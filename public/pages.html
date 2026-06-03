@@ -1,0 +1,457 @@
+<!DOCTYPE html><html><body>
+<!-- MAX TEST PAGE -->
+<div class="page" id="page-m">
+  <div class="stitle">MAX TEST</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+    Trage deine maximalen Werte ein. Alle 2-3 Wochen testen — immer ausgeruht am Anfang des Trainings.
+  </div>
+
+  <!-- Add max entry -->
+  <div class="card">
+    <div class="row2">
+      <div class="fg">
+        <label>DATUM</label>
+        <input type="date" id="max-date">
+      </div>
+      <div class="fg">
+        <label>UBUNG</label>
+        <select id="max-ex" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
+          <option value="Klimmzuge Max|Wdh">Klimmzuge (Max Wdh)</option>
+          <option value="Dips Max|Wdh">Dips (Max Wdh)</option>
+          <option value="Liegestutze Max|Wdh">Liegestutze (Max Wdh)</option>
+          <option value="Plank Max|Sek">Plank (Max Sek)</option>
+          <option value="Muscle-Ups Max|Wdh">Muscle-Ups (Max Wdh)</option>
+          <option value="L-Sit Hold Max|Sek">L-Sit Hold (Max Sek)</option>
+          <option value="Tuck Front Lever Max|Sek">Tuck Front Lever (Max Sek)</option>
+          <option value="Kraul 100m Max|Min:Sek">Kraul 100m (Zeit)</option>
+          <option value="Brust 100m Max|Min:Sek">Brust 100m (Zeit)</option>
+          <option value="Sprint 100m Max|Sek">Sprint 100m (Sek)</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label id="max-val-lbl">ERGEBNIS (WDH)</label>
+      <input type="text" id="max-val" placeholder="z.B. 12">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div class="fg">
+        <label>GESCHLECHT</label>
+        <select id="max-gender" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
+          <option value="m">Mannlich</option>
+          <option value="f">Weiblich</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="saveMaxEntry()">+ EINTRAGEN</button>
+  </div>
+
+  <!-- Percentile Box -->
+  <div id="percentile-box" style="display:none;margin-bottom:16px;"></div>
+
+  <!-- Chart -->
+  <div class="stitle">VERLAUF</div>
+  <div class="cc">
+    <div class="ct">
+      <div class="cl">MAX STEIGUNG</div>
+      <select class="cs" id="max-chart-ex" onchange="drawMaxChart()">
+        <option value="Klimmzuge Max">Klimmzuge</option>
+        <option value="Dips Max">Dips</option>
+        <option value="Liegestutze Max">Liegestutze</option>
+        <option value="Plank Max">Plank</option>
+        <option value="Muscle-Ups Max">Muscle-Ups</option>
+        <option value="L-Sit Hold Max">L-Sit Hold</option>
+        <option value="Tuck Front Lever Max">Tuck Front Lever</option>
+        <option value="Kraul 100m Max">Kraul 100m</option>
+        <option value="Brust 100m Max">Brust 100m</option>
+        <option value="Sprint 100m Max">Sprint 100m</option>
+      </select>
+    </div>
+    <canvas id="max-chart" style="max-height:200px;"></canvas>
+    <div id="max-chart-empty" class="empty" style="display:none;">Noch keine Eintrage</div>
+  </div>
+
+  <!-- Entries -->
+  <div class="stitle">EINGETRAGENE MAXWERTE</div>
+  <div class="filter-row" id="max-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+  <div class="card" id="max-list"></div>
+</div>
+
+
+<!-- CHALLENGE PAGE -->
+<div class="page" id="page-ch">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:18px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);">CHALLENGES</div>
+    <div id="currency-display" style="font-size:13px;font-weight:700;color:var(--text);"></div>
+  </div>
+
+  <!-- KARTE 1: MEINE CHALLENGE (groß, oben) -->
+  <div id="ch-card-personal" onclick="openChDrawer('personal')" style="background:#fff;border-radius:16px;padding:20px 20px 18px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px;"></div>
+    <div style="font-size:8px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:12px;">MEINE CHALLENGE</div>
+    <div id="ch-card-personal-inner"></div>
+    <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#ccc;font-size:20px;">&#8250;</div>
+  </div>
+
+  <!-- KARTEN 2+3: nebeneinander -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+
+    <div id="ch-card-preset" onclick="openChDrawer('preset')" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#38BDF8;border-radius:3px 0 0 3px;"></div>
+      <div style="font-size:7px;letter-spacing:3px;color:#38BDF8;font-weight:700;margin-bottom:12px;">VOREINGESTELLT</div>
+      <div id="ch-card-preset-inner"></div>
+      <div style="position:absolute;right:10px;bottom:14px;color:#ccc;font-size:16px;">&#8250;</div>
+    </div>
+
+    <div id="ch-card-community" onclick="openChDrawer('community')" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#4ECDC4;border-radius:3px 0 0 3px;"></div>
+      <div style="font-size:7px;letter-spacing:3px;color:#4ECDC4;font-weight:700;margin-bottom:12px;">COMMUNITY</div>
+      <div id="ch-card-community-inner"></div>
+      <div style="position:absolute;right:10px;bottom:14px;color:#ccc;font-size:16px;">&#8250;</div>
+    </div>
+
+  </div>
+
+  <!-- hidden containers (content rendered into drawers) -->
+  <div id="challenge-box" style="display:none;"></div>
+  <div id="challenge-presets" style="display:none;"></div>
+  <div id="comm-feed" style="display:none;"></div>
+</div>
+
+
+<!-- PROFIL PAGE -->
+<div class="page" id="page-pr">
+
+  <!-- Hero Section -->
+  <div id="pr-hero" style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;">
+    <div id="pr-avatar" style="width:72px;height:72px;border-radius:50%;background:rgba(255,85,0,0.1);border:2px solid var(--accent);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;" onclick="document.getElementById('pr-avatar-inp').click();">
+      <span id="pr-avatar-emoji">&#x1F4AA;</span>
+    </div>
+    <input type="file" id="pr-avatar-inp" accept="image/*" style="display:none;" onchange="prSetAvatar(this)">
+    <div id="pr-name-display" style="font-family:inherit;font-size:26px;letter-spacing:2px;color:var(--text);cursor:pointer;" onclick="prEditName()">DEIN NAME</div>
+    <div id="pr-level-badge" style="display:inline-block;background:rgba(255,85,0,0.1);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:20px;font-family:inherit;font-size:11px;letter-spacing:2px;padding:3px 12px;margin-top:6px;">BEGINNER</div>
+    <div id="pr-member-since" style="font-size:11px;color:var(--muted2);margin-top:6px;">Mitglied seit heute</div>
+  </div>
+
+  <!-- Stats Row -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;" id="pr-stats-row"></div>
+
+  <!-- Personal Data -->
+  <div class="stitle">PERSONLICHE DATEN</div>
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="fg">
+        <label>NAME</label>
+        <input type="text" id="pr-inp-name" placeholder="Dein Name" oninput="prSave()">
+      </div>
+      <div class="fg">
+        <label>ALTER</label>
+        <input type="number" id="pr-inp-age" placeholder="z.B. 22" min="10" max="99" oninput="prSave()">
+      </div>
+      <div class="fg">
+        <label>GEWICHT (KG)</label>
+        <input type="number" id="pr-inp-weight" placeholder="z.B. 75" oninput="prSave()">
+      </div>
+      <div class="fg">
+        <label>GROSSE (CM)</label>
+        <input type="number" id="pr-inp-height" placeholder="z.B. 180" oninput="prSave()">
+      </div>
+      <div class="fg">
+        <label>GESCHLECHT</label>
+        <select id="pr-inp-gender" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
+          <option value="m">Mannlich</option>
+          <option value="f">Weiblich</option>
+          <option value="x">Divers</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>TRAININGSZIEL</label>
+        <select id="pr-inp-goal" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
+          <option value="strength">Kraft aufbauen</option>
+          <option value="skills">Skills lernen</option>
+          <option value="endurance">Ausdauer</option>
+          <option value="weight">Gewicht verlieren</option>
+          <option value="all">Alles</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievements -->
+  <div class="stitle">ABZEICHEN</div>
+  <div id="pr-badges" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+
+  <!-- Best Performances -->
+  <div class="stitle">BESTLEISTUNGEN</div>
+  <div id="pr-bests" style="margin-bottom:16px;"></div>
+
+  <div class="stitle">STREAK &amp; WOCHENZIEL</div>
+  <div id="pr-streak-section" style="margin-bottom:16px;"></div>
+  <div id="pr-streak-calendar" style="margin-bottom:16px;"></div>
+
+  <!-- Privacy Toggle -->
+  <div class="stitle">DATENSCHUTZ</div>
+  <div id="pr-privacy-toggle" style="margin-bottom:16px;"></div>
+
+  <!-- Admin Panel Button (nur für Admin sichtbar) -->
+  <div id="admin-panel-btn" style="display:none;margin-bottom:16px;">
+    <button onclick="openAdminPanel()" style="width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px solid rgba(255,85,0,0.3);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;padding:14px;cursor:pointer;">&#128274; ADMIN PANEL — EINTRÄGE PRÜFEN</button>
+  </div>
+
+  <!-- Total Reps -->
+  <div class="stitle">GESAMT WIEDERHOLUNGEN</div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Alle Wdh seit Beginn</div>
+  <div id="pr-total-reps" style="margin-bottom:16px;"></div>
+
+  <div class="stitle">TRAININGS-STATISTIKEN</div>
+  <div id="pr-stats-detail" style="margin-bottom:24px;"></div>
+
+</div>
+
+
+<!-- PARKS PAGE -->
+<div class="page" id="page-parks">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:14px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);">CALISTHENICS PARKS</div>
+    <button id="parks-locate-btn" onclick="locateAndLoad()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;letter-spacing:1px;padding:8px 14px;cursor:pointer;">&#9657; STANDORT</button>
+  </div>
+
+  <div id="parks-status" style="font-size:11px;color:var(--muted);margin-bottom:10px;min-height:18px;"></div>
+
+  <!-- Radius-Auswahl -->
+  <div style="display:flex;gap:6px;margin-bottom:12px;" id="parks-radius-btns">
+    <button onclick="setRadius(2000)" id="rbtn-2" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">2 km</button>
+    <button onclick="setRadius(5000)" id="rbtn-5" style="flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">5 km</button>
+    <button onclick="setRadius(10000)" id="rbtn-10" style="flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">10 km</button>
+    <button onclick="setRadius(20000)" id="rbtn-20" style="flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">20 km</button>
+  </div>
+
+  <!-- Karte -->
+  <div id="parks-map" style="width:100%;height:520px;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px;background:var(--bg3);"></div>
+
+  <!-- Park-Liste -->
+  <div id="parks-list"></div>
+</div>
+
+<!-- SKILLS PAGE -->
+<div class="page" id="page-sk">
+  <div style="padding-top:4px;">
+    <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">SKILL LERNPFAD</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Klicke auf eine Progressionsstufe um sie als abgeschlossen zu markieren.</div>
+    <div id="sk-list"></div>
+  </div>
+</div>
+
+
+<script>
+// ── SKILL LERNPFAD ────────────────────────────────────────
+var SKILLS = [
+  {id:'muscle_up',name:'Muscle-Up',icon:'\uD83D\uDD25',desc:'Die Konig der Calisthenics-Skills. Kombiniert Klimmzug und Dips.',color:'#ff5500',steps:[
+    {id:'mu1',name:'10 saubere Klimmzuge',desc:'Basis. Schulterbreiter Griff, volle ROM.'},
+    {id:'mu2',name:'5 explosive Klimmzuge',desc:'Zieh so hoch wie moglich, Brust an die Stange.'},
+    {id:'mu3',name:'10 Dips volle ROM',desc:'Trizeps und Schultern starken.'},
+    {id:'mu4',name:'Negative Muscle-Ups 5x',desc:'Von oben langsam runterlassen.'},
+    {id:'mu5',name:'Band-gestutzter Muscle-Up',desc:'Leichtes Band, Koordination entwickeln.'},
+    {id:'mu6',name:'Kipping Muscle-Up',desc:'Mit Schwung, Koordination der Transition lernen.'},
+    {id:'mu7',name:'Strikter Muscle-Up',desc:'Ohne Schwung, kontrolliert. Das echte Ziel.'}
+  ]},
+  {id:'front_lever',name:'Front Lever',icon:'\uD83D\uDCAA',desc:'Core- und Zugkraft. Korper horizontal parallel zum Boden.',color:'#38BDF8',steps:[
+    {id:'fl1',name:'Hanging Knee Raises 15 Wdh',desc:'Core aus der Hangeposition starken.'},
+    {id:'fl2',name:'Tuck Front Lever 10 Sek',desc:'Knie zur Brust, Rucken gerade, halten.'},
+    {id:'fl3',name:'Tuck Front Lever 30 Sek',desc:'Dieselbe Position langer halten.'},
+    {id:'fl4',name:'Advanced Tuck 10 Sek',desc:'Knie weiter weg, Rucken flacher.'},
+    {id:'fl5',name:'One Leg Extended 10 Sek',desc:'Ein Bein strecken, anderes eingezogen.'},
+    {id:'fl6',name:'Straddle Front Lever 10 Sek',desc:'Beide Beine gestreckt, gegratschter Stand.'},
+    {id:'fl7',name:'Full Front Lever 5 Sek',desc:'Beide Beine gestreckt. Ziel erreicht!'}
+  ]},
+  {id:'planche',name:'Planche',icon:'\u2605',desc:'Pure Druckkraft. Korper horizontal, nur durch Armkraft.',color:'#A78BFA',steps:[
+    {id:'pl1',name:'Planche Lean 10 Sek',desc:'Schultern weit uber die Hande hinaus lehnen.'},
+    {id:'pl2',name:'Tuck Planche 5 Sek',desc:'Knie nah an den Armen, Hufte hoch, balancieren.'},
+    {id:'pl3',name:'Tuck Planche 15 Sek',desc:'Stabile Position, Korper angespannt.'},
+    {id:'pl4',name:'Advanced Tuck Planche 5 Sek',desc:'Knie weiter hinten, Rucken flacher.'},
+    {id:'pl5',name:'Straddle Planche 3 Sek',desc:'Beine gestreckt und gespreizt. Sehr schwer.'},
+    {id:'pl6',name:'Full Planche 2 Sek',desc:'Beide Beine komplett gestreckt. Elite!'}
+  ]},
+  {id:'handstand',name:'Handstand',icon:'\uD83E\uDD38',desc:'Balance, Kraft und Korperbeherrschung.',color:'#F59E0B',steps:[
+    {id:'hs1',name:'Wall Handstand 30 Sek',desc:'Bauch zur Wand, Gewicht auf Fingerkuppen.'},
+    {id:'hs2',name:'Wall Handstand 60 Sek',desc:'Stabil und kontrolliert an der Wand.'},
+    {id:'hs3',name:'Kick-up gegen Wand 10x',desc:'Anlauf uben, Gleichgewicht finden.'},
+    {id:'hs4',name:'Wall Handstand Rucken weg',desc:'Kurz von der Wand ablosen.'},
+    {id:'hs5',name:'Freier Handstand 3 Sek',desc:'Ohne Wand, ruhige Finger, aktive Schultern.'},
+    {id:'hs6',name:'Freier Handstand 10 Sek',desc:'Konsistent halten, Korper gerade.'},
+    {id:'hs7',name:'Handstand Walk 3 Schritte',desc:'Gleichgewicht durch Gewichtverlagerung.'}
+  ]},
+  {id:'human_flag',name:'Human Flag',icon:'\uD83D\uDEA9',desc:'Seitliche Planche am Pfosten. Absolute Seitkraft.',color:'#4ECDC4',steps:[
+    {id:'hf1',name:'Hanging Side Raises 10 Wdh',desc:'An der Stange, Beine seitlich hochheben.'},
+    {id:'hf2',name:'Tuck Human Flag 3 Sek',desc:'Beine eingezogen, seitlich am Pfosten.'},
+    {id:'hf3',name:'Tuck Human Flag 10 Sek',desc:'Stabile Tuck-Position, Ellenbogen gestreckt.'},
+    {id:'hf4',name:'Straddle Human Flag 3 Sek',desc:'Beine gestreckt und gespreizt.'},
+    {id:'hf5',name:'Full Human Flag 2 Sek',desc:'Beide Beine komplett gestreckt. Ziel!'}
+  ]},
+  {id:'back_lever',name:'Back Lever',icon:'\uD83D\uDD04',desc:'Korper horizontal unter der Stange, Bauch nach unten.',color:'#FF6B35',steps:[
+    {id:'bl1',name:'Skin the Cat 5x',desc:'Durch die Stange rollen, Schultern mobilisieren.'},
+    {id:'bl2',name:'Tuck Back Lever 5 Sek',desc:'Knie eingezogen, unter der Stange halten.'},
+    {id:'bl3',name:'Tuck Back Lever 15 Sek',desc:'Stabil, Arme gestreckt, Spannung halten.'},
+    {id:'bl4',name:'Advanced Tuck 10 Sek',desc:'Knie weiter weg, Rucken flacher.'},
+    {id:'bl5',name:'Straddle Back Lever 5 Sek',desc:'Beine gestreckt und gespreizt.'},
+    {id:'bl6',name:'Full Back Lever 5 Sek',desc:'Beide Beine zusammen, komplett gestreckt.'}
+  ]},
+  {id:'dragon_flag',name:'Dragon Flag',icon:'\uD83D\uDC09',desc:'Extremes Core-Training. Korper gerade von der Bank gehoben.',color:'#FF4444',steps:[
+    {id:'df1',name:'Hollow Body Hold 30 Sek',desc:'Flach auf Boden, Rucken flach, Beine angehoben.'},
+    {id:'df2',name:'Tuck Dragon Flag 5 Wdh',desc:'Knie eingezogen, Rucken von der Bank heben.'},
+    {id:'df3',name:'Negative Dragon Flag 3x',desc:'Langsam von oben runterlassen.'},
+    {id:'df4',name:'Straddle Dragon Flag 3 Wdh',desc:'Beine gespreizt, kontrolliert.'},
+    {id:'df5',name:'Full Dragon Flag 3 Wdh',desc:'Beide Beine gestreckt, volle Kontrolle.'}
+  ]},
+  {id:'lsit_vsit',name:'L-Sit bis V-Sit',icon:'\u26A1',desc:'Kompression und Trizepskraft.',color:'#A78BFA',steps:[
+    {id:'ls1',name:'Tuck L-Sit 5 Sek',desc:'Knie eingezogen, Boden verlassen.'},
+    {id:'ls2',name:'Tuck L-Sit 15 Sek',desc:'Stabile Tuck-Position.'},
+    {id:'ls3',name:'L-Sit ein Bein 5 Sek',desc:'Ein Bein gestreckt, anderes eingezogen.'},
+    {id:'ls4',name:'L-Sit 10 Sek',desc:'Beide Beine gestreckt, parallel zum Boden.'},
+    {id:'ls5',name:'L-Sit 20 Sek',desc:'Konstant halten, Hufte nicht absacken.'},
+    {id:'ls6',name:'V-Sit 3 Sek',desc:'Beine uber 45 Grad, maximale Kompression.'}
+  ]},
+  {id:'typewriter',name:'Typewriter Pull-Up',icon:'\u270D\uFE0F',desc:'Seitliche Kontrolle am Klimmzugstab.',color:'#F59E0B',steps:[
+    {id:'tw1',name:'15 saubere Klimmzuge',desc:'Solide Basis, volle ROM, kein Schwung.'},
+    {id:'tw2',name:'Archer Pull-Ups 5x pro Seite',desc:'Einen Arm gebeugt, anderen gestreckt.'},
+    {id:'tw3',name:'Archer Pull-Ups 10x pro Seite',desc:'Kontrolliert und langsam.'},
+    {id:'tw4',name:'Typewriter langsam 3 Wdh',desc:'Oben seitlich von links nach rechts gleiten.'},
+    {id:'tw5',name:'Typewriter 5 Wdh sauber',desc:'Flussige Bewegung, volle Kontrolle.'}
+  ]},
+  {id:'ring_mu',name:'Ring Muscle-Up',icon:'\uD83D\uDD18',desc:'Schwieriger als Stangen-MU durch Instabilitat der Ringe.',color:'#38BDF8',steps:[
+    {id:'rm1',name:'Strikter Stangen-Muscle-Up',desc:'Voraussetzung: sauberer MU an der Stange.'},
+    {id:'rm2',name:'Ring-Dips 10 Wdh',desc:'An den Ringen, viel instabiler.'},
+    {id:'rm3',name:'Ring-Klimmzuge 10 Wdh',desc:'Ringe drehen sich ein, Ellenbogen nah.'},
+    {id:'rm4',name:'Negativer Ring MU 5x',desc:'Von oben langsam durch die Transition.'},
+    {id:'rm5',name:'Ring MU kipping 3x',desc:'Mit Schwung, Koordination der Transition.'},
+    {id:'rm6',name:'Strikter Ring Muscle-Up',desc:'Ohne Schwung. Absolutes Elite-Level.'}
+  ]},
+  {id:'elbow_lever',name:'Elbow Lever',icon:'\uD83E\uDDB5',desc:'Gleichgewicht auf den Ellenbogen.',color:'#4ECDC4',steps:[
+    {id:'el1',name:'Crow Pose 5 Sek',desc:'Knie auf Oberarme stutzen, Gewicht nach vorne.'},
+    {id:'el2',name:'Crow Pose 15 Sek',desc:'Stabil, Blick nach vorne.'},
+    {id:'el3',name:'Elbow Lever schrag 3 Sek',desc:'Gewicht auf einen Ellenbogen, Korper schrag.'},
+    {id:'el4',name:'Elbow Lever 5 Sek',desc:'Korper parallel zum Boden auf beiden Ellenbogen.'},
+    {id:'el5',name:'Elbow Lever 15 Sek',desc:'Kontrolliert und stabil.'}
+  ]},
+  {id:'pullup360',name:'360 Pull-Up',icon:'\uD83D\uDD04',desc:'Explosiver Skill. Am hochsten Punkt um die Stange rotieren.',color:'#C8F04A',steps:[
+    {id:'p361',name:'20 explosive Klimmzuge',desc:'Basis: maximale Explosivkraft.'},
+    {id:'p362',name:'Chest-to-Bar Pull-Ups 10x',desc:'Brust beruht die Stange bei jedem Zug.'},
+    {id:'p363',name:'Half-Turn 180 Grad 3x',desc:'Am hochsten Punkt eine halbe Drehung.'},
+    {id:'p364',name:'360 Pull-Up mit Hilfe 3x',desc:'Partner sichert, volle Rotation uben.'},
+    {id:'p365',name:'360 Pull-Up solo',desc:'Volle Rotation, sauber gefangen.'}
+  ]}
+];
+
+var skillProgress = {};
+var skOpenState = {};
+
+function loadSkillProgress(){
+  try{var d=localStorage.getItem('cali_skills');if(d)skillProgress=JSON.parse(d);}catch(x){}
+}
+function saveSkillProgress(){
+  try{localStorage.setItem('cali_skills',JSON.stringify(skillProgress));}catch(x){}
+}
+function toggleSkillStep(stepId){
+  skillProgress[stepId]=!skillProgress[stepId];
+  saveSkillProgress();
+  buildSkillUI();
+}
+function toggleSkillCard(skillId){
+  skOpenState[skillId]=!skOpenState[skillId];
+  buildSkillUI();
+}
+function hexToRgbInline(hex){
+  try{var r=parseInt(hex.slice(1,3),16);var g=parseInt(hex.slice(3,5),16);var b=parseInt(hex.slice(5,7),16);return r+','+g+','+b;}catch(e){return '0,0,0';}
+}
+
+function buildSkillUI(){
+  var el=document.getElementById('sk-list');
+  if(!el)return;
+  el.innerHTML='';
+  for(var si=0;si<SKILLS.length;si++){
+    var skill=SKILLS[si];
+    var doneCount=0;
+    for(var k=0;k<skill.steps.length;k++){if(skillProgress[skill.steps[k].id])doneCount++;}
+    var pct=Math.round((doneCount/skill.steps.length)*100);
+    var allDone=doneCount===skill.steps.length;
+
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;';
+
+    // Header
+    var header=document.createElement('div');
+    header.style.cssText='padding:16px 16px 12px;cursor:pointer;';
+    header.onclick=(function(sid){return function(){toggleSkillCard(sid);};})(skill.id);
+
+    var htop=document.createElement('div');
+    htop.style.cssText='display:flex;align-items:center;gap:12px;margin-bottom:10px;';
+
+    var ic=document.createElement('div');ic.style.cssText='font-size:28px;line-height:1;';ic.textContent=skill.icon;
+
+    var tw=document.createElement('div');tw.style.cssText='flex:1;';
+    var tn=document.createElement('div');tn.style.cssText='font-size:18px;font-weight:800;color:var(--text);';tn.textContent=skill.name;
+    var td=document.createElement('div');td.style.cssText='font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;';td.textContent=skill.desc;
+    tw.appendChild(tn);tw.appendChild(td);
+
+    var pe=document.createElement('div');
+    pe.style.cssText='font-size:13px;font-weight:800;color:'+(allDone?skill.color:'var(--muted)')+';white-space:nowrap;text-align:right;';
+    pe.textContent=allDone?'\u2713 DONE':doneCount+' / '+skill.steps.length;
+
+    htop.appendChild(ic);htop.appendChild(tw);htop.appendChild(pe);
+
+    var pw=document.createElement('div');pw.style.cssText='background:var(--bg3);border-radius:20px;height:5px;overflow:hidden;';
+    var pf=document.createElement('div');pf.style.cssText='height:100%;border-radius:20px;background:'+skill.color+';width:'+pct+'%;transition:width 0.4s;';
+    pw.appendChild(pf);
+
+    header.appendChild(htop);header.appendChild(pw);
+    card.appendChild(header);
+
+    // Steps (collapsible)
+    var sw=document.createElement('div');
+    sw.style.cssText='display:'+(skOpenState[skill.id]?'block':'none')+';border-top:1px solid var(--border);';
+
+    for(var k=0;k<skill.steps.length;k++){
+      var step=skill.steps[k];
+      var done=!!skillProgress[step.id];
+      var isNext=!done&&(k===0||!!skillProgress[skill.steps[k-1].id]);
+
+      var sr=document.createElement('div');
+      sr.style.cssText='display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;';
+      if(isNext)sr.style.background='rgba('+hexToRgbInline(skill.color)+',0.05)';
+      sr.onclick=(function(sid){return function(){toggleSkillStep(sid);};})(step.id);
+
+      var circle=document.createElement('div');
+      circle.style.cssText='width:26px;height:26px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;';
+      if(done){circle.style.background=skill.color;circle.style.color='#fff';circle.textContent='\u2713';}
+      else if(isNext){circle.style.cssText+=';background:none;border:2px solid '+skill.color+';color:'+skill.color;}
+      else{circle.style.background='var(--bg3)';circle.style.border='1px solid var(--border2)';circle.style.color='var(--muted2)';}
+      if(!done)circle.textContent=String(k+1);
+
+      var si2=document.createElement('div');si2.style.cssText='flex:1;';
+      var sn=document.createElement('div');
+      sn.style.cssText='font-size:14px;font-weight:'+(done||isNext?'700':'500')+';color:'+(done?'var(--muted2)':'var(--text)')+';'+(done?'text-decoration:line-through;':'');
+      sn.textContent=step.name;
+      var sd2=document.createElement('div');sd2.style.cssText='font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;';sd2.textContent=step.desc;
+      si2.appendChild(sn);si2.appendChild(sd2);
+
+      if(isNext){
+        var nb=document.createElement('span');
+        nb.style.cssText='display:inline-block;background:'+skill.color+';color:#fff;font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:20px;margin-top:5px;';
+        nb.textContent='NACHSTER SCHRITT';
+        si2.appendChild(nb);
+      }
+
+      sr.appendChild(circle);sr.appendChild(si2);
+      sw.appendChild(sr);
+    }
+    if(sw.lastChild)sw.lastChild.style.borderBottom='none';
+    card.appendChild(sw);
+    el.appendChild(card);
+  }
+}
+
+loadSkillProgress();
+</script>
+
+
+</body></html>

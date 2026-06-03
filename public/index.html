@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0;url=tracker.html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CALI — Calisthenics Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#060606;--green:#C8F04A;--muted:#444;--muted2:#777;--text:#f0f0f0;--border:#181818;}
+html,body{height:100%;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;border-bottom:1px solid var(--border);background:rgba(6,6,6,0.92);backdrop-filter:blur(16px);}
+.nav-logo{font-family:'Bebas Neue';font-size:26px;letter-spacing:5px;color:var(--green);}
+.nav-cta{background:var(--green);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue';font-size:13px;letter-spacing:2px;padding:8px 18px;cursor:pointer;}
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;overflow:hidden;}
+.hero-bg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue';font-size:36vw;color:rgba(255,255,255,0.022);white-space:nowrap;pointer-events:none;line-height:1;}
+.hero-line{width:48px;height:3px;background:var(--green);margin:0 auto 28px;animation:grow .6s ease both;}
+@keyframes grow{from{width:0}to{width:48px}}
+.hero-eyebrow{font-size:10px;letter-spacing:5px;color:var(--muted2);font-family:'Bebas Neue';margin-bottom:20px;animation:fu .5s .1s ease both;}
+.hero-title{font-family:'Bebas Neue';font-size:clamp(64px,16vw,140px);letter-spacing:4px;line-height:.9;animation:fu .5s .2s ease both;}
+.hero-title span{color:var(--green);}
+.hero-sub{font-size:clamp(14px,2.5vw,17px);color:var(--muted2);max-width:440px;margin:22px auto 0;line-height:1.7;font-weight:300;animation:fu .5s .3s ease both;}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero-btn{margin-top:44px;display:inline-block;background:var(--green);color:#000;border:none;border-radius:10px;font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;padding:18px 48px;cursor:pointer;animation:fu .5s .45s ease both;transition:transform .2s,box-shadow .2s;box-shadow:0 0 0 0 rgba(200,240,74,0);}
+.hero-btn:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(200,240,74,0.25);}
+.hero-hint{margin-top:16px;font-size:11px;color:var(--muted);letter-spacing:1px;animation:fu .5s .55s ease both;}
+.scroll-ind{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;animation:fu .5s .7s ease both;}
+.scroll-ind span{font-size:9px;letter-spacing:3px;color:var(--muted);}
+.scroll-dot{width:1px;height:40px;background:linear-gradient(to bottom,var(--green),transparent);animation:sp 1.8s infinite;}
+@keyframes sp{0%,100%{opacity:.3}50%{opacity:1}}
+.features{padding:80px 24px;max-width:900px;margin:0 auto;position:relative;z-index:1;}
+.feat-label{font-family:'Bebas Neue';font-size:10px;letter-spacing:5px;color:var(--muted2);text-align:center;margin-bottom:48px;}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+.feat{background:var(--bg);padding:32px 28px;transition:background .2s;}
+.feat:hover{background:#0c0c0c;}
+.feat-icon{font-size:28px;margin-bottom:16px;}
+.feat-title{font-family:'Bebas Neue';font-size:20px;letter-spacing:2px;margin-bottom:8px;}
+.feat-desc{font-size:13px;color:var(--muted2);line-height:1.7;font-weight:300;}
+.feat-tag{display:inline-block;margin-top:12px;background:rgba(200,240,74,0.1);border:1px solid rgba(200,240,74,0.2);color:var(--green);border-radius:20px;padding:3px 10px;font-size:10px;letter-spacing:1px;font-family:'Bebas Neue';}
+.feat-tag.soon{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--muted);}
+.cta-strip{position:relative;z-index:1;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:70px 24px;text-align:center;background:linear-gradient(180deg,transparent,rgba(200,240,74,0.03),transparent);}
+.cta-strip h2{font-family:'Bebas Neue';font-size:clamp(36px,8vw,72px);letter-spacing:3px;margin-bottom:10px;}
+.cta-strip h2 span{color:var(--green);}
+.cta-strip p{font-size:14px;color:var(--muted2);margin-bottom:32px;font-weight:300;}
+.cta-big{background:var(--green);color:#000;border:none;border-radius:10px;font-family:'Bebas Neue';font-size:20px;letter-spacing:3px;padding:20px 56px;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 0 60px rgba(200,240,74,0.15);}
+.cta-big:hover{transform:translateY(-2px);box-shadow:0 8px 60px rgba(200,240,74,0.3);}
+footer{padding:28px 24px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:2px;border-top:1px solid var(--border);position:relative;z-index:1;}
+@media(max-width:540px){.feat-grid{grid-template-columns:1fr;}nav{padding:0 16px;}.hero-btn{padding:16px 36px;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">CALI</div>
+  <button class="nav-cta" onclick="goTracker()">TRAINING STARTEN</button>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg">CALI</div>
+  <div class="hero-line"></div>
+  <div class="hero-eyebrow">CALISTHENICS TRACKER</div>
+  <h1 class="hero-title">TRACK.<br><span>PROGRESS.</span><br>REPEAT.</h1>
+  <p class="hero-sub">Verfolge deine Klimmzüge, Sätze, Bandstärke und Fortschritt — alles an einem Ort.</p>
+  <button class="hero-btn" onclick="goTracker()">JETZT TRAINIEREN</button>
+  <div class="hero-hint">Kostenlos &middot; Kein Account nötig</div>
+  <div class="scroll-ind">
+    <span>SCROLL</span>
+    <div class="scroll-dot"></div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="feat-label">WAS CALI KANN</div>
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="feat-icon">&#128202;</div>
+      <div class="feat-title">SATZ-TRACKING</div>
+      <div class="feat-desc">Trage jeden Satz einzeln ein — mit normalen Wdh und wie viele davon mit Band.</div>
+      <div class="feat-tag">KOSTENLOS</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">&#128200;</div>
+      <div class="feat-title">FORTSCHRITT</div>
+      <div class="feat-desc">Grafiken zeigen dir wie du dich über Zeit verbesserst — Übung für Übung.</div>
+      <div class="feat-tag">KOSTENLOS</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">&#127957;</div>
+      <div class="feat-title">BAND-SYSTEM</div>
+      <div class="feat-desc">Wähle deine Bandstärke und tracke normal + mit Band pro Satz getrennt.</div>
+      <div class="feat-tag">KOSTENLOS</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">&#128138;</div>
+      <div class="feat-title">HF SCREENSHOTS</div>
+      <div class="feat-desc">Lade Herzfrequenz-Screenshots hoch und speichere sie mit dem Training.</div>
+      <div class="feat-tag">KOSTENLOS</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">&#9729;</div>
+      <div class="feat-title">SYNC</div>
+      <div class="feat-desc">Daten zwischen iPhone und PC synchronisieren — überall verfügbar.</div>
+      <div class="feat-tag soon">BALD</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">&#11088;</div>
+      <div class="feat-title">PREMIUM</div>
+      <div class="feat-desc">Trainingsplan-Vorlagen, PDF-Exporte, detaillierte Auswertungen und mehr.</div>
+      <div class="feat-tag soon">BALD</div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-strip">
+  <h2>BEREIT ZU<br><span>TRAINIEREN?</span></h2>
+  <p>Kostenlos starten — kein Account, kein Abo.</p>
+  <button class="cta-big" onclick="goTracker()">TRAINING STARTEN</button>
+</section>
+
+<footer>
+  &copy; 2025 CALI &nbsp;&middot;&nbsp; MADE FOR ATHLETES
+</footer>
+
+<script>
+function goTracker(){
+  window.location.href = 'tracker.html';
+}
+</script>
+</body>
+</html>
