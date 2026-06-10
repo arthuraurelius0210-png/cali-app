@@ -146,7 +146,7 @@ function sd(){try{localStorage.setItem(DB,JSON.stringify(ents));}catch(x){}}
 function shr(){try{localStorage.setItem(DHR,JSON.stringify(hrs));}catch(x){}}
 
 function goPage(p){
-  var ps=['e','p','m','ch','v','pr','sk','h','parks'];
+  var ps=['e','p','m','ch','v','pr','sk','h','parks','rek'];
   for(var i=0;i<ps.length;i++){
     var pg=document.getElementById('page-'+ps[i]);
     var tb=document.getElementById('tab-'+ps[i]);
@@ -162,6 +162,7 @@ function goPage(p){
     buildPlanList();
   }
   if(p==='ch'){buildChallengeUI();}
+  if(p==='rek'){buildRekordeUI();}
   if(p==='pr'){lpr();calcStreak();buildProfilUI();}
   if(p==='sk'){buildSkillUI();}
   if(p==='h')bhr();
