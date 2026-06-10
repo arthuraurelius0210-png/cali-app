@@ -693,38 +693,108 @@ function openParkDetail(idx){
 }
 
 function buildParkDetailLeaderboard(el, parkId, parkName){
-  el.innerHTML = '<div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:16px;">&#127942; BESTENLISTE</div>';
+  el.innerHTML = '';
+  if(typeof db === 'undefined' || !db){
+    el.innerHTML = '<div style="padding:20px;color:var(--muted);">Einloggen um Bestenliste zu sehen.</div>'; return;
+  }
 
-  // Submit button
+  // Eintrag einreichen Button
   var subBtn = document.createElement('button');
-  subBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:20px;letter-spacing:1px;';
-  subBtn.textContent = '+ EINTRAG EINREICHEN';
-  subBtn.onclick = function(){ showLeaderboardSubmit(parkId, parkName); };
+  subBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:12px;cursor:pointer;margin-bottom:14px;';
+  subBtn.innerHTML = '+ EINTRAG EINREICHEN';
+  subBtn.onclick = function(){ openRecordSubmit(parkId, parkName); };
   el.appendChild(subBtn);
 
-  if(typeof db === 'undefined' || !db){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Einloggen um Bestenliste zu sehen.</div>'; return; }
+  // Übungs-Auswahl horizontal (wie globale Bestenliste)
+  var exLabel = document.createElement('div');
+  exLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;';
+  exLabel.textContent = 'ÜBUNG';
+  el.appendChild(exLabel);
 
-  var ref = db.collection('parkLeaderboard').doc(parkId).collection('entries').orderBy('value','desc').limit(20);
-  ref.get().then(function(snap){
-    if(snap.empty){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Einträge.<br>Sei der Erste!</div>'; return; }
-    snap.forEach(function(doc, i){
-      var d = doc.data();
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);';
-      var rank = i+1;
-      var medal = rank===1?'&#127947;':rank===2?'&#129352;':rank===3?'&#129353;':'#'+rank;
-      row.innerHTML = '<div style="font-size:18px;width:32px;text-align:center;">'+medal+'</div>'+
-        '<div style="flex:1;">'+
-          '<div style="font-size:14px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);">'+(d.exercise||'')+'</div>'+
-        '</div>'+
-        '<div style="text-align:right;">'+
-          '<div style="font-size:18px;font-weight:800;color:var(--accent);">'+d.value+'</div>'+
-          '<div style="font-size:10px;color:var(--muted);">'+(d.unit||'Wdh')+'</div>'+
-        '</div>';
-      el.appendChild(row);
+  var exWrap = document.createElement('div');
+  exWrap.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;';
+
+  var parkExercises = [
+    {id:'skill_pullup',    name:'Klimmzüge',    unit:'Wdh'},
+    {id:'skill_muscleup',  name:'Muscle-Up',    unit:'Wdh'},
+    {id:'skill_dip',       name:'Dips',         unit:'Wdh'},
+    {id:'skill_pushup',    name:'Liegestütze',  unit:'Wdh'},
+    {id:'skill_lsit',      name:'L-Sit',        unit:'Sek'},
+    {id:'skill_handstand', name:'Handstand',    unit:'Sek'},
+    {id:'skill_frontlever',name:'Front Lever',  unit:'Sek'},
+    {id:'skill_backlever', name:'Back Lever',   unit:'Sek'},
+    {id:'skill_planche',   name:'Planche',      unit:'Sek'},
+    {id:'skill_humanflag', name:'Human Flag',   unit:'Sek'},
+    {id:'skill_pistol',    name:'Pistol Squat', unit:'Wdh'},
+  ];
+
+  var selEx = parkExercises[0];
+  var listEl2 = document.createElement('div');
+
+  parkExercises.forEach(function(ex){
+    var btn = document.createElement('button');
+    btn.dataset.exId = ex.id;
+    var isActive = ex.id === selEx.id;
+    btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    btn.textContent = ex.name;
+    btn.onclick = function(){
+      selEx = ex;
+      exWrap.querySelectorAll('button').forEach(function(b){
+        var a = b.dataset.exId === selEx.id;
+        b.style.borderColor = a?'var(--accent)':'var(--border)';
+        b.style.background = a?'var(--accent)':'none';
+        b.style.color = a?'#fff':'var(--muted)';
+      });
+      loadParkLb(listEl2, parkId, selEx);
+    };
+    exWrap.appendChild(btn);
+  });
+  el.appendChild(exWrap);
+  el.appendChild(listEl2);
+  loadParkLb(listEl2, parkId, selEx);
+}
+
+function loadParkLb(el, parkId, ex){
+  el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px;">&#9203; Lade...</div>';
+  db.collection('parkLeaderboard').doc(parkId).collection('entries')
+    .where('exercise','==',ex.id)
+    .orderBy('value','desc').limit(20)
+    .get().then(function(snap){
+      el.innerHTML = '';
+      if(snap.empty){
+        el.innerHTML = '<div style="text-align:center;padding:30px 10px;"><div style="font-size:30px;margin-bottom:8px;">&#127942;</div><div style="font-size:12px;color:var(--muted);">Noch keine Einträge für '+ex.name+'.<br>Sei der Erste!</div></div>';
+        return;
+      }
+      var uid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
+      snap.forEach(function(doc, i){
+        var d = doc.data();
+        var rank = i+1;
+        var medal = rank===1?'&#129351;':rank===2?'&#129352;':rank===3?'&#129353;':'';
+        var isMe = uid && d.uid === uid;
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';';
+        var rankEl = document.createElement('div');
+        rankEl.style.cssText = 'width:28px;text-align:center;flex-shrink:0;';
+        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-size:11px;font-weight:700;color:var(--muted);">#'+rank+'</span>';
+        var infoEl = document.createElement('div');
+        infoEl.style.cssText = 'flex:1;min-width:0;';
+        infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+' </div>';
+        var valEl = document.createElement('div');
+        valEl.style.cssText = 'text-align:right;flex-shrink:0;';
+        valEl.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--accent);">'+d.value+'</div><div style="font-size:9px;color:var(--muted);">'+ex.unit+'</div>';
+        row.appendChild(rankEl); row.appendChild(infoEl); row.appendChild(valEl);
+        if(d.videoUrl){
+          var vBtn = document.createElement('button');
+          vBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:14px;cursor:pointer;flex-shrink:0;';
+          vBtn.innerHTML = '&#9654;';
+          vBtn.onclick = function(){ playVideo(d.videoUrl); };
+          row.appendChild(vBtn);
+        }
+        el.appendChild(row);
+      });
+    }).catch(function(e){
+      el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>';
     });
-  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Fehler beim Laden.</div>'; });
 }
 
 function buildParkDetailStats(el, parkId){
