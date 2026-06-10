@@ -714,49 +714,99 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
   var exWrap = document.createElement('div');
   exWrap.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;';
 
-  // Alle Übungen aus EX_DB + Skills
-  var parkExercises = [];
-  var seen = {};
-  if(typeof EX_DB !== 'undefined'){
-    EX_DB.forEach(function(ex, i){
-      var k = ex.name+'|'+ex.unit;
-      if(!seen[k]){ seen[k]=1; parkExercises.push({id:'ex_'+i, name:ex.name, unit:ex.unit}); }
-    });
-  }
-  // Zusätzliche Skills falls nicht in EX_DB
-  [{id:'skill_lsit',name:'L-Sit',unit:'Sek'},{id:'skill_handstand',name:'Handstand (frei)',unit:'Sek'},
-   {id:'skill_frontlever',name:'Front Lever Hold',unit:'Sek'},{id:'skill_backlever',name:'Back Lever Hold',unit:'Sek'},
-   {id:'skill_planche',name:'Planche',unit:'Sek'},{id:'skill_humanflag',name:'Human Flag',unit:'Sek'},
-   {id:'skill_360',name:'360 Pull-Up',unit:'Wdh'},{id:'skill_rings',name:'Ring Muscle-Up',unit:'Wdh'}
-  ].forEach(function(s){
-    var k=s.name+'|'+s.unit;
-    if(!seen[k]){seen[k]=1;parkExercises.push(s);}
-  });
+  var PARK_CATS = [
+    {id:'all',label:'Alle',icon:'&#127942;'},
+    {id:'Pull',label:'Pull',icon:'&#11014;'},
+    {id:'Push',label:'Push',icon:'&#128170;'},
+    {id:'Core',label:'Core',icon:'&#128293;'},
+    {id:'Legs',label:'Legs',icon:'&#129466;'},
+    {id:'Skills',label:'Skills',icon:'&#11088;'},
+    {id:'Schwimmen',label:'Schwimmen',icon:'&#127946;'},
+    {id:'Laufen',label:'Laufen',icon:'&#127939;'},
+  ];
+  var activeCat = 'all';
 
-  var selEx = parkExercises[0];
-  var listEl2 = document.createElement('div');
-
-  parkExercises.forEach(function(ex){
+  // Kategorie-Filter
+  var catWrap = document.createElement('div');
+  catWrap.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none;';
+  PARK_CATS.forEach(function(cat){
     var btn = document.createElement('button');
-    btn.dataset.exId = ex.id;
-    var isActive = ex.id === selEx.id;
-    btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
-    btn.textContent = ex.name;
+    btn.dataset.catId = cat.id;
+    var isActive = cat.id === activeCat;
+    btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    btn.innerHTML = cat.icon+' '+cat.label;
     btn.onclick = function(){
-      selEx = ex;
-      exWrap.querySelectorAll('button').forEach(function(b){
-        var a = b.dataset.exId === selEx.id;
+      activeCat = cat.id;
+      catWrap.querySelectorAll('button').forEach(function(b){
+        var a = b.dataset.catId === activeCat;
         b.style.borderColor = a?'var(--accent)':'var(--border)';
         b.style.background = a?'var(--accent)':'none';
         b.style.color = a?'#fff':'var(--muted)';
       });
-      loadParkLb(listEl2, parkId, selEx);
+      rebuildExWrap();
     };
-    exWrap.appendChild(btn);
+    catWrap.appendChild(btn);
   });
-  el.appendChild(exWrap);
+  el.appendChild(catWrap);
+
+  function getParkExercises(cat){
+    var result=[], seen={};
+    if(typeof EX_DB!=='undefined'){
+      EX_DB.forEach(function(ex,i){
+        if(cat==='all'||ex.cat===cat){
+          var k=ex.name+'|'+ex.unit;
+          if(!seen[k]){seen[k]=1;result.push({id:'ex_'+i,name:ex.name,unit:ex.unit,cat:ex.cat});}
+        }
+      });
+    }
+    if(cat==='all'||cat==='Skills'){
+      [{id:'skill_lsit',name:'L-Sit',unit:'Sek'},{id:'skill_handstand',name:'Handstand (frei)',unit:'Sek'},
+       {id:'skill_frontlever',name:'Front Lever Hold',unit:'Sek'},{id:'skill_backlever',name:'Back Lever Hold',unit:'Sek'},
+       {id:'skill_planche',name:'Planche',unit:'Sek'},{id:'skill_humanflag',name:'Human Flag',unit:'Sek'},
+       {id:'skill_360',name:'360 Pull-Up',unit:'Wdh'},{id:'skill_rings',name:'Ring Muscle-Up',unit:'Wdh'}
+      ].forEach(function(s){ var k=s.name+'|'+s.unit; if(!seen[k]){seen[k]=1;result.push(s);} });
+    }
+    return result;
+  }
+
+  var selEx = null;
+  var listEl2 = document.createElement('div');
+  var exWrapOuter = document.createElement('div');
+  exWrapOuter.style.cssText = 'margin-bottom:10px;';
+  el.appendChild(exWrapOuter);
   el.appendChild(listEl2);
-  loadParkLb(listEl2, parkId, selEx);
+
+  function rebuildExWrap(){
+    exWrapOuter.innerHTML = '';
+    var exercises = getParkExercises(activeCat);
+    if(!selEx || !exercises.find(function(e){ return e.id===selEx.id; })){
+      selEx = exercises[0] || null;
+    }
+    var exWrap2 = document.createElement('div');
+    exWrap2.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;';
+    exercises.forEach(function(ex){
+      var btn = document.createElement('button');
+      btn.dataset.exId = ex.id;
+      var isActive = selEx && ex.id === selEx.id;
+      btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+      btn.textContent = ex.name;
+      btn.onclick = function(){
+        selEx = ex;
+        exWrap2.querySelectorAll('button').forEach(function(b){
+          var a = b.dataset.exId === selEx.id;
+          b.style.borderColor = a?'var(--accent)':'var(--border)';
+          b.style.background = a?'var(--accent)':'none';
+          b.style.color = a?'#fff':'var(--muted)';
+        });
+        loadParkLb(listEl2, parkId, selEx);
+      };
+      exWrap2.appendChild(btn);
+    });
+    exWrapOuter.appendChild(exWrap2);
+    if(selEx) loadParkLb(listEl2, parkId, selEx);
+  }
+
+  rebuildExWrap();
 }
 
 function loadParkLb(el, parkId, ex){
