@@ -502,3 +502,310 @@ function buildProfilUI(){
       badgeEl.appendChild(hint);
     }
   }
+
+  // Best performances from maxEntries
+  var bests=document.getElementById('pr-bests');
+  if(bests){
+    bests.innerHTML='';
+    if(!maxEntries.length){
+      bests.innerHTML='<div style="font-size:12px;color:var(--muted2);padding:8px 0;">Noch keine Max-Werte eingetragen.</div>';
+    } else {
+      var bestMap={};
+      for(var i=0;i<maxEntries.length;i++){
+        var me=maxEntries[i];
+        var v=parseFloat(me.val)||0;
+        if(!bestMap[me.name]||v>parseFloat(bestMap[me.name].val)) bestMap[me.name]=me;
+      }
+      for(var name in bestMap){
+        var me=bestMap[name];
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid #1e1e1e;border-radius:10px;margin-bottom:6px;';
+        var left=document.createElement('div');
+        left.style.cssText='font-size:13px;font-weight:500;color:var(--text);';
+        left.textContent=name.replace(' Max','');
+        var right=document.createElement('div');
+        right.style.cssText='font-family:inherit;font-size:20px;color:var(--accent);';
+        right.textContent=me.val+' '+me.unit;
+        row.appendChild(left);row.appendChild(right);
+        bests.appendChild(row);
+      }
+    }
+  }
+
+  // Total reps per exercise breakdown
+  var repsEl = document.getElementById('pr-total-reps');
+  if(repsEl){
+    repsEl.innerHTML='';
+    // Sort by total reps descending
+    var sorted = [];
+    for(var name in repsByEx){ sorted.push({name:name, total:repsByEx[name]}); }
+    sorted.sort(function(a,b){return b.total-a.total;});
+    for(var i=0;i<sorted.length&&i<10;i++){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg2);border:1px solid #1e1e1e;border-radius:10px;margin-bottom:6px;';
+      var rank=document.createElement('div');
+      rank.style.cssText='font-family:inherit;font-size:13px;color:var(--muted);width:20px;text-align:center;';
+      rank.textContent=String(i+1);
+      var name2=document.createElement('div');
+      name2.style.cssText='font-size:13px;color:var(--text);flex:1;';
+      name2.textContent=sorted[i].name;
+      var total=document.createElement('div');
+      total.style.cssText='font-family:inherit;font-size:18px;color:var(--accent);';
+      total.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
+      row.appendChild(rank);row.appendChild(name2);row.appendChild(total);
+      repsEl.appendChild(row);
+    }
+    if(!sorted.length){
+      repsEl.innerHTML='<div style="font-size:12px;color:var(--muted2);padding:8px 0;">Noch keine Wdh eingetragen.</div>';
+    }
+  }
+  // Always build streak section at end
+  buildProfilStreakSection();
+  buildProfilStatsDetail();
+  buildPrivacyToggle();
+  checkAndShowAdminBtn();
+}
+
+function hexToRgb(hex){
+  var r=parseInt(hex.slice(1,3),16);
+  var g=parseInt(hex.slice(3,5),16);
+  var b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+
+
+
+// ── FIREBASE ──────────────────────────────────────────────
+var firebaseConfig = {
+  apiKey: "AIzaSyAzZLudHZd3ht7ASlrgghei-PW6qS9ClMM",
+  authDomain: "cali-app-75cc9.firebaseapp.com",
+  projectId: "cali-app-75cc9",
+  storageBucket: "cali-app-75cc9.firebasestorage.app",
+  messagingSenderId: "431823759191",
+  appId: "1:431823759191:web:d2ccaa761109b2d883c012",
+  measurementId: "G-KZQP7PCWYK"
+};
+
+firebase.initializeApp(firebaseConfig);
+var fbTimeout = null;
+
+
+var auth = firebase.auth();
+var db   = firebase.firestore();
+var currentUser = null;
+var authMode = 'login';
+
+function showAuthTab(mode){
+  authMode = mode;
+  var loginBtn    = document.getElementById('tab-login');
+  var registerBtn = document.getElementById('tab-register');
+  var submitBtn   = document.getElementById('auth-submit-btn');
+  var nameRow     = document.getElementById('auth-name-row');
+  if(mode==='login'){
+    loginBtn.style.background    = 'var(--accent)';
+    loginBtn.style.color         = '#000';
+    registerBtn.style.background = 'none';
+    registerBtn.style.color      = '#888';
+    submitBtn.textContent        = 'EINLOGGEN';
+    if(nameRow) nameRow.style.display = 'none';
+  } else {
+    registerBtn.style.background = 'var(--accent)';
+    registerBtn.style.color      = '#000';
+    loginBtn.style.background    = 'none';
+    loginBtn.style.color         = '#888';
+    submitBtn.textContent        = 'REGISTRIEREN';
+    if(nameRow) nameRow.style.display = 'block';
+  }
+  var err = document.getElementById('auth-error');
+  if(err) err.style.display = 'none';
+}
+
+function authSubmit(){
+  var email    = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  var nameEl   = document.getElementById('auth-name');
+  var name     = nameEl ? nameEl.value.trim() : '';
+  var errEl    = document.getElementById('auth-error');
+
+  if(!email || !password){
+    if(errEl){errEl.textContent='E-Mail und Passwort eingeben!';errEl.style.display='block';}
+    return;
+  }
+
+  if(authMode==='register'){
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(function(cred){
+        return cred.user.updateProfile({displayName: name||email.split('@')[0]});
+      })
+      .then(function(){
+        // Force onboarding for new registrations
+        try{ localStorage.removeItem('cali_onboarded'); }catch(x){}
+        try{ localStorage.removeItem('cali_profile'); }catch(x){}
+        prData = {};
+        toast('Konto erstellt! Willkommen!');
+        setTimeout(showOnboarding, 1500);
+      })
+      .catch(function(e){
+        if(errEl){errEl.textContent=getAuthError(e.code);errEl.style.display='block';}
+      });
+  } else {
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(function(e){
+        if(errEl){errEl.textContent=getAuthError(e.code);errEl.style.display='block';}
+      });
+  }
+}
+
+function authGoogle(){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .catch(function(e){
+      var errEl = document.getElementById('auth-error');
+      if(errEl){errEl.textContent=getAuthError(e.code);errEl.style.display='block';}
+    });
+}
+
+function authLogout(){
+  auth.signOut();
+}
+
+function getAuthError(code){
+  var errors = {
+    'auth/email-already-in-use':   'E-Mail bereits registriert',
+    'auth/invalid-email':          'Ungültige E-Mail Adresse',
+    'auth/weak-password':          'Passwort zu schwach (min. 6 Zeichen)',
+    'auth/user-not-found':         'Kein Konto mit dieser E-Mail',
+    'auth/wrong-password':         'Falsches Passwort',
+    'auth/too-many-requests':      'Zu viele Versuche. Bitte warten.',
+    'auth/popup-closed-by-user':   'Anmeldung abgebrochen',
+  };
+  return errors[code] || 'Fehler: ' + code;
+}
+
+// Auth state listener
+if(auth){
+auth.onAuthStateChanged(function(user){
+  clearTimeout(fbTimeout);
+  if(user){
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    var nav = document.getElementById('main-nav');
+    if(nav) nav.style.display = 'flex';
+    document.getElementById('page-e').className = 'page on';
+    // Load user data from Firestore
+    loadUserData(user.uid);
+    toast('Willkommen ' + (user.displayName||user.email) + '!');
+    // Onboarding check happens inside loadUserData callback
+  } else {
+    currentUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    var nav = document.getElementById('main-nav');
+    if(nav) nav.style.display = 'none';
+    // Hide all pages
+    var pages = ['e','p','m','ch','v','pr','h'];
+    for(var i=0;i<pages.length;i++){
+      var pg = document.getElementById('page-'+pages[i]);
+      if(pg) pg.className = 'page';
+    }
+  }
+}); // end onAuthStateChanged
+} else {
+  // Firebase not available - show login
+  var ls2=document.getElementById('login-screen');if(ls2)ls2.style.display='flex';
+}
+
+// ── FIRESTORE SYNC ────────────────────────────────────────
+function getUserDoc(){
+  if(!currentUser) return null;
+  return db.collection('users').doc(currentUser.uid);
+}
+
+function saveUserData(){
+  if(!currentUser) return;
+  var doc = getUserDoc();
+  doc.set({
+    ents:       ents,
+    maxEntries: maxEntries,
+    plans:      plans,
+    prData:     prData,
+    challenge:  activeChallenge||null,
+    updatedAt:  new Date().toISOString()
+  }, {merge: true}).catch(function(e){ console.log('Save error:', e); });
+}
+
+function loadUserData(uid){
+  db.collection('users').doc(uid).get()
+    .then(function(doc){
+      if(doc.exists){
+        var d = doc.data();
+        if(d.ents)       ents       = d.ents;
+        if(d.maxEntries) maxEntries = d.maxEntries;
+        if(d.plans)      plans      = d.plans;
+        if(d.prData)     prData     = d.prData;
+        if(d.challenge)  activeChallenge = d.challenge;
+        try{
+          localStorage.setItem('cali_v4', JSON.stringify(ents));
+          localStorage.setItem('cali_max', JSON.stringify(maxEntries));
+          localStorage.setItem('cali_plans', JSON.stringify(plans));
+          localStorage.setItem('cali_profile', JSON.stringify(prData));
+        }catch(x){}
+        bb(); buildStartPlanBtns(); buildStartChallengeWidget();
+      }
+      // Check onboarding AFTER data loaded
+      lstreak();
+      var onboarded = false;
+      try{ onboarded = !!localStorage.getItem('cali_onboarded'); }catch(x){}
+      var isNew = !prData || !prData.name;
+      if(isNew && !onboarded){
+        setTimeout(showOnboarding, 1500);
+      } else {
+        if(!streakData.goalSet) showWeeklyGoalModal();
+        buildStreakWidget();
+      }
+    })
+    .catch(function(e){
+      console.log('Load error:', e);
+      // Even on error, check onboarding
+      lstreak();
+      var onboarded = false;
+      try{ onboarded = !!localStorage.getItem('cali_onboarded'); }catch(x){}
+      if(!prData || (!prData.name && !onboarded)){
+        setTimeout(showOnboarding, 400);
+      } else {
+        buildStreakWidget();
+      }
+    });
+}
+
+// ld() wird direkt genutzt, kein Override nötig
+
+// Auto-save to Firebase when data changes
+function fbSave(){
+  if(currentUser) saveUserData();
+}
+
+
+// Populate chart select
+var cexEl=document.getElementById('cex');
+if(cexEl){for(var xi=0;xi<EX_DB.length;xi++){var opt=document.createElement('option');opt.textContent=EX_DB[xi].name;cexEl.appendChild(opt);}}
+
+// ── DEMO MODUS ────────────────────────────────────────────
+function startDemo(){
+  var loadEl = document.getElementById('loading-screen');
+  if(loadEl) loadEl.style.display = 'none';
+  var ls = document.getElementById('login-screen');
+  if(ls) ls.style.display = 'none';
+  document.getElementById('page-e').className = 'page on';
+  var nav = document.getElementById('main-nav');
+  if(nav) nav.style.display = '';
+  // Show nav tabs
+  var navEl = document.querySelector('nav');
+  if(navEl) navEl.style.display = '';
+  // Load local data
+  lmax();lpd();lpr();lstreak();ld();loadChallenges();
+  bb();bhr();buildStartPlanBtns();buildStartChallengeWidget();buildStreakWidget();
+  setTimeout(function(){
+    if(!streakData.goalSet) showWeeklyGoalModal();
+  }, 500);
+  toast('Demo Modus - Daten werden nur lokal gespeichert');
+}

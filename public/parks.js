@@ -95,8 +95,7 @@ function loadParks(){
   // Overpass - mehrere Proxies versuchen
   var query = '[out:json][timeout:30];(node["leisure"="outdoor_gym"](around:'+currentRadius+','+userLat+','+userLng+');node["sport"="calisthenics"](around:'+currentRadius+','+userLat+','+userLng+');node["leisure"="fitness_station"](around:'+currentRadius+','+userLat+','+userLng+');node["amenity"="fitness_station"](around:'+currentRadius+','+userLat+','+userLng+');node["sport"="fitness"](around:'+currentRadius+','+userLat+','+userLng+');way["leisure"="outdoor_gym"](around:'+currentRadius+','+userLat+','+userLng+');way["sport"="calisthenics"](around:'+currentRadius+','+userLat+','+userLng+');relation["leisure"="outdoor_gym"](around:'+currentRadius+','+userLat+','+userLng+'););out center;';
 
-  // Eigene Netlify Function als Proxy - schnell und zuverlässig
-  var ownProxy = '/.netlify/functions/overpass?query=' + encodeURIComponent(query);
+  var proxies = ['/api/overpass'];
 
   function processParks(data){
     parksData = data.elements || [];
@@ -104,7 +103,6 @@ function loadParks(){
     statusEl.textContent = parksData.length + ' Parks gefunden im Umkreis von '+(currentRadius/1000)+' km';
     var parkIcon = L.divIcon({html:'<div style="background:#ff5500;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);">&#128170;</div>',className:'',iconAnchor:[17,17]});
     parksData.forEach(function(p){ var lat=p.lat||(p.center&&p.center.lat); var lng=p.lon||(p.center&&p.center.lon); if(!lat||!lng) return; p._lat=lat; p._lng=lng; p._dist=calcDist(userLat,userLng,lat,lng); });
-    // Duplikate entfernen (gleiche Koordinaten innerhalb 30m)
     parksData=parksData.filter(function(p){return p._lat;});
     var unique=[];
     parksData.forEach(function(p){
@@ -121,15 +119,29 @@ function loadParks(){
       parksMarkers.push(marker);
     });
     buildParksList();
+    document.getElementById('parks-locate-btn').textContent='✓ STANDORT';
   }
 
-  fetch(ownProxy)
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .then(function(data){ processParks(data); })
-    .catch(function(e){
-      console.log('Own proxy failed:', e);
-      statusEl.textContent = 'Fehler beim Laden. Bitte nochmal versuchen.';
-    });
+  function tryProxy(idx){
+    if(idx>=proxies.length){
+      statusEl.textContent='Fehler beim Laden. Bitte nochmal versuchen.';
+      document.getElementById('parks-locate-btn').textContent='▷ STANDORT';
+      return;
+    }
+    statusEl.textContent='Parks werden geladen...';
+    var controller = window.AbortController ? new AbortController() : null;
+    var timer = controller ? setTimeout(function(){ controller.abort(); }, 25000) : null;
+    fetch(proxies[idx], {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: query,
+      signal: controller ? controller.signal : undefined
+    })
+      .then(function(r){ if(timer) clearTimeout(timer); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(data){ processParks(data); })
+      .catch(function(e){ if(timer) clearTimeout(timer); console.log('Proxy '+idx+' failed:',e.message); tryProxy(idx+1); });
+  }
+  tryProxy(0);
 }
 
 function buildParksList(){
@@ -466,7 +478,7 @@ function buildPrivacyToggle(){
     isPublic = !isPublic;
     prData = prData || {};
     prData.isPublic = isPublic;
-    saveProfile();
+    spr();
     fbSave();
     buildPrivacyToggle();
     toast(isPublic ? '&#127758; Profil öffentlich' : '&#128274; Profil privat');

@@ -298,9 +298,108 @@ function buildProfilStreakSection(){
     }
 
     expandBtn.onclick=function(){
-      calExpanded=!calExpanded;
-      expandBtn.textContent=calExpanded?'WENIGER':'ALLE MONATE';
-      renderCalBody();
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
+      var box = document.createElement('div');
+      box.style.cssText = 'background:var(--bg);border-radius:18px;width:100%;max-width:440px;padding:20px;margin:auto;';
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
+      var ttl = document.createElement('div');
+      ttl.style.cssText = 'font-size:11px;letter-spacing:3px;font-weight:700;color:var(--accent);';
+      ttl.textContent = 'TRAININGS-KALENDER';
+      var closeBtn = document.createElement('button');
+      closeBtn.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--muted);padding:4px 12px;cursor:pointer;';
+      closeBtn.textContent = 'X';
+      closeBtn.onclick = function(){ overlay.remove(); };
+      hdr.appendChild(ttl); hdr.appendChild(closeBtn);
+      box.appendChild(hdr);
+      // Legende
+      var leg = document.createElement('div');
+      leg.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 14px;';
+      [{color:'var(--accent)',label:'Training'},{color:'rgba(255,85,0,0.15)',label:'Belohnung'},{color:'rgba(56,189,248,0.2)',label:'Eis-Tag'}].forEach(function(l){
+        var li=document.createElement('div');li.style.cssText='display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);';
+        var dot=document.createElement('div');dot.style.cssText='width:9px;height:9px;border-radius:2px;background:'+l.color+';flex-shrink:0;';
+        li.appendChild(dot);li.appendChild(document.createTextNode(l.label));leg.appendChild(li);
+      });
+      box.appendChild(leg);
+      // Start = firstDate = Tag 1
+      var startD = new Date(firstDate);
+      var startDateStr = firstDate;
+      var cur2 = new Date(startD.getFullYear(), startD.getMonth(), 1);
+      // Show until 12 months after start OR current month+3, whichever is later
+      var stopD = new Date(Math.max(
+        new Date(startD.getFullYear(), startD.getMonth()+13, 1).getTime(),
+        new Date(today.getFullYear(), today.getMonth()+4, 1).getTime()
+      ));
+      while(cur2 < stopD){
+        var yr2=cur2.getFullYear(); var mo3=cur2.getMonth();
+        var firstDayOfMonth=new Date(yr2,mo3,1);
+        var dayNumStart=Math.floor((firstDayOfMonth-startD)/86400000)+1;
+        var mHdr=document.createElement('div');
+        mHdr.style.cssText='display:flex;align-items:baseline;gap:8px;margin:16px 0 6px;';
+        var mName=document.createElement('div');mName.style.cssText='font-size:11px;color:var(--text);letter-spacing:2px;font-weight:700;';
+        mName.textContent=cur2.toLocaleString('de-DE',{month:'long',year:'numeric'}).toUpperCase();
+        var mDay=document.createElement('div');mDay.style.cssText='font-size:9px;color:var(--accent);font-weight:600;';
+        if(dayNumStart>=1) mDay.textContent='AB TAG '+Math.max(1,dayNumStart);
+        mHdr.appendChild(mName);mHdr.appendChild(mDay);box.appendChild(mHdr);
+        var grid2=document.createElement('div');
+        grid2.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;';
+        ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(function(d){
+          var dh=document.createElement('div');dh.style.cssText='text-align:center;font-size:9px;color:var(--muted);padding-bottom:3px;';
+          dh.textContent=d;grid2.appendChild(dh);
+        });
+        var fday2=new Date(yr2,mo3,1).getDay();fday2=fday2===0?6:fday2-1;
+        for(var fi2=0;fi2<fday2;fi2++) grid2.appendChild(document.createElement('div'));
+        var dim2=new Date(yr2,mo3+1,0).getDate();
+        for(var day2=1;day2<=dim2;day2++){
+          var moS2=(mo3+1)<10?'0'+(mo3+1):''+(mo3+1);
+          var ds3=yr2+'-'+moS2+'-'+(day2<10?'0':'')+day2;
+          var cell2=document.createElement('div');
+          var cellDate=new Date(yr2,mo3,day2);
+          var dayNum=Math.floor((cellDate-startD)/86400000)+1;
+          var isFuture=ds3>todayStr;
+          var msNode2=milestoneDates[ds3];
+          var isWo2=!!workoutDates[ds3];
+          var isIce2=!!iceDates[ds3];
+          var isToday3=ds3===todayStr;
+          var isBeforeStart=ds3<startDateStr;
+          cell2.style.cssText='border-radius:6px;padding:3px 1px;text-align:center;font-size:9px;line-height:1.3;min-height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+          if(isBeforeStart){
+            cell2.style.opacity='0.15';cell2.textContent=day2;
+          } else if(isFuture&&msNode2){
+            cell2.style.cssText+='background:rgba(255,85,0,0.12);border:1.5px dashed rgba(255,85,0,0.5);cursor:pointer;';
+            cell2.innerHTML='<div style="font-size:14px;">'+msNode2.icon+'</div><div style="font-size:7px;color:var(--accent);font-weight:700;">TAG '+dayNum+'</div>';
+            cell2.onclick=(function(mn){return function(){showMilestoneDetail(mn,daysSince);};})(msNode2);
+          } else if(isFuture){
+            cell2.style.color='rgba(0,0,0,0.12)';cell2.textContent=day2;
+          } else if(isIce2&&!isWo2){
+            cell2.style.cssText+='background:rgba(56,189,248,0.15);';
+            cell2.innerHTML='<div style="font-size:12px;">*</div><div style="font-size:7px;color:#38BDF8;">TAG '+dayNum+'</div>';
+          } else if(isWo2&&msNode2){
+            cell2.style.cssText+='background:var(--accent);cursor:pointer;';
+            cell2.innerHTML='<div style="font-size:13px;">'+msNode2.icon+'</div><div style="font-size:7px;color:#fff;font-weight:700;">TAG '+dayNum+'</div>';
+            cell2.onclick=(function(mn){return function(){showMilestoneDetail(mn,daysSince);};})(msNode2);
+          } else if(msNode2){
+            cell2.style.cssText+='background:rgba(255,85,0,0.1);border:1px solid rgba(255,85,0,0.3);cursor:pointer;';
+            cell2.innerHTML='<div style="font-size:13px;">'+msNode2.icon+'</div><div style="font-size:7px;color:var(--accent);font-weight:700;">TAG '+dayNum+'</div>';
+            cell2.onclick=(function(mn){return function(){showMilestoneDetail(mn,daysSince);};})(msNode2);
+          } else if(isWo2){
+            cell2.style.cssText+='background:var(--accent);';
+            cell2.innerHTML='<div style="font-size:12px;">&#128293;</div><div style="font-size:7px;color:#fff;">TAG '+dayNum+'</div>';
+          } else if(isToday3){
+            cell2.style.cssText+='border:2px solid var(--accent);';
+            cell2.innerHTML='<div style="font-size:9px;color:var(--accent);font-weight:700;">'+day2+'</div><div style="font-size:7px;color:var(--accent);">HEUTE</div>';
+          } else {
+            cell2.style.color='var(--muted)';cell2.textContent=day2;
+          }
+          grid2.appendChild(cell2);
+        }
+        box.appendChild(grid2);
+        cur2=new Date(yr2,mo3+1,1);
+      }
+      overlay.appendChild(box);
+      overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+      document.body.appendChild(overlay);
     };
     calHdr.appendChild(calTitleEl); calHdr.appendChild(expandBtn);
     calSection.appendChild(calHdr); renderCalBody(); calSection.appendChild(calBody);
@@ -417,3 +516,169 @@ function demoLogin(){
 // ── ONBOARDING ──────────────────────────────────────────
 var obStep = 0;
 var obData = {name:'', age:'', weight:'', height:'', level:'beginner', goal:'strength', weeklyGoal:3};
+
+function showOnboarding(){
+  var existing = document.getElementById('ob-modal');
+  if(existing) existing.remove();
+  var m = document.createElement('div');
+  m.id = 'ob-modal';
+  m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f7f5;z-index:9998;overflow-y:auto;padding:24px;box-sizing:border-box;';
+  document.body.appendChild(m);
+  obStep = 0;
+  renderObStep();
+}
+
+function renderObStep(){
+  var m = document.getElementById('ob-modal');
+  if(!m) return;
+  // Guard against out of bounds
+  if(obStep < 0) obStep = 0;
+  if(!obData) obData = {name:'', age:'', weight:'', height:'', level:'beginner', goal:'strength', weeklyGoal:3};
+
+  var steps = [
+    {icon:'\uD83D\uDC4B', title:'WILLKOMMEN!',   sub:'Wie sollen wir dich nennen?'},
+    {icon:'\uD83D\uDCAA', title:'DEIN K\u00D6RPER',    sub:'Damit wir Trainings anpassen k\u00F6nnen.'},
+    {icon:'\uD83C\uDFCB', title:'DEIN LEVEL',     sub:'Wie erfahren bist du?'},
+    {icon:'\uD83C\uDFAF', title:'DEIN ZIEL',      sub:'Was willst du erreichen?'},
+    {icon:'\uD83D\uDD25', title:'WOCHENZIEL',      sub:'Wie oft pro Woche trainierst du?'}
+  ];
+  var totalSteps = steps.length;
+  if(obStep >= totalSteps){ obFinish(); return; }
+  var s = steps[obStep];
+
+  // Progress bar
+  var pct = Math.round((obStep / (totalSteps-1)) * 100);
+  var dots = '<div style="background:var(--bg3);border-radius:4px;height:4px;margin-bottom:4px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:var(--accent);border-radius:4px;transition:width 0.3s;"></div></div>';
+  dots += '<div style="font-size:10px;color:var(--muted);text-align:right;">'+(obStep+1)+' / '+totalSteps+'</div>';
+
+  var content = '';
+
+  if(obStep===0){
+    content =
+      '<div style="margin-bottom:14px;">'+
+        '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">DEIN NAME</div>'+
+        '<input id="ob-name" type="text" value="'+(obData.name||'')+'" placeholder="Name" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
+      '</div>'+
+      '<div>'+
+        '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">DEIN ALTER</div>'+
+        '<input id="ob-age" type="number" value="'+(obData.age||'')+'" placeholder="" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
+      '</div>';
+  } else if(obStep===1){
+    content =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
+        '<div>'+
+          '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">GEWICHT (KG)</div>'+
+          '<input id="ob-weight" type="number" value="'+obData.weight+'" placeholder="z.B. 75" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
+        '</div>'+
+        '<div>'+
+          '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">GRÖSSE (CM)</div>'+
+          '<input id="ob-height" type="number" value="'+obData.height+'" placeholder="z.B. 180" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
+        '</div>'+
+      '</div>'+
+      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);line-height:1.6;">'+
+        '&#128274; Deine Körperdaten sind privat und werden nur lokal gespeichert.'+
+      '</div>';
+  } else if(obStep===2){
+    var lvls = [
+      {v:'beginner',     l:'ANFÄNGER',       d:'Ich fange gerade an', icon:'&#127935;'},
+      {v:'intermediate', l:'FORTGESCHRITTEN', d:'1-2 Jahre Erfahrung', icon:'&#128170;'},
+      {v:'advanced',     l:'ERFAHREN',        d:'3+ Jahre, solide Basis', icon:'&#127937;'},
+    ];
+    for(var i=0;i<lvls.length;i++){
+      var sel=obData.level===lvls[i].v;
+      content+='<div onclick="obData.level=\''+lvls[i].v+'\';renderObStep()" style="display:flex;align-items:center;gap:12px;background:'+(sel?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1.5px solid '+(sel?'var(--accent)':'var(--border)')+';border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;">'+
+        '<div style="font-size:24px;">'+lvls[i].icon+'</div>'+
+        '<div><div style="font-size:14px;color:'+(sel?'var(--accent)':'var(--text)')+';font-weight:800;letter-spacing:1px;">'+lvls[i].l+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+lvls[i].d+'</div></div>'+
+      '</div>';
+    }
+  } else if(obStep===3){
+    var goals = [
+      {v:'strength',   l:'KRAFT AUFBAUEN',    d:'Stärker & muskulöser werden',    icon:'&#128170;'},
+      {v:'skills',     l:'SKILLS LERNEN',     d:'Muscle-Up, Handstand & co.',     icon:'&#127775;'},
+      {v:'endurance',  l:'AUSDAUER',          d:'Länger & öfter trainieren',      icon:'&#127939;'},
+      {v:'weight',     l:'ABNEHMEN',          d:'Kalorien verbrennen',            icon:'&#128293;'},
+      {v:'challenges', l:'CHALLENGES',        d:'Challenges meistern & gewinnen', icon:'&#127942;'},
+      {v:'compete',    l:'WETTKAMPF',         d:'Gegen andere antreten',          icon:'&#9876;&#65039;'},
+      {v:'all',        l:'ALLES',             d:'Rundum fit werden',              icon:'&#127919;'},
+    ];
+    for(var i=0;i<goals.length;i++){
+      var sel=obData.goal===goals[i].v;
+      content+='<div onclick="obData.goal=\''+goals[i].v+'\';renderObStep()" style="display:flex;align-items:center;gap:12px;background:'+(sel?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1.5px solid '+(sel?'var(--accent)':'var(--border)')+';border-radius:12px;padding:12px 16px;margin-bottom:8px;cursor:pointer;">'+
+        '<div style="font-size:20px;">'+goals[i].icon+'</div>'+
+        '<div><div style="font-size:13px;color:'+(sel?'var(--accent)':'var(--text)')+';font-weight:800;letter-spacing:1px;">'+goals[i].l+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px;">'+goals[i].d+'</div></div>'+
+      '</div>';
+    }
+  } else if(obStep===4){
+    var btns='';
+    for(var i=1;i<=7;i++){
+      var sel=obData.weeklyGoal===i;
+      btns+='<button onclick="obData.weeklyGoal='+i+';renderObStep()" style="background:'+(sel?'var(--accent)':'var(--bg2)')+';border:1px solid '+(sel?'var(--accent)':'var(--border)')+';color:'+(sel?'#fff':'var(--muted)')+';border-radius:10px;padding:14px 4px;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;flex:1;transition:all 0.15s;">'+i+'</button>';
+    }
+    content =
+      '<div style="display:flex;gap:6px;margin-bottom:16px;">'+btns+'</div>'+
+      '<div style="text-align:center;font-size:13px;color:var(--muted);">'+
+        obData.weeklyGoal+'x pro Woche'+
+      '</div>';
+  }
+
+  // Last step = LOS GEHTS, other steps = WEITER
+  var isLast = obStep >= totalSteps - 1;
+  var nextBtn = isLast
+    ? '<button onclick="obFinish()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:16px;font-weight:800;letter-spacing:2px;padding:15px;cursor:pointer;margin-top:16px;">LOS GEHTS! \uD83D\uDCAA</button>'
+    : '<button onclick="obNext()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:16px;font-weight:800;letter-spacing:2px;padding:15px;cursor:pointer;margin-top:16px;">WEITER \u2192</button>';
+
+  var backBtnHtml = obStep > 0
+    ? '<button onclick="obStep--;renderObStep()" style="width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;">\u2190 ZUR\u00DCCK</button>'
+    : '';
+
+  m.innerHTML =
+    '<div style="max-width:380px;margin:0 auto;padding-top:20px;">'+
+      dots+
+      '<div style="font-size:44px;text-align:center;margin:20px 0 12px;">'+s.icon+'</div>'+
+      '<div style="font-size:26px;font-weight:900;letter-spacing:3px;color:var(--accent);text-align:center;margin-bottom:6px;">'+s.title+'</div>'+
+      '<div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px;">'+s.sub+'</div>'+
+      content+
+      nextBtn+
+      backBtnHtml+
+    '</div>';
+}
+
+function obNext(){
+  if(obStep===0){
+    var n=document.getElementById('ob-name'); var a=document.getElementById('ob-age');
+    if(n) obData.name=n.value.trim();
+    if(a) obData.age=a.value;
+    if(!obData.name){ alert('Bitte Namen eingeben!'); return; }
+  }
+  if(obStep===1){
+    var w=document.getElementById('ob-weight'); var h=document.getElementById('ob-height');
+    if(w) obData.weight=w.value;
+    if(h) obData.height=h.value;
+  }
+  obStep++;
+  renderObStep();
+}
+
+function obFinish(){
+  if(!prData) prData = {};
+  prData.name = obData.name || '';
+  prData.age = obData.age || '';
+  prData.weight = obData.weight || '';
+  prData.height = obData.height || '';
+  prData.goal = obData.goal || 'strength';
+  prData.level = obData.level || 'beginner';
+  prData.joinDate = new Date().toISOString().slice(0,10);
+  try{ spr(); }catch(x){}
+
+  if(!streakData) streakData = {};
+  streakData.weeklyGoal = obData.weeklyGoal || 3;
+  streakData.goalSet = true;
+  try{ sstreak(); }catch(x){}
+
+  try{ localStorage.setItem('cali_onboarded','1'); }catch(x){}
+  var m = document.getElementById('ob-modal'); if(m) m.remove();
+  try{ fbSave(); }catch(x){}
+  try{ buildStreakWidget(); }catch(x){}
+  try{ buildStartChallengeWidget(); }catch(x){}
+  toast('\uD83D\uDCAA Willkommen' + (obData.name?' '+obData.name:'') + '! Viel Erfolg!');
+}

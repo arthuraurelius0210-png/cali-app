@@ -355,3 +355,18 @@ function emomFinish(){
 }
 
 
+
+
+// ── APP INIT (nach allen Scripts) ─────────────────────────
+(function(){
+  lmax(); lpd(); lpr(); lstreak(); ld(); loadChallenges(); loadCurrency();
+  bb(); bhr(); buildStartPlanBtns(); buildStartChallengeWidget();
+  setTimeout(function(){ buildChallengeUI(); }, 100);
+  var _md = document.getElementById('max-date'); if(_md) _md.valueAsDate = new Date();
+  var _mx = document.getElementById('max-ex');
+  if(_mx) _mx.onchange = function(){
+    var u = this.value.split('|')[1];
+    var lbl = document.getElementById('max-val-lbl');
+    if(lbl) lbl.textContent = u==='Sek'?'ERGEBNIS (SEK)':u==='Min:Sek'?'ERGEBNIS (MIN:SEK)':'ERGEBNIS (WDH)';
+  };
+})();
