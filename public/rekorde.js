@@ -34,11 +34,18 @@ function buildRekordeUI(){
   var hdr = document.createElement('div');
   hdr.style.cssText = 'padding:0 16px 14px;display:flex;align-items:center;justify-content:space-between;';
   hdr.innerHTML = '<div style="font-size:22px;font-weight:800;color:var(--text);">&#127942; REKORDE</div>';
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;';
+  var parkBtn = document.createElement('button');
+  parkBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;';
+  parkBtn.innerHTML = '&#128170; PARKS';
+  parkBtn.onclick = function(){ goPage('parks'); };
   var subBtn = document.createElement('button');
   subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;letter-spacing:1px;';
   subBtn.textContent = '+ EINTRAG';
   subBtn.onclick = function(){ openRecordSubmit(null,null); };
-  hdr.appendChild(subBtn);
+  btnRow.appendChild(parkBtn); btnRow.appendChild(subBtn);
+  hdr.appendChild(btnRow);
   root.appendChild(hdr);
 
   // ── LAYOUT: links Übungen, rechts Liste ─────────────────

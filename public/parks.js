@@ -621,65 +621,73 @@ function openParkDetail(idx){
   ov.id = 'park-detail-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9900;display:flex;flex-direction:column;overflow:hidden;';
 
-  // Top bar
+  // Top bar — gleicher Look wie Rekorde
   var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
   backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '&#8592; Zurück';
   backBtn.onclick = function(){ ov.remove(); };
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;';
-  titleEl.innerHTML = '<div style="font-size:16px;font-weight:800;color:var(--text);">&#128170; '+name+'</div>'+
+  titleEl.style.cssText = 'flex:1;min-width:0;';
+  titleEl.innerHTML = '<div style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&#128170; '+name+'</div>'+
     '<div style="font-size:11px;color:var(--accent);font-weight:600;">&#128205; '+formatDist(park._dist)+' entfernt</div>';
   var recBtn2 = document.createElement('button');
-  recBtn2.style.cssText = 'background:var(--bg2);border:1.5px solid var(--accent);color:var(--accent);border-radius:10px;font-family:inherit;font-size:10px;font-weight:700;padding:8px 10px;cursor:pointer;letter-spacing:1px;';
-  recBtn2.textContent = '🏆 REKORD';
+  recBtn2.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;';
+  recBtn2.innerHTML = '&#127942; REKORD';
   recBtn2.onclick = function(){ openParkRecordSubmit(idx); };
   var navBtn = document.createElement('button');
-  navBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:10px;font-weight:700;padding:8px 10px;cursor:pointer;letter-spacing:1px;';
-  navBtn.textContent = '📍 NAV';
+  navBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;';
+  navBtn.innerHTML = '&#128205; NAV';
   navBtn.onclick = function(){ ov.remove(); openParkNav(idx); };
   topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(recBtn2); topBar.appendChild(navBtn);
   ov.appendChild(topBar);
 
-  // Tab bar
-  var tabBar = document.createElement('div');
-  tabBar.style.cssText = 'display:flex;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var tabs = ['BESTENLISTE','MEINE STATS','COMMUNITY'];
+  // Haupt-Layout: links Tabs, rechts Inhalt
+  var layout = document.createElement('div');
+  layout.style.cssText = 'display:flex;flex:1;overflow:hidden;';
+
+  // Linke Spalte
+  var leftCol = document.createElement('div');
+  leftCol.style.cssText = 'width:120px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;';
+  var tabDefs = [
+    {label:'&#127942; Bestenliste', id:'lb'},
+    {label:'&#128200; Meine Stats', id:'stats'},
+    {label:'&#128101; Community', id:'comm'},
+  ];
   var bodies = [];
-  tabs.forEach(function(t, ti){
-    var tb = document.createElement('button');
-    tb.style.cssText = 'flex:1;padding:12px 4px;font-family:inherit;font-size:9px;letter-spacing:1.5px;font-weight:700;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
-    tb.textContent = t;
+  tabDefs.forEach(function(t, ti){
+    var btn = document.createElement('button');
+    btn.style.cssText = 'width:100%;padding:14px 10px;border:none;border-bottom:1px solid var(--border);background:'+(ti===0?'rgba(255,85,0,0.08)':'none')+';color:'+(ti===0?'var(--accent)':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;text-align:left;border-left:3px solid '+(ti===0?'var(--accent)':'transparent')+';line-height:1.4;';
+    btn.innerHTML = t.label;
     var body = document.createElement('div');
-    body.style.cssText = 'display:'+(ti===0?'block':'none')+';padding:20px;overflow-y:auto;height:100%;';
+    body.style.cssText = 'display:'+(ti===0?'block':'none')+';padding:14px;overflow-y:auto;';
     bodies.push(body);
-    tb.onclick = (function(tIdx){
+    btn.onclick = (function(tIdx, tBtn){
       return function(){
-        tabBar.querySelectorAll('button').forEach(function(b,bi){
-          b.style.borderBottomColor = bi===tIdx?'var(--accent)':'transparent';
+        leftCol.querySelectorAll('button').forEach(function(b,bi){
+          b.style.background = bi===tIdx?'rgba(255,85,0,0.08)':'none';
           b.style.color = bi===tIdx?'var(--accent)':'var(--muted)';
+          b.style.borderLeftColor = bi===tIdx?'var(--accent)':'transparent';
         });
         bodies.forEach(function(b,bi){ b.style.display=bi===tIdx?'block':'none'; });
         if(tIdx===0 && !bodies[0]._loaded){ buildParkDetailLeaderboard(bodies[0], parkId, name); bodies[0]._loaded=true; }
         if(tIdx===1 && !bodies[1]._loaded){ buildParkDetailStats(bodies[1], parkId); bodies[1]._loaded=true; }
         if(tIdx===2 && !bodies[2]._loaded){ buildParkDetailCommunity(bodies[2], parkId, name); bodies[2]._loaded=true; }
       };
-    })(ti);
-    tabBar.appendChild(tb);
+    })(ti, btn);
+    leftCol.appendChild(btn);
   });
-  ov.appendChild(tabBar);
+  layout.appendChild(leftCol);
 
-  // Scrollable content area
-  var contentWrap = document.createElement('div');
-  contentWrap.style.cssText = 'flex:1;overflow-y:auto;';
-  bodies.forEach(function(b){ contentWrap.appendChild(b); });
-  ov.appendChild(contentWrap);
+  // Rechte Spalte
+  var rightCol = document.createElement('div');
+  rightCol.style.cssText = 'flex:1;overflow-y:auto;';
+  bodies.forEach(function(b){ rightCol.appendChild(b); });
+  layout.appendChild(rightCol);
+  ov.appendChild(layout);
 
   document.body.appendChild(ov);
-
-  // Load first tab
   buildParkDetailLeaderboard(bodies[0], parkId, name);
   bodies[0]._loaded = true;
 }
