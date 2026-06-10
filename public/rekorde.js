@@ -621,17 +621,190 @@ function openMyParksOverview(){
   backBtn.onclick = function(){ ov.remove(); };
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'flex:1;font-size:16px;font-weight:800;color:var(--text);';
-  titleEl.innerHTML = '&#128170; MEINE PARKS';
+  titleEl.innerHTML = '&#128170; PARK REKORDE';
   topBar.appendChild(backBtn); topBar.appendChild(titleEl);
   ov.appendChild(topBar);
 
-  // Scrollbarer Inhalt
-  var content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
-  ov.appendChild(content);
-  document.body.appendChild(ov);
+  // Filter Tabs
+  var filterBar = document.createElement('div');
+  filterBar.style.cssText = 'display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none;';
+  var filters = [
+    {id:'mine',    label:'&#128170; Meine Parks'},
+    {id:'top',     label:'&#127942; Meistbesucht'},
+    {id:'rekorde', label:'&#127937; Meine Rekorde'},
+    {id:'all',     label:'&#127758; Alle Parks'},
+  ];
+  var activeFilter = 'mine';
+  var contentEl = document.createElement('div');
+  contentEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
 
-  loadMyParksOverview(content);
+  filters.forEach(function(f){
+    var btn = document.createElement('button');
+    btn.dataset.fid = f.id;
+    var isActive = f.id === activeFilter;
+    btn.style.cssText = 'flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    btn.innerHTML = f.label;
+    btn.onclick = function(){
+      activeFilter = f.id;
+      filterBar.querySelectorAll('button').forEach(function(b){
+        var a = b.dataset.fid === activeFilter;
+        b.style.borderColor = a?'var(--accent)':'var(--border)';
+        b.style.background = a?'var(--accent)':'none';
+        b.style.color = a?'#fff':'var(--muted)';
+      });
+      loadParksFilter(contentEl, activeFilter);
+    };
+    filterBar.appendChild(btn);
+  });
+  ov.appendChild(filterBar);
+  ov.appendChild(contentEl);
+  document.body.appendChild(ov);
+  loadParksFilter(contentEl, activeFilter);
+}
+
+function loadParksFilter(el, filter){
+  el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:12px 0;">&#9203; Lade...</div>';
+  if(typeof db==='undefined'||!db||!firebase.auth().currentUser){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">Einloggen um Parks zu sehen.</div>'; return;
+  }
+  var uid = firebase.auth().currentUser.uid;
+
+  if(filter === 'mine' || filter === 'rekorde'){
+    // Eigene Einträge
+    db.collection('globalLeaderboard').where('uid','==',uid).limit(200).get()
+      .then(function(snap){
+        var parkMap = {};
+        snap.forEach(function(doc){
+          var d = doc.data();
+          var pid = d.parkId || null;
+          if(!pid && filter === 'rekorde') pid = 'global';
+          if(!pid) return;
+          var pname = d.parkName || (d.location||'Unbekannter Standort');
+          if(!parkMap[pid]) parkMap[pid]={parkId:pid, parkName:pname, count:0, myBest:{}, lastDate:''};
+          parkMap[pid].count++;
+          if(d.exerciseName){
+            if(!parkMap[pid].myBest[d.exerciseName] || d.value > parkMap[pid].myBest[d.exerciseName]){
+              parkMap[pid].myBest[d.exerciseName] = d.value;
+            }
+          }
+          if(d.date > parkMap[pid].lastDate) parkMap[pid].lastDate = d.date;
+        });
+        var parks = Object.values(parkMap).sort(function(a,b){ return b.count-a.count; });
+        renderParksOverview(el, parks, filter);
+      }).catch(function(e){ el.innerHTML='<div style="padding:20px;color:var(--muted);">Fehler: '+e.message+'</div>'; });
+
+  } else if(filter === 'top'){
+    // Meistbesuchte Parks global — aus allen Einträgen
+    db.collection('globalLeaderboard').where('status','==','approved').limit(500).get()
+      .then(function(snap){
+        var parkMap = {};
+        snap.forEach(function(doc){
+          var d = doc.data();
+          if(!d.parkId) return;
+          if(!parkMap[d.parkId]) parkMap[d.parkId]={parkId:d.parkId, parkName:d.parkName||'Park', count:0, users:{}};
+          parkMap[d.parkId].count++;
+          if(d.uid) parkMap[d.parkId].users[d.uid]=1;
+        });
+        var parks = Object.values(parkMap).sort(function(a,b){ return Object.keys(b.users).length - Object.keys(a.users).length; });
+        renderParksOverview(el, parks, filter);
+      }).catch(function(e){ el.innerHTML='<div style="padding:20px;color:var(--muted);">Fehler: '+e.message+'</div>'; });
+
+  } else {
+    // Alle Parks — aus Leaderboard
+    db.collection('globalLeaderboard').limit(500).get()
+      .then(function(snap){
+        var parkMap = {};
+        snap.forEach(function(doc){
+          var d = doc.data();
+          var pid = d.parkId || 'unbekannt';
+          var pname = d.parkName || d.location || 'Unbekannter Standort';
+          if(!parkMap[pid]) parkMap[pid]={parkId:pid, parkName:pname, count:0};
+          parkMap[pid].count++;
+        });
+        var parks = Object.values(parkMap).sort(function(a,b){ return b.count-a.count; });
+        renderParksOverview(el, parks, filter);
+      }).catch(function(e){ el.innerHTML='<div style="padding:20px;color:var(--muted);">Fehler: '+e.message+'</div>'; });
+  }
+}
+
+function renderParksOverview(el, parks, filter){
+  el.innerHTML = '';
+  if(parks.length === 0){
+    el.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">&#128170;</div><div style="font-size:14px;color:var(--muted);">Keine Parks gefunden.</div></div>';
+    return;
+  }
+
+  // Top 3
+  var top3 = parks.slice(0,3);
+  var topLabel = document.createElement('div');
+  topLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:10px;';
+  topLabel.textContent = filter==='mine'?'DEINE TOP PARKS':filter==='top'?'MEISTBESUCHTE PARKS':filter==='rekorde'?'DEINE REKORD-PARKS':'TOP PARKS';
+  el.appendChild(topLabel);
+
+  top3.forEach(function(p, i){
+    var medals = ['&#129351;','&#129352;','&#129353;'];
+    var card = document.createElement('div');
+    card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;margin-bottom:10px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;';
+    card.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
+    card.onmouseout=function(){ this.style.borderColor='var(--border)'; };
+    var sub = filter==='top' ? Object.keys(p.users||{}).length+' Athleten' : p.count+' Einträge';
+    if(filter==='rekorde' && p.myBest){
+      var bestEx = Object.keys(p.myBest).sort(function(a,b){ return p.myBest[b]-p.myBest[a]; })[0];
+      if(bestEx) sub += ' · Best: '+bestEx+' '+p.myBest[bestEx];
+    }
+    card.innerHTML =
+      '<div style="font-size:28px;flex-shrink:0;">'+medals[i]+'</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+sub+'</div>'+
+      '</div>'+
+      '<div style="font-size:22px;color:var(--muted);">›</div>';
+    card.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
+    el.appendChild(card);
+  });
+
+  if(parks.length > 3){
+    var restLabel = document.createElement('div');
+    restLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin:16px 0 10px;';
+    restLabel.textContent = 'WEITERE PARKS';
+    el.appendChild(restLabel);
+
+    parks.slice(3,13).forEach(function(p, i){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;';
+      row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
+      row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
+      var sub2 = filter==='top' ? Object.keys(p.users||{}).length+' Athleten' : p.count+' Einträge';
+      row.innerHTML =
+        '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0;">#'+(i+4)+'</div>'+
+        '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);">'+sub2+'</div></div>'+
+        '<div style="font-size:18px;color:var(--muted);">›</div>';
+      row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
+      el.appendChild(row);
+    });
+
+    if(parks.length > 13){
+      var moreBtn = document.createElement('button');
+      moreBtn.style.cssText = 'width:100%;background:none;border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--muted);margin-top:8px;';
+      moreBtn.textContent = 'Alle '+parks.length+' Parks anzeigen';
+      moreBtn.onclick = function(){
+        moreBtn.remove();
+        parks.slice(13).forEach(function(p, i){
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;';
+          row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
+          row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
+          row.innerHTML = '<div style="width:28px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);">#'+(i+14)+'</div>'+
+            '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+p.parkName+'</div></div>'+
+            '<div style="font-size:18px;color:var(--muted);">›</div>';
+          row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
+          el.appendChild(row);
+        });
+      };
+      el.appendChild(moreBtn);
+    }
+  }
 }
 
 function loadMyParksOverview(el){
