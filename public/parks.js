@@ -714,19 +714,24 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
   var exWrap = document.createElement('div');
   exWrap.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;';
 
-  var parkExercises = [
-    {id:'skill_pullup',    name:'Klimmzüge',    unit:'Wdh'},
-    {id:'skill_muscleup',  name:'Muscle-Up',    unit:'Wdh'},
-    {id:'skill_dip',       name:'Dips',         unit:'Wdh'},
-    {id:'skill_pushup',    name:'Liegestütze',  unit:'Wdh'},
-    {id:'skill_lsit',      name:'L-Sit',        unit:'Sek'},
-    {id:'skill_handstand', name:'Handstand',    unit:'Sek'},
-    {id:'skill_frontlever',name:'Front Lever',  unit:'Sek'},
-    {id:'skill_backlever', name:'Back Lever',   unit:'Sek'},
-    {id:'skill_planche',   name:'Planche',      unit:'Sek'},
-    {id:'skill_humanflag', name:'Human Flag',   unit:'Sek'},
-    {id:'skill_pistol',    name:'Pistol Squat', unit:'Wdh'},
-  ];
+  // Alle Übungen aus EX_DB + Skills
+  var parkExercises = [];
+  var seen = {};
+  if(typeof EX_DB !== 'undefined'){
+    EX_DB.forEach(function(ex, i){
+      var k = ex.name+'|'+ex.unit;
+      if(!seen[k]){ seen[k]=1; parkExercises.push({id:'ex_'+i, name:ex.name, unit:ex.unit}); }
+    });
+  }
+  // Zusätzliche Skills falls nicht in EX_DB
+  [{id:'skill_lsit',name:'L-Sit',unit:'Sek'},{id:'skill_handstand',name:'Handstand (frei)',unit:'Sek'},
+   {id:'skill_frontlever',name:'Front Lever Hold',unit:'Sek'},{id:'skill_backlever',name:'Back Lever Hold',unit:'Sek'},
+   {id:'skill_planche',name:'Planche',unit:'Sek'},{id:'skill_humanflag',name:'Human Flag',unit:'Sek'},
+   {id:'skill_360',name:'360 Pull-Up',unit:'Wdh'},{id:'skill_rings',name:'Ring Muscle-Up',unit:'Wdh'}
+  ].forEach(function(s){
+    var k=s.name+'|'+s.unit;
+    if(!seen[k]){seen[k]=1;parkExercises.push(s);}
+  });
 
   var selEx = parkExercises[0];
   var listEl2 = document.createElement('div');
