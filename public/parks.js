@@ -632,11 +632,15 @@ function openParkDetail(idx){
   titleEl.style.cssText = 'flex:1;';
   titleEl.innerHTML = '<div style="font-size:16px;font-weight:800;color:var(--text);">&#128170; '+name+'</div>'+
     '<div style="font-size:11px;color:var(--accent);font-weight:600;">&#128205; '+formatDist(park._dist)+' entfernt</div>';
+  var recBtn2 = document.createElement('button');
+  recBtn2.style.cssText = 'background:var(--bg2);border:1.5px solid var(--accent);color:var(--accent);border-radius:10px;font-family:inherit;font-size:10px;font-weight:700;padding:8px 10px;cursor:pointer;letter-spacing:1px;';
+  recBtn2.textContent = '🏆 REKORD';
+  recBtn2.onclick = function(){ openParkRecordSubmit(idx); };
   var navBtn = document.createElement('button');
-  navBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 14px;cursor:pointer;letter-spacing:1px;';
-  navBtn.textContent = 'NAVIGATION';
+  navBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:10px;font-weight:700;padding:8px 10px;cursor:pointer;letter-spacing:1px;';
+  navBtn.textContent = '📍 NAV';
   navBtn.onclick = function(){ ov.remove(); openParkNav(idx); };
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(navBtn);
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(recBtn2); topBar.appendChild(navBtn);
   ov.appendChild(topBar);
 
   // Tab bar
@@ -756,4 +760,45 @@ function buildParkDetailCommunity(el, parkId, parkName){
       el.appendChild(card);
     });
   }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler beim Laden.</div>'; });
+}
+
+// ── PARK REKORD MIT GPS-PRÜFUNG ────────────────────────────
+function openParkRecordSubmit(idx){
+  var park = parksData[idx];
+  if(!park) return;
+  var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
+  var parkId = 'park_'+(park.id||Math.round(park._lat*1000)+'_'+Math.round(park._lng*1000));
+
+  // GPS check - must be within 150m of park
+  if(!userLat || !userLng){
+    showParkRecordGPSError(name, 'Standort nicht verfügbar. Bitte Standort aktivieren.');
+    return;
+  }
+  var dist = calcDist(userLat, userLng, park._lat, park._lng);
+  if(dist > 150){
+    showParkRecordGPSError(name, 'Du bist '+Math.round(dist)+'m vom Park entfernt.\nDu musst im Park sein (max. 150m) um einen Park-Rekord aufzustellen!');
+    return;
+  }
+
+  // User is in park - open record submit
+  openRecordSubmit(parkId, name);
+}
+
+function showParkRecordGPSError(parkName, msg){
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;';
+  box.innerHTML =
+    '<div style="font-size:40px;margin-bottom:12px;">📍</div>'+
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">'+parkName+'</div>'+
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;">'+msg+'</div>';
+  var closeBtn = document.createElement('button');
+  closeBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;cursor:pointer;';
+  closeBtn.textContent = 'OK, verstanden';
+  closeBtn.onclick = function(){ ov.remove(); };
+  box.appendChild(closeBtn);
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  document.body.appendChild(ov);
 }
