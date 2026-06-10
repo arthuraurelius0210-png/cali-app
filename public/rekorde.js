@@ -34,11 +34,18 @@ function buildRekordeUI(){
   var hdr = document.createElement('div');
   hdr.style.cssText = 'padding:0 16px 14px;display:flex;align-items:center;justify-content:space-between;';
   hdr.innerHTML = '<div style="font-size:22px;font-weight:800;color:var(--text);">&#127942; REKORDE</div>';
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;';
+  var parkBtn = document.createElement('button');
+  parkBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;';
+  parkBtn.innerHTML = '&#128170; PARKS';
+  parkBtn.onclick = function(){ openMyParksOverview(); };
   var subBtn = document.createElement('button');
   subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;letter-spacing:1px;';
   subBtn.textContent = '+ EINTRAG';
   subBtn.onclick = function(){ openRecordSubmit(null,null); };
-  hdr.appendChild(subBtn);
+  btnRow.appendChild(parkBtn); btnRow.appendChild(subBtn);
+  hdr.appendChild(btnRow);
   root.appendChild(hdr);
 
   // ── LAYOUT: links Übungen, rechts Liste ─────────────────
@@ -132,13 +139,7 @@ function buildRekordeUI(){
   regWrap.appendChild(regBtns);
   rightCol.appendChild(regWrap);
 
-  // Karte (nur wenn Standort bekannt)
-  if(userLat && userLng){
-    var mapEl = document.createElement('div');
-    mapEl.id = 'rek-map';
-    mapEl.style.cssText = 'height:130px;border-bottom:1px solid var(--border);';
-    rightCol.appendChild(mapEl);
-  }
+
 
   // Bestenliste
   var listEl = document.createElement('div');
@@ -163,28 +164,8 @@ function buildRekordeUI(){
   }
 
   loadRekList(listEl);
-  if(userLat && userLng) setTimeout(function(){ initRekMap(); }, 150);
 }
 
-function initRekMap(){
-  if(typeof L === 'undefined') return;
-  var el = document.getElementById('rek-map');
-  if(!el) return;
-  if(rekMapObj){ try{ rekMapObj.remove(); }catch(e){} rekMapObj=null; }
-  rekMapObj = L.map('rek-map',{zoomControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false}).setView([userLat,userLng],11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:''}).addTo(rekMapObj);
-  L.circleMarker([userLat,userLng],{radius:6,fillColor:'#ff5500',fillOpacity:1,color:'#fff',weight:2}).addTo(rekMapObj);
-  updateRekMap();
-}
-
-function updateRekMap(){
-  if(!rekMapObj||!userLat||!userLng) return;
-  if(rekCircleObj){ try{ rekMapObj.removeLayer(rekCircleObj); }catch(e){} rekCircleObj=null; }
-  var km = rekState.regionKm;
-  if(km>=99999){ rekMapObj.setView([51.1657,10.4515],5); return; }
-  rekCircleObj = L.circle([userLat,userLng],{radius:km*1000,color:'#ff5500',fillColor:'#ff5500',fillOpacity:0.08,weight:2}).addTo(rekMapObj);
-  rekMapObj.fitBounds(rekCircleObj.getBounds(),{padding:[8,8]});
-}
 
 function getRekExercises(){
   var result=[], seen={};
@@ -622,4 +603,140 @@ function openParkLeaderboardById(parkId, parkName){
   ov.appendChild(body);
   document.body.appendChild(ov);
   buildParkDetailLeaderboard(body, parkId, parkName);
+}
+
+// ── MEINE PARKS VOLLBILD ───────────────────────────────────
+function openMyParksOverview(){
+  var ex = document.getElementById('my-parks-ov'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'my-parks-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+
+  // Top bar
+  var topBar = document.createElement('div');
+  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.innerHTML = '&#8592; Zurück';
+  backBtn.onclick = function(){ ov.remove(); };
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'flex:1;font-size:16px;font-weight:800;color:var(--text);';
+  titleEl.innerHTML = '&#128170; MEINE PARKS';
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl);
+  ov.appendChild(topBar);
+
+  // Scrollbarer Inhalt
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
+  ov.appendChild(content);
+  document.body.appendChild(ov);
+
+  loadMyParksOverview(content);
+}
+
+function loadMyParksOverview(el){
+  el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:12px 0;">&#9203; Lade deine Parks...</div>';
+
+  if(typeof db==='undefined'||!db||!firebase.auth().currentUser){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">Einloggen um deine Parks zu sehen.</div>'; return;
+  }
+  var uid = firebase.auth().currentUser.uid;
+
+  db.collection('globalLeaderboard').where('uid','==',uid).limit(200).get()
+    .then(function(snap){
+      var parkMap = {};
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var pid = d.parkId || 'unbekannt';
+        var pname = d.parkName || (d.location ? d.location : 'Unbekannter Standort');
+        if(!parkMap[pid]){ parkMap[pid]={parkId:pid, parkName:pname, count:0, exercises:{}, lastDate:''}; }
+        parkMap[pid].count++;
+        if(d.exerciseName) parkMap[pid].exercises[d.exerciseName] = (parkMap[pid].exercises[d.exerciseName]||0)+1;
+        if(d.date > parkMap[pid].lastDate) parkMap[pid].lastDate = d.date;
+      });
+
+      var parks = Object.values(parkMap).sort(function(a,b){ return b.count-a.count; });
+      el.innerHTML = '';
+
+      if(parks.length === 0){
+        el.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">&#128170;</div><div style="font-size:14px;color:var(--muted);">Du hast noch keine Rekorde eingereicht.<br>Reiche deinen ersten Rekord ein!</div></div>';
+        return;
+      }
+
+      // TOP 3
+      var top3 = parks.slice(0,3);
+      var top3Label = document.createElement('div');
+      top3Label.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:10px;';
+      top3Label.textContent = 'DEINE TOP PARKS';
+      el.appendChild(top3Label);
+
+      top3.forEach(function(p, i){
+        var medals = ['&#129351;','&#129352;','&#129353;'];
+        var card = document.createElement('div');
+        card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;margin-bottom:10px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;';
+        card.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
+        card.onmouseout=function(){ this.style.borderColor='var(--border)'; };
+        var topEx = Object.keys(p.exercises).sort(function(a,b){ return p.exercises[b]-p.exercises[a]; })[0] || '';
+        card.innerHTML =
+          '<div style="font-size:28px;flex-shrink:0;">'+medals[i]+'</div>'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+p.count+' Einträge'+(topEx?' · Meist: '+topEx:'')+' </div>'+
+          '</div>'+
+          '<div style="font-size:22px;color:var(--muted);">›</div>';
+        card.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
+        el.appendChild(card);
+      });
+
+      if(parks.length > 3){
+        // TOP 10 Rest
+        var restLabel = document.createElement('div');
+        restLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin:16px 0 10px;';
+        restLabel.textContent = 'WEITERE PARKS';
+        el.appendChild(restLabel);
+
+        parks.slice(3, 10).forEach(function(p, i){
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;';
+          row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
+          row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
+          var rankEl = document.createElement('div');
+          rankEl.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0;';
+          rankEl.textContent = '#'+(i+4);
+          var infoEl = document.createElement('div');
+          infoEl.style.cssText = 'flex:1;min-width:0;';
+          infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
+            '<div style="font-size:10px;color:var(--muted);">'+p.count+' Einträge</div>';
+          row.appendChild(rankEl); row.appendChild(infoEl);
+          row.innerHTML += '<div style="font-size:18px;color:var(--muted);">›</div>';
+          row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
+          el.appendChild(row);
+        });
+      }
+
+      // Alle Parks Button
+      if(parks.length > 10){
+        var allBtn = document.createElement('button');
+        allBtn.style.cssText = 'width:100%;background:none;border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--muted);margin-top:8px;';
+        allBtn.textContent = 'Alle '+parks.length+' Parks anzeigen';
+        allBtn.onclick = function(){
+          allBtn.remove();
+          parks.slice(10).forEach(function(p, i){
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;';
+            row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
+            row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
+            row.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0;">#'+(i+11)+'</div>'+
+              '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+p.parkName+'</div><div style="font-size:10px;color:var(--muted);">'+p.count+' Einträge</div></div>'+
+              '<div style="font-size:18px;color:var(--muted);">›</div>';
+            row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
+            el.appendChild(row);
+          });
+        };
+        el.appendChild(allBtn);
+      }
+    })
+    .catch(function(e){
+      el.innerHTML='<div style="padding:20px;color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>';
+    });
 }
