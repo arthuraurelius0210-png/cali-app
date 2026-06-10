@@ -39,7 +39,12 @@ function buildRekordeUI(){
   var parkBtn = document.createElement('button');
   parkBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;';
   parkBtn.innerHTML = '&#128170; PARKS';
-  parkBtn.onclick = function(){ goPage('parks'); };
+  parkBtn.onclick = function(){
+    var ps = document.getElementById('rek-parks-section');
+    if(ps){ ps.remove(); parkBtn.style.borderColor='var(--border)'; parkBtn.style.color='var(--text)'; return; }
+    parkBtn.style.borderColor='var(--accent)'; parkBtn.style.color='var(--accent)';
+    buildRekParksSection(root);
+  };
   var subBtn = document.createElement('button');
   subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;letter-spacing:1px;';
   subBtn.textContent = '+ EINTRAG';
@@ -282,4 +287,181 @@ function loadRekList(el){
     .catch(function(e){
       el.innerHTML='<div style="padding:16px;color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>';
     });
+}
+
+// ── PARKS SEKTION IN REKORDE ───────────────────────────────
+function buildRekParksSection(root){
+  var sec = document.createElement('div');
+  sec.id = 'rek-parks-section';
+  sec.style.cssText = 'border-top:2px solid var(--accent);margin-top:0;';
+
+  // Header
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;';
+  hdr.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--accent);">&#128170; MEINE PARKS</div>';
+
+  var allBtn = document.createElement('button');
+  allBtn.style.cssText = 'background:none;border:1.5px solid var(--accent);color:var(--accent);border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:5px 10px;cursor:pointer;';
+  allBtn.textContent = 'ALLE PARKS';
+  allBtn.onclick = function(){ openAllMyParks(); };
+  hdr.appendChild(allBtn);
+  sec.appendChild(hdr);
+
+  var listEl = document.createElement('div');
+  listEl.style.cssText = 'padding:0 16px 16px;';
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:12px 0;">&#9203; Lade deine Parks...</div>';
+  sec.appendChild(listEl);
+
+  root.appendChild(sec);
+  loadMyParks(listEl, 10);
+}
+
+function loadMyParks(el, limit){
+  if(typeof db === 'undefined' || !db || !firebase.auth().currentUser){
+    el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:13px;">Einloggen um deine Parks zu sehen.</div>'; return;
+  }
+  var uid = firebase.auth().currentUser.uid;
+
+  // Lade park stats für diesen User
+  db.collection('parkStats').get().then(function(snap){
+    var myParks = [];
+    var promises = [];
+
+    // Für jeden Park prüfen ob User-Daten vorhanden
+    snap.forEach(function(parkDoc){
+      var parkId = parkDoc.id;
+      promises.push(
+        db.collection('parkStats').doc(parkId).collection('users').doc(uid).get()
+          .then(function(userDoc){
+            if(userDoc.exists){
+              var d = userDoc.data();
+              myParks.push({
+                parkId: parkId,
+                parkName: d.parkName || parkId.replace('park_','Park '),
+                workoutCount: d.workoutCount || 0,
+                totalReps: d.totalReps || 0,
+                lastWorkout: d.lastWorkout || '',
+              });
+            }
+          })
+      );
+    });
+
+    Promise.all(promises).then(function(){
+      el.innerHTML = '';
+
+      if(myParks.length === 0){
+        el.innerHTML = '<div style="text-align:center;padding:24px;background:var(--bg2);border-radius:12px;"><div style="font-size:28px;margin-bottom:8px;">&#128170;</div><div style="font-size:13px;color:var(--muted);">Noch keine Parks besucht.<br>Trainiere in einem Park um hier zu erscheinen!</div></div>';
+        return;
+      }
+
+      // Sortiere nach Häufigkeit
+      myParks.sort(function(a,b){ return b.workoutCount - a.workoutCount; });
+      var shown = limit ? myParks.slice(0, limit) : myParks;
+
+      // Top 3 Label
+      var topLabel = document.createElement('div');
+      topLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;';
+      topLabel.textContent = shown.length <= 3 ? 'DEINE PARKS' : 'TOP '+Math.min(shown.length, limit)+' PARKS';
+      el.appendChild(topLabel);
+
+      shown.forEach(function(p, i){
+        var card = document.createElement('div');
+        card.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;';
+        card.onmouseover = function(){ this.style.borderColor='var(--accent)'; };
+        card.onmouseout = function(){ this.style.borderColor='var(--border)'; };
+
+        var rankEl = document.createElement('div');
+        rankEl.style.cssText = 'width:32px;height:32px;border-radius:50%;background:rgba(255,85,0,0.12);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--accent);flex-shrink:0;';
+        rankEl.textContent = '#'+(i+1);
+
+        var infoEl = document.createElement('div');
+        infoEl.style.cssText = 'flex:1;min-width:0;';
+        infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
+          '<div style="font-size:10px;color:var(--muted);">'+p.workoutCount+' Workouts · '+p.totalReps+' Wdh gesamt</div>';
+
+        var arrEl = document.createElement('div');
+        arrEl.style.cssText = 'font-size:18px;color:var(--muted);flex-shrink:0;';
+        arrEl.textContent = '›';
+
+        card.appendChild(rankEl); card.appendChild(infoEl); card.appendChild(arrEl);
+
+        card.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
+        el.appendChild(card);
+      });
+
+      // "Alle Parks" Button wenn mehr als limit
+      if(myParks.length > limit){
+        var moreBtn = document.createElement('button');
+        moreBtn.style.cssText = 'width:100%;background:none;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:11px;cursor:pointer;color:var(--muted);margin-top:4px;';
+        moreBtn.textContent = 'Alle '+myParks.length+' Parks anzeigen';
+        moreBtn.onclick = function(){ openAllMyParks(); };
+        el.appendChild(moreBtn);
+      }
+    });
+  }).catch(function(e){
+    el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>';
+  });
+}
+
+function openAllMyParks(){
+  if(typeof db === 'undefined' || !db || !firebase.auth().currentUser) return;
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+
+  var topBar = document.createElement('div');
+  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.innerHTML = '&#8592; Zurück';
+  backBtn.onclick = function(){ ov.remove(); };
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'font-size:16px;font-weight:800;color:var(--text);';
+  titleEl.innerHTML = '&#128170; ALLE MEINE PARKS';
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl);
+  ov.appendChild(topBar);
+
+  var listEl = document.createElement('div');
+  listEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:12px;">&#9203; Lade...</div>';
+  ov.appendChild(listEl);
+
+  document.body.appendChild(ov);
+  loadMyParks(listEl, null);
+}
+
+function openParkLeaderboardById(parkId, parkName){
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9960;display:flex;flex-direction:column;overflow:hidden;';
+
+  var topBar = document.createElement('div');
+  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.innerHTML = '&#8592; Zurück';
+  backBtn.onclick = function(){ ov.remove(); };
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'flex:1;min-width:0;';
+  titleEl.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&#128170; '+parkName+'</div>'+
+    '<div style="font-size:10px;color:var(--muted);">Park Bestenliste</div>';
+  var subBtn = document.createElement('button');
+  subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;flex-shrink:0;';
+  subBtn.innerHTML = '+ EINTRAG';
+  subBtn.onclick = function(){ openRecordSubmit(parkId, parkName); };
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(subBtn);
+  ov.appendChild(topBar);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
+  ov.appendChild(content);
+
+  document.body.appendChild(ov);
+
+  // Baue Bestenliste direkt
+  if(typeof buildParkDetailLeaderboard === 'function'){
+    buildParkDetailLeaderboard(content, parkId, parkName);
+  } else {
+    content.innerHTML = '<div style="color:var(--muted);padding:20px;">Funktion nicht verfügbar.</div>';
+  }
 }
