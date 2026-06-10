@@ -115,7 +115,7 @@ function loadParks(){
       var name=park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
       var marker=L.marker([park._lat,park._lng],{icon:parkIcon});
       if(clusterGroup){ clusterGroup.addLayer(marker); } else { marker.addTo(parksMap); }
-      marker.bindPopup('<div style="font-family:system-ui;min-width:190px;padding:4px 0;"><div style="font-size:14px;font-weight:800;margin-bottom:2px;">'+name+'</div><div style="font-size:11px;color:#999;margin-bottom:10px;">'+formatDist(park._dist)+' entfernt</div><button onclick="openParkDetail('+idx+')" style="background:#ff5500;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">&#128170; Park ansehen</button><button onclick="openParkNav('+idx+')" style="background:none;border:1.5px solid #ddd;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%;color:#555;">&#128205; Navigation</button></div>');
+      marker.bindPopup('<div style="font-family:system-ui;min-width:190px;padding:4px 0;"><div style="font-size:14px;font-weight:800;margin-bottom:2px;">'+name+'</div><div style="font-size:11px;color:#999;margin-bottom:10px;">'+formatDist(park._dist)+' entfernt</div><button onclick="openParkDetail('+idx+')" style="background:#ff5500;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">&#128170; Park ansehen</button><button onclick="openParkDetail('+idx+')" style="background:none;border:1.5px solid #ddd;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%;color:#555;">&#128170; Park ansehen</button></div>');
       parksMarkers.push(marker);
     });
     buildParksList();
@@ -593,17 +593,43 @@ function openParkNav(idx){
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
   var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
-    '<div style="font-size:9px;letter-spacing:3px;color:var(--muted);font-weight:700;margin-bottom:14px;">NAVIGATION ÖFFNEN MIT</div>';
+  var addr = '';
+  if(park.tags){
+    if(park.tags['addr:street']) addr = park.tags['addr:street']+(park.tags['addr:housenumber']?' '+park.tags['addr:housenumber']:'');
+    if(park.tags['addr:city']) addr += (addr?', ':'')+park.tags['addr:city'];
+  }
+  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">'+name+'</div>'+
+    (addr?'<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">'+addr+'</div>':'')+
+    '<div style="font-size:9px;letter-spacing:3px;color:var(--muted);font-weight:700;margin-bottom:12px;">NAVIGATION ÖFFNEN MIT</div>';
+
+  // Google Maps
   var gBtn = document.createElement('button');
-  gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
   gBtn.innerHTML = '<img src="https://www.google.com/favicon.ico" style="width:18px;height:18px;border-radius:3px;"> Google Maps';
   gBtn.onclick = function(){ window.open('https://www.google.com/maps/dir/?api=1&destination='+park._lat+','+park._lng+'&travelmode=walking','_blank'); ov.remove(); };
+
+  // Apple Maps
+  var aBtn = document.createElement('button');
+  aBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  aBtn.innerHTML = '<span style="font-size:20px;">&#63743;</span> Apple Maps';
+  aBtn.onclick = function(){ window.location.href='maps://maps.apple.com/?daddr='+park._lat+','+park._lng+'&dirflg=w'; ov.remove(); };
+
+  // Adresse kopieren
+  var copyBtn = document.createElement('button');
+  copyBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  copyBtn.innerHTML = '<span style="font-size:18px;">&#128203;</span> Adresse kopieren';
+  copyBtn.onclick = function(){
+    var txt = (addr || (park._lat+', '+park._lng));
+    navigator.clipboard ? navigator.clipboard.writeText(txt).then(function(){ copyBtn.innerHTML='<span style="font-size:18px;">&#10003;</span> Kopiert!'; setTimeout(function(){ ov.remove(); },800); }) : (function(){ var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();copyBtn.innerHTML='<span>&#10003;</span> Kopiert!';setTimeout(function(){ov.remove();},800); })();
+  };
+
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;';
+  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
   cancelBtn.textContent = 'Schließen';
   cancelBtn.onclick = function(){ ov.remove(); };
-  box.appendChild(gBtn); box.appendChild(cancelBtn);
+
+  box.appendChild(gBtn); box.appendChild(aBtn); box.appendChild(copyBtn); box.appendChild(cancelBtn);
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
