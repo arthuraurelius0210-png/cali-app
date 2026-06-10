@@ -56,3 +56,13 @@ function showWeeklyGoalModal(){
   box.appendChild(flame);box.appendChild(title);box.appendChild(sub);box.appendChild(lbl);box.appendChild(btnRow);box.appendChild(saveBtn);
   modal.appendChild(box);document.body.appendChild(modal);
 }
+
+function getLevel(){
+  var streak = streakData.currentStreak || 0;
+  if(streak >= 365) return {label:'LEGEND', color:'#FFD700'};
+  if(streak >= 180) return {label:'ELITE', color:'#FF5500'};
+  if(streak >= 90)  return {label:'PRO', color:'#FF8C00'};
+  if(streak >= 30)  return {label:'FORTGESCHRITTEN', color:'#22C55E'};
+  if(streak >= 7)   return {label:'BEGINNER', color:'#3B82F6'};
+  return {label:'STARTER', color:'#999'};
+}
