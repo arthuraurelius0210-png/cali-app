@@ -34,24 +34,11 @@ function buildRekordeUI(){
   var hdr = document.createElement('div');
   hdr.style.cssText = 'padding:0 16px 14px;display:flex;align-items:center;justify-content:space-between;';
   hdr.innerHTML = '<div style="font-size:22px;font-weight:800;color:var(--text);">&#127942; REKORDE</div>';
-  var btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:8px;';
-  var parkBtn = document.createElement('button');
-  parkBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;';
-  parkBtn.innerHTML = '&#128170; PARKS';
-  parkBtn.onclick = function(){
-    var ps = document.getElementById('rek-parks-section');
-    if(ps){ ps.remove(); parkBtn.style.borderColor='var(--border)'; parkBtn.style.color='var(--text)'; return; }
-    parkBtn.style.borderColor='var(--accent)'; parkBtn.style.color='var(--accent)';
-    var rc = document.getElementById('rek-right-col');
-    if(rc) buildRekParksSection(rc);
-  };
   var subBtn = document.createElement('button');
   subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;letter-spacing:1px;';
   subBtn.textContent = '+ EINTRAG';
   subBtn.onclick = function(){ openRecordSubmit(null,null); };
-  btnRow.appendChild(parkBtn); btnRow.appendChild(subBtn);
-  hdr.appendChild(btnRow);
+  hdr.appendChild(subBtn);
   root.appendChild(hdr);
 
   // ── LAYOUT: links Übungen, rechts Liste ─────────────────
@@ -270,8 +257,9 @@ function loadRekList(el){
         rankEl.innerHTML=medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-size:11px;font-weight:700;color:var(--muted);">#'+rank+'</span>';
         var infoEl=document.createElement('div');
         infoEl.style.cssText='flex:1;min-width:0;';
+        var parkTxt = d.parkName ? '&#128170; '+d.parkName : (d.location ? '&#128205; '+d.location : '&#128205; Unbekannter Standort');
         infoEl.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'Anonym')+(isMe?' <span style="font-size:8px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+' </div>'+
-          '<div style="font-size:10px;color:var(--muted);">'+(d.location||'')+(d.parkName?' &#128205;'+d.parkName:'')+'</div>';
+          '<div style="font-size:10px;color:var(--muted);">'+parkTxt+'</div>';
         var valEl=document.createElement('div');
         valEl.style.cssText='text-align:right;flex-shrink:0;';
         valEl.innerHTML='<div style="font-size:18px;font-weight:800;color:var(--accent);">'+d.value+'</div><div style="font-size:9px;color:var(--muted);">'+rekState.exUnit+'</div>';
