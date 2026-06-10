@@ -115,7 +115,7 @@ function loadParks(){
       var name=park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
       var marker=L.marker([park._lat,park._lng],{icon:parkIcon});
       if(clusterGroup){ clusterGroup.addLayer(marker); } else { marker.addTo(parksMap); }
-      marker.bindPopup('<div style="font-family:system-ui;min-width:160px;"><strong style="font-size:13px;">'+name+'</strong><br><span style="font-size:11px;color:#999;">'+formatDist(park._dist)+' entfernt</span><br><br><button onclick="openParkModal('+idx+')" style="background:#ff5500;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;width:100%;">Navigation starten</button></div>');
+      marker.bindPopup('<div style="font-family:system-ui;min-width:190px;padding:4px 0;"><div style="font-size:14px;font-weight:800;margin-bottom:2px;">'+name+'</div><div style="font-size:11px;color:#999;margin-bottom:10px;">'+formatDist(park._dist)+' entfernt</div><button onclick="openParkDetail('+idx+')" style="background:#ff5500;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">&#128170; Park ansehen</button><button onclick="openParkNav('+idx+')" style="background:none;border:1.5px solid #ddd;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%;color:#555;">&#128205; Navigation</button></div>');
       parksMarkers.push(marker);
     });
     buildParksList();
@@ -581,4 +581,179 @@ function openAdminPanel(){
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+}
+// ── PARK NAVIGATION (direkt) ───────────────────────────────
+function openParkNav(idx){
+  var park = parksData[idx];
+  if(!park) return;
+  var ex = document.getElementById('park-modal-ov'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'park-modal-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9800;display:flex;align-items:flex-end;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
+  var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
+  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
+    '<div style="font-size:9px;letter-spacing:3px;color:var(--muted);font-weight:700;margin-bottom:14px;">NAVIGATION ÖFFNEN MIT</div>';
+  var gBtn = document.createElement('button');
+  gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  gBtn.innerHTML = '<img src="https://www.google.com/favicon.ico" style="width:18px;height:18px;border-radius:3px;"> Google Maps';
+  gBtn.onclick = function(){ window.open('https://www.google.com/maps/dir/?api=1&destination='+park._lat+','+park._lng+'&travelmode=walking','_blank'); ov.remove(); };
+  var cancelBtn = document.createElement('button');
+  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;';
+  cancelBtn.textContent = 'Schließen';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  box.appendChild(gBtn); box.appendChild(cancelBtn);
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  document.body.appendChild(ov);
+}
+
+// ── PARK DETAIL VOLLBILD ───────────────────────────────────
+function openParkDetail(idx){
+  var park = parksData[idx];
+  if(!park) return;
+  var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
+  var parkId = 'park_'+(park.id||Math.round(park._lat*1000)+'_'+Math.round(park._lng*1000));
+
+  var ex = document.getElementById('park-detail-ov'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'park-detail-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9900;display:flex;flex-direction:column;overflow:hidden;';
+
+  // Top bar
+  var topBar = document.createElement('div');
+  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.innerHTML = '&#8592; Zurück';
+  backBtn.onclick = function(){ ov.remove(); };
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'flex:1;';
+  titleEl.innerHTML = '<div style="font-size:16px;font-weight:800;color:var(--text);">&#128170; '+name+'</div>'+
+    '<div style="font-size:11px;color:var(--accent);font-weight:600;">&#128205; '+formatDist(park._dist)+' entfernt</div>';
+  var navBtn = document.createElement('button');
+  navBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 14px;cursor:pointer;letter-spacing:1px;';
+  navBtn.textContent = 'NAVIGATION';
+  navBtn.onclick = function(){ ov.remove(); openParkNav(idx); };
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(navBtn);
+  ov.appendChild(topBar);
+
+  // Tab bar
+  var tabBar = document.createElement('div');
+  tabBar.style.cssText = 'display:flex;border-bottom:1px solid var(--border);flex-shrink:0;';
+  var tabs = ['BESTENLISTE','MEINE STATS','COMMUNITY'];
+  var bodies = [];
+  tabs.forEach(function(t, ti){
+    var tb = document.createElement('button');
+    tb.style.cssText = 'flex:1;padding:12px 4px;font-family:inherit;font-size:9px;letter-spacing:1.5px;font-weight:700;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
+    tb.textContent = t;
+    var body = document.createElement('div');
+    body.style.cssText = 'display:'+(ti===0?'block':'none')+';padding:20px;overflow-y:auto;height:100%;';
+    bodies.push(body);
+    tb.onclick = (function(tIdx){
+      return function(){
+        tabBar.querySelectorAll('button').forEach(function(b,bi){
+          b.style.borderBottomColor = bi===tIdx?'var(--accent)':'transparent';
+          b.style.color = bi===tIdx?'var(--accent)':'var(--muted)';
+        });
+        bodies.forEach(function(b,bi){ b.style.display=bi===tIdx?'block':'none'; });
+        if(tIdx===0 && !bodies[0]._loaded){ buildParkDetailLeaderboard(bodies[0], parkId, name); bodies[0]._loaded=true; }
+        if(tIdx===1 && !bodies[1]._loaded){ buildParkDetailStats(bodies[1], parkId); bodies[1]._loaded=true; }
+        if(tIdx===2 && !bodies[2]._loaded){ buildParkDetailCommunity(bodies[2], parkId, name); bodies[2]._loaded=true; }
+      };
+    })(ti);
+    tabBar.appendChild(tb);
+  });
+  ov.appendChild(tabBar);
+
+  // Scrollable content area
+  var contentWrap = document.createElement('div');
+  contentWrap.style.cssText = 'flex:1;overflow-y:auto;';
+  bodies.forEach(function(b){ contentWrap.appendChild(b); });
+  ov.appendChild(contentWrap);
+
+  document.body.appendChild(ov);
+
+  // Load first tab
+  buildParkDetailLeaderboard(bodies[0], parkId, name);
+  bodies[0]._loaded = true;
+}
+
+function buildParkDetailLeaderboard(el, parkId, parkName){
+  el.innerHTML = '<div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:16px;">&#127942; BESTENLISTE</div>';
+
+  // Submit button
+  var subBtn = document.createElement('button');
+  subBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:20px;letter-spacing:1px;';
+  subBtn.textContent = '+ EINTRAG EINREICHEN';
+  subBtn.onclick = function(){ showLeaderboardSubmit(parkId, parkName); };
+  el.appendChild(subBtn);
+
+  if(typeof db === 'undefined' || !db){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Einloggen um Bestenliste zu sehen.</div>'; return; }
+
+  var ref = db.collection('parkLeaderboard').doc(parkId).collection('entries').orderBy('value','desc').limit(20);
+  ref.get().then(function(snap){
+    if(snap.empty){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Einträge.<br>Sei der Erste!</div>'; return; }
+    snap.forEach(function(doc, i){
+      var d = doc.data();
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);';
+      var rank = i+1;
+      var medal = rank===1?'&#127947;':rank===2?'&#129352;':rank===3?'&#129353;':'#'+rank;
+      row.innerHTML = '<div style="font-size:18px;width:32px;text-align:center;">'+medal+'</div>'+
+        '<div style="flex:1;">'+
+          '<div style="font-size:14px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);">'+(d.exercise||'')+'</div>'+
+        '</div>'+
+        '<div style="text-align:right;">'+
+          '<div style="font-size:18px;font-weight:800;color:var(--accent);">'+d.value+'</div>'+
+          '<div style="font-size:10px;color:var(--muted);">'+(d.unit||'Wdh')+'</div>'+
+        '</div>';
+      el.appendChild(row);
+    });
+  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Fehler beim Laden.</div>'; });
+}
+
+function buildParkDetailStats(el, parkId){
+  el.innerHTML = '<div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:16px;">&#128200; MEINE STATS</div>';
+  if(typeof db === 'undefined' || !db || !firebase.auth().currentUser){
+    el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Einloggen um deine Stats zu sehen.</div>'; return;
+  }
+  var uid = firebase.auth().currentUser.uid;
+  db.collection('parkStats').doc(parkId).collection('users').doc(uid).get().then(function(doc){
+    if(!doc.exists){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Workouts in diesem Park.<br>Trainiere hier und deine Stats erscheinen!</div>'; return; }
+    var d = doc.data();
+    var stats = [
+      {label:'Workouts', value: d.workoutCount||0, unit:''},
+      {label:'Gesamte Wdh', value: d.totalReps||0, unit:'Wdh'},
+      {label:'Letztes Training', value: d.lastWorkout?d.lastWorkout.slice(0,10):'—', unit:''},
+    ];
+    stats.forEach(function(s){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);';
+      row.innerHTML = '<div style="font-size:13px;color:var(--muted);">'+s.label+'</div>'+
+        '<div style="font-size:18px;font-weight:800;color:var(--text);">'+s.value+' <span style="font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
+      el.appendChild(row);
+    });
+  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler.</div>'; });
+}
+
+function buildParkDetailCommunity(el, parkId, parkName){
+  el.innerHTML = '<div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:16px;">&#128101; COMMUNITY WORKOUTS</div>';
+  if(typeof db === 'undefined' || !db){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Einloggen um Community zu sehen.</div>'; return; }
+  db.collection('parkWorkouts').doc(parkId).collection('posts').orderBy('date','desc').limit(20).get().then(function(snap){
+    if(snap.empty){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Community-Workouts hier.<br>Sei der Erste!</div>'; return; }
+    snap.forEach(function(doc){
+      var d = doc.data();
+      var card = document.createElement('div');
+      card.style.cssText = 'background:var(--bg2);border-radius:12px;padding:14px;margin-bottom:10px;';
+      card.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'+
+        '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.userName||'Anonym')+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);">'+(d.date?d.date.slice(0,10):'')+'</div>'+
+        '</div>'+
+        '<div style="font-size:12px;color:var(--muted);">'+(d.summary||'')+'</div>';
+      el.appendChild(card);
+    });
+  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler beim Laden.</div>'; });
 }
