@@ -389,7 +389,11 @@ canvas{max-width:100%;}
     <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:24px;">
       <div id="emom-progress-bar" style="height:100%;background:var(--accent);width:100%;transition:width 1s linear;border-radius:20px;"></div>
     </div>
-    <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="emomSkip(-1)" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:18px;padding:10px;cursor:pointer;">&#9664;</button>
+      <button onclick="emomSkip(1)" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:18px;padding:10px;cursor:pointer;">&#9654;</button>
+    </div>
+    <div id="emom-reps-card" class="card" style="margin-bottom:16px;">
       <div style="font-size:11px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:8px;">WIEDERHOLUNGEN EINTRAGEN</div>
       <div style="display:flex;gap:10px;align-items:center;">
         <input type="number" id="emom-reps-inp" placeholder="z.B. 10" min="0" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:18px;outline:none;">

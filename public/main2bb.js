@@ -228,6 +228,9 @@ function emomStart(){
   var active = document.getElementById('emom-active');
   if(setup) setup.style.display = 'none';
   if(active) active.style.display = 'block';
+  // Pure timer: hide reps card
+  var repsCard = document.getElementById('emom-reps-card');
+  if(repsCard) repsCard.style.display = emomMode==='pure' ? 'none' : 'block';
 
   emomUpdateDisplay();
   emomInterval = setInterval(emomTick, 1000);
@@ -384,3 +387,19 @@ function emomFinish(){
     if(lbl) lbl.textContent = u==='Sek'?'ERGEBNIS (SEK)':u==='Min:Sek'?'ERGEBNIS (MIN:SEK)':'ERGEBNIS (WDH)';
   };
 })();
+
+// ── EMOM SKIP ─────────────────────────────────────────────
+function emomSkip(dir){
+  if(!emomInterval) return;
+  if(dir > 0){
+    // Skip vorwärts
+    emomCurrentRound++;
+    if(emomCurrentRound >= emomTotalRounds){ emomFinish(); return; }
+    emomSecondsLeft = parseInt(document.getElementById('emom-secs')?document.getElementById('emom-secs').value:60)||60;
+  } else {
+    // Skip rückwärts
+    if(emomCurrentRound > 0) emomCurrentRound--;
+    emomSecondsLeft = parseInt(document.getElementById('emom-secs')?document.getElementById('emom-secs').value:60)||60;
+  }
+  emomUpdateDisplay();
+}
