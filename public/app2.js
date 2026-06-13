@@ -125,6 +125,9 @@ function buildPlanList(){
   var h='';
 
   // PRESETS section
+  // WOCHENPLAN section
+  h+='<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:inherit;font-weight:700;margin-bottom:8px;">WOCHENPLAN</div>';
+  h+='<div id="week-plan-section" style="margin-bottom:20px;"></div>';
   h+='<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:inherit;font-weight:700;margin-bottom:8px;">VORLAGEN</div>';
   for(var pi=0;pi<PRESET_PLANS.length;pi++){
     var pl=PRESET_PLANS[pi];
@@ -175,6 +178,7 @@ function buildPlanList(){
     h+='<div class="empty" style="padding:20px 0;">Noch keine eigenen Plane.<br>Vorlage hinzufugen oder neuen Plan erstellen.</div>';
   }
   el.innerHTML=h;
+  buildWeekPlan();
 }
 
 function startPreset(idx){
@@ -855,4 +859,163 @@ function togglePlanExpand(card){
   var isOpen = detail.style.display !== 'none';
   detail.style.display = isOpen ? 'none' : 'block';
   if(arrow) arrow.textContent = isOpen ? '›' : '˅';
+}
+
+// ── WOCHENPLAN ────────────────────────────────────────────
+var WEEK_DAYS = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+var WEEK_DAYS_FULL = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+
+function getWeekPlan(){
+  try{ return JSON.parse(localStorage.getItem('cali_weekplan')||'{}'); }catch(e){ return {}; }
+}
+function saveWeekPlan(wp){ localStorage.setItem('cali_weekplan', JSON.stringify(wp)); }
+
+function buildWeekPlan(){
+  var el = document.getElementById('week-plan-section');
+  if(!el) return;
+  var wp = getWeekPlan();
+  var todayIdx = (new Date().getDay()+6)%7; // 0=Mo, 6=So
+
+  el.innerHTML = '';
+
+  // 7-Tage Übersicht
+  var grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;';
+
+  WEEK_DAYS.forEach(function(day, i){
+    var dayPlans = wp[i] || [];
+    var isToday = i === todayIdx;
+    var btn = document.createElement('div');
+    btn.style.cssText = 'text-align:center;padding:8px 2px;border-radius:10px;cursor:pointer;border:1.5px solid '+(isToday?'var(--accent)':'var(--border)')+';background:'+(isToday?'rgba(255,85,0,0.08)':'var(--bg2)')+';';
+    btn.innerHTML =
+      '<div style="font-size:9px;font-weight:700;color:'+(isToday?'var(--accent)':'var(--muted)')+';">'+day+'</div>'+
+      '<div style="font-size:16px;margin:3px 0;">'+(dayPlans.length===0?'😴':dayPlans.length===1?'💪':'🔥')+'</div>'+
+      '<div style="font-size:8px;color:var(--muted);">'+(dayPlans.length===0?'Ruhe':dayPlans.length+' Plan'+(dayPlans.length>1?'e':''))+'</div>';
+    btn.onclick = function(){ openDayEditor(i); };
+    grid.appendChild(btn);
+  });
+  el.appendChild(grid);
+
+  // Heute hervorheben
+  var todayPlans = wp[todayIdx] || [];
+  if(todayPlans.length > 0){
+    var todayEl = document.createElement('div');
+    todayEl.style.cssText = 'background:rgba(255,85,0,0.08);border:1.5px solid var(--accent);border-radius:12px;padding:12px;';
+    todayEl.innerHTML = '<div style="font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:8px;">HEUTE — '+WEEK_DAYS_FULL[todayIdx].toUpperCase()+'</div>';
+    todayPlans.forEach(function(planId){
+      var plan = getPlanById(planId);
+      if(!plan) return;
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,85,0,0.1);';
+      row.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+plan.name+'</div>';
+      var startBtn = document.createElement('button');
+      startBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;';
+      startBtn.textContent = 'STARTEN';
+      startBtn.onclick = function(){ startWorkout(plan.id); };
+      row.appendChild(startBtn);
+      todayEl.appendChild(row);
+    });
+    el.appendChild(todayEl);
+  } else {
+    var restEl = document.createElement('div');
+    restEl.style.cssText = 'text-align:center;padding:10px;background:var(--bg2);border-radius:12px;border:1px solid var(--border);font-size:12px;color:var(--muted);';
+    restEl.innerHTML = '😴 Heute: Ruhetag';
+    el.appendChild(restEl);
+  }
+}
+
+function getPlanById(id){
+  for(var i=0;i<plans.length;i++){ if(plans[i].id===id) return plans[i]; }
+  for(var i=0;i<PRESET_PLANS.length;i++){ if('preset_'+i===id) return {id:'preset_'+i, name:PRESET_PLANS[i].name, exercises:PRESET_PLANS[i].exercises}; }
+  return null;
+}
+
+function openDayEditor(dayIdx){
+  var wp = getWeekPlan();
+  var dayPlans = wp[dayIdx] || [];
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;max-height:80vh;overflow-y:auto;';
+
+  function renderBox(){
+    box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
+      '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">📅 '+WEEK_DAYS_FULL[dayIdx]+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Pläne für diesen Tag</div>';
+
+    // Assigned plans
+    if(dayPlans.length === 0){
+      var emptyEl = document.createElement('div');
+      emptyEl.style.cssText = 'text-align:center;padding:16px;color:var(--muted);font-size:12px;margin-bottom:12px;';
+      emptyEl.innerHTML = '😴 Ruhetag — kein Plan zugewiesen';
+      box.appendChild(emptyEl);
+    } else {
+      dayPlans.forEach(function(planId, i){
+        var plan = getPlanById(planId);
+        if(!plan) return;
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:10px;margin-bottom:8px;border:1px solid var(--border);';
+        row.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+plan.name+'</div>';
+        var delBtn = document.createElement('button');
+        delBtn.style.cssText = 'background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:6px;font-size:11px;padding:5px 10px;cursor:pointer;font-family:inherit;';
+        delBtn.textContent = '× Entfernen';
+        delBtn.onclick = function(){
+          dayPlans.splice(i,1);
+          wp[dayIdx] = dayPlans;
+          saveWeekPlan(wp);
+          renderBox();
+          buildWeekPlan();
+        };
+        row.appendChild(delBtn);
+        box.appendChild(row);
+      });
+    }
+
+    // Add plan dropdown
+    var addLabel = document.createElement('div');
+    addLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;margin-top:4px;';
+    addLabel.textContent = 'PLAN HINZUFÜGEN';
+    box.appendChild(addLabel);
+
+    var sel = document.createElement('select');
+    sel.style.cssText = 'width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+    var defOpt = document.createElement('option'); defOpt.value=''; defOpt.textContent='— Plan auswählen —'; sel.appendChild(defOpt);
+
+    // My plans
+    plans.forEach(function(pl){
+      var opt = document.createElement('option'); opt.value=pl.id; opt.textContent=pl.name;
+      sel.appendChild(opt);
+    });
+    // Presets
+    PRESET_PLANS.forEach(function(pl, i){
+      var opt = document.createElement('option'); opt.value='preset_'+i; opt.textContent=pl.name+' (Vorlage)';
+      sel.appendChild(opt);
+    });
+    box.appendChild(sel);
+
+    var addBtn = document.createElement('button');
+    addBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:12px;';
+    addBtn.textContent = '+ Hinzufügen';
+    addBtn.onclick = function(){
+      if(!sel.value) return;
+      dayPlans.push(sel.value);
+      wp[dayIdx] = dayPlans;
+      saveWeekPlan(wp);
+      renderBox();
+      buildWeekPlan();
+    };
+    box.appendChild(addBtn);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+    closeBtn.textContent = 'Schließen';
+    closeBtn.onclick = function(){ ov.remove(); };
+    box.appendChild(closeBtn);
+  }
+
+  renderBox();
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  document.body.appendChild(ov);
 }
