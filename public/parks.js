@@ -516,12 +516,37 @@ function openAdminPanel(){
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
 
   box.innerHTML =
-    '<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text);margin-bottom:4px;">&#128274; ADMIN PANEL</div>'+
-    '<div style="font-size:10px;color:var(--muted);margin-bottom:16px;">Bestenlisten-Einträge prüfen</div>';
+    '<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text);margin-bottom:12px;">&#128274; ADMIN PANEL</div>';
 
+  // Tabs
+  var tabWrap = document.createElement('div');
+  tabWrap.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;';
+  var tabs2 = [{label:'&#127942; Einträge',id:'entries'},{label:'&#128170; Parks',id:'parks'}];
+  var activeAdminTab = 'entries';
   var listEl = document.createElement('div');
+  var suggestEl = document.createElement('div'); suggestEl.style.display='none';
+
+  tabs2.forEach(function(t){
+    var btn = document.createElement('button');
+    btn.style.cssText = 'flex:1;padding:8px;border-radius:10px;border:1.5px solid '+(t.id===activeAdminTab?'var(--accent)':'var(--border)')+';background:'+(t.id===activeAdminTab?'rgba(255,85,0,0.1)':'none')+';color:'+(t.id===activeAdminTab?'var(--accent)':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+    btn.innerHTML = t.label;
+    btn.onclick = function(){
+      activeAdminTab = t.id;
+      tabWrap.querySelectorAll('button').forEach(function(b,bi){
+        var a = tabs2[bi].id===activeAdminTab;
+        b.style.borderColor=a?'var(--accent)':'var(--border)';
+        b.style.background=a?'rgba(255,85,0,0.1)':'none';
+        b.style.color=a?'var(--accent)':'var(--muted)';
+      });
+      listEl.style.display = t.id==='entries'?'block':'none';
+      suggestEl.style.display = t.id==='parks'?'block':'none';
+      if(t.id==='parks' && !suggestEl._loaded){ loadParkSuggestions(suggestEl); suggestEl._loaded=true; }
+    };
+    tabWrap.appendChild(btn);
+  });
+  box.appendChild(tabWrap);
   listEl.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
-  box.appendChild(listEl);
+  box.appendChild(listEl); box.appendChild(suggestEl);
 
   // Load pending entries
   db.collection('parkLeaderboard').where('status','==','pending').orderBy('createdAt','desc').get()
@@ -960,4 +985,158 @@ function showParkRecordGPSError(parkName, msg){
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+}
+
+// ── PARK VORSCHLAGEN ───────────────────────────────────────
+function openSuggestPark(){
+  if(!firebase.auth().currentUser){ alert('Bitte einloggen!'); return; }
+  var ex = document.getElementById('suggest-park-ov'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'suggest-park-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
+  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
+    '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; PARK VORSCHLAGEN</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Admin prüft deinen Vorschlag bevor er erscheint.</div>';
+
+  // Name
+  var nameInput = document.createElement('input');
+  nameInput.type = 'text'; nameInput.placeholder = 'Park-Name';
+  nameInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  box.appendChild(nameInput);
+
+  // Beschreibung
+  var descInput = document.createElement('textarea');
+  descInput.placeholder = 'Beschreibung (Adresse, Ausstattung...)';
+  descInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;height:80px;resize:none;';
+  box.appendChild(descInput);
+
+  // GPS Status
+  var gpsEl = document.createElement('div');
+  gpsEl.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;';
+  gpsEl.innerHTML = '<span style="font-size:18px;">&#128205;</span><span id="suggest-gps-status">GPS wird ermittelt...</span>';
+  box.appendChild(gpsEl);
+
+  var suggestLat = null, suggestLng = null;
+
+  // Auto-GPS
+  if(userLat && userLng){
+    suggestLat = userLat; suggestLng = userLng;
+    document.getElementById('suggest-gps-status').textContent = 'Aktueller Standort: '+userLat.toFixed(5)+', '+userLng.toFixed(5);
+  } else {
+    navigator.geolocation.getCurrentPosition(function(pos){
+      suggestLat = pos.coords.latitude; suggestLng = pos.coords.longitude;
+      var el = document.getElementById('suggest-gps-status');
+      if(el) el.textContent = 'Standort: '+suggestLat.toFixed(5)+', '+suggestLng.toFixed(5);
+    }, function(){
+      var el = document.getElementById('suggest-gps-status');
+      if(el) el.textContent = 'GPS nicht verfügbar — bitte manuell eingeben';
+    });
+  }
+
+  // Manuelle Koordinaten
+  var manualWrap = document.createElement('div');
+  manualWrap.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
+  var latInput = document.createElement('input');
+  latInput.type = 'number'; latInput.placeholder = 'Latitude (z.B. 52.5200)'; latInput.step = '0.0001';
+  latInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;background:var(--bg2);color:var(--text);';
+  var lngInput = document.createElement('input');
+  lngInput.type = 'number'; lngInput.placeholder = 'Longitude (z.B. 13.4050)'; lngInput.step = '0.0001';
+  lngInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;background:var(--bg2);color:var(--text);';
+  manualWrap.appendChild(latInput); manualWrap.appendChild(lngInput);
+  box.appendChild(manualWrap);
+
+  // Submit
+  var submitBtn = document.createElement('button');
+  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:15px;cursor:pointer;letter-spacing:1px;margin-bottom:8px;';
+  submitBtn.textContent = 'VORSCHLAG SENDEN';
+  submitBtn.onclick = function(){
+    var name = nameInput.value.trim();
+    if(!name){ alert('Bitte Park-Namen eingeben!'); return; }
+    var lat = parseFloat(latInput.value) || suggestLat;
+    var lng = parseFloat(lngInput.value) || suggestLng;
+    if(!lat || !lng){ alert('Bitte Standort angeben oder GPS aktivieren!'); return; }
+    submitBtn.textContent = 'Wird gesendet...'; submitBtn.disabled = true;
+    var user = firebase.auth().currentUser;
+    db.collection('parkSuggestions').add({
+      name: name,
+      description: descInput.value.trim(),
+      lat: lat, lng: lng,
+      submitterId: user.uid,
+      submitterName: (typeof prData!=='undefined'&&prData&&prData.name)||user.email||'Anonym',
+      status: 'pending',
+      createdAt: Date.now(),
+    }).then(function(){
+      ov.remove();
+      if(typeof toast==='function') toast('&#128170; Vorschlag gesendet! Admin prüft ihn.');
+      else alert('Vorschlag gesendet!');
+    }).catch(function(e){ alert('Fehler: '+e.message); submitBtn.disabled=false; submitBtn.textContent='VORSCHLAG SENDEN'; });
+  };
+  box.appendChild(submitBtn);
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+  cancelBtn.textContent = 'Abbrechen';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  box.appendChild(cancelBtn);
+
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  document.body.appendChild(ov);
+}
+
+// ── ADMIN: PARK VORSCHLÄGE PRÜFEN ─────────────────────────
+function loadParkSuggestions(el){
+  el.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
+  db.collection('parkSuggestions').where('status','==','pending').orderBy('createdAt','desc').get()
+    .then(function(snap){
+      el.innerHTML = '';
+      if(snap.empty){
+        el.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--muted);">&#10003; Keine ausstehenden Vorschläge!</div>';
+        return;
+      }
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var card = document.createElement('div');
+        card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;';
+        card.innerHTML =
+          '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; '+d.name+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Von: '+(d.submitterName||'Anonym')+'</div>'+
+          (d.description?'<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+d.description+'</div>':'')+
+          '<div style="font-size:11px;color:var(--accent);margin-bottom:10px;">&#128205; '+d.lat.toFixed(5)+', '+d.lng.toFixed(5)+
+          ' <a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" style="color:var(--accent);">(Maps öffnen)</a></div>';
+
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:8px;';
+
+        var approveBtn = document.createElement('button');
+        approveBtn.style.cssText = 'flex:1;background:rgba(0,200,100,0.1);color:#00c864;border:1px solid rgba(0,200,100,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
+        approveBtn.innerHTML = '&#10003; GENEHMIGEN';
+        approveBtn.onclick = function(){
+          // Park zu Overpass-ähnlicher Struktur hinzufügen (als custom park)
+          db.collection('customParks').add({
+            name: d.name, description: d.description,
+            lat: d.lat, lng: d.lng,
+            addedAt: Date.now(), addedBy: d.submitterId,
+          }).then(function(){
+            return doc.ref.update({status:'approved'});
+          }).then(function(){
+            card.remove();
+            toast('&#10003; Park genehmigt und hinzugefügt!');
+          });
+        };
+
+        var rejectBtn = document.createElement('button');
+        rejectBtn.style.cssText = 'flex:1;background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
+        rejectBtn.innerHTML = '&#10007; ABLEHNEN';
+        rejectBtn.onclick = function(){
+          doc.ref.update({status:'rejected'}).then(function(){ card.remove(); toast('Abgelehnt.'); });
+        };
+
+        btnRow.appendChild(approveBtn); btnRow.appendChild(rejectBtn);
+        card.appendChild(btnRow);
+        el.appendChild(card);
+      });
+    }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
 }
