@@ -62,27 +62,36 @@ function emomSetMode(mode){
   emomMode = mode;
   var sb = document.getElementById('emom-mode-single');
   var mb = document.getElementById('emom-mode-mix');
+  var pb = document.getElementById('emom-mode-pure');
   var ss = document.getElementById('emom-single-section');
   var ms = document.getElementById('emom-mix-section');
   var desc = document.getElementById('emom-mode-desc');
   var startBtn = document.getElementById('emom-start-btn');
 
+  [sb,mb,pb].forEach(function(b){ if(b){b.style.background='none';b.style.color='#888';} });
+
   if(mode === 'single'){
     if(sb){sb.style.background='var(--accent)';sb.style.color='#000';}
-    if(mb){mb.style.background='none';mb.style.color='#888';}
     if(ss) ss.style.display='block';
     if(ms) ms.style.display='none';
     if(desc) desc.textContent='Eine Ubung fur alle Minuten — jede Minute gleiche Ubung, Wdh selbst eintragen.';
     if(startBtn) startBtn.style.display='block';
     emomMixPlan = [];
-  } else {
+  } else if(mode === 'mix'){
     if(mb){mb.style.background='var(--accent)';mb.style.color='#000';}
-    if(sb){sb.style.background='none';sb.style.color='#888';}
     if(ss) ss.style.display='none';
     if(ms) ms.style.display='block';
     if(desc) desc.textContent='Lege fur jede Minute eine eigene Ubung und Wdh-Ziel fest.';
-    if(startBtn) startBtn.style.display = 'block';
+    if(startBtn) startBtn.style.display='block';
     emomBuildMixGrid();
+  } else if(mode === 'pure'){
+    if(pb){pb.style.background='var(--accent)';pb.style.color='#000';}
+    if(ss) ss.style.display='none';
+    if(ms) ms.style.display='none';
+    if(desc) desc.textContent='Reiner Intervall-Timer — kein Eintrag, nur Countdown.';
+    if(startBtn) startBtn.textContent='TIMER STARTEN';
+    if(startBtn) startBtn.style.display='block';
+    emomMixPlan = [];
   }
 }
 
@@ -195,13 +204,18 @@ function emomStart(){
   emomSecondsLeft = 60;
   emomLog = [];
   emomExIdx = 0;
-  if(emomMode === 'single'){
+  if(emomMode === 'pure'){
+    // Reiner Timer — keine Übungsauswahl nötig
+    emomExList = [''];
+    var secEl = document.getElementById('emom-secs');
+    emomSecondsLeft = parseInt(secEl ? secEl.value : 60) || 60;
+  } else if(emomMode === 'single'){
     var sel = document.getElementById('emom-ex-pick');
     if(sel && sel.value) emomExList = [sel.value];
     if(!emomExList.length){ toast('Bitte eine Ubung wahlen!'); return; }
   } else {
     // Mix mode - use emomMixPlan
-    emomBuildMixGrid(); // ensure plan is up to date
+    emomBuildMixGrid();
     emomExList = [];
     for(var pi=0; pi<emomMixPlan.length; pi++){
       emomExList.push(emomMixPlan[pi].exName);
