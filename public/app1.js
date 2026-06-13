@@ -89,8 +89,8 @@ var EX_DB = [
             // LAUFEN
         ];
 
-var EX_CATS = ['Alle','Pull','Push','Core','Legs','Skills','Schwimmen','Laufen'];
-var EX_CAT_COLORS = {Pull:'var(--accent)',Push:'#FF6B35',Core:'#A78BFA',Legs:'#4ECDC4',Skills:'#F59E0B',Schwimmen:'#38BDF8',Laufen:'var(--accent)',Alle:'#888'};
+var EX_CATS = ['Alle','Pull','Push','Core','Legs','Skills',];
+var EX_CAT_COLORS = {Pull:'var(--accent)',Push:'#FF6B35',Core:'#A78BFA',Legs:'#4ECDC4',Skills:'#F59E0B',Alle:'#888'};
 var activeExCat = 'Alle';
 
 var PRESET_PLANS = [
