@@ -476,12 +476,13 @@ function buildPrivacyToggle(){
   toggle.innerHTML = '<div style="position:absolute;top:3px;'+(isPublic?'right:3px':'left:3px')+';width:20px;height:20px;border-radius:50%;background:#fff;transition:all 0.2s;"></div>';
   toggle.onclick = function(){
     isPublic = !isPublic;
-    prData = prData || {};
+    if(typeof prData === 'undefined' || !prData) window.prData = {};
     prData.isPublic = isPublic;
-    spr();
-    fbSave();
+    try{ localStorage.setItem('cali_profile', JSON.stringify(prData)); }catch(x){}
+    if(typeof spr === 'function') spr();
+    if(typeof fbSave === 'function') fbSave();
     buildPrivacyToggle();
-    toast(isPublic ? '&#127758; Profil öffentlich' : '&#128274; Profil privat');
+    if(typeof toast === 'function') toast(isPublic ? '&#127758; Profil öffentlich' : '&#128274; Profil privat');
   };
   wrap.appendChild(toggle);
   el.appendChild(wrap);
