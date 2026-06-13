@@ -374,3 +374,30 @@ function initXPSystem(){
   if(!db || !firebase.auth().currentUser) return;
   checkDailyKingXP();
 }
+
+// ── XP RING UPDATE ────────────────────────────────────────
+function updateXPRing(){
+  if(!db || !firebase.auth().currentUser) return;
+  var uid = firebase.auth().currentUser.uid;
+  db.collection('xp').doc(uid).get().then(function(doc){
+    var data = doc.exists ? doc.data() : {totalXP:0, level:1};
+    var lv = getLevelFromXP(data.totalXP||0);
+
+    // Update ring
+    var ring = document.getElementById('xp-ring-progress');
+    var badge = document.getElementById('xp-level-badge');
+    if(ring){
+      var circumference = 251.2; // 2 * PI * 40
+      var offset = circumference - (lv.progress / 100 * circumference);
+      ring.style.strokeDashoffset = offset;
+      // Color by level
+      var color = lv.level<=10?'#3b82f6':lv.level<=20?'#22c55e':lv.level<=35?'#f59e0b':'#ff5500';
+      ring.style.stroke = color;
+    }
+    if(badge){
+      badge.textContent = 'LVL '+lv.level;
+      badge.style.display = 'block';
+      badge.style.background = lv.level<=10?'#3b82f6':lv.level<=20?'#22c55e':lv.level<=35?'#f59e0b':'#ff5500';
+    }
+  }).catch(function(){});
+}

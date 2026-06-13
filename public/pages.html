@@ -123,8 +123,19 @@
 
   <!-- Hero Section -->
   <div id="pr-hero" style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;">
-    <div id="pr-avatar" style="width:72px;height:72px;border-radius:50%;background:rgba(255,85,0,0.1);border:2px solid var(--accent);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;" onclick="document.getElementById('pr-avatar-inp').click();">
-      <span id="pr-avatar-emoji">&#x1F4AA;</span>
+    <div style="position:relative;width:90px;height:90px;margin:0 auto 12px;">
+      <svg id="xp-ring-svg" width="90" height="90" style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
+        <circle cx="45" cy="45" r="40" fill="none" stroke="var(--border)" stroke-width="5"/>
+        <circle id="xp-ring-progress" cx="45" cy="45" r="40" fill="none" stroke="var(--accent)" stroke-width="5"
+          stroke-linecap="round"
+          stroke-dasharray="251.2"
+          stroke-dashoffset="251.2"
+          style="transition:stroke-dashoffset 1s ease;"/>
+      </svg>
+      <div id="pr-avatar" style="position:absolute;top:9px;left:9px;width:72px;height:72px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;" onclick="document.getElementById('pr-avatar-inp').click();">
+        <span id="pr-avatar-emoji">&#x1F4AA;</span>
+      </div>
+      <div id="xp-level-badge" style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap;display:none;">LVL 1</div>
     </div>
     <input type="file" id="pr-avatar-inp" accept="image/*" style="display:none;" onchange="prSetAvatar(this)">
     <div id="pr-name-display" style="font-family:inherit;font-size:26px;letter-spacing:2px;color:var(--text);cursor:pointer;" onclick="prEditName()">DEIN NAME</div>
