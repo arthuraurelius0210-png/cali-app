@@ -381,11 +381,36 @@ function emomFinish(){
   setTimeout(function(){ buildChallengeUI(); }, 100);
   var _md = document.getElementById('max-date'); if(_md) _md.valueAsDate = new Date();
   var _mx = document.getElementById('max-ex');
-  if(_mx) _mx.onchange = function(){
-    var u = this.value.split('|')[1];
-    var lbl = document.getElementById('max-val-lbl');
-    if(lbl) lbl.textContent = u==='Sek'?'ERGEBNIS (SEK)':u==='Min:Sek'?'ERGEBNIS (MIN:SEK)':'ERGEBNIS (WDH)';
-  };
+  if(_mx){
+    // Fill with all EX_DB exercises
+    _mx.innerHTML = '';
+    if(typeof EX_DB !== 'undefined'){
+      EX_DB.forEach(function(ex, i){
+        var opt = document.createElement('option');
+        opt.value = ex.name+' Max|'+ex.unit;
+        opt.textContent = ex.name+' (Max '+ex.unit+')';
+        _mx.appendChild(opt);
+      });
+    }
+    // Also fill the chart select in VERLAUF section
+    var _mc = document.getElementById('max-chart-ex');
+    if(_mc){
+      _mc.innerHTML = '';
+      if(typeof EX_DB !== 'undefined'){
+        EX_DB.forEach(function(ex){
+          var opt = document.createElement('option');
+          opt.value = ex.name+' Max';
+          opt.textContent = ex.name;
+          _mc.appendChild(opt);
+        });
+      }
+    }
+    _mx.onchange = function(){
+      var u = this.value.split('|')[1];
+      var lbl = document.getElementById('max-val-lbl');
+      if(lbl) lbl.textContent = u==='Sek'?'ERGEBNIS (SEK)':u==='Min:Sek'?'ERGEBNIS (MIN:SEK)':'ERGEBNIS (WDH)';
+    };
+  }
 })();
 
 // ── EMOM SKIP ─────────────────────────────────────────────

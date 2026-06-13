@@ -159,6 +159,23 @@ function showCommPostModal(){
 
   function renderStep3(){
     hdrTitle.textContent='SCHRITT 3 \u2014 ÜBUNGEN';
+    content.innerHTML='';
+    // Option: no exercises (free text challenge)
+    var freeToggle=document.createElement('div');
+    freeToggle.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:10px;margin-bottom:12px;';
+    freeToggle.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--text);">Freie Challenge (ohne Übungen)</div>';
+    var ftBtn=document.createElement('button');
+    ftBtn.style.cssText='width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;background:'+(challengeData.freeChallenge?'var(--accent)':'#ccc')+';position:relative;';
+    ftBtn.innerHTML='<div style="position:absolute;top:2px;'+(challengeData.freeChallenge?'right:2px':'left:2px')+';width:18px;height:18px;border-radius:50%;background:#fff;"></div>';
+    ftBtn.onclick=function(){challengeData.freeChallenge=!challengeData.freeChallenge;renderStep3();};
+    freeToggle.appendChild(ftBtn); content.appendChild(freeToggle);
+    if(challengeData.freeChallenge){
+      var freeDesc=document.createElement('div');
+      freeDesc.style.cssText='background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--muted);';
+      freeDesc.innerHTML='&#128204; Die Challenge hat keine festen Übungen. Beschreib sie in Schritt 2.';
+      content.appendChild(freeDesc);
+      return;
+    }
     var addBtn=document.createElement('button');
     addBtn.style.cssText='width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px dashed rgba(255,85,0,0.4);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:13px;cursor:pointer;margin-bottom:14px;';
     addBtn.textContent='+ ÜBUNG HINZUFÜGEN';
@@ -167,6 +184,7 @@ function showCommPostModal(){
       renderStep3();
     };
     content.appendChild(addBtn);
+    content._step3Built = true;
     var exList=document.createElement('div'); exList.id='ch-ex-list'; content.appendChild(exList);
     if(challengeData.exercises.length===0){
       var hint=document.createElement('div'); hint.style.cssText='text-align:center;padding:20px 0;font-size:12px;color:var(--muted);';
