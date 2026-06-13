@@ -128,24 +128,28 @@ function buildPlanList(){
   h+='<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:inherit;font-weight:700;margin-bottom:8px;">VORLAGEN</div>';
   for(var pi=0;pi<PRESET_PLANS.length;pi++){
     var pl=PRESET_PLANS[pi];
-    // Check if already added
     var alreadyAdded=false;
     for(var ai=0;ai<plans.length;ai++){if(plans[ai].name===pl.name){alreadyAdded=true;break;}}
-    h+='<div class="plan-card" style="border-color:var(--border);opacity:'+(alreadyAdded?'0.5':'1')+'">';
+    h+='<div class="plan-card" style="border-color:var(--border);opacity:'+(alreadyAdded?'0.5':'1')+';cursor:pointer;" onclick="togglePlanExpand(this)">';
     h+='<div class="plan-top"><div class="plan-name" style="color:var(--muted)">'+pl.name+'</div>';
-    h+='<div style="background:rgba(255,85,0,0.08);color:var(--accent);border-radius:20px;padding:2px 8px;font-family:inherit;font-size:9px;letter-spacing:1px;font-weight:700;">VORLAGE</div></div>';
+    h+='<div style="display:flex;align-items:center;gap:8px;">';
+    h+='<div style="font-size:10px;color:var(--muted);">'+pl.exercises.length+' Übungen</div>';
+    h+='<div style="background:rgba(255,85,0,0.08);color:var(--accent);border-radius:20px;padding:2px 8px;font-family:inherit;font-size:9px;letter-spacing:1px;font-weight:700;">VORLAGE</div>';
+    h+='<div style="font-size:14px;color:var(--muted);">›</div></div></div>';
+    // Exercises hidden by default
+    h+='<div class="plan-ex-detail" style="display:none;margin-top:10px;">';
     for(var j=0;j<pl.exercises.length;j++){
       var pex=pl.exercises[j];var pcol=COLS[pex.col]||COLS.gr;
       var pst='';for(var k=0;k<pex.sets.length;k++){if(k>0)pst+=' · ';pst+='S'+(k+1)+': '+pex.sets[k].n+' '+pex.unit;}
       h+='<div class="plan-exrow"><div class="plan-dot" style="background:'+pcol+'"></div><div class="plan-exname">'+pex.name+'</div><div class="plan-exsets">'+pst+'</div></div>';
     }
-    h+='<div class="plan-actions">';
+    h+='<div class="plan-actions" style="margin-top:10px;">';
     if(alreadyAdded){
-      h+='<button class="plan-del-btn" data-preset-name="'+pi+'" onclick="removePresetFromMyPlans('+pi+')">ENTFERNEN</button>';
+      h+='<button class="plan-del-btn" onclick="event.stopPropagation();removePresetFromMyPlans('+pi+')">ENTFERNEN</button>';
     } else {
-      h+='<button class="plan-start-btn" onclick="addPresetToMyPlans('+pi+')" style="background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);">+ HINZUFUGEN</button>';
+      h+='<button class="plan-start-btn" onclick="event.stopPropagation();addPresetToMyPlans('+pi+')" style="background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);">+ HINZUFUGEN</button>';
     }
-    h+='</div></div>';
+    h+='</div></div></div>';
   }
 
   // MY PLANS section
@@ -153,17 +157,19 @@ function buildPlanList(){
     h+='<div style="font-size:9px;letter-spacing:3px;color:var(--muted);font-family:Bebas Neue;margin:16px 0 8px;">MEINE PLANE</div>';
     for(var i=0;i<plans.length;i++){
       var pl=plans[i];
-      h+='<div class="plan-card">';
-      h+='<div class="plan-top"><div class="plan-name">'+pl.name+'</div><div class="plan-excount">'+pl.exercises.length+' Ubungen</div></div>';
+      h+='<div class="plan-card" style="cursor:pointer;" onclick="togglePlanExpand(this)">';
+      h+='<div class="plan-top"><div class="plan-name">'+pl.name+'</div>';
+      h+='<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:10px;color:var(--muted);">'+pl.exercises.length+' Übungen</div><div style="font-size:14px;color:var(--muted);">›</div></div></div>';
+      h+='<div class="plan-ex-detail" style="display:none;margin-top:10px;">';
       for(var j=0;j<pl.exercises.length;j++){
         var ex=pl.exercises[j];var col=COLS[ex.col]||COLS.gr;
         var st='';for(var k=0;k<ex.sets.length;k++){if(k>0)st+=' · ';st+='S'+(k+1)+': '+ex.sets[k].n+' '+ex.unit;}
         h+='<div class="plan-exrow"><div class="plan-dot" style="background:'+col+'"></div><div class="plan-exname">'+ex.name+'</div><div class="plan-exsets">'+st+'</div></div>';
       }
-      h+='<div class="plan-actions">';
-      h+='<button class="plan-start-btn" onclick="startWorkout('+pl.id+')">STARTEN</button>';
-      h+='<button class="plan-del-btn" onclick="deletePlan('+pl.id+')">LOSCHEN</button>';
-      h+='</div></div>';
+      h+='<div class="plan-actions" style="margin-top:10px;">';
+      h+='<button class="plan-start-btn" onclick="event.stopPropagation();startWorkout('+pl.id+')">STARTEN</button>';
+      h+='<button class="plan-del-btn" onclick="event.stopPropagation();deletePlan('+pl.id+')">LOSCHEN</button>';
+      h+='</div></div></div>';
     }
   } else {
     h+='<div class="empty" style="padding:20px 0;">Noch keine eigenen Plane.<br>Vorlage hinzufugen oder neuen Plan erstellen.</div>';
@@ -841,4 +847,12 @@ function buildDrawerPreset(el){
       el.appendChild(card);
     })(PRESET_CHALLENGES[i]);
   }
+}
+function togglePlanExpand(card){
+  var detail = card.querySelector('.plan-ex-detail');
+  var arrow = card.querySelector('.plan-top div:last-child div:last-child');
+  if(!detail) return;
+  var isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  if(arrow) arrow.textContent = isOpen ? '›' : '˅';
 }
