@@ -4,6 +4,7 @@ var streakData={currentStreak:0,longestStreak:0,weeklyGoal:3,goalSet:false};
 function lstreak(){try{var d=localStorage.getItem('cali_streak');if(d)streakData=JSON.parse(d);}catch(x){}}
 function sstreak(){try{localStorage.setItem('cali_streak',JSON.stringify(streakData));}catch(x){}}
 function calcStreak(){
+  var _prevStreak = streakData.currentStreak||0;
   var dates=[];for(var i=0;i<ents.length;i++){if(dates.indexOf(ents[i].date)===-1)dates.push(ents[i].date);}dates.sort();
   if(!dates.length){streakData.currentStreak=0;sstreak();return;}
   var today=new Date().toISOString().slice(0,10);

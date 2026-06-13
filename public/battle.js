@@ -808,6 +808,22 @@ function confirmRoundResult(battleId, d, roundIdx, myUid, confirmed, value, ov){
       updates.winnerId = winnerId;
       updates.completedAt = Date.now();
       updates.scores = scores;
+      // XP vergeben
+      try{
+        var myUid2 = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
+        if(myUid2 && winnerId === myUid2){
+          var myLv = 1, oppLv = 1;
+          db.collection('xp').doc(myUid2).get().then(function(xdoc){ myLv=xdoc.exists?(xdoc.data().level||1):1;
+            var oppId = d.challengerId===myUid2?d.challengedId:d.challengerId;
+            db.collection('xp').doc(oppId).get().then(function(xdoc2){ oppLv=xdoc2.exists?(xdoc2.data().level||1):1;
+              var xpWon = calcBattleXP(myLv, oppLv, true);
+              var wasKing = false; // TODO: check if opponent was king
+              if(wasKing) xpWon += 300;
+              awardXP(xpWon, '⚔️ Battle gewonnen (Level '+oppLv+' Gegner)');
+            });
+          });
+        }
+      }catch(xe){}
       // King-Update
       updateParkKingAfterBattle(d, winnerId);
     }

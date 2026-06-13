@@ -393,6 +393,7 @@ function buildProfilStatsDetail(){
 }
 
 function buildProfilUI(){
+  setTimeout(function(){ try{ buildXPWidget(document.getElementById('xp-widget')); initXPSystem(); }catch(e){} },200);
   // Fill inputs
   var fields = {
     'pr-inp-name':   prData.name||'',

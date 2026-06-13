@@ -1140,3 +1140,18 @@ function loadParkSuggestions(el){
       });
     }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
 }
+
+// ── ADMIN: MONATSBONI BUTTON ──────────────────────────────
+function addMonthlyBonusAdminBtn(box){
+  var now = new Date();
+  var prevMonth = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
+  var btn = document.createElement('button');
+  btn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);border:1.5px solid var(--accent);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:12px;cursor:pointer;color:var(--accent);margin-bottom:14px;';
+  btn.innerHTML = '🏆 MONATSBONI VERGEBEN ('+prevMonth+')';
+  btn.onclick = function(){
+    if(confirm('Monatsboni für '+prevMonth+' vergeben? Das kann nicht rückgängig gemacht werden!')){
+      awardMonthlyBonuses(prevMonth);
+    }
+  };
+  box.insertBefore(btn, box.firstChild);
+}

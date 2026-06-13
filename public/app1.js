@@ -236,6 +236,7 @@ function startTimer(){
 }
 
 function endWorkout(){
+  try{ awardXP(10, '💪 Workout geloggt'); }catch(e){}
   if(!woExercises.length){
     if(!confirm('Workout ohne Übungen beenden?'))return;
   }
