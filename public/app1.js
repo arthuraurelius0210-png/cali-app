@@ -136,7 +136,31 @@ function ld(){
 function sd(){try{localStorage.setItem(DB,JSON.stringify(ents));}catch(x){}}
 function shr(){try{localStorage.setItem(DHR,JSON.stringify(hrs));}catch(x){}}
 
+function populateMaxDropdowns(){
+  var _mx = document.getElementById('max-ex');
+  if(_mx && _mx.options.length <= 1 && typeof EX_DB !== 'undefined'){
+    _mx.innerHTML = '';
+    EX_DB.forEach(function(ex){
+      var opt = document.createElement('option');
+      opt.value = ex.name+' Max|'+ex.unit;
+      opt.textContent = ex.name+' (Max '+ex.unit+')';
+      _mx.appendChild(opt);
+    });
+  }
+  var _mc = document.getElementById('max-chart-ex');
+  if(_mc && _mc.options.length <= 1 && typeof EX_DB !== 'undefined'){
+    _mc.innerHTML = '';
+    EX_DB.forEach(function(ex){
+      var opt = document.createElement('option');
+      opt.value = ex.name+' Max';
+      opt.textContent = ex.name;
+      _mc.appendChild(opt);
+    });
+  }
+}
+
 function goPage(p){
+  if(p==='m') setTimeout(populateMaxDropdowns, 100);
   var ps=['e','p','m','ch','v','pr','sk','h','parks','rek'];
   for(var i=0;i<ps.length;i++){
     var pg=document.getElementById('page-'+ps[i]);

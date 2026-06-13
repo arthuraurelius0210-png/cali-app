@@ -288,7 +288,7 @@ function showCommPostModal(){
       if(!challengeData.title||challengeData.title.length<3){toast('Titel zu kurz!');return;}
       if(!challengeData.desc||challengeData.desc.length<10){toast('Beschreibung zu kurz!');return;}
     }
-    if(currentStep===3&&challengeData.exercises.length===0){toast('Mindestens eine Übung!');return;}
+    if(currentStep===3&&challengeData.exercises.length===0&&!challengeData.freeChallenge){toast('Mindestens eine Übung oder Freie Challenge aktivieren!');return;}
     if(currentStep===4){postChallenge();return;}
     currentStep++;
     renderStep(currentStep);
