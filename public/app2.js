@@ -874,54 +874,151 @@ function buildWeekPlan(){
   var el = document.getElementById('week-plan-section');
   if(!el) return;
   var wp = getWeekPlan();
-  var todayIdx = (new Date().getDay()+6)%7; // 0=Mo, 6=So
+  var todayIdx = (new Date().getDay()+6)%7;
 
   el.innerHTML = '';
 
-  // 7-Tage Übersicht
-  var grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;';
+  // Kompakter Button der den Kalender öffnet
+  var previewBtn = document.createElement('div');
+  previewBtn.style.cssText = 'background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;';
+  previewBtn.onclick = function(){ openWeekCalendar(); };
 
-  WEEK_DAYS.forEach(function(day, i){
+  // Zeige Heute + morgen als Preview
+  var todayPlans = wp[todayIdx] || [];
+  var previewLeft = document.createElement('div');
+  previewLeft.innerHTML =
+    '<div style="font-size:10px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:6px;">HEUTE — '+WEEK_DAYS_FULL[todayIdx].toUpperCase()+'</div>'+
+    (todayPlans.length===0
+      ? '<div style="font-size:13px;color:var(--muted);">😴 Ruhetag</div>'
+      : todayPlans.slice(0,2).map(function(id){
+          var p=getPlanById(id);
+          return '<div style="font-size:13px;font-weight:700;color:var(--text);">💪 '+(p?p.name:'Plan')+'</div>';
+        }).join('')+(todayPlans.length>2?'<div style="font-size:11px;color:var(--muted);">+'+( todayPlans.length-2)+' weitere</div>':'')
+    );
+
+  var previewRight = document.createElement('div');
+  previewRight.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
+  // Mini 7-day dots
+  var dotsRow = document.createElement('div');
+  dotsRow.style.cssText = 'display:flex;gap:3px;margin-bottom:4px;';
+  WEEK_DAYS.forEach(function(d,i){
+    var dot = document.createElement('div');
+    var dayPl = wp[i]||[];
+    dot.style.cssText = 'width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;background:'+(i===todayIdx?'var(--accent)':'var(--bg3)')+';color:'+(i===todayIdx?'#fff':'var(--muted)')+';';
+    dot.textContent = d;
+    dotsRow.appendChild(dot);
+  });
+  previewRight.appendChild(dotsRow);
+  previewRight.innerHTML += '<div style="font-size:12px;color:var(--muted);">Kalender öffnen ›</div>';
+
+  previewBtn.appendChild(previewLeft);
+  previewBtn.appendChild(previewRight);
+  el.appendChild(previewBtn);
+}
+
+function openWeekCalendar(){
+  var ex = document.getElementById('week-cal-ov'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'week-cal-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+
+  // Top bar
+  var topBar = document.createElement('div');
+  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.innerHTML = '← Zurück';
+  backBtn.onclick = function(){ ov.remove(); };
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'flex:1;font-size:17px;font-weight:800;color:var(--text);';
+  titleEl.textContent = '📅 WOCHENPLAN';
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl);
+  ov.appendChild(topBar);
+
+  // Scrollable content
+  var scroll = document.createElement('div');
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
+  ov.appendChild(scroll);
+  document.body.appendChild(ov);
+
+  renderWeekCalendar(scroll);
+}
+
+function renderWeekCalendar(scroll){
+  scroll.innerHTML = '';
+  var wp = getWeekPlan();
+  var todayIdx = (new Date().getDay()+6)%7;
+
+  WEEK_DAYS_FULL.forEach(function(dayName, i){
     var dayPlans = wp[i] || [];
     var isToday = i === todayIdx;
-    var btn = document.createElement('div');
-    btn.style.cssText = 'text-align:center;padding:8px 2px;border-radius:10px;cursor:pointer;border:1.5px solid '+(isToday?'var(--accent)':'var(--border)')+';background:'+(isToday?'rgba(255,85,0,0.08)':'var(--bg2)')+';';
-    btn.innerHTML =
-      '<div style="font-size:9px;font-weight:700;color:'+(isToday?'var(--accent)':'var(--muted)')+';">'+day+'</div>'+
-      '<div style="font-size:16px;margin:3px 0;">'+(dayPlans.length===0?'😴':dayPlans.length===1?'💪':'🔥')+'</div>'+
-      '<div style="font-size:8px;color:var(--muted);">'+(dayPlans.length===0?'Ruhe':dayPlans.length+' Plan'+(dayPlans.length>1?'e':''))+'</div>';
-    btn.onclick = function(){ openDayEditor(i); };
-    grid.appendChild(btn);
-  });
-  el.appendChild(grid);
 
-  // Heute hervorheben
-  var todayPlans = wp[todayIdx] || [];
-  if(todayPlans.length > 0){
-    var todayEl = document.createElement('div');
-    todayEl.style.cssText = 'background:rgba(255,85,0,0.08);border:1.5px solid var(--accent);border-radius:12px;padding:12px;';
-    todayEl.innerHTML = '<div style="font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:8px;">HEUTE — '+WEEK_DAYS_FULL[todayIdx].toUpperCase()+'</div>';
-    todayPlans.forEach(function(planId){
-      var plan = getPlanById(planId);
-      if(!plan) return;
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,85,0,0.1);';
-      row.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+plan.name+'</div>';
-      var startBtn = document.createElement('button');
-      startBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;';
-      startBtn.textContent = 'STARTEN';
-      startBtn.onclick = function(){ startWorkout(plan.id); };
-      row.appendChild(startBtn);
-      todayEl.appendChild(row);
-    });
-    el.appendChild(todayEl);
-  } else {
-    var restEl = document.createElement('div');
-    restEl.style.cssText = 'text-align:center;padding:10px;background:var(--bg2);border-radius:12px;border:1px solid var(--border);font-size:12px;color:var(--muted);';
-    restEl.innerHTML = '😴 Heute: Ruhetag';
-    el.appendChild(restEl);
-  }
+    var dayBlock = document.createElement('div');
+    dayBlock.style.cssText = 'margin-bottom:12px;border-radius:16px;overflow:hidden;border:1.5px solid '+(isToday?'var(--accent)':'var(--border)')+';';
+
+    // Day header
+    var dayHdr = document.createElement('div');
+    dayHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:'+(isToday?'rgba(255,85,0,0.08)':'var(--bg2)')+';cursor:pointer;';
+    dayHdr.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<div style="font-size:15px;font-weight:800;color:'+(isToday?'var(--accent)':'var(--text)')+';">'+dayName+'</div>'+
+        (isToday?'<div style="font-size:9px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;font-weight:700;">HEUTE</div>':'')+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<div style="font-size:12px;color:var(--muted);">'+(dayPlans.length===0?'😴 Ruhetag':dayPlans.length+' Workout'+(dayPlans.length>1?'s':''))+'</div>'+
+        '<div style="font-size:18px;color:var(--muted);">+</div>'+
+      '</div>';
+
+    dayHdr.onclick = function(){ openDayEditor(i, scroll); };
+    dayBlock.appendChild(dayHdr);
+
+    // Plans for this day
+    if(dayPlans.length > 0){
+      var plansWrap = document.createElement('div');
+      plansWrap.style.cssText = 'padding:8px 12px;background:var(--bg);';
+
+      dayPlans.forEach(function(planId, pi){
+        var plan = getPlanById(planId);
+        if(!plan) return;
+
+        var planRow = document.createElement('div');
+        planRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:12px;margin-bottom:8px;border:1px solid var(--border);';
+
+        var planInfo = document.createElement('div');
+        planInfo.innerHTML =
+          '<div style="font-size:14px;font-weight:700;color:var(--text);">💪 '+plan.name+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+plan.exercises.length+' Übungen</div>';
+
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:6px;';
+
+        var startBtn = document.createElement('button');
+        startBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 14px;cursor:pointer;';
+        startBtn.textContent = '▶ START';
+        startBtn.onclick = function(){ startWorkout(plan.id); document.getElementById('week-cal-ov').remove(); };
+
+        var delBtn = document.createElement('button');
+        delBtn.style.cssText = 'background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:inherit;font-size:14px;padding:6px 10px;cursor:pointer;';
+        delBtn.textContent = '×';
+        delBtn.onclick = function(){
+          var curWp = getWeekPlan();
+          var curDay = curWp[i]||[];
+          curDay.splice(pi,1);
+          curWp[i]=curDay;
+          saveWeekPlan(curWp);
+          buildWeekPlan();
+          renderWeekCalendar(scroll);
+        };
+
+        btnRow.appendChild(startBtn); btnRow.appendChild(delBtn);
+        planRow.appendChild(planInfo); planRow.appendChild(btnRow);
+        plansWrap.appendChild(planRow);
+      });
+      dayBlock.appendChild(plansWrap);
+    }
+
+    scroll.appendChild(dayBlock);
+  });
 }
 
 function getPlanById(id){
@@ -930,7 +1027,7 @@ function getPlanById(id){
   return null;
 }
 
-function openDayEditor(dayIdx){
+function openDayEditor(dayIdx, calScroll){
   var wp = getWeekPlan();
   var dayPlans = wp[dayIdx] || [];
 
@@ -966,6 +1063,7 @@ function openDayEditor(dayIdx){
           saveWeekPlan(wp);
           renderBox();
           buildWeekPlan();
+          if(calScroll) renderWeekCalendar(calScroll);
         };
         row.appendChild(delBtn);
         box.appendChild(row);
@@ -1004,6 +1102,7 @@ function openDayEditor(dayIdx){
       saveWeekPlan(wp);
       renderBox();
       buildWeekPlan();
+      if(calScroll) renderWeekCalendar(calScroll);
     };
     box.appendChild(addBtn);
 
