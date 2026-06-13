@@ -86,17 +86,8 @@ var EX_DB = [
   {name:'Handstand Walk',             cat:'Skills', unit:'Meter',  col:'am', band:0},
   {name:'360 Pull-up',                cat:'Skills', unit:'Wdh',    col:'am', band:0},
   // SCHWIMMEN
-  {name:'Kraul 100m',                 cat:'Schwimmen', unit:'Min:Sek', col:'bl', band:0},
-  {name:'Brust 100m',                 cat:'Schwimmen', unit:'Min:Sek', col:'bl', band:0},
-  {name:'Ruecken 100m',               cat:'Schwimmen', unit:'Min:Sek', col:'bl', band:0},
-  {name:'Kraul 50m',                  cat:'Schwimmen', unit:'Min:Sek', col:'bl', band:0},
-  {name:'Schwimmen (Ausdauer)',       cat:'Schwimmen', unit:'Min',     col:'bl', band:0},
-  // LAUFEN
-  {name:'Sprint 100m',                cat:'Laufen', unit:'Sek',     col:'gr', band:0},
-  {name:'Sprint 200m',                cat:'Laufen', unit:'Sek',     col:'gr', band:0},
-  {name:'Intervall Laufen',           cat:'Laufen', unit:'Min',     col:'gr', band:0},
-  {name:'Dauerlauf',                  cat:'Laufen', unit:'Min',     col:'gr', band:0},
-];
+            // LAUFEN
+        ];
 
 var EX_CATS = ['Alle','Pull','Push','Core','Legs','Skills','Schwimmen','Laufen'];
 var EX_CAT_COLORS = {Pull:'var(--accent)',Push:'#FF6B35',Core:'#A78BFA',Legs:'#4ECDC4',Skills:'#F59E0B',Schwimmen:'#38BDF8',Laufen:'var(--accent)',Alle:'#888'};

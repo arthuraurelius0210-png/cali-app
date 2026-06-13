@@ -771,10 +771,7 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
     {id:'Push',label:'Push',icon:'&#128170;'},
     {id:'Core',label:'Core',icon:'&#128293;'},
     {id:'Legs',label:'Legs',icon:'&#129466;'},
-    {id:'Skills',label:'Skills',icon:'&#11088;'},
-    {id:'Schwimmen',label:'Schwimmen',icon:'&#127946;'},
-    {id:'Laufen',label:'Laufen',icon:'&#127939;'},
-  ];
+    {id:'Skills',label:'Skills',icon:'&#11088;'},  ];
   var activeCat = 'all';
 
   // Kategorie-Filter

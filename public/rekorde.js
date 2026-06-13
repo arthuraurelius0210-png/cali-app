@@ -8,10 +8,7 @@ var REK_CATS = [
   {id:'Push',      label:'Push',      icon:'&#128170;'},
   {id:'Core',      label:'Core',      icon:'&#128293;'},
   {id:'Legs',      label:'Legs',      icon:'&#129466;'},
-  {id:'Skills',    label:'Skills',    icon:'&#11088;'},
-  {id:'Schwimmen', label:'Schwimmen', icon:'&#127946;'},
-  {id:'Laufen',    label:'Laufen',    icon:'&#127939;'},
-];
+  {id:'Skills',    label:'Skills',    icon:'&#11088;'},];
 
 var REK_REGIONS = [
   {label:'Bezirk',      km:10},
@@ -44,7 +41,11 @@ function buildRekordeUI(){
   subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;letter-spacing:1px;';
   subBtn.textContent = '+ EINTRAG';
   subBtn.onclick = function(){ openRecordSubmit(null,null); };
-  btnRow.appendChild(parkBtn); btnRow.appendChild(subBtn);
+  var suggestExBtn2 = document.createElement('button');
+  suggestExBtn2.style.cssText = 'background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 10px;cursor:pointer;';
+  suggestExBtn2.innerHTML = '+ &#220;BUNG';
+  suggestExBtn2.onclick = function(){ openSuggestExercise(); };
+  btnRow.appendChild(parkBtn); btnRow.appendChild(suggestExBtn2); btnRow.appendChild(subBtn);
   hdr.appendChild(btnRow);
   root.appendChild(hdr);
 
@@ -912,4 +913,75 @@ function loadMyParksOverview(el){
     .catch(function(e){
       el.innerHTML='<div style="padding:20px;color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>';
     });
+}
+
+// ── ÜBUNG VORSCHLAGEN ─────────────────────────────────────
+function openSuggestExercise(){
+  if(!firebase.auth().currentUser){ alert('Bitte einloggen!'); return; }
+  var ex = document.getElementById('suggest-ex-ov'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'suggest-ex-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
+  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
+    '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">+ ÜBUNG VORSCHLAGEN</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Fehlt eine Übung? Schlag sie vor!</div>';
+
+  var nameInput = document.createElement('input');
+  nameInput.type = 'text'; nameInput.placeholder = 'Übungsname (z.B. Typewriter Pull-Up)';
+  nameInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+
+  // Kategorie
+  var catSelect = document.createElement('select');
+  catSelect.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  ['Pull','Push','Core','Legs','Skills'].forEach(function(c){
+    var opt = document.createElement('option'); opt.value=c; opt.textContent=c;
+    catSelect.appendChild(opt);
+  });
+
+  var unitSelect = document.createElement('select');
+  unitSelect.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  ['Wdh','Sek','Min'].forEach(function(u){
+    var opt = document.createElement('option'); opt.value=u; opt.textContent=u;
+    unitSelect.appendChild(opt);
+  });
+
+  var descInput = document.createElement('textarea');
+  descInput.placeholder = 'Kurze Beschreibung (optional)';
+  descInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);margin-bottom:16px;box-sizing:border-box;height:70px;resize:none;';
+
+  var sendBtn = document.createElement('button');
+  sendBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:15px;cursor:pointer;margin-bottom:8px;';
+  sendBtn.textContent = 'VORSCHLAG SENDEN';
+  sendBtn.onclick = function(){
+    var name = nameInput.value.trim();
+    if(!name){ alert('Bitte Übungsname eingeben!'); return; }
+    sendBtn.disabled=true; sendBtn.textContent='Wird gesendet...';
+    var user = firebase.auth().currentUser;
+    db.collection('exerciseSuggestions').add({
+      name: name,
+      category: catSelect.value,
+      unit: unitSelect.value,
+      description: descInput.value.trim(),
+      submitterId: user.uid,
+      submitterName: (typeof prData!=='undefined'&&prData&&prData.name)||'Anonym',
+      status: 'pending',
+      createdAt: Date.now(),
+    }).then(function(){
+      ov.remove();
+      if(typeof toast==='function') toast('✅ Vorschlag gesendet! Admin prüft ihn.');
+    }).catch(function(e){ alert('Fehler: '+e.message); sendBtn.disabled=false; sendBtn.textContent='VORSCHLAG SENDEN'; });
+  };
+
+  box.appendChild(nameInput); box.appendChild(catSelect);
+  box.appendChild(unitSelect); box.appendChild(descInput); box.appendChild(sendBtn);
+  var cancelBtn = document.createElement('button');
+  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+  cancelBtn.textContent = 'Abbrechen';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  box.appendChild(cancelBtn);
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  document.body.appendChild(ov);
 }
