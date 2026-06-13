@@ -170,7 +170,7 @@ function buildParksList(){
   });
 }
 
-function openParkModal(idx){
+function openParkDetail(idx){
   var park = parksData[idx];
   if(!park) return;
   var name = park.tags && (park.tags.name || park.tags['name:de']) ? (park.tags.name || park.tags['name:de']) : 'Calisthenics Park';
