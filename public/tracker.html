@@ -603,5 +603,77 @@ canvas{max-width:100%;}
   <script src="battle.js"></script>
   <script src="xp.js"></script>
 
+  <!-- Floating Feedback Button -->
+  <div id="feedback-btn" onclick="openFeedback()" style="position:fixed;bottom:24px;right:16px;width:44px;height:44px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:8000;box-shadow:0 4px 14px rgba(255,85,0,0.4);font-size:20px;">💬</div>
+
+  <script>
+  function openFeedback(){
+    var ex=document.getElementById('feedback-ov'); if(ex) ex.remove();
+    var ov=document.createElement('div');
+    ov.id='feedback-ov';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+    var box=document.createElement('div');
+    box.style.cssText='background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
+    box.innerHTML='<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
+      '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">💬 FEEDBACK</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Was fällt dir auf? Bug, Idee oder Lob — alles willkommen!</div>';
+
+    var typeWrap=document.createElement('div');
+    typeWrap.style.cssText='display:flex;gap:8px;margin-bottom:14px;';
+    var types=[{id:'bug',label:'🐛 Bug'},{id:'idea',label:'💡 Idee'},{id:'lob',label:'👍 Lob'}];
+    var selType='bug';
+    types.forEach(function(t){
+      var btn=document.createElement('button');
+      btn.dataset.tid=t.id;
+      btn.style.cssText='flex:1;padding:9px;border-radius:10px;border:1.5px solid '+(t.id===selType?'var(--accent)':'var(--border)')+';background:'+(t.id===selType?'rgba(255,85,0,0.1)':'none')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:'+(t.id===selType?'var(--accent)':'var(--muted)')+';';
+      btn.textContent=t.label;
+      btn.onclick=function(){
+        selType=t.id;
+        typeWrap.querySelectorAll('button').forEach(function(b){
+          var a=b.dataset.tid===selType;
+          b.style.borderColor=a?'var(--accent)':'var(--border)';
+          b.style.background=a?'rgba(255,85,0,0.1)':'none';
+          b.style.color=a?'var(--accent)':'var(--muted)';
+        });
+      };
+      typeWrap.appendChild(btn);
+    });
+    box.appendChild(typeWrap);
+
+    var ta=document.createElement('textarea');
+    ta.placeholder='Beschreib kurz was dir aufgefallen ist...';
+    ta.style.cssText='width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);height:100px;resize:none;box-sizing:border-box;margin-bottom:12px;';
+    box.appendChild(ta);
+
+    var sendBtn=document.createElement('button');
+    sendBtn.style.cssText='width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:15px;cursor:pointer;margin-bottom:8px;';
+    sendBtn.textContent='SENDEN';
+    sendBtn.onclick=function(){
+      var txt=ta.value.trim();
+      if(!txt){ta.focus();return;}
+      sendBtn.disabled=true;sendBtn.textContent='Wird gesendet...';
+      var uid=typeof firebase!=='undefined'&&firebase.auth().currentUser?firebase.auth().currentUser.uid:'anonym';
+      if(typeof db!=='undefined'){
+        db.collection('feedback').add({type:selType,message:txt,uid:uid,date:Date.now()})
+          .then(function(){ov.remove();if(typeof toast==='function')toast('✅ Danke für dein Feedback!');})
+          .catch(function(){ov.remove();if(typeof toast==='function')toast('✅ Danke!');});
+      } else {
+        ov.remove();if(typeof toast==='function')toast('✅ Danke für dein Feedback!');
+      }
+    };
+    box.appendChild(sendBtn);
+
+    var cancelBtn=document.createElement('button');
+    cancelBtn.style.cssText='width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+    cancelBtn.textContent='Abbrechen';
+    cancelBtn.onclick=function(){ov.remove();};
+    box.appendChild(cancelBtn);
+
+    ov.appendChild(box);
+    ov.onclick=function(e){if(e.target===ov)ov.remove();};
+    document.body.appendChild(ov);
+    setTimeout(function(){ta.focus();},100);
+  }
+  </script>
 </body>
 </html>
