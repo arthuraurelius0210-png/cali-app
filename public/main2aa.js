@@ -97,11 +97,7 @@ var PERCENTILE_DATA = {
     male:   [[5,30],[10,50],[15,65],[20,77],[30,88],[45,95],[60,98]],
     female: [[5,35],[10,55],[15,70],[20,82],[30,91],[45,97]]
   },
-  'Sprint 100m Max': {
-    male:   [[9,99.9],[10,99],[11,97],[12,92],[13,82],[14,68],[15,50],[16,32],[17,18],[18,8],[20,3]],
-    female: [[10,99.9],[11,99],[12,97],[13,90],[14,75],[15,55],[16,35],[17,18],[18,8],[20,3]]
-  }
-};
+  };
 
 function getPercentile(exName, val, gender){
   var data = PERCENTILE_DATA[exName];
@@ -111,8 +107,7 @@ function getPercentile(exName, val, gender){
   var num = parseFloat(val);
   if(isNaN(num)) return -1;
 
-  // Special case: Sprint (lower = better)
-  var isTime = exName.indexOf('Sprint')>-1 || exName.indexOf('100m')>-1;
+  var isTime = false;
   if(isTime){
     // Reverse: lower time = higher percentile
     for(var i=0;i<table.length;i++){

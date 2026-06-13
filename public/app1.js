@@ -127,7 +127,7 @@ var PRESET_PLANS = [
 var activePfCat = 'Alle';
 
 var COLS = {gr:'var(--accent)',or:'#FF6B35',te:'#4ECDC4',pu:'#A78BFA',am:'#F59E0B',bl:'#38BDF8'};
-var CC = {'Klimmzuge':'gr','Dips':'or','Liegestutze':'te','Plank':'pu','Australian Rows':'gr','Pike Push-ups':'or','Muscle-Ups':'am','L-Sit Hold':'pu','Tuck Front Lever':'pu','Kraul 100m':'bl','Brust 100m':'bl','Sprint 100m':'am'};
+var CC = {'Klimmzuge':'gr','Dips':'or','Liegestutze':'te','Plank':'pu','Australian Rows':'gr','Pike Push-ups':'or','Muscle-Ups':'am','L-Sit Hold':'pu','Tuck Front Lever':'pu'};
 
 function ld(){
   try{var a=localStorage.getItem(DB);ents=a?JSON.parse(a):[];}catch(x){ents=[];}
@@ -462,7 +462,7 @@ function toast(m){
 function bb(){
   var el=document.getElementById('bests');
   if(!el)return;
-  var nm=['Klimmzuge','Dips','Liegestutze','Plank','Muscle-Ups','L-Sit Hold','Tuck Front Lever','Kraul 100m','Brust 100m','Sprint 100m'];
+  var nm=['Klimmzuge','Dips','Liegestutze','Plank','Muscle-Ups','L-Sit Hold','Tuck Front Lever'];
   var h='';
   for(var i=0;i<nm.length;i++){
     var n=nm[i];var f=[];
