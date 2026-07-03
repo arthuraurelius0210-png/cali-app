@@ -16,7 +16,8 @@ function showCommPostModal(){
     title:'', desc:'', difficulty:3,
     type:'once',
     typeParams:{},
-    exercises:[]
+    exercises:[],
+    videoUrl:''
   };
   var currentStep = 1;
 
@@ -100,6 +101,15 @@ function showCommPostModal(){
     var ta=document.createElement('textarea'); ta.id='ch-desc'; ta.placeholder='Erkläre die Challenge genau...'; ta.value=challengeData.desc||'';
     ta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;resize:none;height:90px;box-sizing:border-box;';
     w2.appendChild(ta);
+    var w25=document.createElement('div'); w25.style.marginBottom='14px';
+    w25.appendChild(lbl('ERKLÄR-VIDEO (optional)'));
+    var vInp=document.createElement('input'); vInp.id='ch-video'; vInp.type='text'; vInp.placeholder='YouTube-Link z.B. https://youtu.be/...'; vInp.value=challengeData.videoUrl||'';
+    vInp.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;box-sizing:border-box;';
+    vInp.oninput=function(){ challengeData.videoUrl=this.value.trim(); };
+    var vHint=document.createElement('div'); vHint.style.cssText='font-size:10px;color:var(--muted);margin-top:5px;';
+    vHint.textContent='Zeig wie die Challenge geht — YouTube oder youtu.be Link';
+    w25.appendChild(vInp); w25.appendChild(vHint);
+
     var w3=document.createElement('div');
     w3.appendChild(lbl('SCHWIERIGKEIT'));
     var dr=document.createElement('div'); dr.style.cssText='display:flex;gap:6px;';
@@ -116,7 +126,7 @@ function showCommPostModal(){
       })(d);
     }
     w3.appendChild(dr);
-    content.appendChild(w1); content.appendChild(w2); content.appendChild(w3);
+    content.appendChild(w1); content.appendChild(w2); content.appendChild(w25); content.appendChild(w3);
   }
 
   function renderStep2(){
@@ -265,6 +275,16 @@ function showCommPostModal(){
       });
     }
     content.appendChild(card);
+    if(challengeData.videoUrl){
+      var vPrev=document.createElement('div'); vPrev.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;';
+      var vIcon=document.createElement('div'); vIcon.style.cssText='font-size:20px;flex-shrink:0;'; vIcon.textContent='\uD83C\uDFA5';
+      var vInfo=document.createElement('div'); vInfo.style.cssText='flex:1;min-width:0;';
+      var vLbl=document.createElement('div'); vLbl.style.cssText='font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:3px;'; vLbl.textContent='ERKLÄR-VIDEO';
+      var vLink=document.createElement('a'); vLink.href=challengeData.videoUrl; vLink.target='_blank'; vLink.style.cssText='font-size:11px;color:var(--text);word-break:break-all;text-decoration:underline;'; vLink.textContent=challengeData.videoUrl;
+      vInfo.appendChild(vLbl); vInfo.appendChild(vLink);
+      vPrev.appendChild(vIcon); vPrev.appendChild(vInfo);
+      content.appendChild(vPrev);
+    }
     var cn=document.createElement('div'); cn.style.cssText='font-size:11px;color:var(--muted);text-align:center;';
     cn.innerHTML=extraCost?'Kostet 3 \uD83D\uDC8E (heute bereits gepostet)':'Heute kostenlos \u2713';
     content.appendChild(cn);
@@ -274,6 +294,7 @@ function showCommPostModal(){
     if(currentStep===1){
       var t=document.getElementById('ch-title'); if(t) challengeData.title=t.value.trim();
       var d=document.getElementById('ch-desc');  if(d) challengeData.desc=d.value.trim();
+      var v=document.getElementById('ch-video'); if(v) challengeData.videoUrl=v.value.trim();
     }
     if(currentStep===2){
       var days=document.getElementById('tp-days'); if(days) challengeData.typeParams.days=parseInt(days.value)||0;
@@ -311,6 +332,7 @@ function showCommPostModal(){
       title:challengeData.title, desc:challengeData.desc,
       difficulty:challengeData.difficulty, type:challengeData.type,
       typeParams:challengeData.typeParams, exercises:challengeData.exercises,
+      videoUrl:challengeData.videoUrl||'',
       likes:[], comments:[], createdAt:new Date().toISOString()
     };
     nextBtn.textContent='...'; nextBtn.disabled=true;
@@ -395,6 +417,17 @@ function buildCommCard(docId, data){
     descEl.style.cssText = 'font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;';
     descEl.textContent = data.desc;
     card.appendChild(descEl);
+  }
+
+  // Video link
+  if(data.videoUrl){
+    var vRow = document.createElement('a');
+    vRow.href = data.videoUrl; vRow.target = '_blank';
+    vRow.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-decoration:none;';
+    var vIco = document.createElement('span'); vIco.style.cssText='font-size:16px;flex-shrink:0;'; vIco.textContent='\uD83C\uDFA5';
+    var vTxt = document.createElement('span'); vTxt.style.cssText='font-size:11px;color:var(--accent);font-weight:700;letter-spacing:1px;'; vTxt.textContent='ERKLÄR-VIDEO ANSEHEN';
+    vRow.appendChild(vIco); vRow.appendChild(vTxt);
+    card.appendChild(vRow);
   }
 
   // Exercises tag
