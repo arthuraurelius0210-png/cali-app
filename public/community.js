@@ -103,12 +103,69 @@ function showCommPostModal(){
     w2.appendChild(ta);
     var w25=document.createElement('div'); w25.style.marginBottom='14px';
     w25.appendChild(lbl('ERKLÄR-VIDEO (optional)'));
-    var vInp=document.createElement('input'); vInp.id='ch-video'; vInp.type='text'; vInp.placeholder='YouTube-Link z.B. https://youtu.be/...'; vInp.value=challengeData.videoUrl||'';
-    vInp.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;box-sizing:border-box;';
-    vInp.oninput=function(){ challengeData.videoUrl=this.value.trim(); };
-    var vHint=document.createElement('div'); vHint.style.cssText='font-size:10px;color:var(--muted);margin-top:5px;';
-    vHint.textContent='Zeig wie die Challenge geht — YouTube oder youtu.be Link';
-    w25.appendChild(vInp); w25.appendChild(vHint);
+
+    // Video file input (hidden, accepts camera or file)
+    var vFileInp=document.createElement('input');
+    vFileInp.type='file'; vFileInp.accept='video/*'; vFileInp.capture='environment';
+    vFileInp.style.display='none'; vFileInp.id='ch-video-file';
+
+    // Status display
+    var vStatus=document.createElement('div'); vStatus.id='ch-video-status';
+    vStatus.style.cssText='font-size:10px;color:var(--muted);margin-top:6px;min-height:16px;';
+    if(challengeData.videoUrl){
+      vStatus.innerHTML='<span style="color:var(--accent);">✓ Video hochgeladen</span>';
+    }
+
+    // Buttons row
+    var vBtnRow=document.createElement('div'); vBtnRow.style.cssText='display:flex;gap:8px;';
+
+    var vCamBtn=document.createElement('button');
+    vCamBtn.type='button';
+    vCamBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
+    vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> VIDEO AUFNEHMEN';
+    vCamBtn.onclick=function(e){ e.preventDefault(); vFileInp.removeAttribute('capture'); vFileInp.setAttribute('capture','environment'); vFileInp.click(); };
+
+    var vFileBtn=document.createElement('button');
+    vFileBtn.type='button';
+    vFileBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
+    vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> DATEI WÄHLEN';
+    vFileBtn.onclick=function(e){ e.preventDefault(); vFileInp.removeAttribute('capture'); vFileInp.click(); };
+
+    vFileInp.onchange=function(){
+      var file=this.files[0]; if(!file) return;
+      if(file.size > 200*1024*1024){ toast('Video zu groß! Max 200MB.'); return; }
+      vStatus.innerHTML='⏳ Wird hochgeladen...';
+      vCamBtn.disabled=true; vFileBtn.disabled=true;
+      vCamBtn.style.opacity='0.5'; vFileBtn.style.opacity='0.5';
+      var uid=currentUser?currentUser.uid:'anon';
+      var ts=Date.now();
+      var storageRef=firebase.storage().ref('challengeVideos/'+uid+'/'+ts+'_'+file.name);
+      var uploadTask=storageRef.put(file);
+      uploadTask.on('state_changed',
+        function(snapshot){
+          var pct=Math.round((snapshot.bytesTransferred/snapshot.totalBytes)*100);
+          vStatus.innerHTML='⏳ '+pct+'% hochgeladen...';
+        },
+        function(err){
+          vStatus.innerHTML='<span style="color:#ef4444;">Fehler: '+err.message+'</span>';
+          vCamBtn.disabled=false; vFileBtn.disabled=false;
+          vCamBtn.style.opacity='1'; vFileBtn.style.opacity='1';
+        },
+        function(){
+          uploadTask.snapshot.ref.getDownloadURL().then(function(url){
+            challengeData.videoUrl=url;
+            vStatus.innerHTML='<span style="color:var(--accent);">✓ Video hochgeladen!</span>';
+            vCamBtn.disabled=false; vFileBtn.disabled=false;
+            vCamBtn.style.opacity='1'; vFileBtn.style.opacity='1';
+            vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> NEU AUFNEHMEN';
+            vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> ANDERE DATEI';
+          });
+        }
+      );
+    };
+
+    vBtnRow.appendChild(vCamBtn); vBtnRow.appendChild(vFileBtn);
+    w25.appendChild(vBtnRow); w25.appendChild(vFileInp); w25.appendChild(vStatus);
 
     var w3=document.createElement('div');
     w3.appendChild(lbl('SCHWIERIGKEIT'));
@@ -294,7 +351,7 @@ function showCommPostModal(){
     if(currentStep===1){
       var t=document.getElementById('ch-title'); if(t) challengeData.title=t.value.trim();
       var d=document.getElementById('ch-desc');  if(d) challengeData.desc=d.value.trim();
-      var v=document.getElementById('ch-video'); if(v) challengeData.videoUrl=v.value.trim();
+      // videoUrl is saved directly via Firebase upload callback
     }
     if(currentStep===2){
       var days=document.getElementById('tp-days'); if(days) challengeData.typeParams.days=parseInt(days.value)||0;
