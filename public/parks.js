@@ -489,19 +489,11 @@ function buildPrivacyToggle(){
 }
 
 // ── ADMIN PANEL ───────────────────────────────────────────
-var ADMIN_UID = 'YOUR_UID_HERE'; // wird unten dynamisch gesetzt
+var ADMIN_UID = 'u8PNuq4y2ahh2p7rukCa0vGD4su1';
 
 function checkAndShowAdminBtn(){
   if(!currentUser) return;
-  // Store your UID after first login
-  var savedAdminUid = null;
-  try{ savedAdminUid = localStorage.getItem('cali_admin_uid'); }catch(x){}
-  if(!savedAdminUid){
-    // First time: save current user's UID as admin
-    // Only do this if no admin set yet
-    try{ localStorage.setItem('cali_admin_uid', currentUser.uid); savedAdminUid = currentUser.uid; }catch(x){}
-  }
-  if(currentUser.uid === savedAdminUid){
+  if(currentUser.uid === ADMIN_UID){
     var adminBtn = document.getElementById('admin-panel-btn');
     if(adminBtn) adminBtn.style.display = 'block';
   }
