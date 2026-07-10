@@ -541,8 +541,8 @@ function openAdminPanel(){
   listEl.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
   box.appendChild(listEl); box.appendChild(suggestEl);
 
-  // Load pending entries
-  db.collection('parkLeaderboard').where('status','==','pending').orderBy('createdAt','desc').get()
+  // Load pending entries from globalLeaderboard
+  db.collection('globalLeaderboard').where('status','==','pending').orderBy('createdAt','desc').get()
     .then(function(snap){
       listEl.innerHTML = '';
       if(snap.empty){
@@ -554,9 +554,9 @@ function openAdminPanel(){
         var card = document.createElement('div');
         card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;';
         card.innerHTML =
-          '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+d.userName+' — '+d.exercise+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+d.parkName+' &middot; '+d.reps+' Wdh</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt).toLocaleDateString('de-DE')+'</div>'+
+          '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+d.reps+' Wdh</div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
           (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'<div style="font-size:11px;color:#ff4444;margin-bottom:10px;">Kein Video!</div>');
 
         var btnRow = document.createElement('div');
