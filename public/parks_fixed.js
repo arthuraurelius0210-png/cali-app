@@ -1144,3 +1144,4 @@ function addMonthlyBonusAdminBtn(box){
   };
   box.insertBefore(btn, box.firstChild);
 }
+
