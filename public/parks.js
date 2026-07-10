@@ -541,8 +541,7 @@ function openAdminPanel(){
   listEl.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
   box.appendChild(listEl); box.appendChild(suggestEl);
 
-  // Load pending entries from globalLeaderboard
-  db.collection('globalLeaderboard').where('status','==','pending').orderBy('createdAt','desc').get()
+  db.collection('globalLeaderboard').where('status','==','pending').orderBy('date','desc').get()
     .then(function(snap){
       listEl.innerHTML = '';
       if(snap.empty){
