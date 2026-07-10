@@ -489,11 +489,19 @@ function buildPrivacyToggle(){
 }
 
 // ── ADMIN PANEL ───────────────────────────────────────────
-var ADMIN_UID = 'u8PNuq4y2ahh2p7rukCa0vGD4su1';
+var ADMIN_UID = 'YOUR_UID_HERE'; // wird unten dynamisch gesetzt
 
 function checkAndShowAdminBtn(){
   if(!currentUser) return;
-  if(currentUser.uid === ADMIN_UID){
+  // Store your UID after first login
+  var savedAdminUid = null;
+  try{ savedAdminUid = localStorage.getItem('cali_admin_uid'); }catch(x){}
+  if(!savedAdminUid){
+    // First time: save current user's UID as admin
+    // Only do this if no admin set yet
+    try{ localStorage.setItem('cali_admin_uid', currentUser.uid); savedAdminUid = currentUser.uid; }catch(x){}
+  }
+  if(currentUser.uid === savedAdminUid){
     var adminBtn = document.getElementById('admin-panel-btn');
     if(adminBtn) adminBtn.style.display = 'block';
   }
@@ -541,6 +549,7 @@ function openAdminPanel(){
   listEl.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
   box.appendChild(listEl); box.appendChild(suggestEl);
 
+  // Load pending entries
   db.collection('globalLeaderboard').where('status','==','pending').get()
     .then(function(snap){
       listEl.innerHTML = '';
@@ -1144,4 +1153,3 @@ function addMonthlyBonusAdminBtn(box){
   };
   box.insertBefore(btn, box.firstChild);
 }
-
