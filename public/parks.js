@@ -1,3 +1,4 @@
+// v2.0 - admin fix 2026-07-10
 
 var parksMap = null;
 var parksMarkers = [];
