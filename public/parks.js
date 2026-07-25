@@ -147,7 +147,7 @@ function loadParks(){
 
 function buildParksList(){
   var listEl = document.getElementById('parks-list');
-  listEl.innerHTML = '<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:10px;">PARKS IN DER NÄHE</div>';
+  listEl.innerHTML = '<div class="stitle" style="color:var(--accent);margin:0 0 10px;">PARKS IN DER NÄHE</div>';
 
   parksData.slice(0,15).forEach(function(park, idx){
     var name = park.tags && (park.tags.name || park.tags['name:de']) ? (park.tags.name || park.tags['name:de']) : 'Calisthenics Park';
@@ -166,7 +166,7 @@ function buildParksList(){
         '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+
         (addr?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+addr+'</div>':'')+
       '</div>'+
-      '<div style="font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;">'+formatDist(park._dist)+'</div>';
+      '<div style="font-family:var(--display);font-size:15px;color:var(--accent);flex-shrink:0;">'+formatDist(park._dist)+'</div>';
     listEl.appendChild(card);
   });
 }
@@ -215,7 +215,7 @@ function openParkDetail(idx){
 
   tabs.forEach(function(t, ti){
     var tb = document.createElement('button');
-    tb.style.cssText = 'flex:1;padding:11px 4px;font-family:inherit;font-size:9px;letter-spacing:1px;font-weight:700;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
+    tb.style.cssText = 'flex:1;padding:11px 4px;font-family:var(--display);font-size:13px;letter-spacing:1px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
     tb.textContent = t;
     var content = document.createElement('div');
     content.style.cssText = 'padding:16px 20px 32px;display:'+(ti===0?'block':'none')+';';
@@ -239,7 +239,7 @@ function openParkDetail(idx){
   // TAB 0: Navigation
   var navContent = tabContents[0];
   navContent.innerHTML =
-    '<div style="font-size:9px;letter-spacing:3px;color:var(--muted);font-weight:700;margin-bottom:12px;">NAVIGATION &#214;FFNEN MIT</div>';
+    '<div class="stitle" style="margin:0 0 12px;">NAVIGATION &#214;FFNEN MIT</div>';
 
   var gBtn = document.createElement('button');
   gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
@@ -299,20 +299,21 @@ function buildParkStats(el, parkId){
   ];
   stats.forEach(function(s){
     var row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;';
-    row.innerHTML = '<span style="color:var(--muted);">'+s.label+'</span><span style="font-weight:800;color:var(--text);">'+s.val+'</span>';
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;';
+    row.innerHTML = '<span style="color:var(--muted);">'+s.label+'</span><span style="font-family:var(--display);font-size:20px;color:var(--text);">'+s.val+'</span>';
     el.appendChild(row);
   });
 
   if(topEx.length > 0){
     var t = document.createElement('div');
-    t.style.cssText = 'font-size:9px;letter-spacing:3px;color:var(--accent);font-weight:700;margin:14px 0 10px;';
+    t.className = 'stitle';
+    t.style.cssText = 'color:var(--accent);margin:16px 0 10px;';
     t.textContent = 'TOP ÜBUNGEN';
     el.appendChild(t);
     topEx.forEach(function(ex, i){
       var row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
-      row.innerHTML = '<span style="color:var(--text);">'+(i+1)+'. '+ex+'</span><span style="font-weight:700;color:var(--accent);">'+exCounts[ex]+' Wdh</span>';
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
+      row.innerHTML = '<span style="color:var(--text);">'+(i+1)+'. '+ex+'</span><span style="font-family:var(--display);font-size:16px;color:var(--accent);">'+exCounts[ex]+' Wdh</span>';
       el.appendChild(row);
     });
   }
@@ -336,7 +337,8 @@ function buildParkLeaderboard(el, parkId, parkName){
       el.appendChild(subBtn);
 
       var title = document.createElement('div');
-      title.style.cssText = 'font-size:9px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:12px;';
+      title.className = 'stitle';
+      title.style.cssText = 'color:var(--accent);margin:0 0 12px;';
       title.textContent = 'BESTENLISTE — '+parkName.toUpperCase();
       el.appendChild(title);
 
@@ -362,7 +364,7 @@ function buildParkLeaderboard(el, parkId, parkName){
             '<div style="font-size:12px;font-weight:700;color:var(--text);">'+d.userName+'</div>'+
             '<div style="font-size:10px;color:var(--muted);">'+d.exercise+statusBadge+'</div>'+
           '</div>'+
-          '<div style="font-size:15px;font-weight:900;color:var(--accent);">'+d.reps+' Wdh</div>';
+          '<div style="font-family:var(--display);font-size:20px;color:var(--accent);">'+d.reps+' Wdh</div>';
         if(d.videoUrl){
           var vidBtn = document.createElement('a');
           vidBtn.href = d.videoUrl; vidBtn.target='_blank';
@@ -391,7 +393,7 @@ function showLeaderboardSubmit(parkId, parkName){
 
   function inpRow(lbl, id, ph, type){
     var w=document.createElement('div'); w.style.cssText='margin-bottom:12px;';
-    var l=document.createElement('div'); l.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:5px;'; l.textContent=lbl;
+    var l=document.createElement('div'); l.className='stitle'; l.style.cssText='margin:0 0 5px;'; l.textContent=lbl;
     var i=document.createElement('input'); i.id=id; i.type=type||'text'; i.placeholder=ph;
     i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;';
     w.appendChild(l); w.appendChild(i); return w;
@@ -717,7 +719,7 @@ function openParkDetail(idx){
   var bodies = [];
   tabDefs.forEach(function(t, ti){
     var btn = document.createElement('button');
-    btn.style.cssText = 'width:100%;padding:14px 10px;border:none;border-bottom:1px solid var(--border);background:'+(ti===0?'rgba(255,85,0,0.08)':'none')+';color:'+(ti===0?'var(--accent)':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;text-align:left;border-left:3px solid '+(ti===0?'var(--accent)':'transparent')+';line-height:1.4;';
+    btn.style.cssText = 'width:100%;padding:14px 10px;border:none;border-bottom:1px solid var(--border);background:'+(ti===0?'rgba(255,85,0,0.08)':'none')+';color:'+(ti===0?'var(--accent)':'var(--muted)')+';font-family:var(--display);font-size:14px;letter-spacing:0.5px;cursor:pointer;text-align:left;border-left:3px solid '+(ti===0?'var(--accent)':'transparent')+';line-height:1.4;';
     btn.innerHTML = t.label;
     var body = document.createElement('div');
     body.style.cssText = 'display:'+(ti===0?'block':'none')+';padding:14px;overflow-y:auto;';
@@ -766,7 +768,8 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
 
   // Übungs-Auswahl horizontal (wie globale Bestenliste)
   var exLabel = document.createElement('div');
-  exLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;';
+  exLabel.className = 'stitle';
+  exLabel.style.cssText = 'margin:0 0 8px;';
   exLabel.textContent = 'ÜBUNG';
   el.appendChild(exLabel);
 
@@ -886,13 +889,13 @@ function loadParkLb(el, parkId, ex){
         row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';';
         var rankEl = document.createElement('div');
         rankEl.style.cssText = 'width:28px;text-align:center;flex-shrink:0;';
-        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-size:11px;font-weight:700;color:var(--muted);">#'+rank+'</span>';
+        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-family:var(--display);font-size:15px;color:var(--muted);">#'+rank+'</span>';
         var infoEl = document.createElement('div');
         infoEl.style.cssText = 'flex:1;min-width:0;';
         infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+' </div>';
         var valEl = document.createElement('div');
         valEl.style.cssText = 'text-align:right;flex-shrink:0;';
-        valEl.innerHTML = '<div style="font-size:18px;font-weight:800;color:var(--accent);">'+d.value+'</div><div style="font-size:9px;color:var(--muted);">'+ex.unit+'</div>';
+        valEl.innerHTML = '<div style="font-family:var(--display);font-weight:400;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">'+ex.unit+'</div>';
         row.appendChild(rankEl); row.appendChild(infoEl); row.appendChild(valEl);
         if(d.videoUrl){
           var vBtn = document.createElement('button');
@@ -909,7 +912,7 @@ function loadParkLb(el, parkId, ex){
 }
 
 function buildParkDetailStats(el, parkId){
-  el.innerHTML = '<div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:16px;">&#128200; MEINE STATS</div>';
+  el.innerHTML = '<div class="stitle" style="color:var(--accent);margin:0 0 16px;">&#128200; MEINE STATS</div>';
   if(typeof db === 'undefined' || !db || !firebase.auth().currentUser){
     el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Einloggen um deine Stats zu sehen.</div>'; return;
   }
@@ -926,14 +929,14 @@ function buildParkDetailStats(el, parkId){
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);';
       row.innerHTML = '<div style="font-size:13px;color:var(--muted);">'+s.label+'</div>'+
-        '<div style="font-size:18px;font-weight:800;color:var(--text);">'+s.value+' <span style="font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
+        '<div style="font-family:var(--display);font-weight:400;font-size:22px;color:var(--text);">'+s.value+' <span style="font-family:var(--body);font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
       el.appendChild(row);
     });
   }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler.</div>'; });
 }
 
 function buildParkDetailCommunity(el, parkId, parkName){
-  el.innerHTML = '<div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:16px;">&#128101; COMMUNITY WORKOUTS</div>';
+  el.innerHTML = '<div class="stitle" style="color:var(--accent);margin:0 0 16px;">&#128101; COMMUNITY WORKOUTS</div>';
   if(typeof db === 'undefined' || !db){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Einloggen um Community zu sehen.</div>'; return; }
   db.collection('parkWorkouts').doc(parkId).collection('posts').orderBy('date','desc').limit(20).get().then(function(snap){
     if(snap.empty){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Community-Workouts hier.<br>Sei der Erste!</div>'; return; }
