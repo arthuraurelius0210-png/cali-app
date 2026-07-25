@@ -3,7 +3,8 @@ function buildDrawerCommunity(el){
   var hdrRow = document.createElement('div');
   hdrRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'font-size:9px;letter-spacing:3px;color:#4ECDC4;font-weight:700;';
+  hdr.className = 'stitle';
+  hdr.style.cssText = 'color:#4ECDC4;margin:0;';
   hdr.textContent = 'COMMUNITY CHALLENGES';
   var postBtn = document.createElement('button');
   postBtn.style.cssText = 'background:rgba(78,205,196,0.1);color:#4ECDC4;border:1px solid rgba(78,205,196,0.3);border-radius:8px;font-family:inherit;font-size:10px;letter-spacing:2px;padding:7px 12px;cursor:pointer;';
@@ -62,7 +63,7 @@ function buildStartChallengeWidget(){
   t1.style.cssText = 'font-family:inherit;font-size:14px;letter-spacing:1px;color:var(--text);';
   t1.textContent = activeChallenge.title;
   var t2 = document.createElement('div');
-  t2.style.cssText = 'font-size:11px;color:#666;margin-top:2px;';
+  t2.style.cssText = 'font-family:var(--display);font-size:14px;color:var(--muted);margin-top:2px;';
   t2.textContent = prog+' / '+target+' ('+pct+'%)';
   txt.appendChild(t1);
   txt.appendChild(t2);
@@ -201,7 +202,8 @@ function buildChallengePresets(){
   el.innerHTML = '';
 
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:9px;letter-spacing:3px;color:var(--accent);font-family:inherit;margin-bottom:10px;';
+  title.className = 'stitle';
+  title.style.cssText = 'color:var(--accent);margin:0 0 10px;';
   title.textContent = 'VORGEFERTIGTE CHALLENGES';
   el.appendChild(title);
 

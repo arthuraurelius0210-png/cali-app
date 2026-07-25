@@ -84,7 +84,7 @@ function showCommPostModal(){
     else if(step===4) renderStep4();
   }
 
-  function lbl(t){ var d=document.createElement('div'); d.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;font-weight:700;'; d.textContent=t; return d; }
+  function lbl(t){ var d=document.createElement('div'); d.className='stitle'; d.style.cssText='margin:0 0 6px;'; d.textContent=t; return d; }
   function styledInp(id,ph,val){
     var i=document.createElement('input'); i.type='text'; i.id=id; i.placeholder=ph; i.value=val||'';
     i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;box-sizing:border-box;';
@@ -214,7 +214,7 @@ function showCommPostModal(){
     var wrap=document.getElementById('type-params-wrap'); if(!wrap) return; wrap.innerHTML='';
     function numI(id,l,ph,val){
       var w=document.createElement('div'); w.style.marginTop='12px';
-      var lb=document.createElement('div'); lb.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;font-weight:700;'; lb.textContent=l;
+      var lb=document.createElement('div'); lb.className='stitle'; lb.style.cssText='margin:0 0 6px;'; lb.textContent=l;
       var i=document.createElement('input'); i.type='number'; i.id=id; i.placeholder=ph; i.value=val||'';
       i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;box-sizing:border-box;';
       w.appendChild(lb); w.appendChild(i); return w;
@@ -264,7 +264,7 @@ function showCommPostModal(){
   function renderExCard(ex, idx, exList){
     var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;';
     var hRow=document.createElement('div'); hRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
-    var ht=document.createElement('div'); ht.style.cssText='font-size:11px;font-weight:800;color:var(--accent);letter-spacing:2px;'; ht.textContent='ÜBUNG '+(idx+1);
+    var ht=document.createElement('div'); ht.className='stitle'; ht.style.cssText='color:var(--accent);margin:0;'; ht.textContent='ÜBUNG '+(idx+1);
     var delBtn=document.createElement('button'); delBtn.style.cssText='background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;'; delBtn.textContent='\u00D7 ENTFERNEN';
     delBtn.onclick=function(){challengeData.exercises.splice(idx,1);renderStep3();};
     hRow.appendChild(ht); hRow.appendChild(delBtn); card.appendChild(hRow);
@@ -321,7 +321,7 @@ function showCommPostModal(){
       '<div style="font-size:10px;color:var(--muted);">'+typeLabels[challengeData.type]+' \u00B7 '+'\u2605'.repeat(challengeData.difficulty)+'\u2606'.repeat(5-challengeData.difficulty)+'</div></div></div>'+
       '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">'+challengeData.desc+'</div>';
     if(challengeData.exercises.length>0){
-      var et=document.createElement('div'); et.style.cssText='font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:8px;'; et.textContent=challengeData.exercises.length+' ÜBUNGEN';
+      var et=document.createElement('div'); et.className='stitle'; et.style.cssText='color:var(--accent);margin:0 0 8px;'; et.textContent=challengeData.exercises.length+' ÜBUNGEN';
       card.appendChild(et);
       challengeData.exercises.forEach(function(ex){
         var r=document.createElement('div'); r.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
@@ -336,7 +336,7 @@ function showCommPostModal(){
       var vPrev=document.createElement('div'); vPrev.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;';
       var vIcon=document.createElement('div'); vIcon.style.cssText='font-size:20px;flex-shrink:0;'; vIcon.textContent='\uD83C\uDFA5';
       var vInfo=document.createElement('div'); vInfo.style.cssText='flex:1;min-width:0;';
-      var vLbl=document.createElement('div'); vLbl.style.cssText='font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:3px;'; vLbl.textContent='ERKLÄR-VIDEO';
+      var vLbl=document.createElement('div'); vLbl.className='stitle'; vLbl.style.cssText='color:var(--accent);margin:0 0 3px;'; vLbl.textContent='ERKLÄR-VIDEO';
       var vLink=document.createElement('a'); vLink.href=challengeData.videoUrl; vLink.target='_blank'; vLink.style.cssText='font-size:11px;color:var(--text);word-break:break-all;text-decoration:underline;'; vLink.textContent=challengeData.videoUrl;
       vInfo.appendChild(vLbl); vInfo.appendChild(vLink);
       vPrev.appendChild(vIcon); vPrev.appendChild(vInfo);
