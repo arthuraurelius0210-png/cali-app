@@ -178,7 +178,7 @@ function emomRenderExList(){
   for(var i = 0; i < emomExList.length; i++){
     (function(idx){
       var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid #1e1e1e;border-radius:10px;padding:10px 14px;margin-bottom:6px;';
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;';
       var num = document.createElement('div');
       num.style.cssText = 'font-family:inherit;font-size:13px;color:var(--accent);margin-right:10px;';
       num.textContent = String(idx+1);
@@ -344,12 +344,12 @@ function emomShowFinishModal(){
   modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9990;display:flex;align-items:center;justify-content:center;padding:24px;';
   var box=document.createElement('div');box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center;';
   var ic=document.createElement('div');ic.style.cssText='font-size:52px;margin-bottom:12px;';ic.textContent='\uD83C\uDF89';
-  var ti=document.createElement('div');ti.style.cssText='font-family:inherit;font-size:26px;letter-spacing:3px;color:var(--accent);margin-bottom:8px;';ti.textContent='EMOM FERTIG!';
+  var ti=document.createElement('div');ti.style.cssText='font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:3px;color:var(--accent);margin-bottom:8px;';ti.textContent='EMOM FERTIG!';
   var st=document.createElement('div');st.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px;';
   var tr=0;for(var i=0;i<emomLog.length;i++)tr+=parseInt(emomLog[i].reps)||0;
   st.textContent=emomLog.length+' Satze  |  '+tr+' Wdh gesamt';
-  var b1=document.createElement('button');b1.style.cssText='width:100%;background:var(--accent);color:#000;border:none;border-radius:10px;font-family:inherit;font-size:15px;letter-spacing:2px;padding:14px;cursor:pointer;margin-bottom:10px;';b1.textContent='NEUES EMOM STARTEN';b1.onclick=function(){modal.remove();emomSaveAndReset();showEmomSetup(true);};
-  var b2=document.createElement('button');b2.style.cssText='width:100%;background:none;border:1px solid #2a2a2a;color:var(--text);border-radius:10px;font-family:inherit;font-size:15px;letter-spacing:2px;padding:14px;cursor:pointer;margin-bottom:10px;';b2.textContent='WORKOUT BEENDEN';b2.onclick=function(){modal.remove();emomSaveAndReset();var ss=document.getElementById('start-screen');if(ss)ss.style.display='flex';};
+  var b1=document.createElement('button');b1.style.cssText='width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;letter-spacing:2px;padding:14px;cursor:pointer;margin-bottom:10px;';b1.textContent='NEUES EMOM STARTEN';b1.onclick=function(){modal.remove();emomSaveAndReset();showEmomSetup(true);};
+  var b2=document.createElement('button');b2.style.cssText='width:100%;background:none;border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:15px;letter-spacing:2px;padding:14px;cursor:pointer;margin-bottom:10px;';b2.textContent='WORKOUT BEENDEN';b2.onclick=function(){modal.remove();emomSaveAndReset();var ss=document.getElementById('start-screen');if(ss)ss.style.display='flex';};
   var b3=document.createElement('button');b3.style.cssText='width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;';b3.textContent='NORMALES WORKOUT FORTSETZEN';b3.onclick=function(){modal.remove();emomSaveAndReset();var ss=document.getElementById('start-screen');if(ss)ss.style.display='flex';};
   box.appendChild(ic);box.appendChild(ti);box.appendChild(st);box.appendChild(b1);box.appendChild(b2);box.appendChild(b3);
   modal.appendChild(box);document.body.appendChild(modal);

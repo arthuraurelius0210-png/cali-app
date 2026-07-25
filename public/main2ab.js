@@ -29,22 +29,22 @@ function showWeeklyGoalModal(){
   modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:8888;display:flex;align-items:center;justify-content:center;padding:24px;';
   var box=document.createElement('div');box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center;';
   var flame=document.createElement('div');flame.style.cssText='font-size:48px;margin-bottom:12px;';flame.textContent='\uD83D\uDD25';
-  var title=document.createElement('div');title.style.cssText='font-family:inherit;font-size:24px;letter-spacing:3px;color:var(--accent);margin-bottom:8px;';title.textContent='TRAININGS-STREAK';
+  var title=document.createElement('div');title.style.cssText='font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:3px;color:var(--accent);margin-bottom:8px;';title.textContent='TRAININGS-STREAK';
   var sub=document.createElement('div');sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;';sub.textContent='Wie oft willst du diese Woche trainieren?';
-  var lbl=document.createElement('div');lbl.style.cssText='font-family:inherit;font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:12px;';lbl.textContent='WOCHENZIEL';
+  var lbl=document.createElement('div');lbl.style.cssText='font-family:var(--display);font-weight:400;font-size:13px;letter-spacing:3px;color:var(--muted);margin-bottom:12px;';lbl.textContent='WOCHENZIEL';
   var btnRow=document.createElement('div');btnRow.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;';
   var goalBtns=[];
   for(var i=1;i<=7;i++){
     (function(n){
       var btn=document.createElement('button');btn.textContent=String(n);
-      btn.style.cssText='background:#161616;border:1px solid #2a2a2a;color:var(--muted);border-radius:8px;padding:10px 4px;font-family:inherit;font-size:16px;cursor:pointer;';
-      btn.onclick=function(){for(var j=0;j<goalBtns.length;j++){goalBtns[j].style.background='#161616';goalBtns[j].style.borderColor='#2a2a2a';goalBtns[j].style.color='#888';}btn.style.background='rgba(255,85,0,0.1)';btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';streakData.weeklyGoal=n;};
+      btn.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 4px;font-family:var(--display);font-size:18px;cursor:pointer;';
+      btn.onclick=function(){for(var j=0;j<goalBtns.length;j++){goalBtns[j].style.background='var(--bg3)';goalBtns[j].style.borderColor='var(--border)';goalBtns[j].style.color='var(--muted)';}btn.style.background='rgba(255,85,0,0.1)';btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';streakData.weeklyGoal=n;};
       goalBtns.push(btn);btnRow.appendChild(btn);
     })(i);
   }
   var selIdx = (streakData.weeklyGoal||3) - 1;
-  goalBtns[selIdx].style.background='rgba(200,240,74,0.15)';goalBtns[selIdx].style.borderColor='var(--accent)';goalBtns[selIdx].style.color='var(--accent)';
-  var saveBtn=document.createElement('button');saveBtn.style.cssText='width:100%;background:var(--accent);color:#000;border:none;border-radius:10px;font-family:inherit;font-size:16px;letter-spacing:3px;padding:14px;cursor:pointer;';
+  goalBtns[selIdx].style.background='rgba(255,85,0,0.1)';goalBtns[selIdx].style.borderColor='var(--accent)';goalBtns[selIdx].style.color='var(--accent)';
+  var saveBtn=document.createElement('button');saveBtn.style.cssText='width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:16px;letter-spacing:3px;padding:14px;cursor:pointer;';
   saveBtn.textContent='LOS GEHT\'S!';
   saveBtn.onclick=function(){
   streakData.goalSet=true;

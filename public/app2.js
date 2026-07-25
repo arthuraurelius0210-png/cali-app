@@ -157,7 +157,7 @@ function buildPlanList(){
 
   // MY PLANS section
   if(plans.length){
-    h+='<div style="font-size:9px;letter-spacing:3px;color:var(--muted);font-family:Bebas Neue;margin:16px 0 8px;">MEINE PLANE</div>';
+    h+='<div class="stitle">MEINE PLANE</div>';
     for(var i=0;i<plans.length;i++){
       var pl=plans[i];
       h+='<div class="plan-card" style="cursor:pointer;" onclick="togglePlanExpand(this)">';
@@ -213,7 +213,7 @@ function buildStartPlanBtns(){
   for(var i=0;i<plans.length;i++){
     (function(pl){
       var btn=document.createElement('button');
-      btn.style.cssText='background:var(--bg2);border:1px solid #2a2a2a;color:var(--text);border-radius:10px;padding:11px 14px;font-family:Bebas Neue;font-size:13px;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;';
+      btn.style.cssText='background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:var(--display);font-size:15px;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;';
       btn.innerHTML=pl.name+'<span style="font-size:10px;color:var(--muted)">'+pl.exercises.length+' Ubungen</span>';
       btn.onclick=function(){startWorkout(pl.id);};
       el.appendChild(btn);
@@ -311,7 +311,7 @@ function buildMaxList(){
     h+='<div class="ei"><div class="et">';
     h+='<div class="ed">'+e.date.slice(5).replace('-','.')+'</div>';
     h+='<div class="en">'+e.name+'</div>';
-    h+='<div style="font-family:Bebas Neue;font-size:22px;color:var(--accent);">'+e.val+' <span style="font-size:11px;color:var(--muted)">'+e.unit+'</span></div>';
+    h+='<div style="font-family:var(--display);font-size:24px;color:var(--accent);">'+e.val+' <span style="font-size:11px;font-family:var(--body);color:var(--muted)">'+e.unit+'</span></div>';
     h+='<button class="edel" onclick="delMaxEntry('+e.id+')">&#x2715;</button>';
     h+='</div></div>';
   }
@@ -346,7 +346,7 @@ function drawMaxChart(){
   if(maxChart2)maxChart2.destroy();
   maxChart2=new Chart(cv,{
     type:'line',
-    data:{labels:lbls,datasets:[{data:vals,borderColor:'var(--accent)',backgroundColor:'rgba(200,240,74,0.1)',fill:true,tension:0.4,pointBackgroundColor:'var(--accent)',pointRadius:6,borderWidth:2}]},
+    data:{labels:lbls,datasets:[{data:vals,borderColor:'#ff5500',backgroundColor:'rgba(255,85,0,0.1)',fill:true,tension:0.4,pointBackgroundColor:'#ff5500',pointRadius:6,borderWidth:2}]},
     options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1a1a1a'}}}}
   });
 }

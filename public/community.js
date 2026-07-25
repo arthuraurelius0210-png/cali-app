@@ -601,7 +601,7 @@ function buildCommSection(el, docId, data){
   txta.placeholder = 'Kommentar schreiben...';
   txta.style.cssText = 'flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:12px;color:var(--text);outline:none;';
   var sendBtn = document.createElement('button');
-  sendBtn.style.cssText = 'background:var(--accent);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;padding:9px 14px;cursor:pointer;white-space:nowrap;';
+  sendBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;padding:9px 14px;cursor:pointer;white-space:nowrap;';
   sendBtn.textContent = 'OK';
   sendBtn.onclick = function(){
     var txt = txta.value.trim();

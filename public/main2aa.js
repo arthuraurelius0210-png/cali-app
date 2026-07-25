@@ -145,14 +145,14 @@ function showPercentile(exName, val, gender){
   var lbl = getPercentileLabel(pct);
 
   var card = document.createElement('div');
-  card.style.cssText='background:rgba(255,85,0,0.05);border:2px solid var(--accent);border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 0 20px rgba(200,240,74,0.1);';
+  card.style.cssText='background:rgba(255,85,0,0.05);border:2px solid var(--accent);border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 0 20px rgba(255,85,0,0.12);';
 
   var title = document.createElement('div');
   title.style.cssText='font-family:inherit;font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:10px;';
   title.textContent='WELTWEITER VERGLEICH';
 
   var pctText = document.createElement('div');
-  pctText.style.cssText='font-family:inherit;font-size:32px;color:'+lbl.color+';line-height:1;margin-bottom:4px;';
+  pctText.style.cssText='font-family:inherit;font-weight:700;font-size:24px;color:'+lbl.color+';line-height:1.3;margin-bottom:4px;';
   var displayPct = Math.min(99.9, Math.round(pct*10)/10);
   pctText.textContent='Besser als '+displayPct+'%';
 
@@ -328,9 +328,9 @@ function buildProfilStatsDetail(){
   grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;';
   for(var i=0;i<bigStats.length;i++){
     var box=document.createElement('div');
-    box.style.cssText='background:var(--bg2);border:1px solid #1e1e1e;border-radius:10px;padding:12px;';
+    box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;';
     var val=document.createElement('div');
-    val.style.cssText='font-family:inherit;font-size:22px;color:var(--accent);line-height:1;margin-bottom:3px;';
+    val.style.cssText='font-family:var(--display);font-weight:400;font-size:26px;color:var(--accent);line-height:1;margin-bottom:3px;';
     val.textContent=bigStats[i].value;
     var lbl=document.createElement('div');
     lbl.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;';
@@ -455,7 +455,7 @@ function buildProfilUI(){
       var box=document.createElement('div');
       box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;';
       var val=document.createElement('div');
-      val.style.cssText='font-family:inherit;font-size:26px;color:var(--accent);line-height:1;';
+      val.style.cssText='font-family:var(--display);font-weight:400;font-size:30px;color:var(--accent);line-height:1;';
       val.textContent=String(stats[i].value);
       var lbl=document.createElement('div');
       lbl.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-top:3px;';
@@ -481,7 +481,7 @@ function buildProfilUI(){
       icon.innerHTML=b.icon;
       var info=document.createElement('div');
       var t=document.createElement('div');
-      t.style.cssText='font-family:inherit;font-size:13px;letter-spacing:1px;color:'+(has?'var(--accent)':'#555')+';';
+      t.style.cssText='font-family:inherit;font-size:13px;letter-spacing:1px;color:'+(has?'var(--accent)':'var(--muted)')+';';
       t.textContent=b.title;
       var d2=document.createElement('div');
       d2.style.cssText='font-size:10px;color:var(--muted2);margin-top:1px;';
@@ -515,12 +515,12 @@ function buildProfilUI(){
       for(var name in bestMap){
         var me=bestMap[name];
         var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid #1e1e1e;border-radius:10px;margin-bottom:6px;';
+        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;';
         var left=document.createElement('div');
         left.style.cssText='font-size:13px;font-weight:500;color:var(--text);';
         left.textContent=name.replace(' Max','');
         var right=document.createElement('div');
-        right.style.cssText='font-family:inherit;font-size:20px;color:var(--accent);';
+        right.style.cssText='font-family:var(--display);font-weight:400;font-size:22px;color:var(--accent);';
         right.textContent=me.val+' '+me.unit;
         row.appendChild(left);row.appendChild(right);
         bests.appendChild(row);
@@ -538,7 +538,7 @@ function buildProfilUI(){
     sorted.sort(function(a,b){return b.total-a.total;});
     for(var i=0;i<sorted.length&&i<10;i++){
       var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg2);border:1px solid #1e1e1e;border-radius:10px;margin-bottom:6px;';
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;';
       var rank=document.createElement('div');
       rank.style.cssText='font-family:inherit;font-size:13px;color:var(--muted);width:20px;text-align:center;';
       rank.textContent=String(i+1);
@@ -546,7 +546,7 @@ function buildProfilUI(){
       name2.style.cssText='font-size:13px;color:var(--text);flex:1;';
       name2.textContent=sorted[i].name;
       var total=document.createElement('div');
-      total.style.cssText='font-family:inherit;font-size:18px;color:var(--accent);';
+      total.style.cssText='font-family:var(--display);font-weight:400;font-size:20px;color:var(--accent);';
       total.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
       row.appendChild(rank);row.appendChild(name2);row.appendChild(total);
       repsEl.appendChild(row);

@@ -32,7 +32,7 @@ function buildProfilStreakSection(){
     var sbEl=document.createElement('div');sbEl.style.cssText='font-size:11px;color:var(--muted2);margin-top:4px;';sbEl.textContent='Beste: '+streakData.longestStreak+' Tage';
     strL.appendChild(sfEl);strL.appendChild(sbEl);
     var strR=document.createElement('div');strR.style.cssText='text-align:right;';
-    var gtEl=document.createElement('div');gtEl.style.cssText='font-family:inherit;font-size:26px;color:var(--accent);';gtEl.textContent=getWeeklyProgress()+' / '+streakData.weeklyGoal;
+    var gtEl=document.createElement('div');gtEl.style.cssText='font-family:var(--display);font-weight:400;font-size:28px;color:var(--accent);';gtEl.textContent=getWeeklyProgress()+' / '+streakData.weeklyGoal;
     var gsEl=document.createElement('div');gsEl.style.cssText='font-size:10px;color:var(--muted);font-family:inherit;';gsEl.textContent='DIESE WOCHE';
     strR.appendChild(gtEl);strR.appendChild(gsEl);strRow.appendChild(strL);strRow.appendChild(strR);
     var chBtn=document.createElement('button');chBtn.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1px;padding:10px;cursor:pointer;';chBtn.textContent='WOCHENZIEL ANDERN (aktuell: '+streakData.weeklyGoal+'x)';chBtn.onclick=function(){streakData.goalSet=false;sstreak();showWeeklyGoalModal();};
@@ -522,7 +522,7 @@ function showOnboarding(){
   if(existing) existing.remove();
   var m = document.createElement('div');
   m.id = 'ob-modal';
-  m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#f7f7f5;z-index:9998;overflow-y:auto;padding:24px;box-sizing:border-box;';
+  m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9998;overflow-y:auto;padding:24px;box-sizing:border-box;';
   document.body.appendChild(m);
   obStep = 0;
   renderObStep();

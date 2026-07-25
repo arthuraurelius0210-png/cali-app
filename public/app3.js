@@ -46,7 +46,7 @@ function buildStartChallengeWidget(){
   var done = pct>=100;
 
   var box = document.createElement('div');
-  box.style.cssText = 'background:'+(done?'rgba(200,240,74,0.08)':'#101010')+';border:1px solid '+(done?'rgba(200,240,74,0.3)':'#1e1e1e')+';border-radius:12px;padding:14px 16px;margin-bottom:12px;cursor:pointer;';
+  box.style.cssText = 'background:'+(done?'rgba(255,85,0,0.08)':'var(--bg3)')+';border:1px solid '+(done?'rgba(255,85,0,0.3)':'var(--border)')+';border-radius:12px;padding:14px 16px;margin-bottom:12px;cursor:pointer;';
   box.onclick = function(){ goPage('ch'); };
 
   var row = document.createElement('div');
@@ -78,7 +78,7 @@ function buildStartChallengeWidget(){
   var bar = document.createElement('div');
   bar.style.cssText = 'background:var(--bg3);border-radius:20px;height:4px;overflow:hidden;';
   var fill = document.createElement('div');
-  fill.style.cssText = 'height:100%;border-radius:20px;background:'+(done?'var(--accent)':'#2a4a00')+';width:'+pct+'%;';
+  fill.style.cssText = 'height:100%;border-radius:20px;background:'+(done?'var(--accent)':'rgba(255,85,0,0.35)')+';width:'+pct+'%;';
   bar.appendChild(fill);
 
   box.appendChild(row);

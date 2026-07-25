@@ -378,9 +378,9 @@ function toggleBelt(){
   var row = document.getElementById('belt-kg-row');
   if(btn){
     btn.textContent = beltEnabled ? 'Gurtel: AN' : 'Gurtel: AUS';
-    btn.style.borderColor = beltEnabled ? '#F59E0B' : '#2a2a2a';
-    btn.style.color = beltEnabled ? '#F59E0B' : '#888';
-    btn.style.background = beltEnabled ? 'rgba(245,158,11,0.1)' : '#161616';
+    btn.style.borderColor = beltEnabled ? '#F59E0B' : 'var(--border)';
+    btn.style.color = beltEnabled ? '#F59E0B' : 'var(--muted)';
+    btn.style.background = beltEnabled ? 'rgba(245,158,11,0.1)' : 'var(--bg3)';
   }
   if(row) row.style.display = beltEnabled ? 'block' : 'none';
   bsets();
@@ -449,7 +449,7 @@ function bsets(){
       binp.type = 'number';
       binp.placeholder = '0';
       binp.value = sets[i].b || '';
-      binp.style.cssText = 'background:#161616;border:1px solid #F59E0B;color:#F59E0B;border-radius:8px;padding:9px 8px;font-size:14px;font-family:DM Sans,sans-serif;outline:none;width:100%;text-align:center;';
+      binp.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid #F59E0B;color:#F59E0B;border-radius:8px;padding:9px 8px;font-size:14px;font-family:var(--body);outline:none;width:100%;text-align:center;';
       binp.setAttribute('data-i', String(i));
       binp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].b=this.value;};
       binp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].b=this.value;};
@@ -460,7 +460,7 @@ function bsets(){
       kinp.type = 'number';
       kinp.placeholder = '0';
       kinp.value = sets[i].kg || beltKgVal || '';
-      kinp.style.cssText = 'background:#161616;border:1px solid #38BDF8;color:#38BDF8;border-radius:8px;padding:9px 8px;font-size:14px;font-family:DM Sans,sans-serif;outline:none;width:100%;text-align:center;';
+      kinp.style.cssText = 'background:rgba(56,189,248,0.08);border:1px solid #38BDF8;color:#38BDF8;border-radius:8px;padding:9px 8px;font-size:14px;font-family:var(--body);outline:none;width:100%;text-align:center;';
       kinp.setAttribute('data-i', String(i));
       kinp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].kg=this.value;};
       kinp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].kg=this.value;};
