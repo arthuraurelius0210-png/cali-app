@@ -29,8 +29,8 @@ function buildRekordeUI(){
 
   // ── HEADER ──────────────────────────────────────────────
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'padding:0 16px 14px;display:flex;align-items:center;justify-content:space-between;';
-  hdr.innerHTML = '<div style="font-size:22px;font-weight:800;color:var(--text);">&#127942; REKORDE</div>';
+  hdr.style.cssText = 'padding:16px 16px 14px;display:flex;align-items:center;justify-content:space-between;';
+  hdr.innerHTML = '<div style="font-size:24px;font-weight:800;color:var(--text);">&#127942; REKORDE</div>';
   var btnRow = document.createElement('div');
   btnRow.style.cssText = 'display:flex;gap:8px;';
   var parkBtn = document.createElement('button');
@@ -62,7 +62,7 @@ function buildRekordeUI(){
     var btn = document.createElement('button');
     btn.dataset.catId = cat.id;
     var isActive = cat.id === rekState.cat;
-    btn.style.cssText = 'width:100%;padding:10px 12px;border:none;border-bottom:1px solid var(--border);background:'+(isActive?'rgba(255,85,0,0.08)':'none')+';color:'+(isActive?'var(--accent)':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;text-align:left;border-left:3px solid '+(isActive?'var(--accent)':'transparent')+';';
+    btn.style.cssText = 'width:100%;padding:11px 12px;border:none;border-bottom:1px solid var(--border);background:'+(isActive?'rgba(255,85,0,0.08)':'none')+';color:'+(isActive?'var(--accent)':'var(--muted)')+';font-family:var(--display);font-size:15px;letter-spacing:1px;cursor:pointer;text-align:left;border-left:3px solid '+(isActive?'var(--accent)':'transparent')+';';
     btn.innerHTML = cat.icon+' '+cat.label;
     btn.onclick = function(){
       rekState.cat = cat.id;
@@ -80,7 +80,8 @@ function buildRekordeUI(){
 
   // Übungen als vertikale Liste
   var exLabel = document.createElement('div');
-  exLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;padding:12px 14px 6px;';
+  exLabel.className = 'stitle';
+  exLabel.style.cssText = 'margin:14px 14px 6px;';
   exLabel.textContent = 'ÜBUNG';
   rightCol.appendChild(exLabel);
 
@@ -114,7 +115,8 @@ function buildRekordeUI(){
   var regWrap = document.createElement('div');
   regWrap.style.cssText = 'padding:10px 14px;border-bottom:1px solid var(--border);';
   var regLabel = document.createElement('div');
-  regLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;';
+  regLabel.className = 'stitle';
+  regLabel.style.cssText = 'margin:0 0 8px;';
   regLabel.textContent = 'REGION';
   regWrap.appendChild(regLabel);
   var regBtns = document.createElement('div');
@@ -236,7 +238,7 @@ function loadRekList(el){
         row.style.cssText='display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';';
         var rankEl=document.createElement('div');
         rankEl.style.cssText='width:28px;text-align:center;flex-shrink:0;';
-        rankEl.innerHTML=medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-size:11px;font-weight:700;color:var(--muted);">#'+rank+'</span>';
+        rankEl.innerHTML=medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-family:var(--display);font-size:15px;color:var(--muted);">#'+rank+'</span>';
         var infoEl=document.createElement('div');
         infoEl.style.cssText='flex:1;min-width:0;';
         var parkTxt = d.parkName ? '&#128170; '+d.parkName : (d.location ? '&#128205; '+d.location : '&#128205; Unbekannter Standort');
@@ -244,7 +246,7 @@ function loadRekList(el){
           '<div style="font-size:10px;color:var(--muted);">'+parkTxt+'</div>';
         var valEl=document.createElement('div');
         valEl.style.cssText='text-align:right;flex-shrink:0;';
-        valEl.innerHTML='<div style="font-size:18px;font-weight:800;color:var(--accent);">'+d.value+'</div><div style="font-size:9px;color:var(--muted);">'+rekState.exUnit+'</div>';
+        valEl.innerHTML='<div style="font-family:var(--display);font-weight:400;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">'+rekState.exUnit+'</div>';
         row.appendChild(rankEl);row.appendChild(infoEl);row.appendChild(valEl);
         if(d.videoUrl){
           var vBtn=document.createElement('button');
@@ -499,7 +501,8 @@ function renderMyParks(el, parks){
 
   // Top 3
   var topLabel = document.createElement('div');
-  topLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;';
+  topLabel.className = 'stitle';
+  topLabel.style.cssText = 'margin:0 0 8px;';
   topLabel.textContent = 'DEINE TOP PARKS';
   el.appendChild(topLabel);
 
@@ -522,7 +525,8 @@ function renderMyParks(el, parks){
   // Top 10 list
   if(parks.length > 3){
     var moreLabel = document.createElement('div');
-    moreLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin:14px 0 8px;';
+    moreLabel.className = 'stitle';
+    moreLabel.style.cssText = 'margin:14px 0 8px;';
     moreLabel.textContent = 'ALLE BESUCHTEN PARKS ('+parks.length+')';
     el.appendChild(moreLabel);
 
@@ -738,7 +742,8 @@ function renderParksOverview(el, parks, filter){
   // Top 3
   var top3 = parks.slice(0,3);
   var topLabel = document.createElement('div');
-  topLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:10px;';
+  topLabel.className = 'stitle';
+  topLabel.style.cssText = 'color:var(--accent);margin:0 0 10px;';
   topLabel.textContent = filter==='mine'?'DEINE TOP PARKS':filter==='top'?'MEISTBESUCHTE PARKS':filter==='rekorde'?'DEINE REKORD-PARKS':'TOP PARKS';
   el.appendChild(topLabel);
 
@@ -766,7 +771,8 @@ function renderParksOverview(el, parks, filter){
 
   if(parks.length > 3){
     var restLabel = document.createElement('div');
-    restLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin:16px 0 10px;';
+    restLabel.className = 'stitle';
+    restLabel.style.cssText = 'margin:16px 0 10px;';
     restLabel.textContent = 'WEITERE PARKS';
     el.appendChild(restLabel);
 
@@ -777,7 +783,7 @@ function renderParksOverview(el, parks, filter){
       row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
       var sub2 = filter==='top' ? Object.keys(p.users||{}).length+' Athleten' : p.count+' Einträge';
       row.innerHTML =
-        '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0;">#'+(i+4)+'</div>'+
+        '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;color:var(--accent);flex-shrink:0;">#'+(i+4)+'</div>'+
         '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
         '<div style="font-size:10px;color:var(--muted);">'+sub2+'</div></div>'+
         '<div style="font-size:18px;color:var(--muted);">›</div>';
@@ -840,7 +846,8 @@ function loadMyParksOverview(el){
       // TOP 3
       var top3 = parks.slice(0,3);
       var top3Label = document.createElement('div');
-      top3Label.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:10px;';
+      top3Label.className = 'stitle';
+      top3Label.style.cssText = 'color:var(--accent);margin:0 0 10px;';
       top3Label.textContent = 'DEINE TOP PARKS';
       el.appendChild(top3Label);
 
@@ -865,7 +872,8 @@ function loadMyParksOverview(el){
       if(parks.length > 3){
         // TOP 10 Rest
         var restLabel = document.createElement('div');
-        restLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin:16px 0 10px;';
+        restLabel.className = 'stitle';
+        restLabel.style.cssText = 'margin:16px 0 10px;';
         restLabel.textContent = 'WEITERE PARKS';
         el.appendChild(restLabel);
 
@@ -875,7 +883,7 @@ function loadMyParksOverview(el){
           row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
           row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
           var rankEl = document.createElement('div');
-          rankEl.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0;';
+          rankEl.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;color:var(--accent);flex-shrink:0;';
           rankEl.textContent = '#'+(i+4);
           var infoEl = document.createElement('div');
           infoEl.style.cssText = 'flex:1;min-width:0;';
@@ -900,7 +908,7 @@ function loadMyParksOverview(el){
             row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;';
             row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
             row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
-            row.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0;">#'+(i+11)+'</div>'+
+            row.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;color:var(--accent);flex-shrink:0;">#'+(i+11)+'</div>'+
               '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+p.parkName+'</div><div style="font-size:10px;color:var(--muted);">'+p.count+' Einträge</div></div>'+
               '<div style="font-size:18px;color:var(--muted);">›</div>';
             row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
