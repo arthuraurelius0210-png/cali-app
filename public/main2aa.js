@@ -665,6 +665,58 @@ function authLogout(){
   auth.signOut();
 }
 
+// ── EINSTELLUNGEN (Zahnrad im Profil) ─────────────────────
+function openSettings(){
+  var exOv = document.getElementById('settings-ov'); if(exOv) exOv.remove();
+  var panel = document.getElementById('pr-settings-panel');
+  if(!panel) return;
+
+  var ov = document.createElement('div');
+  ov.id = 'settings-ov';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+
+  var box = document.createElement('div');
+  box.id = 'settings-box';
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
+  box.innerHTML = '<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text);margin-bottom:12px;">&#9881;&#65039; EINSTELLUNGEN</div>';
+
+  box.appendChild(panel);
+  try{ buildPrivacyToggle(); }catch(e){}
+  try{ checkAndShowAdminBtn(); }catch(e){}
+
+  var closeBtn = document.createElement('button');
+  closeBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:12px;cursor:pointer;';
+  closeBtn.textContent = 'Schließen';
+  closeBtn.onclick = function(){ closeSettings(); };
+  box.appendChild(closeBtn);
+
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target===ov) closeSettings(); };
+  document.body.appendChild(ov);
+}
+
+function closeSettings(){
+  var panel = document.getElementById('pr-settings-panel');
+  var home = document.getElementById('pr-settings-home');
+  if(panel && home) home.appendChild(panel);
+  var ov = document.getElementById('settings-ov');
+  if(ov) ov.remove();
+}
+
+function settingsStub(label){
+  if(typeof toast === 'function') toast(label+' — kommt bald!');
+}
+
+function checkForAppUpdate(){
+  if(!('serviceWorker' in navigator)){ if(typeof toast==='function') toast('Nicht unterstutzt.'); return; }
+  if(typeof toast === 'function') toast('Suche nach Updates...');
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    Promise.all(regs.map(function(r){ return r.update(); })).then(function(){
+      setTimeout(function(){ location.reload(); }, 800);
+    });
+  }).catch(function(){});
+}
+
 function getAuthError(code){
   var errors = {
     'auth/email-already-in-use':   'E-Mail bereits registriert',

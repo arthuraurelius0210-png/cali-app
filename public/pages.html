@@ -113,7 +113,8 @@
 <div class="page" id="page-pr">
 
   <!-- Hero Section -->
-  <div id="pr-hero" style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;">
+  <div id="pr-hero" style="position:relative;background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;">
+    <button onclick="openSettings()" style="position:absolute;top:14px;right:14px;width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);">&#9881;&#65039;</button>
     <div style="position:relative;width:90px;height:90px;margin:0 auto 12px;">
       <svg id="xp-ring-svg" width="90" height="90" style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
         <circle cx="45" cy="45" r="40" fill="none" stroke="var(--border)" stroke-width="5"/>
@@ -136,47 +137,6 @@
 
   <!-- Stats Row -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;" id="pr-stats-row"></div>
-
-  <!-- Personal Data -->
-  <div class="stitle">PERSONLICHE DATEN</div>
-  <div class="card" style="margin-bottom:16px;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="fg">
-        <label>NAME</label>
-        <input type="text" id="pr-inp-name" placeholder="Dein Name" oninput="prSave()">
-      </div>
-      <div class="fg">
-        <label>ALTER</label>
-        <input type="number" id="pr-inp-age" placeholder="z.B. 22" min="10" max="99" oninput="prSave()">
-      </div>
-      <div class="fg">
-        <label>GEWICHT (KG)</label>
-        <input type="number" id="pr-inp-weight" placeholder="z.B. 75" oninput="prSave()">
-      </div>
-      <div class="fg">
-        <label>GROSSE (CM)</label>
-        <input type="number" id="pr-inp-height" placeholder="z.B. 180" oninput="prSave()">
-      </div>
-      <div class="fg">
-        <label>GESCHLECHT</label>
-        <select id="pr-inp-gender" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
-          <option value="m">Mannlich</option>
-          <option value="f">Weiblich</option>
-          <option value="x">Divers</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label>TRAININGSZIEL</label>
-        <select id="pr-inp-goal" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
-          <option value="strength">Kraft aufbauen</option>
-          <option value="skills">Skills lernen</option>
-          <option value="endurance">Ausdauer</option>
-          <option value="weight">Gewicht verlieren</option>
-          <option value="all">Alles</option>
-        </select>
-      </div>
-    </div>
-  </div>
 
   <!-- Achievements -->
   <div class="stitle">ABZEICHEN</div>
@@ -202,15 +162,97 @@
     <span>&#128200; VERLAUF</span><span style="color:var(--muted);">&#8250;</span>
   </button>
 
-  <button onclick="authLogout()" style="width:100%;background:none;border:1.5px solid #ef4444;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:#ef4444;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-    <span>&#128682; LOGOUT</span><span style="color:#ef4444;">&#8250;</span>
-  </button>
-  <div class="stitle">DATENSCHUTZ</div>
-  <div id="pr-privacy-toggle" style="margin-bottom:16px;"></div>
+  <!-- Settings Panel content lives here, hidden; openSettings() moves #pr-settings-panel into a modal sheet -->
+  <div id="pr-settings-home" style="display:none;">
+  <div id="pr-settings-panel">
 
-  <!-- Admin Panel Button (nur für Admin sichtbar) -->
-  <div id="admin-panel-btn" style="display:none;margin-bottom:16px;">
-    <button onclick="openAdminPanel()" style="width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px solid rgba(255,85,0,0.3);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;padding:14px;cursor:pointer;">&#128274; ADMIN PANEL — EINTRÄGE PRÜFEN</button>
+    <div class="stitle" style="margin-top:0;">KONTO</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fg">
+          <label>NAME</label>
+          <input type="text" id="pr-inp-name" placeholder="Dein Name" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>ALTER</label>
+          <input type="number" id="pr-inp-age" placeholder="z.B. 22" min="10" max="99" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>GEWICHT (KG)</label>
+          <input type="number" id="pr-inp-weight" placeholder="z.B. 75" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>GROSSE (CM)</label>
+          <input type="number" id="pr-inp-height" placeholder="z.B. 180" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>GESCHLECHT</label>
+          <select id="pr-inp-gender" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
+            <option value="m">Mannlich</option>
+            <option value="f">Weiblich</option>
+            <option value="x">Divers</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>TRAININGSZIEL</label>
+          <select id="pr-inp-goal" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;">
+            <option value="strength">Kraft aufbauen</option>
+            <option value="skills">Skills lernen</option>
+            <option value="endurance">Ausdauer</option>
+            <option value="weight">Gewicht verlieren</option>
+            <option value="all">Alles</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <button onclick="settingsStub('Passwort ändern')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128273; PASSWORT ANDERN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('E-Mail ändern')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#9993;&#65039; E-MAIL ANDERN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Account löschen')" style="width:100%;background:none;border:1.5px solid #ef4444;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:#ef4444;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128465;&#65039; ACCOUNT LOSCHEN</span><span style="color:#ef4444;">&#8250;</span>
+    </button>
+    <button onclick="if(confirm('Wirklich ausloggen?')) authLogout();" style="width:100%;background:none;border:1.5px solid #ef4444;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:#ef4444;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#128682; LOGOUT</span><span style="color:#ef4444;">&#8250;</span>
+    </button>
+
+    <div class="stitle">DATENSCHUTZ &amp; RECHTLICHES</div>
+    <div id="pr-privacy-toggle" style="margin-bottom:10px;"></div>
+    <button onclick="settingsStub('Datenschutzerklärung')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128220; DATENSCHUTZERKLARUNG</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Impressum')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128203; IMPRESSUM</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Daten exportieren')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#11015;&#65039; DATEN EXPORTIEREN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+
+    <div class="stitle">APP-EINSTELLUNGEN</div>
+    <button onclick="settingsStub('Einheiten')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128207; EINHEITEN (kg/lbs, cm/inch)</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Benachrichtigungen')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#128276; BENACHRICHTIGUNGEN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+
+    <div class="stitle">SUPPORT</div>
+    <button onclick="closeSettings();openFeedback();" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128172; FEEDBACK SENDEN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="checkForAppUpdate()" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#128260; NACH UPDATES SUCHEN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+
+    <!-- Admin Panel Button (nur für Admin sichtbar) -->
+    <div id="admin-panel-btn" style="display:none;margin-bottom:8px;">
+      <div class="stitle">ADMIN</div>
+      <button onclick="closeSettings();openAdminPanel();" style="width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px solid rgba(255,85,0,0.3);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;padding:14px;cursor:pointer;">&#128274; ADMIN PANEL — EINTRÄGE PRÜFEN</button>
+    </div>
+
+  </div>
   </div>
 
   <!-- Total Reps -->
