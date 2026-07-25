@@ -523,10 +523,11 @@ function openAdminPanel(){
   // Tabs
   var tabWrap = document.createElement('div');
   tabWrap.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;';
-  var tabs2 = [{label:'&#8987; Ausstehend',id:'pending'},{label:'&#10003; Genehmigt',id:'approved'},{label:'&#128170; Parks',id:'parks'}];
+  var tabs2 = [{label:'&#8987; Ausstehend',id:'pending'},{label:'&#10003; Genehmigt',id:'approved'},{label:'&#10007; Abgelehnt',id:'rejected'},{label:'&#128170; Parks',id:'parks'}];
   var activeAdminTab = 'pending';
   var listEl = document.createElement('div');
   var approvedEl = document.createElement('div'); approvedEl.style.display='none';
+  var rejectedEl = document.createElement('div'); rejectedEl.style.display='none';
   var suggestEl = document.createElement('div'); suggestEl.style.display='none';
 
   tabs2.forEach(function(t){
@@ -543,15 +544,17 @@ function openAdminPanel(){
       });
       listEl.style.display = t.id==='pending'?'block':'none';
       approvedEl.style.display = t.id==='approved'?'block':'none';
+      rejectedEl.style.display = t.id==='rejected'?'block':'none';
       suggestEl.style.display = t.id==='parks'?'block':'none';
       if(t.id==='approved' && !approvedEl._loaded){ loadApprovedEntries(approvedEl); approvedEl._loaded=true; }
+      if(t.id==='rejected' && !rejectedEl._loaded){ loadRejectedEntries(rejectedEl); rejectedEl._loaded=true; }
       if(t.id==='parks' && !suggestEl._loaded){ loadParkSuggestions(suggestEl); suggestEl._loaded=true; }
     };
     tabWrap.appendChild(btn);
   });
   box.appendChild(tabWrap);
   listEl.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
-  box.appendChild(listEl); box.appendChild(approvedEl); box.appendChild(suggestEl);
+  box.appendChild(listEl); box.appendChild(approvedEl); box.appendChild(rejectedEl); box.appendChild(suggestEl);
 
   // Load pending entries
   db.collection('globalLeaderboard').where('status','==','pending').get()
@@ -1096,6 +1099,43 @@ function loadApprovedEntries(el){
       el.innerHTML = '';
       if(snap.empty){
         el.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--muted);">Keine genehmigten Einträge.</div>';
+        return;
+      }
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var card = document.createElement('div');
+        card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;';
+        card.innerHTML =
+          '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
+          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'');
+
+        var undoBtn = document.createElement('button');
+        undoBtn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
+        undoBtn.innerHTML = '&#8617; RÜCKGÄNGIG';
+        undoBtn.onclick = function(){
+          doc.ref.update({status:'pending'}).then(function(){
+            card.remove();
+            toast('Rückgängig gemacht.');
+          });
+        };
+
+        card.appendChild(undoBtn);
+        el.appendChild(card);
+      });
+    })
+    .catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+}
+
+// ── ADMIN: ABGELEHNTE EINTRÄGE (mit Rückgängig) ───────────
+function loadRejectedEntries(el){
+  el.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
+  db.collection('globalLeaderboard').where('status','==','rejected').get()
+    .then(function(snap){
+      el.innerHTML = '';
+      if(snap.empty){
+        el.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--muted);">Keine abgelehnten Einträge.</div>';
         return;
       }
       snap.forEach(function(doc){
