@@ -207,7 +207,7 @@ function openRecordSubmit(parkId, parkName){
 
   // Step 1: Übung wählen
   var s1 = document.createElement('div');
-  s1.innerHTML = '<div style="font-size:10px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:10px;">SCHRITT 1 — ÜBUNG WÄHLEN</div>';
+  s1.innerHTML = '<div class="stitle" style="margin:0 0 10px;">SCHRITT 1 — ÜBUNG WÄHLEN</div>';
   var exGrid = document.createElement('div');
   exGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;';
   var selectedExId = LB_EXERCISES[0].id;
@@ -234,7 +234,8 @@ function openRecordSubmit(parkId, parkName){
   // Step 2: Wert eingeben
   var s2 = document.createElement('div');
   var valLabel = document.createElement('div');
-  valLabel.style.cssText = 'font-size:10px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;';
+  valLabel.className = 'stitle';
+  valLabel.style.cssText = 'margin:0 0 8px;';
   valLabel.textContent = 'SCHRITT 2 — ERGEBNIS (WDH)';
   var valInput = document.createElement('input');
   valInput.type = 'number';
@@ -246,7 +247,7 @@ function openRecordSubmit(parkId, parkName){
 
   // Step 3: Video aufnehmen
   var s3 = document.createElement('div');
-  s3.innerHTML = '<div style="font-size:10px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:10px;">SCHRITT 3 — VIDEOBEWEIS (PFLICHT)</div>';
+  s3.innerHTML = '<div class="stitle" style="margin:0 0 10px;">SCHRITT 3 — VIDEOBEWEIS (PFLICHT)</div>';
 
   var videoBlob = null;
   var mediaRecorder = null;
