@@ -148,7 +148,7 @@ function buildSkillUI(){
     tw.appendChild(tn);tw.appendChild(td);
 
     var pe=document.createElement('div');
-    pe.style.cssText='font-size:13px;font-weight:800;color:'+(allDone?skill.color:'var(--muted)')+';white-space:nowrap;text-align:right;';
+    pe.style.cssText='font-family:var(--display);font-weight:400;font-size:17px;color:'+(allDone?skill.color:'var(--muted)')+';white-space:nowrap;text-align:right;';
     pe.textContent=allDone?'\u2713 DONE':doneCount+' / '+skill.steps.length;
 
     htop.appendChild(ic);htop.appendChild(tw);htop.appendChild(pe);
@@ -175,7 +175,7 @@ function buildSkillUI(){
       sr.onclick=(function(sid){return function(){toggleSkillStep(sid);};})(step.id);
 
       var circle=document.createElement('div');
-      circle.style.cssText='width:26px;height:26px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;';
+      circle.style.cssText='width:26px;height:26px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:13px;';
       if(done){circle.style.background=skill.color;circle.style.color='#fff';circle.textContent='\u2713';}
       else if(isNext){circle.style.cssText+=';background:none;border:2px solid '+skill.color+';color:'+skill.color;}
       else{circle.style.background='var(--bg3)';circle.style.border='1px solid var(--border2)';circle.style.color='var(--muted2)';}
