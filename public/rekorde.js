@@ -22,6 +22,10 @@ var rekState = { cat:'all', exId:null, exName:'', exUnit:'Wdh', regionKm:99999 }
 var rekMapObj = null;
 var rekCircleObj = null;
 
+function rekChipStyle(active){
+  return 'flex-shrink:0;padding:7px 13px;border-radius:20px;border:1.5px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'var(--accent)':'none')+';color:'+(active?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+}
+
 function buildRekordeUI(){
   var root = document.getElementById('rek-root');
   if(!root) return;
@@ -49,124 +53,151 @@ function buildRekordeUI(){
   hdr.appendChild(btnRow);
   root.appendChild(hdr);
 
-  // ── LAYOUT: links Übungen, rechts Liste ─────────────────
-  var layout = document.createElement('div');
-  layout.style.cssText = 'display:flex;gap:0;';
+  // ── FILTER (Accordion — eingeklappt zeigt nur eine Zusammenfassung) ──
+  var filterWrap = document.createElement('div');
+  filterWrap.style.cssText = 'margin:0 16px 14px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg2);';
 
-  // Linke Spalte — Kategorien + Übungen
-  var leftCol = document.createElement('div');
-  leftCol.style.cssText = 'width:140px;flex-shrink:0;border-right:1px solid var(--border);';
+  var summaryBtn = document.createElement('button');
+  summaryBtn.style.cssText = 'width:100%;display:flex;align-items:center;gap:8px;padding:13px 14px;background:none;border:none;cursor:pointer;text-align:left;';
+  var summaryText = document.createElement('div');
+  summaryText.style.cssText = 'flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+  var summaryChevron = document.createElement('div');
+  summaryChevron.style.cssText = 'font-size:11px;color:var(--muted);transition:transform 0.2s;flex-shrink:0;';
+  summaryChevron.innerHTML = '&#9660;';
+  summaryBtn.appendChild(summaryText); summaryBtn.appendChild(summaryChevron);
 
-  // Kategorie-Tabs (vertikal)
+  var filterPanel = document.createElement('div');
+  filterPanel.style.cssText = 'display:none;padding:2px 14px 16px;border-top:1px solid var(--border);';
+
+  var panelOpen = false;
+  summaryBtn.onclick = function(){
+    panelOpen = !panelOpen;
+    filterPanel.style.display = panelOpen ? 'block' : 'none';
+    summaryChevron.style.transform = panelOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+  };
+
+  function updateSummary(){
+    var catObj = REK_CATS.find(function(c){ return c.id===rekState.cat; });
+    var regObj = REK_REGIONS.find(function(r){ return r.km===rekState.regionKm; }) || REK_REGIONS[REK_REGIONS.length-1];
+    summaryText.innerHTML = (catObj?catObj.icon+' '+catObj.label:'Alle')+' &middot; '+(rekState.exName||'Übung wählen')+' &middot; '+regObj.label;
+  }
+
+  // Kategorie-Chips
+  var catLabel = document.createElement('div');
+  catLabel.className = 'stitle';
+  catLabel.style.cssText = 'margin:14px 0 8px;';
+  catLabel.textContent = 'KATEGORIE';
+  var catRow = document.createElement('div');
+  catRow.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;';
   REK_CATS.forEach(function(cat){
     var btn = document.createElement('button');
     btn.dataset.catId = cat.id;
-    var isActive = cat.id === rekState.cat;
-    btn.style.cssText = 'width:100%;padding:11px 12px;border:none;border-bottom:1px solid var(--border);background:'+(isActive?'rgba(255,85,0,0.08)':'none')+';color:'+(isActive?'var(--accent)':'var(--muted)')+';font-family:var(--display);font-size:15px;letter-spacing:1px;cursor:pointer;text-align:left;border-left:3px solid '+(isActive?'var(--accent)':'transparent')+';';
+    btn.style.cssText = rekChipStyle(cat.id===rekState.cat);
     btn.innerHTML = cat.icon+' '+cat.label;
     btn.onclick = function(){
       rekState.cat = cat.id;
       rekState.exId = null;
-      buildRekordeUI();
+      catRow.querySelectorAll('button').forEach(function(b){
+        b.style.cssText = rekChipStyle(b.dataset.catId===rekState.cat);
+      });
+      rebuildExList();
     };
-    leftCol.appendChild(btn);
+    catRow.appendChild(btn);
   });
-  layout.appendChild(leftCol);
 
-  // Rechte Spalte — Übungen + Region + Liste
-  var rightCol = document.createElement('div');
-  rightCol.id = 'rek-right-col';
-  rightCol.style.cssText = 'flex:1;min-width:0;';
-
-  // Übungen als vertikale Liste
+  // Übungs-Liste
   var exLabel = document.createElement('div');
   exLabel.className = 'stitle';
-  exLabel.style.cssText = 'margin:14px 14px 6px;';
+  exLabel.style.cssText = 'margin:0 0 8px;';
   exLabel.textContent = 'ÜBUNG';
-  rightCol.appendChild(exLabel);
+  var exListWrap = document.createElement('div');
+  exListWrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;max-height:220px;overflow-y:auto;margin-bottom:16px;';
 
-  var exList = document.createElement('div');
-  exList.style.cssText = 'border-bottom:1px solid var(--border);max-height:200px;overflow-y:auto;';
-  var allEx = getRekExercises();
-  allEx.forEach(function(ex){
-    var btn = document.createElement('button');
-    btn.dataset.exId = ex.id;
-    var isActive = ex.id === rekState.exId;
-    btn.style.cssText = 'width:100%;padding:10px 14px;border:none;border-bottom:1px solid var(--border);background:'+(isActive?'rgba(255,85,0,0.08)':'none')+';color:'+(isActive?'var(--accent)':'var(--text)')+';font-family:inherit;font-size:12px;font-weight:'+(isActive?'700':'400')+';cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;border-left:3px solid '+(isActive?'var(--accent)':'transparent')+';';
-    btn.innerHTML = '<span>'+ex.name+'</span><span style="font-size:10px;color:var(--muted);">'+ex.unit+'</span>';
-    btn.onclick = function(){
-      rekState.exId = ex.id;
-      rekState.exName = ex.name;
-      rekState.exUnit = ex.unit;
-      exList.querySelectorAll('button').forEach(function(b){
-        var a = b.dataset.exId === rekState.exId;
-        b.style.background = a?'rgba(255,85,0,0.08)':'none';
-        b.style.color = a?'var(--accent)':'var(--text)';
-        b.style.fontWeight = a?'700':'400';
-        b.style.borderLeftColor = a?'var(--accent)':'transparent';
-      });
-      loadRekList(listEl);
-    };
-    exList.appendChild(btn);
-  });
-  rightCol.appendChild(exList);
+  function rebuildExList(){
+    exListWrap.innerHTML = '';
+    var allEx = getRekExercises();
+    allEx.forEach(function(ex){
+      var btn = document.createElement('button');
+      btn.dataset.exId = ex.id;
+      var isActive = ex.id === rekState.exId;
+      btn.style.cssText = 'width:100%;padding:10px 12px;border:none;border-bottom:1px solid var(--border);background:'+(isActive?'rgba(255,85,0,0.08)':'none')+';color:'+(isActive?'var(--accent)':'var(--text)')+';font-family:inherit;font-size:12px;font-weight:'+(isActive?'700':'400')+';cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;';
+      btn.innerHTML = '<span>'+ex.name+'</span><span style="font-size:10px;color:var(--muted);">'+ex.unit+'</span>';
+      btn.onclick = function(){
+        rekState.exId = ex.id;
+        rekState.exName = ex.name;
+        rekState.exUnit = ex.unit;
+        exListWrap.querySelectorAll('button').forEach(function(b){
+          var a = b.dataset.exId === rekState.exId;
+          b.style.background = a?'rgba(255,85,0,0.08)':'none';
+          b.style.color = a?'var(--accent)':'var(--text)';
+          b.style.fontWeight = a?'700':'400';
+        });
+        updateSummary();
+        loadRekList(listEl);
+      };
+      exListWrap.appendChild(btn);
+    });
+    if(exListWrap.lastChild) exListWrap.lastChild.style.borderBottom = 'none';
 
-  // Region-Filter
-  var regWrap = document.createElement('div');
-  regWrap.style.cssText = 'padding:10px 14px;border-bottom:1px solid var(--border);';
+    // Auto-select erste Übung wenn keine gewählt ist
+    if(!rekState.exId && allEx.length > 0){
+      rekState.exId = allEx[0].id;
+      rekState.exName = allEx[0].name;
+      rekState.exUnit = allEx[0].unit;
+      var firstBtn = exListWrap.querySelector('button');
+      if(firstBtn){
+        firstBtn.style.background = 'rgba(255,85,0,0.08)';
+        firstBtn.style.color = 'var(--accent)';
+        firstBtn.style.fontWeight = '700';
+      }
+    }
+    updateSummary();
+    loadRekList(listEl);
+  }
+
+  // Region-Chips
   var regLabel = document.createElement('div');
   regLabel.className = 'stitle';
   regLabel.style.cssText = 'margin:0 0 8px;';
   regLabel.textContent = 'REGION';
-  regWrap.appendChild(regLabel);
-  var regBtns = document.createElement('div');
-  regBtns.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;';
-  REK_REGIONS.forEach(function(opt, oi){
+  var regRow = document.createElement('div');
+  regRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;';
+  REK_REGIONS.forEach(function(opt){
     var btn = document.createElement('button');
-    var isActive = opt.km === rekState.regionKm;
-    btn.style.cssText = 'padding:5px 10px;border-radius:16px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'rgba(255,85,0,0.1)':'none')+';color:'+(isActive?'var(--accent)':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;';
+    btn.dataset.km = opt.km;
+    btn.style.cssText = rekChipStyle(opt.km===rekState.regionKm);
     btn.textContent = opt.label;
     btn.onclick = function(){
       rekState.regionKm = opt.km;
-      regBtns.querySelectorAll('button').forEach(function(b,bi){
-        var a = REK_REGIONS[bi].km === rekState.regionKm;
-        b.style.borderColor = a?'var(--accent)':'var(--border)';
-        b.style.background = a?'rgba(255,85,0,0.1)':'none';
-        b.style.color = a?'var(--accent)':'var(--muted)';
+      regRow.querySelectorAll('button').forEach(function(b){
+        b.style.cssText = rekChipStyle(parseInt(b.dataset.km,10)===rekState.regionKm);
       });
-      updateRekMap();
+      updateSummary();
       loadRekList(listEl);
     };
-    regBtns.appendChild(btn);
+    regRow.appendChild(btn);
   });
-  regWrap.appendChild(regBtns);
-  rightCol.appendChild(regWrap);
 
+  var doneBtn = document.createElement('button');
+  doneBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:1px;padding:11px;cursor:pointer;';
+  doneBtn.textContent = 'FERTIG';
+  doneBtn.onclick = function(){ summaryBtn.click(); };
 
+  filterPanel.appendChild(catLabel); filterPanel.appendChild(catRow);
+  filterPanel.appendChild(exLabel); filterPanel.appendChild(exListWrap);
+  filterPanel.appendChild(regLabel); filterPanel.appendChild(regRow);
+  filterPanel.appendChild(doneBtn);
 
-  // Bestenliste
+  filterWrap.appendChild(summaryBtn);
+  filterWrap.appendChild(filterPanel);
+  root.appendChild(filterWrap);
+
+  // ── BESTENLISTE (volle Breite) ───────────────────────────
   var listEl = document.createElement('div');
-  listEl.style.cssText = 'padding:12px 14px 80px;';
-  rightCol.appendChild(listEl);
+  listEl.style.cssText = 'padding:0 16px 80px;';
+  root.appendChild(listEl);
 
-  layout.appendChild(rightCol);
-  root.appendChild(layout);
-
-  // Auto-select erste Übung
-  if(!rekState.exId && allEx.length > 0){
-    rekState.exId = allEx[0].id;
-    rekState.exName = allEx[0].name;
-    rekState.exUnit = allEx[0].unit;
-    var firstBtn = exList.querySelector('button');
-    if(firstBtn){
-      firstBtn.style.background = 'rgba(255,85,0,0.08)';
-      firstBtn.style.color = 'var(--accent)';
-      firstBtn.style.fontWeight = '700';
-      firstBtn.style.borderLeftColor = 'var(--accent)';
-    }
-  }
-
-  loadRekList(listEl);
+  rebuildExList();
 }
 
 
