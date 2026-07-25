@@ -55,7 +55,7 @@ function openBattleOverview(){
   var bodies = [];
   tabs.forEach(function(t, ti){
     var tb = document.createElement('button');
-    tb.style.cssText = 'flex:1;padding:12px 4px;font-family:inherit;font-size:9px;letter-spacing:1.5px;font-weight:700;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
+    tb.style.cssText = 'flex:1;padding:12px 4px;font-family:var(--display);font-size:13px;letter-spacing:1px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
     tb.textContent = t;
     var body = document.createElement('div');
     body.style.cssText = 'display:'+(ti===0?'flex':'none')+';flex-direction:column;padding:16px;gap:10px;overflow-y:auto;flex:1;';
@@ -301,7 +301,8 @@ function openChallengeSetup(opponent, parentOv){
   var exercises = getBattleExercises();
 
   var label = document.createElement('div');
-  label.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:12px;';
+  label.className = 'stitle';
+  label.style.cssText = 'color:var(--accent);margin:0 0 12px;';
   label.textContent = 'DEINE 2 ÜBUNGEN WÄHLEN';
   content.appendChild(label);
 
@@ -437,7 +438,8 @@ function acceptBattle(battleId, d){
   var exercises = getBattleExercises().filter(function(e){ return !challengerIds.includes(e.id); });
 
   var label = document.createElement('div');
-  label.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:12px;';
+  label.className = 'stitle';
+  label.style.cssText = 'color:var(--accent);margin:0 0 12px;';
   label.textContent = 'DEINE 2 ÜBUNGEN WÄHLEN (keine Dopplungen)';
   content.appendChild(label);
 
@@ -557,15 +559,15 @@ function openActiveBattle(battleId, d, myUid){
     else if(r.winner && r.winner !== myUid) oppScore++;
   });
   scoreEl.innerHTML =
-    '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--accent);">'+myScore+'</div><div style="font-size:10px;color:var(--muted);">Du</div></div>'+
-    '<div style="font-size:14px;font-weight:700;color:var(--muted);">RUNDE '+(round+1)+' / '+roundOrder.length+'</div>'+
-    '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--text);">'+oppScore+'</div><div style="font-size:10px;color:var(--muted);">'+opponentName+'</div></div>';
+    '<div style="text-align:center;"><div style="font-family:var(--display);font-weight:400;font-size:32px;color:var(--accent);line-height:1;">'+myScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Du</div></div>'+
+    '<div style="font-family:var(--display);font-size:15px;letter-spacing:1px;color:var(--muted);">RUNDE '+(round+1)+' / '+roundOrder.length+'</div>'+
+    '<div style="text-align:center;"><div style="font-family:var(--display);font-weight:400;font-size:32px;color:var(--text);line-height:1;">'+oppScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">'+opponentName+'</div></div>';
   content.appendChild(scoreEl);
 
   // Aktuelle Übung
   var exCard = document.createElement('div');
   exCard.style.cssText = 'background:rgba(255,85,0,0.08);border:1.5px solid rgba(255,85,0,0.3);border-radius:14px;padding:16px;margin-bottom:16px;text-align:center;';
-  exCard.innerHTML = '<div style="font-size:10px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:6px;">AKTUELLE ÜBUNG</div>'+
+  exCard.innerHTML = '<div class="stitle" style="color:var(--accent);justify-content:center;margin:0 0 6px;">AKTUELLE ÜBUNG</div>'+
     '<div style="font-size:22px;font-weight:800;color:var(--text);">'+(currentRound.exercise&&currentRound.exercise.name||'')+'</div>'+
     '<div style="font-size:12px;color:var(--muted);">'+(currentRound.exercise&&currentRound.exercise.unit||'')+'</div>';
   content.appendChild(exCard);
@@ -599,7 +601,8 @@ function buildSubmitUI(content, battleId, d, roundIdx, myUid, currentRound, ov){
   var submitSection = document.createElement('div');
 
   var label = document.createElement('div');
-  label.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:12px;';
+  label.className = 'stitle';
+  label.style.cssText = 'margin:0 0 12px;';
   label.textContent = 'DEIN ERGEBNIS EINREICHEN';
   submitSection.appendChild(label);
 
@@ -713,14 +716,15 @@ function buildConfirmUI(content, battleId, d, roundIdx, myUid, opponentName, rou
   var confirmSection = document.createElement('div');
 
   var label = document.createElement('div');
-  label.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:12px;';
+  label.className = 'stitle';
+  label.style.cssText = 'color:var(--accent);margin:0 0 12px;';
   label.textContent = 'ERGEBNIS BESTÄTIGEN';
   confirmSection.appendChild(label);
 
   var resultCard = document.createElement('div');
   resultCard.style.cssText = 'background:var(--bg2);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;';
   resultCard.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">'+opponentName+' behauptet:</div>'+
-    '<div style="font-size:32px;font-weight:800;color:var(--accent);">'+roundData.value+'</div>'+
+    '<div style="font-family:var(--display);font-weight:400;font-size:38px;color:var(--accent);line-height:1;">'+roundData.value+'</div>'+
     '<div style="font-size:12px;color:var(--muted);">'+(d.roundOrder&&d.roundOrder[roundIdx]&&d.roundOrder[roundIdx].exercise&&d.roundOrder[roundIdx].exercise.unit||'Wdh')+'</div>';
   confirmSection.appendChild(resultCard);
 
@@ -867,7 +871,8 @@ function loadParkKings(el){
       return;
     }
     var label = document.createElement('div');
-    label.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:12px;';
+    label.className = 'stitle';
+    label.style.cssText = 'color:var(--accent);margin:0 0 12px;';
     label.textContent = 'PARK KINGS';
     el.appendChild(label);
     snap.forEach(function(doc){
@@ -881,7 +886,7 @@ function loadParkKings(el){
           '<div style="font-size:14px;font-weight:800;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);">'+(d.parkName||doc.id)+'</div>'+
         '</div>'+
-        '<div style="text-align:right;"><div style="font-size:16px;font-weight:800;color:var(--accent);">'+(d.defenses||0)+'</div><div style="font-size:9px;color:var(--muted);">Siege</div></div>';
+        '<div style="text-align:right;"><div style="font-family:var(--display);font-weight:400;font-size:20px;color:var(--accent);">'+(d.defenses||0)+'</div><div style="font-size:9px;color:var(--muted);">Siege</div></div>';
       el.appendChild(card);
     });
   }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
