@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cali-v1';
+const CACHE_NAME = 'cali-v2';
 const STATIC_ASSETS = [
   '/tracker.html',
   '/index.html',
@@ -50,8 +50,12 @@ self.addEventListener('fetch', function(e) {
     return;
   }
   e.respondWith(
-    caches.match(e.request).then(function(cached) {
-      return cached || fetch(e.request);
+    fetch(e.request).then(function(res) {
+      var resClone = res.clone();
+      caches.open(CACHE_NAME).then(function(cache) { cache.put(e.request, resClone); });
+      return res;
+    }).catch(function() {
+      return caches.match(e.request);
     })
   );
 });
