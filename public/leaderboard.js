@@ -41,7 +41,7 @@ function openGlobalLeaderboard(){
   titleEl.style.cssText = 'flex:1;font-size:16px;font-weight:800;color:var(--text);';
   titleEl.innerHTML = '🏆 BESTENLISTE';
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;letter-spacing:1px;';
+  submitBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;';
   submitBtn.textContent = '+ EINTRAG';
   submitBtn.onclick = function(){ openRecordSubmit(null, null); };
   topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(submitBtn);
@@ -335,7 +335,7 @@ function openRecordSubmit(parkId, parkName){
 
   // Submit button
   var submitBtn2 = document.createElement('button');
-  submitBtn2.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;letter-spacing:2px;opacity:0.4;';
+  submitBtn2.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;opacity:0.4;';
   submitBtn2.textContent = 'EINREICHEN';
   submitBtn2.disabled = true;
 

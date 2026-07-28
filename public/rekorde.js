@@ -42,7 +42,7 @@ function buildRekordeUI(){
   parkBtn.innerHTML = '&#128170; PARKS';
   parkBtn.onclick = function(){ openMyParksOverview(); };
   var subBtn = document.createElement('button');
-  subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;letter-spacing:1px;';
+  subBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;';
   subBtn.textContent = '+ EINTRAG';
   subBtn.onclick = function(){ openRecordSubmit(null,null); };
   var suggestExBtn2 = document.createElement('button');
@@ -179,7 +179,7 @@ function buildRekordeUI(){
   });
 
   var doneBtn = document.createElement('button');
-  doneBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:1px;padding:11px;cursor:pointer;';
+  doneBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:800;padding:11px;cursor:pointer;';
   doneBtn.textContent = 'FERTIG';
   doneBtn.onclick = function(){ summaryBtn.click(); };
 
@@ -270,7 +270,7 @@ function loadRekList(el){
         row.style.cssText='display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';';
         var rankEl=document.createElement('div');
         rankEl.style.cssText='width:28px;text-align:center;flex-shrink:0;';
-        rankEl.innerHTML=medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-family:var(--display);font-size:15px;color:var(--muted);">#'+rank+'</span>';
+        rankEl.innerHTML=medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-family:inherit;font-weight:800;font-size:15px;color:var(--muted);">#'+rank+'</span>';
         var infoEl=document.createElement('div');
         infoEl.style.cssText='flex:1;min-width:0;';
         var parkTxt = d.parkName ? '&#128170; '+d.parkName : (d.location ? '&#128205; '+d.location : '&#128205; Unbekannter Standort');
@@ -278,7 +278,7 @@ function loadRekList(el){
           '<div style="font-size:10px;color:var(--muted);">'+parkTxt+'</div>';
         var valEl=document.createElement('div');
         valEl.style.cssText='text-align:right;flex-shrink:0;';
-        valEl.innerHTML='<div style="font-family:var(--display);font-weight:400;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">'+rekState.exUnit+'</div>';
+        valEl.innerHTML='<div style="font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">'+rekState.exUnit+'</div>';
         row.appendChild(rankEl);row.appendChild(infoEl);row.appendChild(valEl);
         if(d.videoUrl){
           var vBtn=document.createElement('button');
@@ -374,7 +374,7 @@ function renderMyParks(el, myParks, limit){
   myParks.sort(function(a,b){ return b.count-a.count; });
   var shown = (limit && myParks.length>limit) ? myParks.slice(0,limit) : myParks;
   var topLabel = document.createElement('div');
-  topLabel.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;';
+  topLabel.style.cssText='font-size:9px;color:var(--muted);font-weight:700;margin-bottom:8px;';
   topLabel.textContent = shown.length<=3?'DEINE PARKS':'TOP '+shown.length+' PARKS';
   el.appendChild(topLabel);
   shown.forEach(function(p,i){
@@ -815,7 +815,7 @@ function renderParksOverview(el, parks, filter){
       row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
       var sub2 = filter==='top' ? Object.keys(p.users||{}).length+' Athleten' : p.count+' Einträge';
       row.innerHTML =
-        '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;color:var(--accent);flex-shrink:0;">#'+(i+4)+'</div>'+
+        '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:var(--accent);flex-shrink:0;">#'+(i+4)+'</div>'+
         '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
         '<div style="font-size:10px;color:var(--muted);">'+sub2+'</div></div>'+
         '<div style="font-size:18px;color:var(--muted);">›</div>';
@@ -915,7 +915,7 @@ function loadMyParksOverview(el){
           row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
           row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
           var rankEl = document.createElement('div');
-          rankEl.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;color:var(--accent);flex-shrink:0;';
+          rankEl.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:var(--accent);flex-shrink:0;';
           rankEl.textContent = '#'+(i+4);
           var infoEl = document.createElement('div');
           infoEl.style.cssText = 'flex:1;min-width:0;';
@@ -940,7 +940,7 @@ function loadMyParksOverview(el){
             row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;';
             row.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
             row.onmouseout=function(){ this.style.borderColor='var(--border)'; };
-            row.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;color:var(--accent);flex-shrink:0;">#'+(i+11)+'</div>'+
+            row.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:var(--accent);flex-shrink:0;">#'+(i+11)+'</div>'+
               '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+p.parkName+'</div><div style="font-size:10px;color:var(--muted);">'+p.count+' Einträge</div></div>'+
               '<div style="font-size:18px;color:var(--muted);">›</div>';
             row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
