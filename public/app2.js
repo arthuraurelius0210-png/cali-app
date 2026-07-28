@@ -944,33 +944,95 @@ function openWeekCalendar(){
   renderWeekCalendar(scroll);
 }
 
+function getWeekDates(){
+  var today = new Date();
+  var todayIdx = (today.getDay()+6)%7;
+  var monday = new Date(today);
+  monday.setDate(today.getDate()-todayIdx);
+  var dates = [];
+  for(var i=0;i<7;i++){
+    var d = new Date(monday);
+    d.setDate(monday.getDate()+i);
+    dates.push(d);
+  }
+  return dates;
+}
+function formatDayDate(d){
+  var months = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  return (d.getDate()<10?'0':'')+d.getDate()+'. '+months[d.getMonth()];
+}
+
 function renderWeekCalendar(scroll){
   scroll.innerHTML = '';
   var wp = getWeekPlan();
   var todayIdx = (new Date().getDay()+6)%7;
+  var weekDates = getWeekDates();
 
   WEEK_DAYS_FULL.forEach(function(dayName, i){
     var dayPlans = wp[i] || [];
     var isToday = i === todayIdx;
 
     var dayBlock = document.createElement('div');
-    dayBlock.style.cssText = 'margin-bottom:12px;border-radius:16px;overflow:hidden;border:1.5px solid '+(isToday?'var(--accent)':'var(--border)')+';';
+    dayBlock.style.cssText = 'margin-bottom:12px;border-radius:16px;overflow:hidden;'+(isToday?'box-shadow:0 2px 12px rgba(255,85,0,0.15);':'border:1.5px solid var(--border);');
 
     // Day header
     var dayHdr = document.createElement('div');
-    dayHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:'+(isToday?'rgba(255,85,0,0.08)':'var(--bg2)')+';cursor:pointer;';
+    dayHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:'+(isToday?'var(--accent)':'var(--bg2)')+';cursor:pointer;';
     dayHdr.innerHTML =
       '<div style="display:flex;align-items:center;gap:10px;">'+
-        '<div style="font-size:15px;font-weight:800;color:'+(isToday?'var(--accent)':'var(--text)')+';">'+dayName+'</div>'+
-        (isToday?'<div style="font-size:9px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;font-weight:700;">HEUTE</div>':'')+
+        '<div>'+
+          '<div style="font-size:15px;font-weight:800;color:'+(isToday?'#fff':'var(--text)')+';">'+dayName+'</div>'+
+          '<div style="font-size:11px;color:'+(isToday?'rgba(255,255,255,0.85)':'var(--muted)')+';margin-top:1px;">'+formatDayDate(weekDates[i])+'</div>'+
+        '</div>'+
+        (isToday?'<div style="font-size:9px;background:rgba(255,255,255,0.25);color:#fff;padding:3px 9px;border-radius:20px;font-weight:700;">Heute</div>':'')+
       '</div>'+
       '<div style="display:flex;align-items:center;gap:8px;">'+
-        '<div style="font-size:12px;color:var(--muted);">'+(dayPlans.length===0?'😴 Ruhetag':dayPlans.length+' Workout'+(dayPlans.length>1?'s':''))+'</div>'+
-        '<div style="font-size:18px;color:var(--muted);">+</div>'+
+        '<div style="font-size:12px;color:'+(isToday?'rgba(255,255,255,0.9)':'var(--muted)')+';">'+(dayPlans.length===0?'😴 Ruhetag':dayPlans.length+' Workout'+(dayPlans.length>1?'s':''))+'</div>'+
+        '<div style="font-size:18px;color:'+(isToday?'#fff':'var(--muted)')+';">+</div>'+
       '</div>';
 
     dayHdr.onclick = function(){ openDayEditor(i, scroll); };
     dayBlock.appendChild(dayHdr);
+
+    // Heute: Tipp-Box direkt eingeblendet
+    if(isToday){
+      var tipWrap = document.createElement('div');
+      tipWrap.style.cssText = 'padding:14px 16px;background:var(--bg);';
+
+      var tipBox = document.createElement('div');
+      tipBox.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;';
+
+      var tipTitle, tipText, actionLabel;
+      if(dayPlans.length === 0){
+        tipTitle = '☀️ Tipp für heute';
+        tipText = 'Ruhetag — nutze die Zeit für Mobilität, Stretching oder einen Spaziergang. Dein Körper regeneriert sich am besten mit leichter Bewegung.';
+        actionLabel = '+ Plan hinzufügen';
+      } else {
+        tipTitle = '🔥 Tipp für heute';
+        tipText = 'Du hast heute '+dayPlans.length+' Workout'+(dayPlans.length>1?'s':'')+' geplant. Wärm dich gut auf und bleib dran!';
+        actionLabel = '▶ Workout starten';
+      }
+
+      tipBox.innerHTML =
+        '<div style="font-size:12px;font-weight:800;color:var(--accent);margin-bottom:6px;">'+tipTitle+'</div>'+
+        '<div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:12px;">'+tipText+'</div>';
+
+      var tipBtn = document.createElement('button');
+      tipBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;cursor:pointer;';
+      tipBtn.textContent = actionLabel;
+      tipBtn.onclick = function(e){
+        e.stopPropagation();
+        if(dayPlans.length === 0){
+          openDayEditor(i, scroll);
+        } else {
+          var firstPlan = getPlanById(dayPlans[0]);
+          if(firstPlan){ startWorkout(firstPlan.id); document.getElementById('week-cal-ov').remove(); }
+        }
+      };
+      tipBox.appendChild(tipBtn);
+      tipWrap.appendChild(tipBox);
+      dayBlock.appendChild(tipWrap);
+    }
 
     // Plans for this day
     if(dayPlans.length > 0){
