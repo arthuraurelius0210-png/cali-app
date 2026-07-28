@@ -7,7 +7,7 @@ function buildDrawerCommunity(el){
   hdr.style.cssText = 'color:#4ECDC4;margin:0;';
   hdr.textContent = 'COMMUNITY CHALLENGES';
   var postBtn = document.createElement('button');
-  postBtn.style.cssText = 'background:rgba(78,205,196,0.1);color:#4ECDC4;border:1px solid rgba(78,205,196,0.3);border-radius:8px;font-family:inherit;font-size:10px;letter-spacing:2px;padding:7px 12px;cursor:pointer;';
+  postBtn.style.cssText = 'background:rgba(78,205,196,0.1);color:#4ECDC4;border:1px solid rgba(78,205,196,0.3);border-radius:8px;font-family:inherit;font-size:10px;padding:7px 12px;cursor:pointer;';
   postBtn.textContent = '+ POSTEN';
   postBtn.onclick = function(){ closeChDrawer(); setTimeout(showCommPostModal, 300); };
   hdrRow.appendChild(hdr);
@@ -60,10 +60,10 @@ function buildStartChallengeWidget(){
   var txt = document.createElement('div');
   txt.style.cssText = 'flex:1;';
   var t1 = document.createElement('div');
-  t1.style.cssText = 'font-family:inherit;font-size:14px;letter-spacing:1px;color:var(--text);';
+  t1.style.cssText = 'font-family:inherit;font-size:14px;color:var(--text);';
   t1.textContent = activeChallenge.title;
   var t2 = document.createElement('div');
-  t2.style.cssText = 'font-family:var(--display);font-size:14px;color:var(--muted);margin-top:2px;';
+  t2.style.cssText = 'font-family:inherit;font-weight:800;font-size:14px;color:var(--muted);margin-top:2px;';
   t2.textContent = prog+' / '+target+' ('+pct+'%)';
   txt.appendChild(t1);
   txt.appendChild(t2);
@@ -223,7 +223,7 @@ function buildChallengePresets(){
       info.style.cssText = 'flex:1;';
 
       var t = document.createElement('div');
-      t.style.cssText = 'font-family:inherit;font-size:15px;letter-spacing:1px;color:var(--text);';
+      t.style.cssText = 'font-family:inherit;font-size:15px;color:var(--text);';
       t.textContent = ch.title;
 
       var d = document.createElement('div');
@@ -240,7 +240,7 @@ function buildChallengePresets(){
       exp.textContent = ch.explanation;
 
       var btn = document.createElement('button');
-      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;letter-spacing:2px;padding:9px;cursor:pointer;width:100%;margin-top:10px;';
+      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;padding:9px;cursor:pointer;width:100%;margin-top:10px;';
       btn.textContent = 'CHALLENGE ANNEHMEN';
       btn.onclick = function(){
         activeChallenge = {

@@ -40,7 +40,7 @@ function openBattleOverview(){
   backBtn.onclick = function(){ ov.remove(); };
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'flex:1;font-size:17px;font-weight:800;color:var(--text);';
-  titleEl.innerHTML = '&#9876;&#65039; BATTLES';
+  titleEl.innerHTML = '&#9876;&#65039; Battles';
   var newBtn = document.createElement('button');
   newBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;';
   newBtn.textContent = '+ CHALLENGE';
@@ -51,11 +51,11 @@ function openBattleOverview(){
   // Tabs
   var tabBar = document.createElement('div');
   tabBar.style.cssText = 'display:flex;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var tabs = ['OFFEN','MEINE BATTLES','PARK KINGS'];
+  var tabs = ['Offen','Meine Battles','Park Kings'];
   var bodies = [];
   tabs.forEach(function(t, ti){
     var tb = document.createElement('button');
-    tb.style.cssText = 'flex:1;padding:12px 4px;font-family:var(--display);font-size:13px;letter-spacing:1px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
+    tb.style.cssText = 'flex:1;padding:12px 4px;font-family:inherit;font-weight:800;font-size:13px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
     tb.textContent = t;
     var body = document.createElement('div');
     body.style.cssText = 'display:'+(ti===0?'flex':'none')+';flex-direction:column;padding:16px;gap:10px;overflow-y:auto;flex:1;';
@@ -342,7 +342,7 @@ function openChallengeSetup(opponent, parentOv){
   content.appendChild(exGrid);
 
   var sendBtn = document.createElement('button');
-  sendBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;letter-spacing:1px;opacity:0.4;';
+  sendBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;opacity:0.4;';
   sendBtn.textContent = 'HERAUSFORDERUNG SENDEN';
   sendBtn.disabled = true;
   sendBtn.onclick = function(){
@@ -559,9 +559,9 @@ function openActiveBattle(battleId, d, myUid){
     else if(r.winner && r.winner !== myUid) oppScore++;
   });
   scoreEl.innerHTML =
-    '<div style="text-align:center;"><div style="font-family:var(--display);font-weight:400;font-size:32px;color:var(--accent);line-height:1;">'+myScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Du</div></div>'+
-    '<div style="font-family:var(--display);font-size:15px;letter-spacing:1px;color:var(--muted);">RUNDE '+(round+1)+' / '+roundOrder.length+'</div>'+
-    '<div style="text-align:center;"><div style="font-family:var(--display);font-weight:400;font-size:32px;color:var(--text);line-height:1;">'+oppScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">'+opponentName+'</div></div>';
+    '<div style="text-align:center;"><div style="font-family:inherit;font-weight:800;font-size:32px;color:var(--accent);line-height:1;">'+myScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Du</div></div>'+
+    '<div style="font-family:inherit;font-weight:800;font-size:15px;color:var(--muted);">RUNDE '+(round+1)+' / '+roundOrder.length+'</div>'+
+    '<div style="text-align:center;"><div style="font-family:inherit;font-weight:800;font-size:32px;color:var(--text);line-height:1;">'+oppScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">'+opponentName+'</div></div>';
   content.appendChild(scoreEl);
 
   // Aktuelle Übung
@@ -724,7 +724,7 @@ function buildConfirmUI(content, battleId, d, roundIdx, myUid, opponentName, rou
   var resultCard = document.createElement('div');
   resultCard.style.cssText = 'background:var(--bg2);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;';
   resultCard.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">'+opponentName+' behauptet:</div>'+
-    '<div style="font-family:var(--display);font-weight:400;font-size:38px;color:var(--accent);line-height:1;">'+roundData.value+'</div>'+
+    '<div style="font-family:inherit;font-weight:800;font-size:38px;color:var(--accent);line-height:1;">'+roundData.value+'</div>'+
     '<div style="font-size:12px;color:var(--muted);">'+(d.roundOrder&&d.roundOrder[roundIdx]&&d.roundOrder[roundIdx].exercise&&d.roundOrder[roundIdx].exercise.unit||'Wdh')+'</div>';
   confirmSection.appendChild(resultCard);
 
@@ -886,7 +886,7 @@ function loadParkKings(el){
           '<div style="font-size:14px;font-weight:800;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);">'+(d.parkName||doc.id)+'</div>'+
         '</div>'+
-        '<div style="text-align:right;"><div style="font-family:var(--display);font-weight:400;font-size:20px;color:var(--accent);">'+(d.defenses||0)+'</div><div style="font-size:9px;color:var(--muted);">Siege</div></div>';
+        '<div style="text-align:right;"><div style="font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);">'+(d.defenses||0)+'</div><div style="font-size:9px;color:var(--muted);">Siege</div></div>';
       el.appendChild(card);
     });
   }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });

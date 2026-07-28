@@ -35,8 +35,8 @@ function showCommPostModal(){
   var hdrRow = document.createElement('div');
   hdrRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
   var hdrTitle = document.createElement('div');
-  hdrTitle.style.cssText = 'font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text);';
-  hdrTitle.textContent = 'CHALLENGE ERSTELLEN';
+  hdrTitle.style.cssText = 'font-size:15px;font-weight:800;color:var(--text);';
+  hdrTitle.textContent = 'Challenge erstellen';
   var closeX = document.createElement('button');
   closeX.style.cssText = 'background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;color:var(--muted);';
   closeX.textContent = '\u00D7';
@@ -62,7 +62,7 @@ function showCommPostModal(){
   backBtn.style.cssText = 'flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;display:none;';
   backBtn.textContent = '\u2190 ZURÜCK';
   var nextBtn = document.createElement('button');
-  nextBtn.style.cssText = 'flex:2;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;padding:14px;cursor:pointer;';
+  nextBtn.style.cssText = 'flex:2;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:14px;cursor:pointer;';
   nextBtn.textContent = 'WEITER \u2192';
   footer.appendChild(backBtn); footer.appendChild(nextBtn);
   box.appendChild(footer);
@@ -198,7 +198,7 @@ function showCommPostModal(){
       var card=document.createElement('div'); card.id='type-card-'+t.id;
       var sel=challengeData.type===t.id;
       card.style.cssText='display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1.5px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(255,85,0,0.06)':'var(--bg2)')+';cursor:pointer;margin-bottom:8px;';
-      card.innerHTML='<div style="font-size:24px;">'+t.icon+'</div><div><div style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:1px;">'+t.label+'</div><div style="font-size:11px;color:var(--muted);">'+t.desc+'</div></div>';
+      card.innerHTML='<div style="font-size:24px;">'+t.icon+'</div><div><div style="font-size:13px;font-weight:800;color:var(--text);">'+t.label+'</div><div style="font-size:11px;color:var(--muted);">'+t.desc+'</div></div>';
       card.onclick=function(){
         challengeData.type=t.id;
         types.forEach(function(tt){var c=document.getElementById('type-card-'+tt.id);if(c){c.style.borderColor=tt.id===t.id?'var(--accent)':'var(--border)';c.style.background=tt.id===t.id?'rgba(255,85,0,0.06)':'var(--bg2)';}});
@@ -281,7 +281,7 @@ function showCommPostModal(){
     var sr=document.createElement('div'); sr.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;';
     function mi(fld,lb,val,ph){
       var w=document.createElement('div');
-      var l=document.createElement('div'); l.style.cssText='font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:4px;'; l.textContent=lb;
+      var l=document.createElement('div'); l.style.cssText='font-size:8px;color:var(--muted);margin-bottom:4px;'; l.textContent=lb;
       var i=document.createElement('input'); i.type='number'; i.value=val||''; i.placeholder=ph||'';
       i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px;color:var(--text);outline:none;box-sizing:border-box;';
       i.oninput=(function(f){return function(){challengeData.exercises[idx][f]=parseInt(this.value)||0;};})(fld);
@@ -448,7 +448,7 @@ function buildCommCard(docId, data){
 
   var left = document.createElement('div');
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:15px;font-weight:800;letter-spacing:1px;color:var(--text);line-height:1.3;';
+  titleEl.style.cssText = 'font-size:15px;font-weight:800;color:var(--text);line-height:1.3;';
   titleEl.textContent = data.title;
 
   var meta = document.createElement('div');
@@ -482,7 +482,7 @@ function buildCommCard(docId, data){
     vRow.href = data.videoUrl; vRow.target = '_blank';
     vRow.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-decoration:none;';
     var vIco = document.createElement('span'); vIco.style.cssText='font-size:16px;flex-shrink:0;'; vIco.textContent='\uD83C\uDFA5';
-    var vTxt = document.createElement('span'); vTxt.style.cssText='font-size:11px;color:var(--accent);font-weight:700;letter-spacing:1px;'; vTxt.textContent='ERKLÄR-VIDEO ANSEHEN';
+    var vTxt = document.createElement('span'); vTxt.style.cssText='font-size:11px;color:var(--accent);font-weight:700;'; vTxt.textContent='ERKLÄR-VIDEO ANSEHEN';
     vRow.appendChild(vIco); vRow.appendChild(vTxt);
     card.appendChild(vRow);
   }
@@ -519,7 +519,7 @@ function buildCommCard(docId, data){
 
   // Try button
   var tryBtn = document.createElement('button');
-  tryBtn.style.cssText = 'flex:1;background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1px;padding:7px 12px;cursor:pointer;';
+  tryBtn.style.cssText = 'flex:1;background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;padding:7px 12px;cursor:pointer;';
   tryBtn.textContent = 'AUSPROBIEREN';
   tryBtn.onclick = function(){
     activeChallenge = {
