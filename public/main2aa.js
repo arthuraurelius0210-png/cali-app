@@ -7,7 +7,7 @@ function buildChallengePresets(){
   el.innerHTML = '';
 
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:9px;letter-spacing:3px;color:var(--accent);font-family:inherit;margin-bottom:10px;';
+  title.style.cssText = 'font-size:9px;color:var(--accent);font-family:inherit;margin-bottom:10px;';
   title.textContent = 'VORGEFERTIGTE CHALLENGES';
   el.appendChild(title);
 
@@ -27,7 +27,7 @@ function buildChallengePresets(){
       info.style.cssText = 'flex:1;';
 
       var t = document.createElement('div');
-      t.style.cssText = 'font-family:inherit;font-size:15px;letter-spacing:1px;color:var(--text);';
+      t.style.cssText = 'font-family:inherit;font-size:15px;color:var(--text);';
       t.textContent = ch.title;
 
       var d = document.createElement('div');
@@ -44,7 +44,7 @@ function buildChallengePresets(){
       exp.textContent = ch.explanation;
 
       var btn = document.createElement('button');
-      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;letter-spacing:2px;padding:9px;cursor:pointer;width:100%;margin-top:10px;';
+      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;padding:9px;cursor:pointer;width:100%;margin-top:10px;';
       btn.textContent = 'CHALLENGE ANNEHMEN';
       btn.onclick = function(){
         activeChallenge = {
@@ -148,7 +148,7 @@ function showPercentile(exName, val, gender){
   card.style.cssText='background:rgba(255,85,0,0.05);border:2px solid var(--accent);border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 0 20px rgba(255,85,0,0.12);';
 
   var title = document.createElement('div');
-  title.style.cssText='font-family:inherit;font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:10px;';
+  title.style.cssText='font-family:inherit;font-size:11px;color:var(--muted);margin-bottom:10px;';
   title.textContent='WELTWEITER VERGLEICH';
 
   var pctText = document.createElement('div');
@@ -168,7 +168,7 @@ function showPercentile(exName, val, gender){
   barWrap.appendChild(bar);
 
   var labelDiv = document.createElement('div');
-  labelDiv.style.cssText='font-family:inherit;font-size:14px;letter-spacing:1px;color:'+lbl.color+';';
+  labelDiv.style.cssText='font-family:inherit;font-size:14px;color:'+lbl.color+';';
   labelDiv.textContent=lbl.text;
 
   var source = document.createElement('div');
@@ -330,10 +330,10 @@ function buildProfilStatsDetail(){
     var box=document.createElement('div');
     box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;';
     var val=document.createElement('div');
-    val.style.cssText='font-family:var(--display);font-weight:400;font-size:26px;color:var(--accent);line-height:1;margin-bottom:3px;';
+    val.style.cssText='font-family:inherit;font-weight:800;font-size:26px;color:var(--accent);line-height:1;margin-bottom:3px;';
     val.textContent=bigStats[i].value;
     var lbl=document.createElement('div');
-    lbl.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;';
+    lbl.style.cssText='font-size:9px;color:var(--muted);font-family:inherit;';
     lbl.textContent=bigStats[i].label;
     var sub=document.createElement('div');
     sub.style.cssText='font-size:10px;color:var(--muted2);margin-top:2px;';
@@ -345,7 +345,7 @@ function buildProfilStatsDetail(){
 
   // ── Wdh per exercise ranking ──
   var title2=document.createElement('div');
-  title2.style.cssText='font-size:9px;letter-spacing:3px;color:var(--muted);font-family:inherit;margin-bottom:8px;margin-top:4px;';
+  title2.style.cssText='font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:8px;margin-top:4px;';
   title2.textContent='ALLE UBUNGEN — GESAMTE WIEDERHOLUNGEN';
   el.appendChild(title2);
 
@@ -455,10 +455,10 @@ function buildProfilUI(){
       var box=document.createElement('div');
       box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;';
       var val=document.createElement('div');
-      val.style.cssText='font-family:var(--display);font-weight:400;font-size:30px;color:var(--accent);line-height:1;';
+      val.style.cssText='font-family:inherit;font-weight:800;font-size:30px;color:var(--accent);line-height:1;';
       val.textContent=String(stats[i].value);
       var lbl=document.createElement('div');
-      lbl.style.cssText='font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-top:3px;';
+      lbl.style.cssText='font-size:9px;color:var(--muted);font-family:inherit;margin-top:3px;';
       lbl.textContent=stats[i].label;
       box.appendChild(val);box.appendChild(lbl);
       sr.appendChild(box);
@@ -481,7 +481,7 @@ function buildProfilUI(){
       icon.innerHTML=b.icon;
       var info=document.createElement('div');
       var t=document.createElement('div');
-      t.style.cssText='font-family:inherit;font-size:13px;letter-spacing:1px;color:'+(has?'var(--accent)':'var(--muted)')+';';
+      t.style.cssText='font-family:inherit;font-size:13px;color:'+(has?'var(--accent)':'var(--muted)')+';';
       t.textContent=b.title;
       var d2=document.createElement('div');
       d2.style.cssText='font-size:10px;color:var(--muted2);margin-top:1px;';
@@ -520,7 +520,7 @@ function buildProfilUI(){
         left.style.cssText='font-size:13px;font-weight:500;color:var(--text);';
         left.textContent=name.replace(' Max','');
         var right=document.createElement('div');
-        right.style.cssText='font-family:var(--display);font-weight:400;font-size:22px;color:var(--accent);';
+        right.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);';
         right.textContent=me.val+' '+me.unit;
         row.appendChild(left);row.appendChild(right);
         bests.appendChild(row);
@@ -546,7 +546,7 @@ function buildProfilUI(){
       name2.style.cssText='font-size:13px;color:var(--text);flex:1;';
       name2.textContent=sorted[i].name;
       var total=document.createElement('div');
-      total.style.cssText='font-family:var(--display);font-weight:400;font-size:20px;color:var(--accent);';
+      total.style.cssText='font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);';
       total.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
       row.appendChild(rank);row.appendChild(name2);row.appendChild(total);
       repsEl.appendChild(row);
@@ -678,7 +678,7 @@ function openSettings(){
   var box = document.createElement('div');
   box.id = 'settings-box';
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
-  box.innerHTML = '<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text);margin-bottom:12px;">&#9881;&#65039; EINSTELLUNGEN</div>';
+  box.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;">&#9881;&#65039; EINSTELLUNGEN</div>';
 
   box.appendChild(panel);
   try{ buildPrivacyToggle(); }catch(e){}

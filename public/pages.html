@@ -66,14 +66,14 @@
 <div class="page" id="page-ch">
   <!-- Header -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:18px;">
-    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);">CHALLENGES</div>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);">CHALLENGES</div>
     <div id="currency-display" style="font-size:13px;font-weight:700;color:var(--text);"></div>
   </div>
 
   <!-- KARTE 1: MEINE CHALLENGE (groß, oben) -->
   <div id="ch-card-personal" onclick="openChDrawer('personal')" style="background:#fff;border-radius:16px;padding:20px 20px 18px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px;"></div>
-    <div style="font-size:8px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:12px;">MEINE CHALLENGE</div>
+    <div style="font-size:8px;color:var(--accent);font-weight:700;margin-bottom:12px;">MEINE CHALLENGE</div>
     <div id="ch-card-personal-inner"></div>
     <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#ccc;font-size:20px;">&#8250;</div>
   </div>
@@ -83,14 +83,14 @@
 
     <div id="ch-card-preset" onclick="openChDrawer('preset')" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
       <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#38BDF8;border-radius:3px 0 0 3px;"></div>
-      <div style="font-size:7px;letter-spacing:3px;color:#38BDF8;font-weight:700;margin-bottom:12px;">VOREINGESTELLT</div>
+      <div style="font-size:7px;color:#38BDF8;font-weight:700;margin-bottom:12px;">VOREINGESTELLT</div>
       <div id="ch-card-preset-inner"></div>
       <div style="position:absolute;right:10px;bottom:14px;color:#ccc;font-size:16px;">&#8250;</div>
     </div>
 
     <div id="ch-card-community" onclick="openChDrawer('community')" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
       <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#4ECDC4;border-radius:3px 0 0 3px;"></div>
-      <div style="font-size:7px;letter-spacing:3px;color:#4ECDC4;font-weight:700;margin-bottom:12px;">COMMUNITY</div>
+      <div style="font-size:7px;color:#4ECDC4;font-weight:700;margin-bottom:12px;">COMMUNITY</div>
       <div id="ch-card-community-inner"></div>
       <div style="position:absolute;right:10px;bottom:14px;color:#ccc;font-size:16px;">&#8250;</div>
     </div>
@@ -130,8 +130,8 @@
       <div id="xp-level-badge" style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap;display:none;">LVL 1</div>
     </div>
     <input type="file" id="pr-avatar-inp" accept="image/*" style="display:none;" onchange="prSetAvatar(this)">
-    <div id="pr-name-display" style="font-family:inherit;font-size:26px;letter-spacing:2px;color:var(--text);cursor:pointer;" onclick="prEditName()">DEIN NAME</div>
-    <div id="pr-level-badge" style="display:inline-block;background:rgba(255,85,0,0.1);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:20px;font-family:inherit;font-size:11px;letter-spacing:2px;padding:3px 12px;margin-top:6px;">BEGINNER</div>
+    <div id="pr-name-display" style="font-family:inherit;font-size:26px;color:var(--text);cursor:pointer;" onclick="prEditName()">DEIN NAME</div>
+    <div id="pr-level-badge" style="display:inline-block;background:rgba(255,85,0,0.1);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:20px;font-family:inherit;font-size:11px;padding:3px 12px;margin-top:6px;">BEGINNER</div>
     <div id="pr-member-since" style="font-size:11px;color:var(--muted2);margin-top:6px;">Mitglied seit heute</div>
   </div>
 
@@ -249,7 +249,7 @@
     <!-- Admin Panel Button (nur für Admin sichtbar) -->
     <div id="admin-panel-btn" style="display:none;margin-bottom:8px;">
       <div class="stitle">ADMIN</div>
-      <button onclick="closeSettings();openAdminPanel();" style="width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px solid rgba(255,85,0,0.3);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;padding:14px;cursor:pointer;">&#128274; ADMIN PANEL — EINTRÄGE PRÜFEN</button>
+      <button onclick="closeSettings();openAdminPanel();" style="width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px solid rgba(255,85,0,0.3);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:14px;cursor:pointer;">&#128274; ADMIN PANEL — EINTRÄGE PRÜFEN</button>
     </div>
 
   </div>
@@ -269,10 +269,10 @@
 <!-- PARKS PAGE -->
 <div class="page" id="page-parks">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:14px;">
-    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);">CALISTHENICS PARKS</div>
-<button onclick="openMyParksOverview()" style="background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;letter-spacing:1px;padding:8px 12px;cursor:pointer;">&#127942; REKORDE</button>
-    <button onclick="openSuggestPark()" style="background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;letter-spacing:1px;padding:8px 12px;cursor:pointer;">&#43; PARK MELDEN</button>
-    <button id="parks-locate-btn" onclick="locateAndLoad()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;letter-spacing:1px;padding:8px 14px;cursor:pointer;">&#9657; STANDORT</button>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);">CALISTHENICS PARKS</div>
+<button onclick="openMyParksOverview()" style="background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;padding:8px 12px;cursor:pointer;">&#127942; REKORDE</button>
+    <button onclick="openSuggestPark()" style="background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;padding:8px 12px;cursor:pointer;">&#43; PARK MELDEN</button>
+    <button id="parks-locate-btn" onclick="locateAndLoad()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;padding:8px 14px;cursor:pointer;">&#9657; STANDORT</button>
   </div>
 
   <div id="parks-status" style="font-size:11px;color:var(--muted);margin-bottom:10px;min-height:18px;"></div>

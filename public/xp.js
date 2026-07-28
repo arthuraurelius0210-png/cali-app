@@ -116,7 +116,7 @@ function awardXP(amount, reason){
 
       // Level-Up Toast
       if(newLevel.level > oldLevel.level){
-        var msg = '🎉 LEVEL UP! Level '+newLevel.level;
+        var msg = '🎉 Level up! Level '+newLevel.level;
         if(diamondBonus > 0) msg += ' +'+diamondBonus+' 💎';
         if(typeof toast==='function') toast(msg);
         showLevelUpAnimation(oldLevel.level, newLevel.level, diamondBonus);
@@ -139,9 +139,9 @@ function showLevelUpAnimation(oldLevel, newLevel, diamonds){
   ov.innerHTML =
     '<div style="text-align:center;animation:fadeIn 0.5s ease;">'+
       '<div style="font-size:60px;margin-bottom:8px;">🎉</div>'+
-      '<div style="font-family:var(--display);font-size:16px;letter-spacing:4px;color:#ff5500;margin-bottom:8px;">LEVEL UP!</div>'+
-      '<div style="font-family:var(--display);font-weight:400;font-size:72px;color:#fff;margin-bottom:4px;line-height:1;">'+newLevel+'</div>'+
-      (diamonds>0?'<div style="font-family:var(--display);font-size:22px;color:#ffd700;margin-bottom:16px;">+'+diamonds+' 💎</div>':'')+
+      '<div style="font-family:inherit;font-weight:800;font-size:16px;color:#ff5500;margin-bottom:8px;">Level up!</div>'+
+      '<div style="font-family:inherit;font-weight:800;font-size:72px;color:#fff;margin-bottom:4px;line-height:1;">'+newLevel+'</div>'+
+      (diamonds>0?'<div style="font-family:inherit;font-weight:800;font-size:22px;color:#ffd700;margin-bottom:16px;">+'+diamonds+' 💎</div>':'')+
       '<div style="font-size:13px;color:#999;">Tippen um fortzufahren</div>'+
     '</div>';
   ov.onclick = function(){ ov.remove(); };
@@ -174,7 +174,7 @@ function buildXPWidget(el){
     var levelLabel = lv.level<=5?'Starter':lv.level<=10?'Beginner':lv.level<=20?'Fortgeschritten':lv.level<=30?'Pro':lv.level<=40?'Elite':'Legend';
     card.innerHTML =
       '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">'+
-        '<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#ff5500,#ff8c00);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;color:#fff;flex-shrink:0;">'+lv.level+'</div>'+
+        '<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#ff5500,#ff8c00);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:20px;color:#fff;flex-shrink:0;">'+lv.level+'</div>'+
         '<div style="flex:1;">'+
           '<div style="font-size:16px;font-weight:800;color:var(--text);">Level '+lv.level+' — '+levelLabel+'</div>'+
           '<div style="font-size:11px;color:var(--muted);">'+lv.xp.toLocaleString()+' XP gesamt · '+monthlyXP.toLocaleString()+' XP diesen Monat</div>'+
@@ -229,7 +229,7 @@ function openXPHistory(uid){
             '<div style="font-size:12px;font-weight:700;color:var(--text);">'+d.reason+'</div>'+
             '<div style="font-size:10px;color:var(--muted);">'+new Date(d.date).toLocaleDateString('de-DE')+'</div>'+
           '</div>'+
-          '<div style="font-family:var(--display);font-weight:400;font-size:19px;color:var(--accent);">+'+d.amount+' XP</div>';
+          '<div style="font-family:inherit;font-weight:800;font-size:19px;color:var(--accent);">+'+d.amount+' XP</div>';
         el.appendChild(row);
       });
     });
@@ -296,13 +296,13 @@ function openMonthlyLeaderboard(){
       // Load name from users collection
       row.innerHTML =
         '<div style="width:28px;text-align:center;flex-shrink:0;">'+(medal?'<span style="font-size:20px;">'+medal+'</span>':'<span style="font-size:12px;font-weight:700;color:var(--muted);">#'+rank+'</span>')+'</div>'+
-        '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ff5500,#ff8c00);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;color:#fff;flex-shrink:0;">'+e.level+'</div>'+
+        '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ff5500,#ff8c00);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;">'+e.level+'</div>'+
         '<div style="flex:1;min-width:0;">'+
           '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(isMe?'Du':'Spieler')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+' </div>'+
           (bonus?'<div style="font-size:9px;color:var(--accent);">+'+bonus.xp+' XP Bonus</div>':'')+
         '</div>'+
         '<div style="text-align:right;flex-shrink:0;">'+
-          '<div style="font-family:var(--display);font-weight:400;font-size:20px;color:var(--accent);">'+e.monthlyXP.toLocaleString()+'</div>'+
+          '<div style="font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);">'+e.monthlyXP.toLocaleString()+'</div>'+
           '<div style="font-size:9px;color:var(--muted);">XP</div>'+
         '</div>';
 

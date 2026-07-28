@@ -8,12 +8,12 @@ function buildStreakWidget(){
   var top=document.createElement('div');top.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
   var left=document.createElement('div');
   var flEl=document.createElement('div');flEl.style.cssText='font-size:24px;line-height:1;';flEl.textContent=streak>0?getFlames(streak):'\uD83D\uDD25';
-  var snEl=document.createElement('div');snEl.style.cssText='font-family:inherit;font-size:12px;color:'+(streak>0?'var(--accent)':'#333')+';letter-spacing:1px;margin-top:2px;';snEl.textContent=streak>0?streak+' TAGE STREAK':'NOCH KEIN STREAK';
+  var snEl=document.createElement('div');snEl.style.cssText='font-family:inherit;font-size:12px;color:'+(streak>0?'var(--accent)':'#333')+';margin-top:2px;';snEl.textContent=streak>0?streak+' Tage Streak':'Noch kein Streak';
   left.appendChild(flEl);left.appendChild(snEl);
   var right=document.createElement('div');right.style.cssText='text-align:right;';
-  var lvBadge=document.createElement('div');lvBadge.style.cssText='color:'+lv.color+';border:1px solid '+lv.color+';border-radius:20px;font-family:inherit;font-size:10px;letter-spacing:2px;padding:3px 10px;background:rgba(200,200,200,0.05);display:inline-block;';lvBadge.textContent=lv.label;
+  var lvBadge=document.createElement('div');lvBadge.style.cssText='color:'+lv.color+';border:1px solid '+lv.color+';border-radius:20px;font-family:inherit;font-size:10px;padding:3px 10px;background:rgba(200,200,200,0.05);display:inline-block;';lvBadge.textContent=lv.label;
   right.appendChild(lvBadge);top.appendChild(left);top.appendChild(right);
-  var wkLbl=document.createElement('div');wkLbl.style.cssText='font-size:10px;color:var(--muted);font-family:inherit;letter-spacing:1px;margin-bottom:6px;';wkLbl.textContent='DIESE WOCHE: '+weekDone+' / '+weekGoal;
+  var wkLbl=document.createElement('div');wkLbl.style.cssText='font-size:10px;color:var(--muted);font-family:inherit;margin-bottom:6px;';wkLbl.textContent='Diese Woche: '+weekDone+' / '+weekGoal;
   var dotRow=document.createElement('div');dotRow.style.cssText='display:flex;gap:5px;';
   for(var i=0;i<weekGoal;i++){var dot=document.createElement('div');dot.style.cssText='flex:1;height:5px;border-radius:3px;background:'+(i<weekDone?'var(--accent)':'var(--bg3)')+';';dotRow.appendChild(dot);}
   var changeBtn=document.createElement('button');changeBtn.style.cssText='background:none;border:none;color:var(--muted2);font-size:10px;font-family:inherit;cursor:pointer;margin-top:6px;';changeBtn.textContent='ZIEL ANDERN';changeBtn.onclick=function(){streakData.goalSet=false;sstreak();showWeeklyGoalModal();};
@@ -32,10 +32,10 @@ function buildProfilStreakSection(){
     var sbEl=document.createElement('div');sbEl.style.cssText='font-size:11px;color:var(--muted2);margin-top:4px;';sbEl.textContent='Beste: '+streakData.longestStreak+' Tage';
     strL.appendChild(sfEl);strL.appendChild(sbEl);
     var strR=document.createElement('div');strR.style.cssText='text-align:right;';
-    var gtEl=document.createElement('div');gtEl.style.cssText='font-family:var(--display);font-weight:400;font-size:28px;color:var(--accent);';gtEl.textContent=getWeeklyProgress()+' / '+streakData.weeklyGoal;
+    var gtEl=document.createElement('div');gtEl.style.cssText='font-family:inherit;font-weight:800;font-size:28px;color:var(--accent);';gtEl.textContent=getWeeklyProgress()+' / '+streakData.weeklyGoal;
     var gsEl=document.createElement('div');gsEl.style.cssText='font-size:10px;color:var(--muted);font-family:inherit;';gsEl.textContent='DIESE WOCHE';
     strR.appendChild(gtEl);strR.appendChild(gsEl);strRow.appendChild(strL);strRow.appendChild(strR);
-    var chBtn=document.createElement('button');chBtn.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1px;padding:10px;cursor:pointer;';chBtn.textContent='WOCHENZIEL ANDERN (aktuell: '+streakData.weeklyGoal+'x)';chBtn.onclick=function(){streakData.goalSet=false;sstreak();showWeeklyGoalModal();};
+    var chBtn=document.createElement('button');chBtn.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;';chBtn.textContent='Wochenziel ändern (aktuell: '+streakData.weeklyGoal+'x)';chBtn.onclick=function(){streakData.goalSet=false;sstreak();showWeeklyGoalModal();};
     strCard.appendChild(strRow);strCard.appendChild(chBtn);strEl.appendChild(strCard);
   }
   var calEl=document.getElementById('pr-streak-calendar');
@@ -100,10 +100,10 @@ function buildProfilStreakSection(){
     var iceLeft = document.createElement('div');
     iceLeft.style.cssText = 'flex:1;';
     iceLeft.innerHTML =
-      '<div style="font-size:12px;font-weight:800;color:#38BDF8;letter-spacing:1px;margin-bottom:3px;">\u2744\uFE0F STREAK AUF EIS</div>'+
+      '<div style="font-size:12px;font-weight:800;color:#38BDF8;margin-bottom:3px;">\u2744\uFE0F STREAK AUF EIS</div>'+
       '<div style="font-size:10px;color:var(--muted);line-height:1.5;">Schütze deinen Streak für 1 Tag — kostet 2 \uD83D\uDC8E</div>';
     var iceBtn = document.createElement('button');
-    iceBtn.style.cssText = 'background:#38BDF8;color:#000;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:1px;padding:8px 14px;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+    iceBtn.style.cssText = 'background:#38BDF8;color:#000;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;padding:8px 14px;cursor:pointer;white-space:nowrap;flex-shrink:0;';
     iceBtn.textContent = '2 \uD83D\uDC8E';
     iceBtn.onclick = function(){ buyIceStreak(); };
     iceBox.appendChild(iceLeft);
@@ -125,7 +125,7 @@ function buildProfilStreakSection(){
     msBtn.innerHTML =
       '<div style="font-size:24px;">\uD83D\uDC0E</div>'+
       '<div style="flex:1;">'+
-        '<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:3px;">MEILENSTEINE</div>'+
+        '<div style="font-size:9px;color:var(--accent);font-weight:700;margin-bottom:3px;">MEILENSTEINE</div>'+
         '<div style="font-size:11px;color:var(--text);font-weight:700;">'+reached_count+' / '+MILESTONES.length+' erreicht'+(nextMs?' &nbsp;\u00B7&nbsp; Nächster in '+(nextMs.days-daysSince)+'d':'')+'</div>'+
       '</div>'+
       '<div id="ms-chevron" style="font-size:16px;color:var(--muted);transition:transform 0.2s;">\u2039</div>';
@@ -160,7 +160,7 @@ function buildProfilStreakSection(){
 
       if(reached && !claimed){
         var claimBtn2 = document.createElement('button');
-        claimBtn2.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:1px;padding:5px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+        claimBtn2.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:9px;font-weight:800;padding:5px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;';
         claimBtn2.textContent = '+'+m.diamonds+' \uD83D\uDC8E';
         claimBtn2.onclick = (function(ms3, key3){
           return function(e){
@@ -199,10 +199,10 @@ function buildProfilStreakSection(){
     var calHdr = document.createElement('div');
     calHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
     var calTitleEl = document.createElement('div');
-    calTitleEl.style.cssText = 'font-size:9px;letter-spacing:3px;color:var(--accent);font-weight:700;';
+    calTitleEl.style.cssText = 'font-size:9px;color:var(--accent);font-weight:700;';
     calTitleEl.textContent = 'TRAININGS-KALENDER';
     var expandBtn = document.createElement('button');
-    expandBtn.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:9px;letter-spacing:1px;color:var(--muted);padding:4px 10px;cursor:pointer;';
+    expandBtn.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:9px;color:var(--muted);padding:4px 10px;cursor:pointer;';
     expandBtn.textContent = 'ALLE MONATE';
     var calExpanded = false;
     var calBody = document.createElement('div');
@@ -238,7 +238,7 @@ function buildProfilStreakSection(){
         var mo2 = cur.getMonth();
 
         var mLbl = document.createElement('div');
-        mLbl.style.cssText = 'font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;margin-top:12px;font-weight:600;';
+        mLbl.style.cssText = 'font-size:10px;color:var(--muted);margin-bottom:6px;margin-top:12px;font-weight:600;';
         mLbl.textContent = cur.toLocaleString('de-DE',{month:'long',year:'numeric'}).toUpperCase();
         calBody.appendChild(mLbl);
 
@@ -305,7 +305,7 @@ function buildProfilStreakSection(){
       var hdr = document.createElement('div');
       hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;';
       var ttl = document.createElement('div');
-      ttl.style.cssText = 'font-size:11px;letter-spacing:3px;font-weight:700;color:var(--accent);';
+      ttl.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent);';
       ttl.textContent = 'TRAININGS-KALENDER';
       var closeBtn = document.createElement('button');
       closeBtn.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--muted);padding:4px 12px;cursor:pointer;';
@@ -337,7 +337,7 @@ function buildProfilStreakSection(){
         var dayNumStart=Math.floor((firstDayOfMonth-startD)/86400000)+1;
         var mHdr=document.createElement('div');
         mHdr.style.cssText='display:flex;align-items:baseline;gap:8px;margin:16px 0 6px;';
-        var mName=document.createElement('div');mName.style.cssText='font-size:11px;color:var(--text);letter-spacing:2px;font-weight:700;';
+        var mName=document.createElement('div');mName.style.cssText='font-size:11px;color:var(--text);font-weight:700;';
         mName.textContent=cur2.toLocaleString('de-DE',{month:'long',year:'numeric'}).toUpperCase();
         var mDay=document.createElement('div');mDay.style.cssText='font-size:9px;color:var(--accent);font-weight:600;';
         if(dayNumStart>=1) mDay.textContent='AB TAG '+Math.max(1,dayNumStart);
@@ -449,17 +449,17 @@ function showMilestoneDetail(m){
 
   box.innerHTML =
     '<div style="font-size:52px;margin-bottom:12px;">'+m.icon+'</div>'+
-    '<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:8px;">MEILENSTEIN</div>'+
-    '<div style="font-size:22px;font-weight:900;letter-spacing:2px;color:var(--text);margin-bottom:6px;">'+m.label+'</div>'+
+    '<div style="font-size:9px;color:var(--accent);font-weight:700;margin-bottom:8px;">MEILENSTEIN</div>'+
+    '<div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:6px;">'+m.label+'</div>'+
     '<div style="font-size:14px;color:var(--muted);margin-bottom:20px;">Badge: <strong style="color:var(--text);">'+m.badge+'</strong></div>'+
     '<div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:20px;">'+
       '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">BELOHNUNG</div>'+
       '<div style="font-size:28px;font-weight:900;color:var(--accent);">'+m.reward+'</div>'+
     '</div>'+
     (reached2 && !claimed ?
-      '<button onclick="claimMilestoneFromModal(\''+m.days+'\','+m.diamonds+',\''+m.badge+'\',\''+m.icon+'\')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;letter-spacing:2px;padding:16px;cursor:pointer;margin-bottom:10px;">JETZT ABHOLEN</button>' :
+      '<button onclick="claimMilestoneFromModal(\''+m.days+'\','+m.diamonds+',\''+m.badge+'\',\''+m.icon+'\')" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;margin-bottom:10px;">JETZT ABHOLEN</button>' :
       reached2 ?
-      '<div style="color:var(--accent);font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:12px;">\u2713 BEREITS ABGEHOLT</div>' :
+      '<div style="color:var(--accent);font-size:12px;font-weight:700;margin-bottom:12px;">\u2713 BEREITS ABGEHOLT</div>' :
       '<div style="color:var(--muted);font-size:12px;margin-bottom:12px;">Noch nicht erreicht</div>'
     );
 
@@ -556,22 +556,22 @@ function renderObStep(){
   if(obStep===0){
     content =
       '<div style="margin-bottom:14px;">'+
-        '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">DEIN NAME</div>'+
+        '<div style="font-size:9px;color:var(--muted);margin-bottom:6px;">DEIN NAME</div>'+
         '<input id="ob-name" type="text" value="'+(obData.name||'')+'" placeholder="Name" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
       '</div>'+
       '<div>'+
-        '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">DEIN ALTER</div>'+
+        '<div style="font-size:9px;color:var(--muted);margin-bottom:6px;">DEIN ALTER</div>'+
         '<input id="ob-age" type="number" value="'+(obData.age||'')+'" placeholder="" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
       '</div>';
   } else if(obStep===1){
     content =
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'+
         '<div>'+
-          '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">GEWICHT (KG)</div>'+
+          '<div style="font-size:9px;color:var(--muted);margin-bottom:6px;">GEWICHT (KG)</div>'+
           '<input id="ob-weight" type="number" value="'+obData.weight+'" placeholder="z.B. 75" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
         '</div>'+
         '<div>'+
-          '<div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">GRÖSSE (CM)</div>'+
+          '<div style="font-size:9px;color:var(--muted);margin-bottom:6px;">GRÖSSE (CM)</div>'+
           '<input id="ob-height" type="number" value="'+obData.height+'" placeholder="z.B. 180" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
         '</div>'+
       '</div>'+
@@ -588,7 +588,7 @@ function renderObStep(){
       var sel=obData.level===lvls[i].v;
       content+='<div onclick="obData.level=\''+lvls[i].v+'\';renderObStep()" style="display:flex;align-items:center;gap:12px;background:'+(sel?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1.5px solid '+(sel?'var(--accent)':'var(--border)')+';border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;">'+
         '<div style="font-size:24px;">'+lvls[i].icon+'</div>'+
-        '<div><div style="font-size:14px;color:'+(sel?'var(--accent)':'var(--text)')+';font-weight:800;letter-spacing:1px;">'+lvls[i].l+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+lvls[i].d+'</div></div>'+
+        '<div><div style="font-size:14px;color:'+(sel?'var(--accent)':'var(--text)')+';font-weight:800;">'+lvls[i].l+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+lvls[i].d+'</div></div>'+
       '</div>';
     }
   } else if(obStep===3){
@@ -605,7 +605,7 @@ function renderObStep(){
       var sel=obData.goal===goals[i].v;
       content+='<div onclick="obData.goal=\''+goals[i].v+'\';renderObStep()" style="display:flex;align-items:center;gap:12px;background:'+(sel?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1.5px solid '+(sel?'var(--accent)':'var(--border)')+';border-radius:12px;padding:12px 16px;margin-bottom:8px;cursor:pointer;">'+
         '<div style="font-size:20px;">'+goals[i].icon+'</div>'+
-        '<div><div style="font-size:13px;color:'+(sel?'var(--accent)':'var(--text)')+';font-weight:800;letter-spacing:1px;">'+goals[i].l+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px;">'+goals[i].d+'</div></div>'+
+        '<div><div style="font-size:13px;color:'+(sel?'var(--accent)':'var(--text)')+';font-weight:800;">'+goals[i].l+'</div><div style="font-size:11px;color:var(--muted);margin-top:1px;">'+goals[i].d+'</div></div>'+
       '</div>';
     }
   } else if(obStep===4){
@@ -624,8 +624,8 @@ function renderObStep(){
   // Last step = LOS GEHTS, other steps = WEITER
   var isLast = obStep >= totalSteps - 1;
   var nextBtn = isLast
-    ? '<button onclick="obFinish()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:16px;font-weight:800;letter-spacing:2px;padding:15px;cursor:pointer;margin-top:16px;">LOS GEHTS! \uD83D\uDCAA</button>'
-    : '<button onclick="obNext()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:16px;font-weight:800;letter-spacing:2px;padding:15px;cursor:pointer;margin-top:16px;">WEITER \u2192</button>';
+    ? '<button onclick="obFinish()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:16px;font-weight:800;padding:15px;cursor:pointer;margin-top:16px;">LOS GEHTS! \uD83D\uDCAA</button>'
+    : '<button onclick="obNext()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:16px;font-weight:800;padding:15px;cursor:pointer;margin-top:16px;">WEITER \u2192</button>';
 
   var backBtnHtml = obStep > 0
     ? '<button onclick="obStep--;renderObStep()" style="width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;">\u2190 ZUR\u00DCCK</button>'
@@ -635,7 +635,7 @@ function renderObStep(){
     '<div style="max-width:380px;margin:0 auto;padding-top:20px;">'+
       dots+
       '<div style="font-size:44px;text-align:center;margin:20px 0 12px;">'+s.icon+'</div>'+
-      '<div style="font-size:26px;font-weight:900;letter-spacing:3px;color:var(--accent);text-align:center;margin-bottom:6px;">'+s.title+'</div>'+
+      '<div style="font-size:26px;font-weight:900;color:var(--accent);text-align:center;margin-bottom:6px;">'+s.title+'</div>'+
       '<div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px;">'+s.sub+'</div>'+
       content+
       nextBtn+
