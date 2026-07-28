@@ -875,15 +875,21 @@ function buildWeekPlan(){
   if(!el) return;
   var wp = getWeekPlan();
   var todayIdx = (new Date().getDay()+6)%7;
+  var stats = computeWeekStats(wp);
 
   el.innerHTML = '';
 
-  // Kompakter Button der den Kalender öffnet
-  var previewBtn = document.createElement('div');
-  previewBtn.style.cssText = 'background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;';
-  previewBtn.onclick = function(){ openWeekCalendar(); };
+  // Monatskalender + Wochenübersicht + Tipp der Woche direkt auf der Seite
+  buildMonthCalendarCard(el, wp, buildWeekPlan);
+  buildWeekSummaryCard(el, stats);
+  buildWeekTipCard(el);
 
-  // Zeige Heute + morgen als Preview
+  // Kompakter Button der die Tagesansicht öffnet
+  var previewBtn = document.createElement('div');
+  previewBtn.style.cssText = 'background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:12px;';
+  previewBtn.onclick = function(){ openDayListModal(todayIdx); };
+
+  // Zeige Heute als Preview
   var todayPlans = wp[todayIdx] || [];
   var previewLeft = document.createElement('div');
   previewLeft.innerHTML =
@@ -898,18 +904,22 @@ function buildWeekPlan(){
 
   var previewRight = document.createElement('div');
   previewRight.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
-  // Mini 7-day dots
+  // Mini 7-day dots — jeweils klickbar
   var dotsRow = document.createElement('div');
   dotsRow.style.cssText = 'display:flex;gap:3px;margin-bottom:4px;';
   WEEK_DAYS.forEach(function(d,i){
     var dot = document.createElement('div');
     var dayPl = wp[i]||[];
-    dot.style.cssText = 'width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;background:'+(i===todayIdx?'var(--accent)':'var(--bg3)')+';color:'+(i===todayIdx?'#fff':'var(--muted)')+';';
+    dot.style.cssText = 'width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;background:'+(i===todayIdx?'var(--accent)':'var(--bg3)')+';color:'+(i===todayIdx?'#fff':'var(--muted)')+';cursor:pointer;';
     dot.textContent = d;
+    dot.onclick = function(e){ e.stopPropagation(); openDayListModal(i); };
     dotsRow.appendChild(dot);
   });
   previewRight.appendChild(dotsRow);
-  previewRight.innerHTML += '<div style="font-size:12px;color:var(--muted);">Kalender öffnen ›</div>';
+  var linkLabel = document.createElement('div');
+  linkLabel.style.cssText = 'font-size:12px;color:var(--muted);';
+  linkLabel.textContent = 'Kalender öffnen ›';
+  previewRight.appendChild(linkLabel);
 
   previewBtn.appendChild(previewLeft);
   previewBtn.appendChild(previewRight);
@@ -917,7 +927,6 @@ function buildWeekPlan(){
 }
 
 var weekCalMonthOffset = 0;
-var weekCalView = 'overview';
 var MONTH_NAMES = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 var WEEK_TIPS = [
   'Konsistenz schlägt Intensität. Bleib dran und vertraue dem Prozess.',
@@ -927,10 +936,8 @@ var WEEK_TIPS = [
   'Dein zukünftiges Ich dankt dir für das heutige Workout.'
 ];
 
-function openWeekCalendar(){
+function openDayListModal(focusIdx){
   var ex = document.getElementById('week-cal-ov'); if(ex) ex.remove();
-  weekCalMonthOffset = 0;
-  weekCalView = 'overview';
   var ov = document.createElement('div');
   ov.id = 'week-cal-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
@@ -941,10 +948,7 @@ function openWeekCalendar(){
   var backBtn = document.createElement('button');
   backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
   backBtn.innerHTML = '← Zurück';
-  backBtn.onclick = function(){
-    if(weekCalView === 'daylist'){ renderWeekOverview(scroll); }
-    else { ov.remove(); }
-  };
+  backBtn.onclick = function(){ ov.remove(); };
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'flex:1;font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
   titleEl.textContent = '📅 Wochenplan';
@@ -961,7 +965,7 @@ function openWeekCalendar(){
   ov.appendChild(scroll);
   document.body.appendChild(ov);
 
-  renderWeekOverview(scroll);
+  renderDayList(scroll, focusIdx);
 }
 
 function getWeekDates(){
@@ -998,55 +1002,6 @@ function computeWeekStats(wp){
 function getWeekTip(){
   var dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
   return WEEK_TIPS[dayOfYear % WEEK_TIPS.length];
-}
-
-function renderWeekOverview(scroll){
-  weekCalView = 'overview';
-  scroll.innerHTML = '';
-  var wp = getWeekPlan();
-  var todayIdx = (new Date().getDay()+6)%7;
-  var stats = computeWeekStats(wp);
-
-  buildMonthCalendarCard(scroll, wp, scroll);
-  buildWeekSummaryCard(scroll, stats);
-  buildWeekTipCard(scroll);
-
-  // Kompakte Tagesvorschau — führt zur Tagesansicht
-  var previewBar = document.createElement('div');
-  previewBar.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-top:12px;cursor:pointer;';
-  previewBar.onclick = function(){ openDayListView(scroll, todayIdx); };
-
-  var todayPlans = wp[todayIdx] || [];
-  var todayPlan = todayPlans.length ? getPlanById(todayPlans[0]) : null;
-
-  var topRow = document.createElement('div');
-  topRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
-  topRow.innerHTML =
-    '<div>'+
-      '<div style="font-size:10px;font-weight:800;color:var(--accent);margin-bottom:4px;">Heute — '+WEEK_DAYS_FULL[todayIdx]+'</div>'+
-      '<div style="font-size:14px;font-weight:700;color:var(--text);">'+(todayPlan ? '💪 '+todayPlan.name : '😴 Ruhetag')+'</div>'+
-    '</div>'+
-    '<div style="font-size:12px;color:var(--muted);">Tagesübersicht ›</div>';
-  previewBar.appendChild(topRow);
-
-  var dotsRow = document.createElement('div');
-  dotsRow.style.cssText = 'display:flex;gap:6px;';
-  WEEK_DAYS.forEach(function(d,i){
-    var dayPl = wp[i]||[];
-    var dot = document.createElement('div');
-    dot.style.cssText = 'flex:1;text-align:center;padding:8px 0;border-radius:8px;font-size:10px;font-weight:700;background:'+(i===todayIdx?'var(--accent)':'var(--bg)')+';color:'+(i===todayIdx?'#fff':(dayPl.length?'var(--text)':'var(--muted)'))+';border:1px solid '+(i===todayIdx?'var(--accent)':'var(--border)')+';';
-    dot.textContent = d;
-    dot.onclick = function(e){ e.stopPropagation(); openDayListView(scroll, i); };
-    dotsRow.appendChild(dot);
-  });
-  previewBar.appendChild(dotsRow);
-
-  scroll.appendChild(previewBar);
-}
-
-function openDayListView(scroll, focusIdx){
-  weekCalView = 'daylist';
-  renderDayList(scroll, focusIdx);
 }
 
 function renderDayList(scroll, focusIdx){
@@ -1167,7 +1122,7 @@ function renderDayList(scroll, focusIdx){
   scroll.appendChild(left);
 }
 
-function buildMonthCalendarCard(container, wp, scroll){
+function buildMonthCalendarCard(container, wp, rerenderFn){
   var now = new Date();
   var viewDate = new Date(now.getFullYear(), now.getMonth()+weekCalMonthOffset, 1);
   var year = viewDate.getFullYear(), month = viewDate.getMonth();
@@ -1183,14 +1138,14 @@ function buildMonthCalendarCard(container, wp, scroll){
   var prevBtn = document.createElement('button');
   prevBtn.style.cssText = 'background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:4px 8px;';
   prevBtn.textContent = '‹';
-  prevBtn.onclick = function(){ weekCalMonthOffset--; renderWeekOverview(scroll); };
+  prevBtn.onclick = function(){ weekCalMonthOffset--; rerenderFn(); };
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'font-size:13px;font-weight:800;color:var(--text);';
   titleEl.textContent = MONTH_NAMES[month]+' '+year;
   var nextBtn = document.createElement('button');
   nextBtn.style.cssText = 'background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:4px 8px;';
   nextBtn.textContent = '›';
-  nextBtn.onclick = function(){ weekCalMonthOffset++; renderWeekOverview(scroll); };
+  nextBtn.onclick = function(){ weekCalMonthOffset++; rerenderFn(); };
   hdr.appendChild(prevBtn); hdr.appendChild(titleEl); hdr.appendChild(nextBtn);
   card.appendChild(hdr);
 
