@@ -54,8 +54,8 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .logo{font-family:var(--display);font-weight:400;font-size:25px;letter-spacing:4px;color:var(--text);cursor:pointer;}
 .tabs{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
 .tabs::-webkit-scrollbar{display:none;}
-.tab{background:none;border:none;color:var(--muted);font-family:var(--display);font-weight:400;font-size:14px;letter-spacing:2px;padding:6px 10px;cursor:pointer;border-radius:20px;white-space:nowrap;transition:all 0.2s;}
-.tab.on{background:var(--text);color:var(--bg);}
+.tab{background:none;border:none;color:var(--muted);font-family:var(--body);font-weight:700;font-size:12px;letter-spacing:0;padding:7px 12px;cursor:pointer;border-radius:20px;white-space:nowrap;transition:all 0.2s;}
+.tab.on{background:var(--accent);color:#fff;}
 
 /* ── PAGES ── */
 .page{display:none;padding:16px 16px 200px;max-width:480px;margin:0 auto;overflow:visible;}
@@ -65,15 +65,15 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .start-screen{display:flex;flex-direction:column;min-height:calc(100vh - 56px);}
 .start-top{padding:20px 0 8px;flex:1;}
 .start-logo{font-family:var(--display);font-weight:400;font-size:42px;letter-spacing:6px;color:var(--text);margin-bottom:2px;}
-.start-sub{font-size:12px;color:var(--muted);letter-spacing:2px;margin-bottom:16px;}
+.start-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
 .start-bottom{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:12px 16px 32px;max-width:480px;margin:0 auto;}
 
 /* ── BUTTONS ── */
-.start-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:800;letter-spacing:2px;padding:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 0.1s;}
+.start-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:800;padding:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 0.1s;}
 .start-btn:active{transform:scale(0.98);}
-.btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;letter-spacing:2px;padding:15px;cursor:pointer;margin-top:8px;transition:transform 0.1s;}
+.btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;padding:15px;cursor:pointer;margin-top:8px;transition:transform 0.1s;}
 .btn:active{transform:scale(0.98);}
-.btn-g{background:none;border:1px solid var(--border2);color:var(--text);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1px;padding:8px 14px;cursor:pointer;}
+.btn-g{background:none;border:1px solid var(--border2);color:var(--text);border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;}
 
 /* ── CARDS ── */
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;}
@@ -96,13 +96,13 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .wo-bar::before{top:6px;left:6px;border-right:none;border-bottom:none;}
 .wo-bar::after{bottom:6px;right:6px;border-left:none;border-top:none;}
 .wo-bar-left{display:flex;flex-direction:column;gap:2px;}
-.wo-bar-status{font-size:9px;color:rgba(255,255,255,0.7);letter-spacing:2px;font-weight:700;}
-.wo-bar-timer{font-family:var(--display);font-weight:400;font-size:34px;color:#fff;font-variant-numeric:tabular-nums;line-height:1;}
+.wo-bar-status{font-size:11px;color:rgba(255,255,255,0.8);font-weight:700;}
+.wo-bar-timer{font-family:inherit;font-weight:800;font-size:32px;color:#fff;font-variant-numeric:tabular-nums;line-height:1;}
 .wo-bar-date{font-size:10px;color:rgba(255,255,255,0.6);}
-.wo-end-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1px;padding:10px 14px;cursor:pointer;text-align:center;}
+.wo-end-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 14px;cursor:pointer;text-align:center;}
 .wo-bar-right{display:flex;gap:6px;}
-.wo-time{font-family:var(--display);font-weight:400;font-size:34px;color:#fff;}
-.wo-label{font-size:9px;color:rgba(255,255,255,0.6);letter-spacing:1px;}
+.wo-time{font-family:inherit;font-weight:800;font-size:32px;color:#fff;}
+.wo-label{font-size:10px;color:rgba(255,255,255,0.6);}
 .wo-end{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:8px;padding:8px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;}
 
 /* ── SETS ── */
@@ -120,7 +120,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 
 /* ── FORM ── */
 .fg{margin-bottom:12px;}
-.fg label{display:block;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:6px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;}
 .fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;outline:none;}
 .fg input:focus,.fg select:focus{border-color:var(--border2);}
 
@@ -128,20 +128,20 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .ex-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;}
 .ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .ex-name-t{font-size:13px;font-weight:600;color:var(--text);flex:1;}
-.ex-cat-t{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.ex-cat-t{font-size:10px;color:var(--muted);}
 
 /* ── PLAN CARDS ── */
-.plan-btn{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:1px;padding:14px 16px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.plan-btn{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px 16px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;margin-bottom:6px;}
 .plan-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;}
 .plan-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .plan-name{font-size:15px;font-weight:700;color:var(--text);}
-.plan-excount{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.plan-excount{font-size:10px;color:var(--muted);}
 .plan-exrow{display:flex;align-items:center;gap:8px;padding:5px 0;}
 .plan-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .plan-exname{font-size:12px;font-weight:600;color:var(--text);flex:1;}
 .plan-exsets{font-size:11px;color:var(--muted);}
 .plan-actions{display:flex;gap:8px;margin-top:10px;}
-.plan-start-btn{flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1px;padding:10px;cursor:pointer;}
+.plan-start-btn{flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;cursor:pointer;}
 .plan-del-btn{background:none;border:1px solid var(--border2);color:var(--muted);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 14px;cursor:pointer;}
 
 /* ── PLAN BLOCKS (active workout) ── */
@@ -149,7 +149,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .peb-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;}
 .peb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .peb-name{flex:1;font-size:14px;font-weight:700;color:var(--text);}
-.peb-status{font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--muted);}
+.peb-status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--muted);}
 .peb-status.done{background:rgba(255,85,0,0.1);color:var(--accent);}
 .peb-arrow{font-size:12px;color:var(--muted);transition:transform 0.2s;}
 .peb-arrow.open{transform:rotate(90deg);}
@@ -158,7 +158,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .peb-setrow{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;margin-bottom:8px;}
 .peb-snum{font-size:13px;font-weight:700;text-align:center;}
 .peb-inp{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:14px;font-weight:600;outline:none;width:100%;}
-.peb-add-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:1px;padding:12px;cursor:pointer;margin-top:4px;}
+.peb-add-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;margin-top:4px;}
 
 /* ── PLAN FORM ── */
 .pf-ex-item{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:6px;}
@@ -167,7 +167,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .pf-ex-sets{font-size:11px;color:var(--muted);margin-top:2px;}
 .pf-ex-del{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;}
 .sh{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;padding:0 0 6px;}
-.sh span{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:1px;}
+.sh span{font-size:10px;color:var(--muted);font-weight:700;}
 .sr{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
 .snum{font-size:14px;font-weight:700;text-align:center;}
 .sinp{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;font-family:inherit;font-size:14px;font-weight:600;outline:none;text-align:center;}
@@ -182,7 +182,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 .wo-ex-sets{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
 
 /* ── BAND CHIPS ── */
-.band-row-lbl{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;font-weight:700;}
+.band-row-lbl{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
 .chip{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:5px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;}
 .chip.on{background:rgba(78,205,196,0.1);border-color:var(--teal);color:var(--teal);}
@@ -191,7 +191,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 /* ── CAT FILTER ── */
 .cat-scroll{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:12px;}
 .cat-scroll::-webkit-scrollbar{display:none;}
-.cat-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;white-space:nowrap;}
+.cat-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .cat-btn.on{background:var(--text);color:var(--bg);border-color:var(--text);}
 
 /* ── BELT TOGGLE ── */
@@ -203,7 +203,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 canvas{max-width:100%;}
 .cc{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
 .ct{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.cl{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);}
+.cl{font-size:12px;font-weight:700;color:var(--muted);}
 .cs{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-family:inherit;font-size:12px;outline:none;}
 .empty{font-size:13px;color:var(--muted);padding:16px 0;text-align:center;}
 
@@ -215,7 +215,7 @@ canvas{max-width:100%;}
 .fp.on{background:var(--text);color:var(--bg);border-color:var(--text);}
 .ei{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;}
 .et{display:flex;flex-direction:column;gap:2px;}
-.ed{font-size:11px;color:var(--muted);letter-spacing:1px;}
+.ed{font-size:11px;color:var(--muted);}
 .en{font-size:14px;font-weight:700;color:var(--text);}
 .edel{background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;align-self:flex-end;}
 
@@ -287,32 +287,32 @@ canvas{max-width:100%;}
 <!-- LOGIN SCREEN -->
 <div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;">
   <div style="font-family:inherit;font-size:52px;letter-spacing:6px;color:var(--accent);margin-bottom:8px;">CALI</div>
-  <div style="font-size:13px;color:var(--muted);margin-bottom:40px;letter-spacing:2px;">CALISTHENICS TRACKER</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:40px;">Calisthenics Tracker</div>
   <div style="display:flex;gap:0;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px;width:100%;max-width:320px;">
-    <button id="tab-login" onclick="showAuthTab('login')" style="flex:1;background:var(--text);color:var(--bg);border:none;border-radius:7px;font-family:inherit;font-size:14px;letter-spacing:2px;padding:10px;cursor:pointer;">LOGIN</button>
-    <button id="tab-register" onclick="showAuthTab('register')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:14px;letter-spacing:2px;padding:10px;cursor:pointer;">REGISTRIEREN</button>
+    <button id="tab-login" onclick="showAuthTab('login')" style="flex:1;background:var(--text);color:var(--bg);border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:700;padding:10px;cursor:pointer;">Login</button>
+    <button id="tab-register" onclick="showAuthTab('register')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:700;padding:10px;cursor:pointer;">Registrieren</button>
   </div>
   <div style="width:100%;max-width:320px;">
     <div style="margin-bottom:12px;">
-      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">E-MAIL</div>
+      <div style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:700;margin-bottom:6px;">E-Mail</div>
       <input type="email" id="auth-email" placeholder="deine@email.com" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box;">
     </div>
     <div style="margin-bottom:12px;">
-      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">PASSWORT</div>
+      <div style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:700;margin-bottom:6px;">Passwort</div>
       <input type="password" id="auth-password" placeholder="Mindestens 6 Zeichen" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box;">
     </div>
     <div id="auth-name-row" style="display:none;margin-bottom:12px;">
-      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">NAME</div>
+      <div style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:700;margin-bottom:6px;">Name</div>
       <input type="text" id="auth-name" placeholder="Dein Name" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box;">
     </div>
-    <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:2px;padding:14px;cursor:pointer;margin-bottom:16px;">EINLOGGEN</button>
-    <div style="text-align:center;color:var(--muted2);font-size:12px;margin-bottom:16px;">-- ODER --</div>
-    <button onclick="authGoogle()" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:1px;padding:13px;cursor:pointer;">MIT GOOGLE ANMELDEN</button>
-    <div style="text-align:center;color:var(--muted2);font-size:12px;margin:12px 0;">-- ODER --</div>
-    <button onclick="demoLogin()" style="width:100%;background:none;color:var(--muted);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:1px;padding:12px;cursor:pointer;">DEMO MODUS (KEIN LOGIN)</button>
+    <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;padding:14px;cursor:pointer;margin-bottom:16px;">Einloggen</button>
+    <div style="text-align:center;color:var(--muted2);font-size:12px;margin-bottom:16px;">-- oder --</div>
+    <button onclick="authGoogle()" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:13px;cursor:pointer;">Mit Google anmelden</button>
+    <div style="text-align:center;color:var(--muted2);font-size:12px;margin:12px 0;">-- oder --</div>
+    <button onclick="demoLogin()" style="width:100%;background:none;color:var(--muted);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer;">Demo-Modus (kein Login)</button>
     <div id="auth-error" style="color:#ff4444;font-size:12px;text-align:center;margin-top:12px;display:none;"></div>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center;">
-      <button onclick="startDemo()" style="background:none;border:none;color:var(--muted2);font-size:12px;font-family:inherit;letter-spacing:2px;cursor:pointer;text-decoration:underline;">OHNE LOGIN TESTEN (Demo)</button>
+      <button onclick="startDemo()" style="background:none;border:none;color:var(--muted2);font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;">Ohne Login testen (Demo)</button>
     </div>
   </div>
 </div>
@@ -321,13 +321,13 @@ canvas{max-width:100%;}
 <nav>
   <div class="logo" onclick="window.location.href='index.html'">CALI</div>
   <div class="tabs">
-    <button class="tab on" id="tab-e" onclick="goPage('e')">WORKOUT</button>
-    <button class="tab" id="tab-p" onclick="goPage('p')">PLANE</button>
-    <button class="tab" id="tab-m" onclick="goPage('m')">MAX</button>
-    <button class="tab" id="tab-ch" onclick="goPage('ch')">CHALLENGE</button>
-    <button class="tab" id="tab-pr" onclick="goPage('pr')">PROFIL</button>
-    <button class="tab" id="tab-parks" onclick="goPage('parks')">PARKS</button>
-    <button class="tab" id="tab-rek" onclick="goPage('rek')">REKORDE</button>
+    <button class="tab on" id="tab-e" onclick="goPage('e')">Workout</button>
+    <button class="tab" id="tab-p" onclick="goPage('p')">Pläne</button>
+    <button class="tab" id="tab-m" onclick="goPage('m')">Max</button>
+    <button class="tab" id="tab-ch" onclick="goPage('ch')">Challenge</button>
+    <button class="tab" id="tab-pr" onclick="goPage('pr')">Profil</button>
+    <button class="tab" id="tab-parks" onclick="goPage('parks')">Parks</button>
+    <button class="tab" id="tab-rek" onclick="goPage('rek')">Rekorde</button>
   </div>
 </nav>
 
@@ -374,9 +374,9 @@ canvas{max-width:100%;}
   <div id="emom-setup" style="display:none;padding:16px;">
     <div class="stitle">EMOM TIMER</div>
     <div style="display:flex;gap:0;margin-bottom:16px;background:var(--bg3);border-radius:10px;padding:4px;">
-      <button id="emom-mode-single" onclick="emomSetMode('single')" style="flex:1;background:var(--text);color:var(--bg);border:none;border-radius:7px;font-family:inherit;font-size:13px;letter-spacing:1px;padding:9px;cursor:pointer;">EINE UBUNG</button>
-      <button id="emom-mode-mix" onclick="emomSetMode('mix')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;letter-spacing:1px;padding:9px;cursor:pointer;">MIX (pro Min)</button>
-      <button id="emom-mode-pure" onclick="emomSetMode('pure')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;letter-spacing:1px;padding:9px;cursor:pointer;">&#9201; TIMER</button>
+      <button id="emom-mode-single" onclick="emomSetMode('single')" style="flex:1;background:var(--text);color:var(--bg);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">Eine Übung</button>
+      <button id="emom-mode-mix" onclick="emomSetMode('mix')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">MIX (pro Min)</button>
+      <button id="emom-mode-pure" onclick="emomSetMode('pure')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">&#9201; TIMER</button>
     </div>
     <div id="emom-mode-desc" style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Eine Ubung fur alle Minuten — jede Minute gleiche Ubung.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
@@ -397,7 +397,7 @@ canvas{max-width:100%;}
       <div id="emom-mix-grid" style="margin-bottom:8px;"></div>
     </div>
     <button onclick="emomStart()" id="emom-start-btn" class="btn" style="display:none;">EMOM STARTEN</button>
-    <button onclick="showEmomSetup(false)" style="width:100%;background:none;border:1px solid var(--border2);color:var(--muted);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:1px;padding:12px;cursor:pointer;margin-top:8px;">ABBRECHEN</button>
+    <button onclick="showEmomSetup(false)" style="width:100%;background:none;border:1px solid var(--border2);color:var(--muted);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;margin-top:8px;">Abbrechen</button>
   </div>
 
   <!-- EMOM ACTIVE SCREEN -->
@@ -423,15 +423,15 @@ canvas{max-width:100%;}
       <button onclick="emomSkip(1)" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:18px;padding:10px;cursor:pointer;">&#9654;</button>
     </div>
     <div id="emom-reps-card" class="card" style="margin-bottom:16px;">
-      <div style="font-size:11px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:8px;">WIEDERHOLUNGEN EINTRAGEN</div>
+      <div style="font-size:11px;color:var(--muted);font-family:inherit;margin-bottom:8px;">WIEDERHOLUNGEN EINTRAGEN</div>
       <div style="display:flex;gap:10px;align-items:center;">
         <input type="number" id="emom-reps-inp" placeholder="z.B. 10" min="0" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:18px;outline:none;">
-        <button onclick="emomLogRep()" style="background:var(--accent);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:14px;letter-spacing:1px;padding:10px 16px;cursor:pointer;">OK</button>
+        <button onclick="emomLogRep()" style="background:var(--accent);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:14px;padding:10px 16px;cursor:pointer;">OK</button>
       </div>
     </div>
     <div id="emom-logged" style="margin-bottom:10px;"></div>
 
-    <button onclick="emomStop()" style="width:100%;background:none;border:1px solid #ff4444;color:#ff4444;border-radius:10px;font-family:inherit;font-size:14px;letter-spacing:2px;padding:12px;cursor:pointer;">EMOM BEENDEN</button>
+    <button onclick="emomStop()" style="width:100%;background:none;border:1px solid #ff4444;color:#ff4444;border-radius:10px;font-family:inherit;font-size:14px;padding:12px;cursor:pointer;">EMOM beenden</button>
   </div>
 
   <!-- ACTIVE WORKOUT (hidden until started) -->
@@ -446,7 +446,7 @@ canvas{max-width:100%;}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;">
         <button class="wo-end-btn" onclick="endWorkout()">WORKOUT<br>BEENDEN</button>
-        <button onclick="cancelWorkout()" style="background:none;border:1px solid #333;color:var(--muted);border-radius:8px;font-family:inherit;font-size:11px;letter-spacing:2px;padding:6px 10px;cursor:pointer;">ABBRECHEN</button>
+        <button onclick="cancelWorkout()" style="background:none;border:1px solid #333;color:var(--muted);border-radius:8px;font-family:inherit;font-size:11px;padding:6px 10px;cursor:pointer;">Abbrechen</button>
       </div>
     </div>
 
@@ -464,14 +464,14 @@ canvas{max-width:100%;}
 
     <!-- EMOM in active workout -->
   <div id="wo-emom-btn-wrap" style="padding:0 0 8px 0;display:none;">
-    <button onclick="showEmomSetup(true)" style="width:100%;background:none;border:1px solid rgba(200,240,74,0.3);color:var(--accent);border-radius:10px;font-family:inherit;font-size:13px;letter-spacing:2px;padding:10px;cursor:pointer;">⏱ EMOM STARTEN</button>
+    <button onclick="showEmomSetup(true)" style="width:100%;background:none;border:1px solid rgba(200,240,74,0.3);color:var(--accent);border-radius:10px;font-family:inherit;font-size:13px;padding:10px;cursor:pointer;">⏱ EMOM starten</button>
   </div>
 
   <!-- Add exercise -->
     <div class="stitle" id="plan-add-label" style="display:none;">ÜBUNG HINZUFÜGEN</div>
     <div class="card" id="plan-add-form" style="display:none;">
       <div style="margin-bottom:10px;">
-        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">KATEGORIE</div>
+        <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">KATEGORIE</div>
         <select id="wo-cat-sel" onchange="woCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;margin-bottom:10px;">
           <option value="Alle">Alle Kategorien</option>
           <option value="Pull">Pull</option>
@@ -482,7 +482,7 @@ canvas{max-width:100%;}
           
           
         </select>
-        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">UBUNG</div>
+        <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">UBUNG</div>
         <select id="wo-ex-sel" onchange="woExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;"></select>
       </div>
 
@@ -499,16 +499,16 @@ canvas{max-width:100%;}
         <input class="b-cust" id="b-cust" placeholder="Eigene Bandstarke..." oninput="custBand(this.value)">
       </div>
 
-      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">SATZE</div>
+      <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">SATZE</div>
       <!-- GURTEL -->
       <div style="margin-bottom:10px;">
         <button id="belt-toggle-btn" onclick="toggleBelt()"
-          style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1px;padding:9px 16px;cursor:pointer;">
+          style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 16px;cursor:pointer;">
           Gurtel: AUS
         </button>
       </div>
       <div id="belt-kg-row" style="display:none;margin-bottom:10px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#F59E0B;font-family:inherit;margin-bottom:6px;">GEWICHT AM GURTEL (KG)</div>
+        <div style="font-size:9px;color:#F59E0B;font-family:inherit;margin-bottom:6px;">GEWICHT AM GURTEL (KG)</div>
         <input type="number" id="belt-kg-input" placeholder="z.B. 10" min="0"
           style="width:100%;background:rgba(245,158,11,0.05);border:1px solid var(--amber);color:var(--amber);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;"
           oninput="beltKgVal=this.value;">
@@ -578,14 +578,14 @@ canvas{max-width:100%;}
         <input type="text" id="pf-name" placeholder="z.B. Pull Tag, Push Tag...">
       </div>
 
-      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:8px;">UBUNGEN IM PLAN</div>
+      <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:8px;">UBUNGEN IM PLAN</div>
       <div id="pf-ex-list" style="margin-bottom:10px;"></div>
 
       <!-- Add exercise to plan -->
       <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:8px;">UBUNG HINZUFUGEN</div>
+        <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:8px;">UBUNG HINZUFUGEN</div>
         <div style="margin-bottom:8px;">
-          <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">KATEGORIE</div>
+          <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">KATEGORIE</div>
           <select id="pf-cat-sel" onchange="pfCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;margin-bottom:10px;">
             <option value="Alle">Alle Kategorien</option>
             <option value="Pull">Pull</option>
@@ -596,10 +596,10 @@ canvas{max-width:100%;}
             
             
           </select>
-          <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">UBUNG</div>
+          <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">UBUNG</div>
           <select id="pf-ex-sel" onchange="pfExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;"></select>
         </div>
-        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:inherit;margin-bottom:6px;">GEPLANTE SATZE</div>
+        <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">GEPLANTE SATZE</div>
         <div class="sh"><span>#</span><span id="pf-lbl-n">WDHS (ZIEL)</span><span></span><span></span></div>
         <div id="pf-sbox"></div>
         <div style="margin-top:8px;"><button class="btn-g" onclick="pfAddSet()">+ SATZ</button></div>
@@ -609,7 +609,7 @@ canvas{max-width:100%;}
 
       <button class="btn" onclick="savePlan()">PLAN SPEICHERN</button>
       <div style="height:8px;"></div>
-      <button class="btn-g" style="width:100%;" onclick="cancelPlanForm()">ABBRECHEN</button>
+      <button class="btn-g" style="width:100%;" onclick="cancelPlanForm()">Abbrechen</button>
     </div>
   </div>
 </div>

@@ -213,7 +213,7 @@ function buildStartPlanBtns(){
   for(var i=0;i<plans.length;i++){
     (function(pl){
       var btn=document.createElement('button');
-      btn.style.cssText='background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:var(--display);font-size:15px;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;';
+      btn.style.cssText='background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;';
       btn.innerHTML=pl.name+'<span style="font-size:10px;color:var(--muted)">'+pl.exercises.length+' Ubungen</span>';
       btn.onclick=function(){startWorkout(pl.id);};
       el.appendChild(btn);
@@ -311,7 +311,7 @@ function buildMaxList(){
     h+='<div class="ei"><div class="et">';
     h+='<div class="ed">'+e.date.slice(5).replace('-','.')+'</div>';
     h+='<div class="en">'+e.name+'</div>';
-    h+='<div style="font-family:var(--display);font-size:24px;color:var(--accent);">'+e.val+' <span style="font-size:11px;font-family:var(--body);color:var(--muted)">'+e.unit+'</span></div>';
+    h+='<div style="font-family:inherit;font-size:22px;font-weight:800;color:var(--accent);">'+e.val+' <span style="font-size:11px;font-weight:600;color:var(--muted)">'+e.unit+'</span></div>';
     h+='<button class="edel" onclick="delMaxEntry('+e.id+')">&#x2715;</button>';
     h+='</div></div>';
   }
