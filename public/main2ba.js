@@ -4,20 +4,35 @@ function buildStreakWidget(){
   calcStreak();
   var streak=streakData.currentStreak;var weekDone=getWeeklyProgress();var weekGoal=streakData.weeklyGoal||3;
   var lv=getLevel();el.innerHTML='';
-  var card=document.createElement('div');card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;';
-  var top=document.createElement('div');top.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
-  var left=document.createElement('div');
-  var flEl=document.createElement('div');flEl.style.cssText='font-size:24px;line-height:1;';flEl.textContent=streak>0?getFlames(streak):'\uD83D\uDD25';
-  var snEl=document.createElement('div');snEl.style.cssText='font-family:inherit;font-size:12px;color:'+(streak>0?'var(--accent)':'#333')+';margin-top:2px;';snEl.textContent=streak>0?streak+' Tage Streak':'Noch kein Streak';
-  left.appendChild(flEl);left.appendChild(snEl);
-  var right=document.createElement('div');right.style.cssText='text-align:right;';
-  var lvBadge=document.createElement('div');lvBadge.style.cssText='color:'+lv.color+';border:1px solid '+lv.color+';border-radius:20px;font-family:inherit;font-size:10px;padding:3px 10px;background:rgba(200,200,200,0.05);display:inline-block;';lvBadge.textContent=lv.label;
-  right.appendChild(lvBadge);top.appendChild(left);top.appendChild(right);
-  var wkLbl=document.createElement('div');wkLbl.style.cssText='font-size:10px;color:var(--muted);font-family:inherit;margin-bottom:6px;';wkLbl.textContent='Diese Woche: '+weekDone+' / '+weekGoal;
-  var dotRow=document.createElement('div');dotRow.style.cssText='display:flex;gap:5px;';
-  for(var i=0;i<weekGoal;i++){var dot=document.createElement('div');dot.style.cssText='flex:1;height:5px;border-radius:3px;background:'+(i<weekDone?'var(--accent)':'var(--bg3)')+';';dotRow.appendChild(dot);}
-  var changeBtn=document.createElement('button');changeBtn.style.cssText='background:none;border:none;color:var(--muted2);font-size:10px;font-family:inherit;cursor:pointer;margin-top:6px;';changeBtn.textContent='ZIEL ANDERN';changeBtn.onclick=function(){streakData.goalSet=false;sstreak();showWeeklyGoalModal();};
-  card.appendChild(top);card.appendChild(wkLbl);card.appendChild(dotRow);card.appendChild(changeBtn);el.appendChild(card);
+
+  var card=document.createElement('div');
+  card.style.cssText='position:relative;border-radius:18px;padding:16px;margin-bottom:10px;min-height:190px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:#000 url(/hero-workout.jpg) center/cover no-repeat;';
+
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.15) 35%,rgba(0,0,0,0.75) 100%);';
+  card.appendChild(overlay);
+
+  var top=document.createElement('div');top.style.cssText='position:relative;display:flex;align-items:center;justify-content:space-between;';
+  var flBadge=document.createElement('div');
+  flBadge.style.cssText='background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#fff;';
+  flBadge.innerHTML='<span>'+(streak>0?getFlames(streak):'\uD83D\uDD25')+'</span><span>'+(streak>0?streak+' Tage Streak':'Noch kein Streak')+'</span>';
+  var lvBadge=document.createElement('div');lvBadge.style.cssText='background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);color:'+lv.color+';border-radius:20px;font-family:inherit;font-size:10px;font-weight:700;padding:5px 10px;';lvBadge.textContent=lv.label;
+  top.appendChild(flBadge);top.appendChild(lvBadge);
+  card.appendChild(top);
+
+  var bottom=document.createElement('div');bottom.style.cssText='position:relative;';
+  var wkLbl=document.createElement('div');wkLbl.style.cssText='font-size:11px;color:rgba(255,255,255,0.75);font-weight:600;margin-bottom:2px;';wkLbl.textContent='Diese Woche';
+  var wkVal=document.createElement('div');wkVal.style.cssText='font-size:22px;color:#fff;font-weight:800;margin-bottom:10px;';wkVal.textContent=weekDone+' / '+weekGoal+' Workouts';
+  var dotRow=document.createElement('div');dotRow.style.cssText='display:flex;gap:5px;margin-bottom:8px;';
+  for(var i=0;i<weekGoal;i++){var dot=document.createElement('div');dot.style.cssText='flex:1;height:5px;border-radius:3px;background:'+(i<weekDone?'var(--accent)':'rgba(255,255,255,0.3)')+';';dotRow.appendChild(dot);}
+  var actionRow=document.createElement('div');actionRow.style.cssText='display:flex;align-items:center;justify-content:space-between;';
+  var changeBtn=document.createElement('button');changeBtn.style.cssText='background:none;border:none;color:rgba(255,255,255,0.85);font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;padding:0;';changeBtn.textContent='Ziel \u00E4ndern \u203A';changeBtn.onclick=function(){streakData.goalSet=false;sstreak();showWeeklyGoalModal();};
+  var goBtn=document.createElement('button');goBtn.style.cssText='background:var(--accent);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:13px;font-weight:800;padding:9px 18px;cursor:pointer;display:flex;align-items:center;gap:6px;';goBtn.innerHTML='Starten <span>&#9654;</span>';goBtn.onclick=function(){startWorkout(null);};
+  actionRow.appendChild(changeBtn);actionRow.appendChild(goBtn);
+  bottom.appendChild(wkLbl);bottom.appendChild(wkVal);bottom.appendChild(dotRow);bottom.appendChild(actionRow);
+  card.appendChild(bottom);
+
+  el.appendChild(card);
   buildProfilStreakSection();
 }
 
