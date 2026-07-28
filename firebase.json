@@ -14,7 +14,7 @@
     ],
     "headers": [
       {
-        "source": "/sw.js",
+        "source": "**/*.@(js|html|json)",
         "headers": [
           { "key": "Cache-Control", "value": "no-cache" }
         ]
