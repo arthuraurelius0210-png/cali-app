@@ -166,7 +166,7 @@ function buildParksList(){
         '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+
         (addr?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+addr+'</div>':'')+
       '</div>'+
-      '<div style="font-family:var(--display);font-size:15px;color:var(--accent);flex-shrink:0;">'+formatDist(park._dist)+'</div>';
+      '<div style="font-family:inherit;font-weight:800;font-size:15px;color:var(--accent);flex-shrink:0;">'+formatDist(park._dist)+'</div>';
     listEl.appendChild(card);
   });
 }
@@ -215,7 +215,7 @@ function openParkDetail(idx){
 
   tabs.forEach(function(t, ti){
     var tb = document.createElement('button');
-    tb.style.cssText = 'flex:1;padding:11px 4px;font-family:var(--display);font-size:13px;letter-spacing:1px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
+    tb.style.cssText = 'flex:1;padding:11px 4px;font-family:inherit;font-weight:800;font-size:13px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
     tb.textContent = t;
     var content = document.createElement('div');
     content.style.cssText = 'padding:16px 20px 32px;display:'+(ti===0?'block':'none')+';';
@@ -300,7 +300,7 @@ function buildParkStats(el, parkId){
   stats.forEach(function(s){
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;';
-    row.innerHTML = '<span style="color:var(--muted);">'+s.label+'</span><span style="font-family:var(--display);font-size:20px;color:var(--text);">'+s.val+'</span>';
+    row.innerHTML = '<span style="color:var(--muted);">'+s.label+'</span><span style="font-family:inherit;font-weight:800;font-size:20px;color:var(--text);">'+s.val+'</span>';
     el.appendChild(row);
   });
 
@@ -313,7 +313,7 @@ function buildParkStats(el, parkId){
     topEx.forEach(function(ex, i){
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
-      row.innerHTML = '<span style="color:var(--text);">'+(i+1)+'. '+ex+'</span><span style="font-family:var(--display);font-size:16px;color:var(--accent);">'+exCounts[ex]+' Wdh</span>';
+      row.innerHTML = '<span style="color:var(--text);">'+(i+1)+'. '+ex+'</span><span style="font-family:inherit;font-weight:800;font-size:16px;color:var(--accent);">'+exCounts[ex]+' Wdh</span>';
       el.appendChild(row);
     });
   }
@@ -331,7 +331,7 @@ function buildParkLeaderboard(el, parkId, parkName){
 
       // Submit button
       var subBtn = document.createElement('button');
-      subBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:2px;padding:14px;cursor:pointer;margin-bottom:16px;';
+      subBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:14px;cursor:pointer;margin-bottom:16px;';
       subBtn.textContent = '+ EINTRAG EINREICHEN';
       subBtn.onclick = function(){ showLeaderboardSubmit(parkId, parkName); };
       el.appendChild(subBtn);
@@ -364,7 +364,7 @@ function buildParkLeaderboard(el, parkId, parkName){
             '<div style="font-size:12px;font-weight:700;color:var(--text);">'+d.userName+'</div>'+
             '<div style="font-size:10px;color:var(--muted);">'+d.exercise+statusBadge+'</div>'+
           '</div>'+
-          '<div style="font-family:var(--display);font-size:20px;color:var(--accent);">'+d.reps+' Wdh</div>';
+          '<div style="font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);">'+d.reps+' Wdh</div>';
         if(d.videoUrl){
           var vidBtn = document.createElement('a');
           vidBtn.href = d.videoUrl; vidBtn.target='_blank';
@@ -388,7 +388,7 @@ function showLeaderboardSubmit(parkId, parkName){
   var box2 = document.createElement('div');
   box2.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
 
-  box2.innerHTML = '<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text);margin-bottom:6px;">EINTRAG EINREICHEN</div>'+
+  box2.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px;">EINTRAG EINREICHEN</div>'+
     '<div style="font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.5;">'+parkName+' &middot; Video-Beweis Pflicht &middot; Ich prüfe deinen Eintrag</div>';
 
   function inpRow(lbl, id, ph, type){
@@ -404,7 +404,7 @@ function showLeaderboardSubmit(parkId, parkName){
   box2.appendChild(inpRow('VIDEO-LINK (YouTube/Instagram)', 'lb-video', 'https://...'));
 
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;letter-spacing:2px;padding:16px;cursor:pointer;margin-top:6px;';
+  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;margin-top:6px;';
   submitBtn.textContent = 'EINREICHEN';
   submitBtn.onclick = function(){
     var exVal = document.getElementById('lb-ex').value.trim();
@@ -520,7 +520,7 @@ function openAdminPanel(){
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
 
   box.innerHTML =
-    '<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:var(--text);margin-bottom:12px;">&#128274; ADMIN PANEL</div>';
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;">&#128274; ADMIN PANEL</div>';
 
   // Tabs
   var tabWrap = document.createElement('div');
@@ -636,7 +636,7 @@ function openParkNav(idx){
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
     '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">'+name+'</div>'+
     (addr?'<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">'+addr+'</div>':'')+
-    '<div style="font-size:9px;letter-spacing:3px;color:var(--muted);font-weight:700;margin-bottom:12px;">NAVIGATION ÖFFNEN MIT</div>';
+    '<div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:12px;">NAVIGATION ÖFFNEN MIT</div>';
 
   // Google Maps
   var gBtn = document.createElement('button');
@@ -719,7 +719,7 @@ function openParkDetail(idx){
   var bodies = [];
   tabDefs.forEach(function(t, ti){
     var btn = document.createElement('button');
-    btn.style.cssText = 'width:100%;padding:14px 10px;border:none;border-bottom:1px solid var(--border);background:'+(ti===0?'rgba(255,85,0,0.08)':'none')+';color:'+(ti===0?'var(--accent)':'var(--muted)')+';font-family:var(--display);font-size:14px;letter-spacing:0.5px;cursor:pointer;text-align:left;border-left:3px solid '+(ti===0?'var(--accent)':'transparent')+';line-height:1.4;';
+    btn.style.cssText = 'width:100%;padding:14px 10px;border:none;border-bottom:1px solid var(--border);background:'+(ti===0?'rgba(255,85,0,0.08)':'none')+';color:'+(ti===0?'var(--accent)':'var(--muted)')+';font-family:inherit;font-weight:800;font-size:14px;letter-spacing:0.5px;cursor:pointer;text-align:left;border-left:3px solid '+(ti===0?'var(--accent)':'transparent')+';line-height:1.4;';
     btn.innerHTML = t.label;
     var body = document.createElement('div');
     body.style.cssText = 'display:'+(ti===0?'block':'none')+';padding:14px;overflow-y:auto;';
@@ -889,13 +889,13 @@ function loadParkLb(el, parkId, ex){
         row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';';
         var rankEl = document.createElement('div');
         rankEl.style.cssText = 'width:28px;text-align:center;flex-shrink:0;';
-        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-family:var(--display);font-size:15px;color:var(--muted);">#'+rank+'</span>';
+        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-family:inherit;font-weight:800;font-size:15px;color:var(--muted);">#'+rank+'</span>';
         var infoEl = document.createElement('div');
         infoEl.style.cssText = 'flex:1;min-width:0;';
         infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+' </div>';
         var valEl = document.createElement('div');
         valEl.style.cssText = 'text-align:right;flex-shrink:0;';
-        valEl.innerHTML = '<div style="font-family:var(--display);font-weight:400;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">'+ex.unit+'</div>';
+        valEl.innerHTML = '<div style="font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">'+ex.unit+'</div>';
         row.appendChild(rankEl); row.appendChild(infoEl); row.appendChild(valEl);
         if(d.videoUrl){
           var vBtn = document.createElement('button');
@@ -929,7 +929,7 @@ function buildParkDetailStats(el, parkId){
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);';
       row.innerHTML = '<div style="font-size:13px;color:var(--muted);">'+s.label+'</div>'+
-        '<div style="font-family:var(--display);font-weight:400;font-size:22px;color:var(--text);">'+s.value+' <span style="font-family:var(--body);font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
+        '<div style="font-family:inherit;font-weight:800;font-size:22px;color:var(--text);">'+s.value+' <span style="font-family:var(--body);font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
       el.appendChild(row);
     });
   }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler.</div>'; });
@@ -1057,7 +1057,7 @@ function openSuggestPark(){
 
   // Submit
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:15px;cursor:pointer;letter-spacing:1px;margin-bottom:8px;';
+  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:15px;cursor:pointer;margin-bottom:8px;';
   submitBtn.textContent = 'VORSCHLAG SENDEN';
   submitBtn.onclick = function(){
     var name = nameInput.value.trim();
