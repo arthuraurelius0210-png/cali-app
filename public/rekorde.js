@@ -201,11 +201,12 @@ function buildRekordeUI(){
 }
 
 
-function getRekExercises(){
+function getRekExercises(catOverride){
+  var cat = catOverride || rekState.cat;
   var result=[], seen={};
   if(typeof EX_DB!=='undefined'){
     EX_DB.forEach(function(ex,i){
-      if(rekState.cat==='all'||ex.cat===rekState.cat){
+      if(cat==='all'||ex.cat===cat){
         var k=ex.name+'|'+ex.unit;
         if(!seen[k]){seen[k]=1;result.push({id:'ex_'+i,name:ex.name,unit:ex.unit,cat:ex.cat});}
       }
@@ -219,7 +220,7 @@ function getRekExercises(){
     {id:'skill_rings',name:'Ring Muscle-Up',unit:'Wdh',cat:'Skills'},
     {id:'skill_360pu',name:'360 Pull-Up',unit:'Wdh',cat:'Skills'},
   ];
-  if(rekState.cat==='all'||rekState.cat==='Skills'){
+  if(cat==='all'||cat==='Skills'){
     extras.forEach(function(s){
       var k=s.name+'|'+s.unit;
       if(!seen[k]){seen[k]=1;result.push(s);}

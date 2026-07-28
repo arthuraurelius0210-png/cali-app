@@ -209,13 +209,14 @@ function openRecordSubmit(parkId, parkName){
   var s1 = document.createElement('div');
   s1.innerHTML = '<div class="stitle" style="margin:0 0 10px;">SCHRITT 1 — ÜBUNG WÄHLEN</div>';
   var exGrid = document.createElement('div');
-  exGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;';
-  var selectedExId = LB_EXERCISES[0].id;
-  LB_EXERCISES.forEach(function(ex){
+  exGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;max-height:260px;overflow-y:auto;';
+  var recordExercises = getRekExercises('all');
+  var selectedExId = recordExercises[0].id;
+  recordExercises.forEach(function(ex){
     var btn = document.createElement('button');
     btn.dataset.exId = ex.id;
     btn.style.cssText = 'padding:10px;border-radius:10px;border:1.5px solid '+(ex.id===selectedExId?'var(--accent)':'var(--border)')+';background:'+(ex.id===selectedExId?'rgba(255,85,0,0.1)':'none')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--text);text-align:left;';
-    btn.innerHTML = ex.icon+' '+ex.name+'<div style="font-size:9px;color:var(--muted);font-weight:400;">'+ex.unit+'</div>';
+    btn.innerHTML = ex.name+'<div style="font-size:9px;color:var(--muted);font-weight:400;">'+ex.unit+'</div>';
     btn.onclick = function(){
       selectedExId = ex.id;
       exGrid.querySelectorAll('button').forEach(function(b){
@@ -223,7 +224,7 @@ function openRecordSubmit(parkId, parkName){
         b.style.borderColor = a?'var(--accent)':'var(--border)';
         b.style.background = a?'rgba(255,85,0,0.1)':'none';
       });
-      var exInfo = LB_EXERCISES.find(function(e){ return e.id===selectedExId; });
+      var exInfo = recordExercises.find(function(e){ return e.id===selectedExId; });
       valLabel.textContent = 'ERGEBNIS ('+exInfo.unit.toUpperCase()+')';
     };
     exGrid.appendChild(btn);
@@ -342,7 +343,7 @@ function openRecordSubmit(parkId, parkName){
     if(!videoBlob){ alert('Bitte zuerst Video aufnehmen!'); return; }
     var val = parseInt(valInput.value);
     if(!val || val < 1){ alert('Bitte Ergebnis eingeben!'); return; }
-    var exInfo = LB_EXERCISES.find(function(e){ return e.id===selectedExId; });
+    var exInfo = recordExercises.find(function(e){ return e.id===selectedExId; });
     var user = firebase.auth().currentUser;
     submitBtn2.textContent = 'WIRD HOCHGELADEN...';
     submitBtn2.disabled = true;
