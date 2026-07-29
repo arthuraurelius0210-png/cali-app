@@ -157,6 +157,7 @@ function populateMaxDropdowns(){
       _mc.appendChild(opt);
     });
   }
+  if(typeof drawMaxChart === 'function') drawMaxChart();
 }
 
 function goPage(p){
