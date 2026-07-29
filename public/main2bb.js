@@ -342,7 +342,7 @@ function emomShowFinishModal(){
   var ex=document.getElementById('emom-finish-modal');if(ex)ex.remove();
   var modal=document.createElement('div');modal.id='emom-finish-modal';
   modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-  var box=document.createElement('div');box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center;';
+  var box=document.createElement('div');box.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:28px 24px;width:100%;max-width:320px;text-align:center;';
   var ic=document.createElement('div');ic.style.cssText='font-size:52px;margin-bottom:12px;';ic.textContent='\uD83C\uDF89';
   var ti=document.createElement('div');ti.style.cssText='font-family:inherit;font-weight:800;font-size:30px;color:var(--accent);margin-bottom:8px;';ti.textContent='EMOM fertig!';
   var st=document.createElement('div');st.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px;';

@@ -754,7 +754,7 @@ function buildTrendingChallenges(){
   db.collection('challengeStats').orderBy('views','desc').limit(3).get().then(function(snap){
     if(!el) return;
     if(snap.empty){
-      el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center;font-size:12px;color:var(--muted);">Noch keine Trends — probiere Challenges aus, um sie hier zu sehen!</div>';
+      el.innerHTML = '<div style="background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:18px;text-align:center;font-size:12px;color:var(--muted);">Noch keine Trends — probiere Challenges aus, um sie hier zu sehen!</div>';
       return;
     }
     var docs = [];
@@ -1047,7 +1047,7 @@ function buildWeekPlan(){
 
   // Kompakter Button der die Tagesansicht öffnet
   var previewBtn = document.createElement('div');
-  previewBtn.style.cssText = 'background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:12px;';
+  previewBtn.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:12px;';
   previewBtn.onclick = function(){ openDayListModal(todayIdx); };
 
   // Zeige Heute als Preview
@@ -1176,7 +1176,7 @@ function renderDayList(scroll, focusIdx){
 
   // Stats bar
   var statsBar = document.createElement('div');
-  statsBar.style.cssText = 'display:flex;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;flex-wrap:wrap;';
+  statsBar.style.cssText = 'display:flex;gap:8px;background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:12px;margin-bottom:12px;flex-wrap:wrap;';
   [
     {icon:'💪', val:stats.workouts, label:'Workouts'},
     {icon:'😴', val:stats.restDays, label:'Ruhetage'},
@@ -1292,7 +1292,7 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   var prevMonthDays = new Date(year, month, 0).getDate();
 
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;';
+  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;margin-bottom:12px;';
 
   var hdr = document.createElement('div');
   hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
@@ -1372,7 +1372,7 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
 
 function buildWeekSummaryCard(container, stats){
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;';
+  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;margin-bottom:12px;';
   var title = document.createElement('div');
   title.style.cssText = 'font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;';
   title.textContent = 'Wochenübersicht';

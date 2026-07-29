@@ -27,7 +27,7 @@ function showWeeklyGoalModal(){
   var ex=document.getElementById('weekly-goal-modal');if(ex)ex.remove();
   var modal=document.createElement('div');modal.id='weekly-goal-modal';
   modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-  var box=document.createElement('div');box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center;';
+  var box=document.createElement('div');box.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:28px 24px;width:100%;max-width:320px;text-align:center;';
   var flame=document.createElement('div');flame.style.cssText='font-size:48px;margin-bottom:12px;';flame.textContent='\uD83D\uDD25';
   var title=document.createElement('div');title.style.cssText='font-family:inherit;font-weight:800;font-size:26px;color:var(--accent);margin-bottom:8px;';title.textContent='Trainings-Streak';
   var sub=document.createElement('div');sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;';sub.textContent='Wie oft willst du diese Woche trainieren?';

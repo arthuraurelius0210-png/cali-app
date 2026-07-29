@@ -263,7 +263,7 @@ function showCommPostModal(){
   }
 
   function renderExCard(ex, idx, exList){
-    var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;';
+    var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;margin-bottom:10px;';
     var hRow=document.createElement('div'); hRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
     var ht=document.createElement('div'); ht.className='stitle'; ht.style.cssText='color:var(--accent);margin:0;'; ht.textContent='ÜBUNG '+(idx+1);
     var delBtn=document.createElement('button'); delBtn.style.cssText='background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;'; delBtn.textContent='\u00D7 ENTFERNEN';
@@ -314,7 +314,7 @@ function showCommPostModal(){
     var typeIcons={once:'&#127937;',weekly:'&#128197;',timed:'&#9201;',streak:'&#128293;'};
     var typeLabels={once:'Einmalig',weekly:'Wöchentlich',timed:'Zeitlimit',streak:'Streak'};
     var card=document.createElement('div');
-    card.style.cssText='background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;';
+    card.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:18px;margin-bottom:14px;';
     card.innerHTML=
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'+
       '<div style="font-size:28px;">'+typeIcons[challengeData.type]+'</div>'+
@@ -441,7 +441,7 @@ function loadCommFeed(){
 
 function buildCommCard(docId, data){
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;';
+  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:16px;margin-bottom:10px;';
   card.onclick = function(){ trackChallengeView('comm_'+docId); };
 
   // Header row

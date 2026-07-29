@@ -130,7 +130,7 @@ function buildSkillUI(){
     var allDone=doneCount===skill.steps.length;
 
     var card=document.createElement('div');
-    card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;';
+    card.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:12px;overflow:hidden;';
 
     // Header
     var header=document.createElement('div');
