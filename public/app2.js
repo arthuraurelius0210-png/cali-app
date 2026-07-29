@@ -666,7 +666,7 @@ function buildChCardPersonal(){
     el.innerHTML =
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;padding-right:28px;">'+
         '<div style="font-size:20px;font-weight:800;color:var(--text);line-height:1.3;">'+activeChallenge.title+'</div>'+
-        '<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏆</div>'+
+        '<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M8 3h8v5a4 4 0 01-8 0V3z" fill="var(--accent)"/><rect x="11" y="11" width="2" height="4" fill="var(--accent)"/><rect x="8" y="18" width="8" height="2" rx="1" fill="var(--accent)"/><rect x="9" y="15" width="6" height="2" fill="var(--accent)"/></svg></div>'+
       '</div>'+
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
         '<div style="flex:1;background:var(--bg3);border-radius:20px;height:6px;overflow:hidden;">'+
