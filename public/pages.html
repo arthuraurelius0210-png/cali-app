@@ -57,15 +57,27 @@
 <!-- CHALLENGE PAGE -->
 <div class="page" id="page-ch">
   <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:18px;">
-    <div style="font-size:10px;font-weight:700;color:var(--muted);">CHALLENGES</div>
-    <div id="currency-display" style="font-size:13px;font-weight:700;color:var(--text);"></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-top:20px;margin-bottom:18px;gap:12px;">
+    <div>
+      <div style="font-size:26px;font-weight:800;color:var(--text);margin-bottom:4px;">Challenges</div>
+      <div style="font-size:12px;color:var(--muted);">Fordere dich selbst heraus und bleib motiviert.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <div style="background:#fff;border-radius:12px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);text-align:center;">
+        <div style="font-size:15px;font-weight:800;color:var(--text);">&#128293; <span id="ch-streak-val">0</span></div>
+        <div style="font-size:8px;color:var(--muted);margin-top:1px;">Streak</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);text-align:center;">
+        <div style="font-size:15px;font-weight:800;color:var(--text);">&#128142; <span id="ch-points-val">0</span></div>
+        <div style="font-size:8px;color:var(--muted);margin-top:1px;">Points</div>
+      </div>
+    </div>
   </div>
 
   <!-- KARTE 1: MEINE CHALLENGE (groß, oben) -->
   <div id="ch-card-personal" onclick="openChDrawer('personal')" style="background:#fff;border-radius:16px;padding:20px 20px 18px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px;"></div>
-    <div style="font-size:8px;color:var(--accent);font-weight:700;margin-bottom:12px;">MEINE CHALLENGE</div>
+    <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:12px;">MEINE CHALLENGE</div>
     <div id="ch-card-personal-inner"></div>
     <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#ccc;font-size:20px;">&#8250;</div>
   </div>
@@ -75,29 +87,51 @@
 
     <div id="ch-card-preset" onclick="openChDrawer('preset')" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
       <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#38BDF8;border-radius:3px 0 0 3px;"></div>
-      <div style="font-size:7px;color:#38BDF8;font-weight:700;margin-bottom:12px;">VOREINGESTELLT</div>
+      <div style="width:34px;height:34px;border-radius:10px;background:rgba(56,189,248,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px;">&#9889;</div>
+      <div style="font-size:11px;color:#38BDF8;font-weight:700;margin-bottom:10px;">VOREINGESTELLT</div>
       <div id="ch-card-preset-inner"></div>
-      <div style="position:absolute;right:10px;bottom:14px;color:#ccc;font-size:16px;">&#8250;</div>
+      <div style="font-size:11px;color:#38BDF8;font-weight:700;margin-top:10px;">Ansehen &#8594;</div>
     </div>
 
     <div id="ch-card-community" onclick="openChDrawer('community')" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
       <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#4ECDC4;border-radius:3px 0 0 3px;"></div>
-      <div style="font-size:7px;color:#4ECDC4;font-weight:700;margin-bottom:12px;">COMMUNITY</div>
+      <div style="width:34px;height:34px;border-radius:10px;background:rgba(78,205,196,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px;">&#128101;</div>
+      <div style="font-size:11px;color:#4ECDC4;font-weight:700;margin-bottom:10px;">COMMUNITY</div>
       <div id="ch-card-community-inner"></div>
-      <div style="position:absolute;right:10px;bottom:14px;color:#ccc;font-size:16px;">&#8250;</div>
+      <div style="font-size:11px;color:#4ECDC4;font-weight:700;margin-top:10px;">Ansehen &#8594;</div>
     </div>
 
+  </div>
+
+  <!-- SKILL LERNPFAD -->
+  <div style="background:rgba(255,85,0,0.06);border-radius:16px;padding:16px;margin-bottom:16px;cursor:pointer;display:flex;align-items:center;gap:14px;" onclick="goPage('sk')">
+    <div style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">&#11088;</div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">Skill Lernpfad</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Strukturiere deinen Fortschritt und meistere neue Skills Schritt für Schritt.</div>
+    </div>
+    <div style="width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;">&#8250;</div>
+  </div>
+
+  <!-- TRENDING CHALLENGES -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);">TRENDING CHALLENGES</div>
+  </div>
+  <div id="ch-trending" style="margin-bottom:20px;"></div>
+
+  <!-- BOTTOM BANNER -->
+  <div style="background:rgba(255,85,0,0.06);border-radius:16px;padding:18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div>
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;">Jede Wiederholung zählt.</div>
+      <div style="font-size:11px;color:var(--muted);">Bleib konstant und feiere deine Fortschritte!</div>
+    </div>
+    <div style="font-size:30px;flex-shrink:0;">&#128170;</div>
   </div>
 
   <!-- hidden containers (content rendered into drawers) -->
   <div id="challenge-box" style="display:none;"></div>
   <div id="challenge-presets" style="display:none;"></div>
   <div id="comm-feed" style="display:none;"></div>
-  <div style="padding:16px;">
-    <button onclick="goPage('sk')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;">
-      <span>&#11088; SKILL LERNPFAD</span><span style="color:var(--muted);">&#8250;</span>
-    </button>
-  </div>
 </div>
 
 

@@ -635,11 +635,13 @@ function getCurrencyDisplay(){
 }
 
 function buildChallengeUI(){
-  // Update currency display
-  var cd = document.getElementById('currency-display');
-  if(cd) cd.textContent = '\uD83D\uDD25 '+currency.flames+'  \uD83D\uDC8E '+currency.diamonds;
+  var streakEl = document.getElementById('ch-streak-val');
+  if(streakEl) streakEl.textContent = (streakData && streakData.currentStreak) || 0;
+  var pointsEl = document.getElementById('ch-points-val');
+  if(pointsEl) pointsEl.textContent = currency.diamonds || 0;
   buildChCards();
   buildStartChallengeWidget();
+  buildTrendingChallenges();
 }
 
 // ── BUILD 3 CARD PREVIEWS ─────────────────────────────────
@@ -654,7 +656,7 @@ function buildChCardPersonal(){
   if(!el) return;
   if(!activeChallenge){
     el.innerHTML =
-      '<div style="font-size:18px;font-weight:800;letter-spacing:1px;color:var(--text);margin-bottom:5px;">KEINE AKTIV</div>'+
+      '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:5px;">Keine aktiv</div>'+
       '<div style="font-size:11px;color:var(--muted);line-height:1.5;">Tippe um eine Challenge zu generieren</div>';
   } else {
     var prog = calcChallengeProgress();
@@ -662,11 +664,17 @@ function buildChCardPersonal(){
     var pct = Math.min(100, Math.round((prog/target)*100));
     var done = pct >= 100;
     el.innerHTML =
-      '<div style="font-size:15px;font-weight:800;letter-spacing:1px;color:var(--text);margin-bottom:10px;line-height:1.3;padding-right:28px;">'+activeChallenge.title+'</div>'+
-      '<div style="background:var(--bg3);border-radius:20px;height:4px;margin-bottom:6px;overflow:hidden;">'+
-        '<div style="height:100%;border-radius:20px;background:var(--accent);width:'+pct+'%;transition:width 0.5s;"></div>'+
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;padding-right:28px;">'+
+        '<div style="font-size:20px;font-weight:800;color:var(--text);line-height:1.3;">'+activeChallenge.title+'</div>'+
+        '<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏆</div>'+
       '</div>'+
-      '<div style="font-size:10px;color:var(--muted);letter-spacing:1px;">'+prog+' / '+target+'&nbsp;&nbsp;&middot;&nbsp;&nbsp;'+pct+'%'+(done?' &nbsp;<span style="color:var(--accent);font-weight:700;">GESCHAFFT!</span>':'')+'</div>';
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
+        '<div style="flex:1;background:var(--bg3);border-radius:20px;height:6px;overflow:hidden;">'+
+          '<div style="height:100%;border-radius:20px;background:var(--accent);width:'+pct+'%;transition:width 0.5s;"></div>'+
+        '</div>'+
+        '<div style="font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0;">'+pct+'%</div>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--muted);">'+prog+' / '+target+' · '+pct+'% abgeschlossen'+(done?' &nbsp;<span style="color:var(--accent);font-weight:700;">Geschafft!</span>':'')+'</div>';
   }
 }
 
@@ -674,15 +682,15 @@ function buildChCardPreset(){
   var el = document.getElementById('ch-card-preset-inner');
   if(!el) return;
   el.innerHTML =
-    '<div style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:1px;margin-bottom:10px;">'+PRESET_CHALLENGES.length+' CHALLENGES</div>'+
-    '<div style="display:flex;flex-direction:column;gap:5px;">'+
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px;">'+PRESET_CHALLENGES.length+' Challenges</div>'+
+    '<div style="display:flex;flex-direction:column;gap:6px;">'+
       PRESET_CHALLENGES.slice(0,3).map(function(c){
-        return '<div style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:7px;">'+
-          '<div style="width:3px;height:3px;border-radius:50%;background:#38BDF8;flex-shrink:0;"></div>'+
+        return '<div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;">'+
+          '<div style="width:5px;height:5px;border-radius:50%;background:#38BDF8;flex-shrink:0;"></div>'+
           c.title+
         '</div>';
       }).join('')+
-      '<div style="font-size:10px;color:#bbb;padding-left:10px;">+ '+(PRESET_CHALLENGES.length-3)+' weitere</div>'+
+      '<div style="font-size:11px;color:#bbb;padding-left:12px;">+ '+(PRESET_CHALLENGES.length-3)+' weitere</div>'+
     '</div>';
 }
 
@@ -690,16 +698,147 @@ function buildChCardCommunity(){
   var el = document.getElementById('ch-card-community-inner');
   if(!el) return;
   el.innerHTML =
-    '<div style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:1px;margin-bottom:8px;">COMMUNITY</div>'+
-    '<div style="font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:10px;">Von Athleten erstellt<br>&amp; bewertet</div>'+
-    '<div style="display:inline-block;background:rgba(78,205,196,0.08);color:#4ECDC4;border:1px solid rgba(78,205,196,0.25);border-radius:6px;font-size:8px;letter-spacing:2px;padding:3px 9px;font-weight:700;">+ POSTEN</div>';
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">0 Challenges</div>'+
+    '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">Von Athleten erstellt & bewertet</div>'+
+    '<button onclick="event.stopPropagation();closeChDrawer();setTimeout(showCommPostModal,50);" style="background:none;border:1px solid rgba(78,205,196,0.4);color:#4ECDC4;border-radius:20px;font-family:inherit;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;">+ Posten</button>';
   if(currentUser){
     db.collection('communityChallenges').get().then(function(snap){
-      if(el && snap.size > 0){
+      if(el){
         var titleEl = el.querySelector('div');
-        if(titleEl) titleEl.textContent = snap.size + ' CHALLENGES';
+        if(titleEl) titleEl.textContent = snap.size + ' Challenges';
       }
     }).catch(function(){});
+  }
+}
+
+// ── TRENDING CHALLENGES ───────────────────────────────────
+function trackChallengeView(id){
+  if(!currentUser || !id) return;
+  db.collection('challengeStats').doc(id).set({
+    views: firebase.firestore.FieldValue.increment(1)
+  }, {merge:true}).catch(function(){});
+}
+
+function trackChallengeParticipant(id){
+  if(!currentUser || !id) return;
+  db.collection('challengeStats').doc(id).set({
+    participantUids: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+  }, {merge:true}).catch(function(){});
+}
+
+function buildTrendingChallenges(){
+  var el = document.getElementById('ch-trending');
+  if(!el) return;
+  if(!currentUser){
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:12px 0;">Einloggen um Trending Challenges zu sehen.</div>';
+    return;
+  }
+  el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:12px 0;">Wird geladen…</div>';
+
+  db.collection('challengeStats').orderBy('views','desc').limit(3).get().then(function(snap){
+    if(!el) return;
+    if(snap.empty){
+      el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;font-size:12px;color:var(--muted);">Noch keine Trends — probiere Challenges aus, um sie hier zu sehen!</div>';
+      return;
+    }
+    var docs = [];
+    snap.forEach(function(d){ docs.push({id:d.id, data:d.data()}); });
+    el.innerHTML = '';
+    docs.forEach(function(entry){ renderTrendingCard(el, entry.id, entry.data); });
+  }).catch(function(){
+    el.innerHTML = '';
+  });
+}
+
+function renderTrendingCard(container, id, stats){
+  var meta = null;
+  var iconBg = 'linear-gradient(135deg, var(--accent), #FF6B35)';
+  var isCommunity = id.indexOf('comm_') === 0;
+  if(isCommunity){
+    iconBg = 'linear-gradient(135deg, #4ECDC4, #38BDF8)';
+  } else {
+    for(var i=0;i<PRESET_CHALLENGES.length;i++){
+      if(PRESET_CHALLENGES[i].id === id){ meta = PRESET_CHALLENGES[i]; break; }
+    }
+    if(!meta) return; // stats doc without resolvable metadata — skip silently
+    iconBg = 'linear-gradient(135deg, #38BDF8, var(--accent))';
+  }
+
+  var participantUids = stats.participantUids || [];
+  var views = stats.views || 0;
+
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#fff;border-radius:16px;overflow:hidden;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,0.06);';
+
+  var header = document.createElement('div');
+  header.style.cssText = 'background:'+iconBg+';padding:20px;position:relative;';
+  header.innerHTML =
+    '<div style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,0.9);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:800;color:var(--text);">🔥 '+views+'</div>'+
+    '<div style="font-size:40px;text-align:center;">'+(isCommunity ? '🌟' : (meta.icon||'🏆'))+'</div>';
+  card.appendChild(header);
+
+  var body = document.createElement('div');
+  body.style.cssText = 'padding:14px 16px 16px;';
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;';
+  titleEl.textContent = isCommunity ? 'Wird geladen…' : meta.title;
+  var descEl = document.createElement('div');
+  descEl.style.cssText = 'font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:10px;';
+  descEl.textContent = isCommunity ? '' : (meta.desc||'');
+  body.appendChild(titleEl);
+  body.appendChild(descEl);
+
+  var footer = document.createElement('div');
+  footer.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
+
+  var countEl = document.createElement('div');
+  countEl.style.cssText = 'font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;';
+  countEl.innerHTML = '👥 '+participantUids.length+' Teilnehmer';
+  footer.appendChild(countEl);
+
+  var avatarStack = document.createElement('div');
+  avatarStack.style.cssText = 'display:flex;align-items:center;';
+  footer.appendChild(avatarStack);
+  body.appendChild(footer);
+  card.appendChild(body);
+  container.appendChild(card);
+
+  renderAvatarStack(avatarStack, participantUids);
+
+  if(isCommunity){
+    var rawId = id.slice(5);
+    db.collection('communityChallenges').doc(rawId).get().then(function(doc){
+      if(!doc.exists){ titleEl.textContent = 'Challenge nicht mehr verfügbar'; return; }
+      var d = doc.data();
+      titleEl.textContent = d.title || 'Community Challenge';
+      descEl.textContent = d.desc || '';
+    }).catch(function(){ titleEl.textContent = 'Community Challenge'; });
+  }
+}
+
+function renderAvatarStack(el, uids){
+  var shown = uids.slice(0,3);
+  var overflow = uids.length - shown.length;
+  el.innerHTML = '';
+  shown.forEach(function(uid, i){
+    var av = document.createElement('div');
+    av.style.cssText = 'width:24px;height:24px;border-radius:50%;background:var(--bg3);border:2px solid #fff;margin-left:'+(i>0?'-8px':'0')+';display:flex;align-items:center;justify-content:center;font-size:11px;overflow:hidden;';
+    av.textContent = '💪';
+    el.appendChild(av);
+    db.collection('users').doc(uid).get().then(function(doc){
+      if(!doc.exists) return;
+      var pd = doc.data().prData;
+      if(pd && pd.avatar){
+        av.style.cssText += 'background-image:url('+pd.avatar+');background-size:cover;background-position:center;';
+        av.textContent = '';
+      }
+    }).catch(function(){});
+  });
+  if(overflow > 0){
+    var more = document.createElement('div');
+    more.style.cssText = 'width:24px;height:24px;border-radius:50%;background:var(--bg3);border:2px solid #fff;margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);';
+    more.textContent = '+'+overflow;
+    el.appendChild(more);
   }
 }
 
@@ -822,6 +961,7 @@ function buildDrawerPreset(el){
 
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
     (function(ch){
+      trackChallengeView(ch.id);
       var card = document.createElement('div');
       card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;';
       card.innerHTML =
@@ -844,6 +984,7 @@ function buildDrawerPreset(el){
           startDate:new Date().toISOString().slice(0,10), progress:0
         };
         saveChallenges(); fbSave();
+        trackChallengeParticipant(ch.id);
         closeChDrawer();
         toast(ch.title+' angenommen!');
       };
