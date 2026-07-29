@@ -185,6 +185,45 @@ function goPage(p){
   if(p==='parks'){initParksPage();}
 }
 
+// ── SWIPE NAVIGATION (TikTok-style: swipe down at top = next tab, swipe up at bottom = previous tab) ──
+(function(){
+  var NAV_ORDER = ['e','p','m','ch','pr','parks','rek'];
+  var startY = 0, startX = 0, startScrollTop = 0, swiping = false;
+
+  document.addEventListener('touchstart', function(e){
+    var pageEl = e.target.closest('.page.on');
+    if(!pageEl || e.touches.length !== 1){ swiping = false; return; }
+    swiping = true;
+    startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+    startScrollTop = window.scrollY || document.documentElement.scrollTop;
+  }, {passive:true});
+
+  document.addEventListener('touchend', function(e){
+    if(!swiping) return;
+    swiping = false;
+    var endY = e.changedTouches[0].clientY;
+    var endX = e.changedTouches[0].clientX;
+    var deltaY = endY - startY;
+    var deltaX = endX - startX;
+    if(Math.abs(deltaY) < 70 || Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+    var currentPage = document.querySelector('.page.on');
+    if(!currentPage) return;
+    var idx = NAV_ORDER.indexOf(currentPage.id.replace('page-',''));
+    if(idx === -1) return;
+
+    var atTop = startScrollTop <= 4;
+    var atBottom = (window.scrollY + window.innerHeight) >= (document.documentElement.scrollHeight - 4);
+
+    if(deltaY > 0 && atTop){
+      goPage(NAV_ORDER[(idx + 1) % NAV_ORDER.length]);
+    } else if(deltaY < 0 && atBottom){
+      goPage(NAV_ORDER[(idx - 1 + NAV_ORDER.length) % NAV_ORDER.length]);
+    }
+  }, {passive:true});
+})();
+
 // ── WORKOUT FLOW ──────────────────────────────────────────
 function startWorkout(planId){
   woActive = true;
