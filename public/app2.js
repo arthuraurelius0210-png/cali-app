@@ -126,9 +126,9 @@ function buildPlanList(){
 
   // PRESETS section
   // WOCHENPLAN section
-  h+='<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:inherit;font-weight:700;margin-bottom:8px;">WOCHENPLAN</div>';
+  h+='<div style="font-size:11px;color:var(--accent);font-family:inherit;font-weight:700;margin-bottom:8px;">Wochenplan</div>';
   h+='<div id="week-plan-section" style="margin-bottom:20px;"></div>';
-  h+='<div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:inherit;font-weight:700;margin-bottom:8px;">VORLAGEN</div>';
+  h+='<div style="font-size:11px;color:var(--accent);font-family:inherit;font-weight:700;margin-bottom:8px;">Vorlagen</div>';
   for(var pi=0;pi<PRESET_PLANS.length;pi++){
     var pl=PRESET_PLANS[pi];
     var alreadyAdded=false;
@@ -137,7 +137,7 @@ function buildPlanList(){
     h+='<div class="plan-top"><div class="plan-name" style="color:var(--muted)">'+pl.name+'</div>';
     h+='<div style="display:flex;align-items:center;gap:8px;">';
     h+='<div style="font-size:10px;color:var(--muted);">'+pl.exercises.length+' Übungen</div>';
-    h+='<div style="background:rgba(255,85,0,0.08);color:var(--accent);border-radius:20px;padding:2px 8px;font-family:inherit;font-size:9px;letter-spacing:1px;font-weight:700;">VORLAGE</div>';
+    h+='<div style="background:rgba(255,85,0,0.08);color:var(--accent);border-radius:20px;padding:2px 8px;font-family:inherit;font-size:10px;font-weight:700;">Vorlage</div>';
     h+='<div style="font-size:14px;color:var(--muted);">›</div></div></div>';
     // Exercises hidden by default
     h+='<div class="plan-ex-detail" style="display:none;margin-top:10px;">';
@@ -613,8 +613,8 @@ function showSkipModal(){
 
   var canDiamond = currency.diamonds >= 1;
   var btn = document.createElement('button');
-  btn.style.cssText = 'width:100%;background:'+(canDiamond?'rgba(56,189,248,0.1)':'var(--bg3)')+';border:1.5px solid '+(canDiamond?'#38BDF8':'var(--border)')+';border-radius:14px;padding:18px;cursor:'+(canDiamond?'pointer':'not-allowed')+';opacity:'+(canDiamond?'1':'0.4')+';font-family:inherit;font-size:15px;font-weight:800;color:'+(canDiamond?'#38BDF8':'var(--muted)')+';letter-spacing:2px;margin-bottom:10px;';
-  btn.textContent = '\uD83D\uDC8E 1 DIAMANT — SKIPPEN';
+  btn.style.cssText = 'width:100%;background:'+(canDiamond?'rgba(56,189,248,0.1)':'var(--bg3)')+';border:1.5px solid '+(canDiamond?'#38BDF8':'var(--border)')+';border-radius:14px;padding:18px;cursor:'+(canDiamond?'pointer':'not-allowed')+';opacity:'+(canDiamond?'1':'0.4')+';font-family:inherit;font-size:15px;font-weight:800;color:'+(canDiamond?'#38BDF8':'var(--muted)')+';margin-bottom:10px;';
+  btn.textContent = '\uD83D\uDC8E 1 Diamant — skippen';
   if(canDiamond) btn.onclick = function(){ modal.remove(); currency.diamonds -= 1; saveCurrency(); activeChallenge=null; saveChallenges(); buildChallengeUI(); toast('Challenge geskippt! -1 \uD83D\uDC8E'); };
 
   var cancel = document.createElement('button');
@@ -754,7 +754,7 @@ function buildTrendingChallenges(){
   db.collection('challengeStats').orderBy('views','desc').limit(3).get().then(function(snap){
     if(!el) return;
     if(snap.empty){
-      el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;font-size:12px;color:var(--muted);">Noch keine Trends — probiere Challenges aus, um sie hier zu sehen!</div>';
+      el.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center;font-size:12px;color:var(--muted);">Noch keine Trends — probiere Challenges aus, um sie hier zu sehen!</div>';
       return;
     }
     var docs = [];
@@ -919,8 +919,8 @@ function closeChDrawer(){
 // ── PERSONAL DRAWER ───────────────────────────────────────
 function buildDrawerPersonal(el){
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'font-size:9px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-bottom:16px;';
-  hdr.textContent = 'MEINE CHALLENGE';
+  hdr.style.cssText = 'font-size:11px;color:var(--accent);font-weight:700;margin-bottom:16px;';
+  hdr.textContent = 'Meine Challenge';
   el.appendChild(hdr);
 
   if(!activeChallenge){
@@ -928,8 +928,8 @@ function buildDrawerPersonal(el){
     hint.style.cssText = 'font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;text-align:center;padding:12px 0;';
     hint.textContent = 'Noch keine aktive Challenge.';
     var genBtn = document.createElement('button');
-    genBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;letter-spacing:2px;padding:16px;cursor:pointer;width:100%;margin-bottom:12px;';
-    genBtn.textContent = '\uD83C\uDFB2 CHALLENGE GENERIEREN';
+    genBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;width:100%;margin-bottom:12px;';
+    genBtn.textContent = '\uD83C\uDFB2 Challenge generieren';
     genBtn.onclick = function(){ generateChallenge(); closeChDrawer(); setTimeout(function(){ openChDrawer('personal'); }, 350); };
     el.appendChild(hint);
     el.appendChild(genBtn);
@@ -940,15 +940,15 @@ function buildDrawerPersonal(el){
     var done = pct >= 100;
 
     var card = document.createElement('div');
-    card.style.cssText = 'background:var(--bg2);border:1px solid '+(done?'var(--accent)':'var(--border)')+';border-radius:14px;padding:18px;margin-bottom:14px;';
+    card.style.cssText = 'background:var(--bg2);border:1px solid '+(done?'var(--accent)':'var(--border)')+';border-radius:16px;padding:18px;margin-bottom:14px;';
     card.innerHTML =
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'+
         '<div style="font-size:32px;">'+activeChallenge.icon+'</div>'+
         '<div style="flex:1;">'+
-          '<div style="font-size:17px;font-weight:800;letter-spacing:1px;color:var(--text);">'+activeChallenge.title+'</div>'+
+          '<div style="font-size:17px;font-weight:800;color:var(--text);">'+activeChallenge.title+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;">'+activeChallenge.desc+'</div>'+
         '</div>'+
-        '<div style="font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:20px;background:'+(done?'rgba(255,85,0,0.12)':'rgba(255,255,255,0.05)')+';color:'+(done?'var(--accent)':'#555')+';">'+(done?'GESCHAFFT!':'AKTIV')+'</div>'+
+        '<div style="font-size:10px;padding:3px 10px;border-radius:20px;background:'+(done?'rgba(255,85,0,0.12)':'rgba(255,255,255,0.05)')+';color:'+(done?'var(--accent)':'#555')+';">'+(done?'Geschafft!':'Aktiv')+'</div>'+
       '</div>'+
       '<div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:6px;">'+
         '<div style="height:100%;border-radius:20px;background:'+(done?'var(--accent)':'rgba(255,85,0,0.6)')+';width:'+pct+'%;transition:width 0.5s;"></div>'+
@@ -959,8 +959,8 @@ function buildDrawerPersonal(el){
     el.appendChild(card);
 
     var newBtn = document.createElement('button');
-    newBtn.style.cssText = 'background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;letter-spacing:2px;padding:12px;cursor:pointer;width:100%;margin-bottom:8px;';
-    newBtn.textContent = 'NEUE CHALLENGE GENERIEREN';
+    newBtn.style.cssText = 'background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;padding:12px;cursor:pointer;width:100%;margin-bottom:8px;';
+    newBtn.textContent = 'Neue Challenge generieren';
     newBtn.onclick = function(){ activeChallenge=null; saveChallenges(); generateChallenge(); closeChDrawer(); setTimeout(function(){ openChDrawer('personal'); }, 350); };
     el.appendChild(newBtn);
 
@@ -975,8 +975,8 @@ function buildDrawerPersonal(el){
 // ── PRESET DRAWER ─────────────────────────────────────────
 function buildDrawerPreset(el){
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'font-size:9px;letter-spacing:3px;color:#38BDF8;font-weight:700;margin-bottom:16px;';
-  hdr.textContent = 'VOREINGESTELLTE CHALLENGES';
+  hdr.style.cssText = 'font-size:11px;color:#38BDF8;font-weight:700;margin-bottom:16px;';
+  hdr.textContent = 'Voreingestellte Challenges';
   el.appendChild(hdr);
 
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
@@ -988,14 +988,14 @@ function buildDrawerPreset(el){
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
           '<span style="font-size:22px;">'+ch.icon+'</span>'+
           '<div style="flex:1;">'+
-            '<div style="font-size:14px;font-weight:700;letter-spacing:1px;color:var(--text);">'+ch.title+'</div>'+
+            '<div style="font-size:14px;font-weight:700;color:var(--text);">'+ch.title+'</div>'+
             '<div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;">'+ch.desc+'</div>'+
           '</div>'+
         '</div>'+
         '<div style="font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;line-height:1.5;font-style:italic;">'+ch.explanation+'</div>';
       var btn = document.createElement('button');
-      btn.style.cssText = 'background:rgba(56,189,248,0.08);color:#38BDF8;border:1px solid rgba(56,189,248,0.3);border-radius:8px;font-family:inherit;font-size:12px;letter-spacing:2px;padding:10px;cursor:pointer;width:100%;margin-top:10px;';
-      btn.textContent = 'ANNEHMEN';
+      btn.style.cssText = 'background:rgba(56,189,248,0.08);color:#38BDF8;border:1px solid rgba(56,189,248,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;width:100%;margin-top:10px;';
+      btn.textContent = 'Annehmen';
       btn.onclick = function(){
         activeChallenge = {
           id:ch.id, title:ch.title, desc:ch.desc,
@@ -1047,14 +1047,14 @@ function buildWeekPlan(){
 
   // Kompakter Button der die Tagesansicht öffnet
   var previewBtn = document.createElement('div');
-  previewBtn.style.cssText = 'background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:12px;';
+  previewBtn.style.cssText = 'background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:12px;';
   previewBtn.onclick = function(){ openDayListModal(todayIdx); };
 
   // Zeige Heute als Preview
   var todayPlans = wp[todayIdx] || [];
   var previewLeft = document.createElement('div');
   previewLeft.innerHTML =
-    '<div style="font-size:10px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-bottom:6px;">HEUTE — '+WEEK_DAYS_FULL[todayIdx].toUpperCase()+'</div>'+
+    '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;">Heute — '+WEEK_DAYS_FULL[todayIdx]+'</div>'+
     (todayPlans.length===0
       ? '<div style="font-size:13px;color:var(--muted);">😴 Ruhetag</div>'
       : todayPlans.slice(0,2).map(function(id){
@@ -1176,7 +1176,7 @@ function renderDayList(scroll, focusIdx){
 
   // Stats bar
   var statsBar = document.createElement('div');
-  statsBar.style.cssText = 'display:flex;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;flex-wrap:wrap;';
+  statsBar.style.cssText = 'display:flex;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;flex-wrap:wrap;';
   [
     {icon:'💪', val:stats.workouts, label:'Workouts'},
     {icon:'😴', val:stats.restDays, label:'Ruhetage'},
@@ -1198,7 +1198,7 @@ function renderDayList(scroll, focusIdx){
     if(hasWorkout && !firstPlan) hasWorkout = false;
 
     var dayBlock = document.createElement('div');
-    dayBlock.style.cssText = 'margin-bottom:8px;border-radius:14px;overflow:hidden;background:var(--bg2);'+(isToday?'border:1.5px solid var(--accent);':'border:1px solid var(--border);');
+    dayBlock.style.cssText = 'margin-bottom:8px;border-radius:16px;overflow:hidden;background:var(--bg2);'+(isToday?'border:1.5px solid var(--accent);':'border:1px solid var(--border);');
 
     var expanded = i === focusIdx;
 
@@ -1448,8 +1448,8 @@ function openDayEditor(dayIdx, calScroll){
 
     // Add plan dropdown
     var addLabel = document.createElement('div');
-    addLabel.style.cssText = 'font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:8px;margin-top:4px;';
-    addLabel.textContent = 'PLAN HINZUFÜGEN';
+    addLabel.style.cssText = 'font-size:11px;color:var(--muted);font-weight:700;margin-bottom:8px;margin-top:4px;';
+    addLabel.textContent = 'Plan hinzufügen';
     box.appendChild(addLabel);
 
     var sel = document.createElement('select');

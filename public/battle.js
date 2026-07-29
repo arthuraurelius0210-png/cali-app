@@ -152,7 +152,7 @@ function buildBattleCard(battleId, d, status, myUid){
   var statusLabels = {pending:'Offen', active:'Läuft', completed:'Beendet', declined:'Abgelehnt'};
   var statusColor = statusColors[status]||'#999';
 
-  card.style.cssText = 'background:var(--bg2);border-radius:14px;padding:14px;border:1.5px solid var(--border);';
+  card.style.cssText = 'background:var(--bg2);border-radius:16px;padding:14px;border:1.5px solid var(--border);';
   card.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
       '<div style="display:flex;align-items:center;gap:10px;">'+
@@ -552,7 +552,7 @@ function openActiveBattle(battleId, d, myUid){
 
   // Scoreboard
   var scoreEl = document.createElement('div');
-  scoreEl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:14px;padding:16px;margin-bottom:16px;';
+  scoreEl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:16px;padding:16px;margin-bottom:16px;';
   var myScore = 0, oppScore = 0;
   (d.rounds||[]).forEach(function(r){
     if(r.winner === myUid) myScore++;
@@ -722,7 +722,7 @@ function buildConfirmUI(content, battleId, d, roundIdx, myUid, opponentName, rou
   confirmSection.appendChild(label);
 
   var resultCard = document.createElement('div');
-  resultCard.style.cssText = 'background:var(--bg2);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;';
+  resultCard.style.cssText = 'background:var(--bg2);border-radius:16px;padding:16px;margin-bottom:14px;text-align:center;';
   resultCard.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">'+opponentName+' behauptet:</div>'+
     '<div style="font-family:inherit;font-weight:800;font-size:38px;color:var(--accent);line-height:1;">'+roundData.value+'</div>'+
     '<div style="font-size:12px;color:var(--muted);">'+(d.roundOrder&&d.roundOrder[roundIdx]&&d.roundOrder[roundIdx].exercise&&d.roundOrder[roundIdx].exercise.unit||'Wdh')+'</div>';
@@ -879,7 +879,7 @@ function loadParkKings(el){
       var d = doc.data();
       var isMe = firebase.auth().currentUser && d.uid===firebase.auth().currentUser.uid;
       var card = document.createElement('div');
-      card.style.cssText = 'background:'+(isMe?'rgba(255,85,0,0.08)':'var(--bg2)')+';border-radius:14px;padding:14px;margin-bottom:10px;border:1.5px solid '+(isMe?'var(--accent)':'var(--border)')+';display:flex;align-items:center;gap:12px;';
+      card.style.cssText = 'background:'+(isMe?'rgba(255,85,0,0.08)':'var(--bg2)')+';border-radius:16px;padding:14px;margin-bottom:10px;border:1.5px solid '+(isMe?'var(--accent)':'var(--border)')+';display:flex;align-items:center;gap:12px;';
       card.innerHTML =
         '<div style="font-size:28px;">&#128081;</div>'+
         '<div style="flex:1;">'+

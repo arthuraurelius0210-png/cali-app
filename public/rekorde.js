@@ -55,7 +55,7 @@ function buildRekordeUI(){
 
   // ── FILTER (Accordion — eingeklappt zeigt nur eine Zusammenfassung) ──
   var filterWrap = document.createElement('div');
-  filterWrap.style.cssText = 'margin:0 16px 14px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg2);';
+  filterWrap.style.cssText = 'margin:0 16px 14px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--bg2);';
 
   var summaryBtn = document.createElement('button');
   summaryBtn.style.cssText = 'width:100%;display:flex;align-items:center;gap:8px;padding:13px 14px;background:none;border:none;cursor:pointer;text-align:left;';
@@ -782,7 +782,7 @@ function renderParksOverview(el, parks, filter){
   top3.forEach(function(p, i){
     var medals = ['&#129351;','&#129352;','&#129353;'];
     var card = document.createElement('div');
-    card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;margin-bottom:10px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;';
+    card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;margin-bottom:10px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;';
     card.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
     card.onmouseout=function(){ this.style.borderColor='var(--border)'; };
     var sub = filter==='top' ? Object.keys(p.users||{}).length+' Athleten' : p.count+' Einträge';
@@ -886,7 +886,7 @@ function loadMyParksOverview(el){
       top3.forEach(function(p, i){
         var medals = ['&#129351;','&#129352;','&#129353;'];
         var card = document.createElement('div');
-        card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;margin-bottom:10px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;';
+        card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;margin-bottom:10px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;';
         card.onmouseover=function(){ this.style.borderColor='var(--accent)'; };
         card.onmouseout=function(){ this.style.borderColor='var(--border)'; };
         var topEx = Object.keys(p.exercises).sort(function(a,b){ return p.exercises[b]-p.exercises[a]; })[0] || '';

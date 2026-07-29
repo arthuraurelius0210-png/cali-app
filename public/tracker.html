@@ -132,7 +132,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 
 /* ── PLAN CARDS ── */
 .plan-btn{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px 16px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;margin-bottom:6px;}
-.plan-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;}
+.plan-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:8px;}
 .plan-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .plan-name{font-size:15px;font-weight:700;color:var(--text);}
 .plan-excount{font-size:10px;color:var(--muted);}
@@ -201,7 +201,7 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 
 /* ── CHART ── */
 canvas{max-width:100%;}
-.cc{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;}
 .ct{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .cl{font-size:12px;font-weight:700;color:var(--muted);}
 .cs{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-family:inherit;font-size:12px;outline:none;}
@@ -220,10 +220,10 @@ canvas{max-width:100%;}
 .edel{background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;align-self:flex-end;}
 
 /* ── CHALLENGE ── */
-.ch-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;}
+.ch-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:8px;}
 
 /* ── HR ── */
-.uz{background:var(--bg2);border:2px dashed var(--border2);border-radius:14px;padding:28px;text-align:center;cursor:pointer;margin-bottom:12px;}
+.uz{background:var(--bg2);border:2px dashed var(--border2);border-radius:16px;padding:28px;text-align:center;cursor:pointer;margin-bottom:12px;}
 .ui{font-size:36px;margin-bottom:8px;}
 .ut{font-size:13px;color:var(--muted);line-height:1.6;}
 .hg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
@@ -234,7 +234,7 @@ canvas{max-width:100%;}
 .hdel{background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;}
 
 /* ── WORKOUT HISTORY ── */
-.wh-item{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;}
+.wh-item{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:8px;}
 .wh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .wh-date{font-size:14px;font-weight:800;color:var(--accent);}
 .wh-dur{font-size:12px;color:var(--muted);}
@@ -281,7 +281,7 @@ canvas{max-width:100%;}
 <!-- LOADING SCREEN -->
 <div id="loading-screen" style="display:none;visibility:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;">
   <div style="font-family:inherit;font-size:52px;letter-spacing:6px;color:var(--accent);">CALI</div>
-  <div style="font-size:12px;color:var(--muted2);margin-top:8px;letter-spacing:3px;font-family:inherit;">LADEN...</div>
+  <div style="font-size:13px;color:var(--muted2);margin-top:8px;font-family:inherit;">Lädt...</div>
 </div>
 
 <!-- LOGIN SCREEN -->
@@ -362,9 +362,9 @@ canvas{max-width:100%;}
         <button class="hero-card-cta" onclick="startWorkout(null)">&#9654; Jetzt starten</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-        <button class="action-tile" onclick="showEmomSetup(true)"><span>&#x23F1;</span>EMOM</button>
-        <button class="action-tile" onclick="goPage('p')"><span>&#9776;</span>Pläne</button>
-        <button class="action-tile" onclick="goPage('ch')"><span>&#9670;</span>Challenges</button>
+        <button class="action-tile" onclick="showEmomSetup(true)"><span><svg width="16" height="16" viewBox="0 0 24 24"><rect x="9" y="1" width="6" height="2.5" rx="1.25" fill="var(--accent)"/><circle cx="12" cy="14" r="9" fill="var(--accent)"/><rect x="11" y="8" width="2" height="7" rx="1" fill="#fff"/><rect x="12" y="13" width="6" height="2" rx="1" fill="#fff"/></svg></span>EMOM</button>
+        <button class="action-tile" onclick="goPage('p')"><span><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="4" fill="var(--accent)"/><rect x="6.5" y="8" width="11" height="2" rx="1" fill="#fff"/><rect x="6.5" y="12" width="11" height="2" rx="1" fill="#fff"/><rect x="6.5" y="16" width="7" height="2" rx="1" fill="#fff"/></svg></span>Pläne</button>
+        <button class="action-tile" onclick="goPage('ch')"><span><svg width="16" height="16" viewBox="0 0 24 24"><path d="M8 3h8v5a4 4 0 01-8 0V3z" fill="var(--accent)"/><rect x="11" y="11" width="2" height="4" fill="var(--accent)"/><rect x="8" y="18" width="8" height="2" rx="1" fill="var(--accent)"/><rect x="9" y="15" width="6" height="2" fill="var(--accent)"/></svg></span>Challenges</button>
       </div>
     </div>
   </div>
@@ -403,7 +403,7 @@ canvas{max-width:100%;}
   <!-- EMOM ACTIVE SCREEN -->
   <div id="emom-active" style="display:none;padding:16px;">
     <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-family:inherit;font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:8px;">EMOM RUNDE</div>
+      <div style="font-family:inherit;font-size:12px;color:var(--muted);margin-bottom:8px;">Emom-Runde</div>
       <div id="emom-round-display" style="font-family:inherit;font-size:36px;color:var(--accent);line-height:1;">MIN 1 / 10</div>
       <div id="emom-ex-display" style="font-size:16px;color:var(--text);margin-top:8px;font-weight:500;"></div>
     </div>
@@ -413,7 +413,7 @@ canvas{max-width:100%;}
         <div id="emom-timer-display" style="font-family:inherit;font-size:96px;color:var(--accent);line-height:1;letter-spacing:4px;">60</div>
         <button onclick="emomAdjustTime(5)" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:18px;font-weight:700;padding:10px 16px;cursor:pointer;">+5</button>
       </div>
-      <div style="font-size:11px;letter-spacing:3px;color:var(--muted);font-family:inherit;margin-top:4px;">SEKUNDEN</div>
+      <div style="font-size:12px;color:var(--muted);font-family:inherit;margin-top:4px;">Sekunden</div>
     </div>
     <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:24px;">
       <div id="emom-progress-bar" style="height:100%;background:var(--accent);width:100%;transition:width 1s linear;border-radius:20px;"></div>

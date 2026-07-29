@@ -262,7 +262,7 @@ function showCommPostModal(){
   }
 
   function renderExCard(ex, idx, exList){
-    var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;';
+    var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;';
     var hRow=document.createElement('div'); hRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
     var ht=document.createElement('div'); ht.className='stitle'; ht.style.cssText='color:var(--accent);margin:0;'; ht.textContent='ÜBUNG '+(idx+1);
     var delBtn=document.createElement('button'); delBtn.style.cssText='background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;'; delBtn.textContent='\u00D7 ENTFERNEN';
@@ -440,7 +440,7 @@ function loadCommFeed(){
 
 function buildCommCard(docId, data){
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;';
+  card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;';
   card.onclick = function(){ trackChallengeView('comm_'+docId); };
 
   // Header row
