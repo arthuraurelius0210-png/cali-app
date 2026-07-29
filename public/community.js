@@ -407,6 +407,10 @@ function showCommPostModal(){
 
 
 // ── LOAD & RENDER FEED ────────────────────────────────────
+var commAllDocs = [];
+var commFilterMode = 'newest';
+var commSearchQuery = '';
+
 function loadCommFeed(){
   var feedEl = document.getElementById('comm-feed');
   if(!feedEl) return;
@@ -414,24 +418,24 @@ function loadCommFeed(){
   feedEl.innerHTML = '<div style="text-align:center;padding:20px 0;font-size:12px;color:var(--muted);">Wird geladen...</div>';
 
   if(!currentUser){
-    feedEl.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;font-size:12px;color:var(--muted);">Einloggen um Community Challenges zu sehen.</div>';
+    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:16px;text-align:center;font-size:12px;color:var(--muted);">Einloggen um Community Challenges zu sehen.</div>';
     return;
   }
 
-  db.collection('communityChallenges')
-    .orderBy('createdAt', 'desc')
-    .limit(20)
-    .get()
+  var query = (commFilterMode === 'mine')
+    ? db.collection('communityChallenges').where('uid', '==', currentUser.uid).limit(50)
+    : db.collection('communityChallenges').orderBy('createdAt', 'desc').limit(50);
+
+  query.get()
     .then(function(snap){
-      feedEl.innerHTML = '';
-      if(snap.empty){
-        feedEl.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:22px;margin-bottom:8px;">\uD83C\uDFC6</div><div style="font-size:12px;color:var(--muted);">Noch keine Community Challenges. Sei der Erste!</div></div>';
-        return;
+      commAllDocs = [];
+      snap.forEach(function(doc){ commAllDocs.push({id: doc.id, data: doc.data()}); });
+      if(commFilterMode === 'mine'){
+        commAllDocs.sort(function(a,b){ return (b.data.createdAt||0) - (a.data.createdAt||0); });
+      } else if(commFilterMode === 'popular'){
+        commAllDocs.sort(function(a,b){ return ((b.data.likes||[]).length) - ((a.data.likes||[]).length); });
       }
-      snap.forEach(function(doc){
-        var data = doc.data();
-        feedEl.appendChild(buildCommCard(doc.id, data));
-      });
+      renderCommFeed();
     })
     .catch(function(e){
       feedEl.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px 0;">Fehler beim Laden.</div>';
@@ -439,22 +443,63 @@ function loadCommFeed(){
     });
 }
 
+function renderCommFeed(){
+  var feedEl = document.getElementById('comm-feed');
+  if(!feedEl) return;
+  var q = commSearchQuery.trim().toLowerCase();
+  var filtered = commAllDocs.filter(function(d){
+    if(!q) return true;
+    var hay = ((d.data.title||'') + ' ' + (d.data.desc||'')).toLowerCase();
+    return hay.indexOf(q) > -1;
+  });
+  feedEl.innerHTML = '';
+  if(!filtered.length){
+    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:20px;text-align:center;"><div style="font-size:22px;margin-bottom:8px;">\uD83C\uDFC6</div><div style="font-size:12px;color:var(--muted);">'+(q ? 'Keine Treffer.' : (commFilterMode==='mine' ? 'Du hast noch keine Challenge gepostet.' : 'Noch keine Community Challenges. Sei der Erste!'))+'</div></div>';
+    return;
+  }
+  filtered.forEach(function(entry){ feedEl.appendChild(buildCommCard(entry.id, entry.data)); });
+}
+
+var COMM_PHOTOS = ['/challenge-pullup.jpg', '/challenge-dip.jpg', '/challenge-handstand.jpg'];
+function commPhotoFor(docId){
+  var sum = 0;
+  for(var i=0;i<docId.length;i++){ sum += docId.charCodeAt(i); }
+  return COMM_PHOTOS[sum % COMM_PHOTOS.length];
+}
+
 function buildCommCard(docId, data){
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:16px;margin-bottom:10px;';
+  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:16px;margin-bottom:10px;overflow:hidden;';
   card.onclick = function(){ trackChallengeView('comm_'+docId); };
 
   // Header row
   var hdRow = document.createElement('div');
-  hdRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;';
+  hdRow.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;';
+
+  var avatarEl = document.createElement('div');
+  avatarEl.style.cssText = 'width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;';
+  avatarEl.innerHTML = '&#128170;';
+  if(data.uid){
+    db.collection('users').doc(data.uid).get().then(function(doc){
+      if(!doc.exists) return;
+      var pd = doc.data().prData;
+      if(pd && pd.avatar){
+        avatarEl.style.backgroundImage = 'url(' + pd.avatar + ')';
+        avatarEl.style.backgroundSize = 'cover';
+        avatarEl.style.backgroundPosition = 'center';
+        avatarEl.innerHTML = '';
+      }
+    }).catch(function(){});
+  }
 
   var left = document.createElement('div');
+  left.style.cssText = 'flex:1;min-width:0;';
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'font-size:15px;font-weight:800;color:var(--text);line-height:1.3;';
   titleEl.textContent = data.title;
 
   var meta = document.createElement('div');
-  meta.style.cssText = 'font-size:16px;color:var(--muted);margin-top:3px;';
+  meta.style.cssText = 'font-size:11px;color:var(--muted);margin-top:3px;';
   var dateStr = data.createdAt ? new Date(data.createdAt).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) : '';
   meta.textContent = (data.authorName || 'Athlet') + ' \u00B7 ' + dateStr;
 
@@ -463,11 +508,30 @@ function buildCommCard(docId, data){
 
   // Difficulty stars
   var stars = document.createElement('div');
-  stars.style.cssText = 'font-size:12px;color:var(--accent);flex-shrink:0;margin-left:8px;';
+  stars.style.cssText = 'font-size:12px;color:var(--accent);flex-shrink:0;';
   stars.textContent = '\u2605'.repeat(data.difficulty || 3) + '\u2606'.repeat(5-(data.difficulty||3));
 
+  hdRow.appendChild(avatarEl);
   hdRow.appendChild(left);
   hdRow.appendChild(stars);
+
+  // Delete menu \u2014 only for the post's own author
+  if(currentUser && data.uid === currentUser.uid){
+    var moreBtn = document.createElement('button');
+    moreBtn.setAttribute('aria-label', 'Optionen');
+    moreBtn.style.cssText = 'background:none;border:none;color:var(--muted);font-size:16px;font-weight:800;cursor:pointer;padding:0 4px;flex-shrink:0;';
+    moreBtn.textContent = '\u22ef';
+    moreBtn.onclick = function(e){
+      e.stopPropagation();
+      if(confirm('Diese Challenge wirklich l\u00f6schen?')){
+        db.collection('communityChallenges').doc(docId).delete().then(function(){
+          toast('Challenge gel\u00f6scht');
+          loadCommFeed();
+        }).catch(function(){ toast('Fehler beim L\u00f6schen.'); });
+      }
+    };
+    hdRow.appendChild(moreBtn);
+  }
   card.appendChild(hdRow);
 
   // Description
@@ -478,26 +542,36 @@ function buildCommCard(docId, data){
     card.appendChild(descEl);
   }
 
+  // Exercises tags
+  if(data.exercises && data.exercises.length){
+    var exNames = data.exercises.map(function(e){ return (typeof e === 'string') ? e : e.name; }).filter(Boolean);
+    if(exNames.length){
+      var tagRow = document.createElement('div');
+      tagRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;';
+      exNames.forEach(function(name){
+        var exTag = document.createElement('div');
+        exTag.style.cssText = 'background:var(--bg3);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);';
+        exTag.innerHTML = '&#128170; ' + name;
+        tagRow.appendChild(exTag);
+      });
+      card.appendChild(tagRow);
+    }
+  }
+
+  // Photo
+  var photoEl = document.createElement('div');
+  photoEl.style.cssText = 'height:160px;border-radius:10px;background:#000 url(' + commPhotoFor(docId) + ') center/cover no-repeat;margin-bottom:10px;';
+  card.appendChild(photoEl);
+
   // Video link
   if(data.videoUrl){
     var vRow = document.createElement('a');
     vRow.href = data.videoUrl; vRow.target = '_blank';
     vRow.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-decoration:none;';
-    var vIco = document.createElement('span'); vIco.style.cssText='font-size:16px;flex-shrink:0;'; vIco.textContent='\uD83C\uDFA5';
+    var vIco = document.createElement('span'); vIco.style.cssText='font-size:16px;flex-shrink:0;'; vIco.innerHTML='&#127909;';
     var vTxt = document.createElement('span'); vTxt.style.cssText='font-size:11px;color:var(--accent);font-weight:700;'; vTxt.textContent='ERKLÄR-VIDEO ANSEHEN';
     vRow.appendChild(vIco); vRow.appendChild(vTxt);
     card.appendChild(vRow);
-  }
-
-  // Exercises tag
-  if(data.exercises && data.exercises.length){
-    var exNames = data.exercises.map(function(e){ return (typeof e === 'string') ? e : e.name; }).filter(Boolean);
-    if(exNames.length){
-      var exTag = document.createElement('div');
-      exTag.style.cssText = 'display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);margin-bottom:10px;';
-      exTag.textContent = '\uD83D\uDCAA ' + exNames.join(', ');
-      card.appendChild(exTag);
-    }
   }
 
   // Action row: like, try, comment

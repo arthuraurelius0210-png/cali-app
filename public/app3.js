@@ -1,35 +1,93 @@
 // ── COMMUNITY PAGE (full screen) ──────────────────────────
 function openCommunityPage(){
   var ex = document.getElementById('comm-page-ov'); if(ex) ex.remove();
+  commFilterMode = 'newest';
+  commSearchQuery = '';
   var ov = document.createElement('div');
   ov.id = 'comm-page-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  topBar.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
   backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
   backBtn.innerHTML = '← Zurück';
   backBtn.onclick = function(){ ov.remove(); buildChCards(); };
+  var titleWrap = document.createElement('div');
+  titleWrap.style.cssText = 'flex:1;min-width:0;';
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  titleEl.textContent = '🌟 Community Challenges';
+  titleEl.style.cssText = 'font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+  titleEl.textContent = '🌟 Community Challenge';
+  var subtitleEl = document.createElement('div');
+  subtitleEl.style.cssText = 'font-size:11px;color:var(--muted);margin-top:1px;';
+  subtitleEl.textContent = 'Trainiere. Teile. Wachse.';
+  titleWrap.appendChild(titleEl); titleWrap.appendChild(subtitleEl);
   var postBtn = document.createElement('button');
-  postBtn.style.cssText = 'background:#4ECDC4;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;white-space:nowrap;';
+  postBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;white-space:nowrap;';
   postBtn.textContent = '+ Posten';
   postBtn.onclick = function(){ showCommPostModal(); };
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(postBtn);
+  topBar.appendChild(backBtn); topBar.appendChild(titleWrap); topBar.appendChild(postBtn);
   ov.appendChild(topBar);
+
+  // Filter tabs
+  var filterBar = document.createElement('div');
+  filterBar.style.cssText = 'display:flex;gap:8px;padding:12px 16px 0;flex-shrink:0;overflow-x:auto;';
+  var filterTabs = [
+    {id:'newest', label:'Neueste'},
+    {id:'popular', label:'Beliebt'},
+    {id:'mine', label:'Meine Beiträge'}
+  ];
+  filterTabs.forEach(function(t){
+    var tabBtn = document.createElement('button');
+    tabBtn.dataset.filterId = t.id;
+    tabBtn.textContent = t.label;
+    tabBtn.onclick = function(){ commFilterMode = t.id; renderFilterTabs(filterBar); loadCommFeed(); };
+    filterBar.appendChild(tabBtn);
+  });
+  ov.appendChild(filterBar);
+  renderFilterTabs(filterBar);
+
+  // Search
+  var searchRow = document.createElement('div');
+  searchRow.style.cssText = 'padding:10px 16px 4px;flex-shrink:0;';
+  var searchInp = document.createElement('input');
+  searchInp.type = 'text';
+  searchInp.placeholder = 'Beiträge durchsuchen…';
+  searchInp.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
+  searchInp.oninput = function(){ commSearchQuery = this.value; renderCommFeed(); };
+  searchRow.appendChild(searchInp);
+  ov.appendChild(searchRow);
 
   var scroll = document.createElement('div');
   scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
   var feedEl = document.createElement('div');
   feedEl.id = 'comm-feed';
   scroll.appendChild(feedEl);
+
+  // Bottom CTA
+  var ctaBanner = document.createElement('div');
+  ctaBanner.style.cssText = 'background:rgba(255,85,0,0.06);border-radius:16px;padding:18px;margin-top:8px;display:flex;align-items:center;gap:14px;';
+  ctaBanner.innerHTML =
+    '<div style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>'+
+    '<div style="flex:1;"><div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">Teile deine Challenge</div><div style="font-size:11px;color:var(--muted);line-height:1.4;">Zeige der Community deine Fortschritte, stelle dich neuen Herausforderungen und motiviere andere!</div></div>';
+  var ctaBtn = document.createElement('button');
+  ctaBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 14px;cursor:pointer;flex-shrink:0;white-space:nowrap;';
+  ctaBtn.textContent = '+ Neuen Beitrag';
+  ctaBtn.onclick = function(){ showCommPostModal(); };
+  ctaBanner.appendChild(ctaBtn);
+  scroll.appendChild(ctaBanner);
+
   ov.appendChild(scroll);
   document.body.appendChild(ov);
 
   loadCommFeed();
+}
+
+function renderFilterTabs(filterBar){
+  Array.from(filterBar.children).forEach(function(btn){
+    var active = btn.dataset.filterId === commFilterMode;
+    btn.style.cssText = 'flex-shrink:0;background:'+(active?'var(--accent)':'var(--bg2)')+';color:'+(active?'#fff':'var(--muted)')+';border:1px solid '+(active?'var(--accent)':'var(--border)')+';border-radius:20px;font-family:inherit;font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;white-space:nowrap;';
+  });
 }
 
 function buildStartChallengeWidget(){
