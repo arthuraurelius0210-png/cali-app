@@ -87,7 +87,7 @@ function buildStartChallengeWidget(){
 // ---- PRESET CHALLENGES ----
 var PRESET_CHALLENGES = [
   {
-    id:'p1', icon:'💯', title:'100 Klimmzuge Challenge',
+    id:'p1', icon:'💯', title:'100 Klimmzuge Challenge', image:'/challenge-pullup.jpg',
     desc:'Schaffe 100 Klimmzuge in einer einzigen Einheit. Pause erlaubt, aber kein Verlassen der Stange fur mehr als 3 Minuten.',
     explanation:'Verteile die 100 Wdh auf so viele Satze wie du brauchst. Ziel: maximale Gesamtmenge. Starte mit deinen starksten Satzen.',
     target:100, metric:'session_total', exName:'Klimmzuge'
@@ -105,7 +105,7 @@ var PRESET_CHALLENGES = [
     target:100, metric:'session_total', exName:'Klimmzuge'
   },
   {
-    id:'p4', icon:'🏋?', title:'Weighted Dips 5x5',
+    id:'p4', icon:'🏋?', title:'Weighted Dips 5x5', image:'/challenge-dip.jpg',
     desc:'5 Satze je 5 Dips mit Gewichtsgurtel. Steigere das Gewicht jeden Satz.',
     explanation:'Klassisches Kraftprotokoll. Fange leicht an (z.B. 5kg) und steigere um 2-5kg pro Satz. Volle ROM!',
     target:25, metric:'session_total', exName:'Dips'

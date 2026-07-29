@@ -770,14 +770,17 @@ function renderTrendingCard(container, id, stats){
   var meta = null;
   var iconBg = 'linear-gradient(135deg, var(--accent), #FF6B35)';
   var isCommunity = id.indexOf('comm_') === 0;
+  var photoUrl = null;
   if(isCommunity){
     iconBg = 'linear-gradient(135deg, #4ECDC4, #38BDF8)';
+    photoUrl = '/challenge-handstand.jpg';
   } else {
     for(var i=0;i<PRESET_CHALLENGES.length;i++){
       if(PRESET_CHALLENGES[i].id === id){ meta = PRESET_CHALLENGES[i]; break; }
     }
     if(!meta) return; // stats doc without resolvable metadata — skip silently
     iconBg = 'linear-gradient(135deg, #38BDF8, var(--accent))';
+    photoUrl = meta.image || null;
   }
 
   var participantUids = stats.participantUids || [];
@@ -787,10 +790,12 @@ function renderTrendingCard(container, id, stats){
   card.style.cssText = 'background:#fff;border-radius:16px;overflow:hidden;flex:0 0 62%;min-width:190px;max-width:220px;box-shadow:0 2px 12px rgba(0,0,0,0.06);';
 
   var header = document.createElement('div');
-  header.style.cssText = 'background:'+iconBg+';padding:20px;position:relative;';
+  header.style.cssText = photoUrl
+    ? 'height:130px;background:#000 url('+photoUrl+') center/cover no-repeat;position:relative;'
+    : 'background:'+iconBg+';padding:20px;position:relative;';
   header.innerHTML =
     '<div style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,0.9);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:800;color:var(--text);">🔥 '+views+'</div>'+
-    '<div style="font-size:40px;text-align:center;">'+(isCommunity ? '🌟' : (meta.icon||'🏆'))+'</div>';
+    (photoUrl ? '' : '<div style="font-size:40px;text-align:center;">'+(isCommunity ? '🌟' : (meta.icon||'🏆'))+'</div>');
   card.appendChild(header);
 
   var body = document.createElement('div');
