@@ -700,12 +700,28 @@ function buildChCardCommunity(){
   el.innerHTML =
     '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">0 Challenges</div>'+
     '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">Von Athleten erstellt & bewertet</div>'+
+    '<div id="ch-community-creators" style="display:flex;align-items:center;margin-bottom:10px;min-height:24px;"></div>'+
     '<button onclick="event.stopPropagation();closeChDrawer();setTimeout(showCommPostModal,50);" style="background:none;border:1px solid rgba(78,205,196,0.4);color:#4ECDC4;border-radius:20px;font-family:inherit;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;">+ Posten</button>';
   if(currentUser){
     db.collection('communityChallenges').get().then(function(snap){
-      if(el){
-        var titleEl = el.querySelector('div');
-        if(titleEl) titleEl.textContent = snap.size + ' Challenges';
+      if(!el) return;
+      var titleEl = el.querySelector('div');
+      if(titleEl) titleEl.textContent = snap.size + ' Challenges';
+
+      // Top-4 Ersteller nach Gesamt-Likes ihrer Challenges
+      var likesByUid = {};
+      snap.forEach(function(doc){
+        var d = doc.data();
+        if(!d.uid) return;
+        likesByUid[d.uid] = (likesByUid[d.uid]||0) + (d.likes||[]).length;
+      });
+      var authors = Object.keys(likesByUid).map(function(uid){ return {uid:uid, likes:likesByUid[uid]}; });
+      authors.sort(function(a,b){ return b.likes - a.likes; });
+      var top = authors.slice(0,4);
+      var overflow = authors.length - top.length;
+      var stackEl = document.getElementById('ch-community-creators');
+      if(stackEl && top.length){
+        renderAvatarStack(stackEl, top.map(function(a){return a.uid;}), 4, overflow);
       }
     }).catch(function(){});
   }
@@ -816,9 +832,10 @@ function renderTrendingCard(container, id, stats){
   }
 }
 
-function renderAvatarStack(el, uids){
-  var shown = uids.slice(0,3);
-  var overflow = uids.length - shown.length;
+function renderAvatarStack(el, uids, maxShown, overflowOverride){
+  maxShown = maxShown || 3;
+  var shown = uids.slice(0,maxShown);
+  var overflow = (typeof overflowOverride === 'number') ? overflowOverride : (uids.length - shown.length);
   el.innerHTML = '';
   shown.forEach(function(uid, i){
     var av = document.createElement('div');
@@ -961,9 +978,9 @@ function buildDrawerPreset(el){
 
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
     (function(ch){
-      trackChallengeView(ch.id);
       var card = document.createElement('div');
       card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;';
+      card.onclick = function(){ trackChallengeView(ch.id); };
       card.innerHTML =
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
           '<span style="font-size:22px;">'+ch.icon+'</span>'+

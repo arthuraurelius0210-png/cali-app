@@ -439,9 +439,9 @@ function loadCommFeed(){
 }
 
 function buildCommCard(docId, data){
-  trackChallengeView('comm_'+docId);
   var card = document.createElement('div');
   card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;';
+  card.onclick = function(){ trackChallengeView('comm_'+docId); };
 
   // Header row
   var hdRow = document.createElement('div');
