@@ -1,39 +1,35 @@
-// ── COMMUNITY DRAWER ──────────────────────────────────────
-function buildDrawerCommunity(el){
-  var hdrRow = document.createElement('div');
-  hdrRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
-  var hdr = document.createElement('div');
-  hdr.className = 'stitle';
-  hdr.style.cssText = 'color:#4ECDC4;margin:0;';
-  hdr.textContent = 'COMMUNITY CHALLENGES';
+// ── COMMUNITY PAGE (full screen) ──────────────────────────
+function openCommunityPage(){
+  var ex = document.getElementById('comm-page-ov'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'comm-page-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+
+  var topBar = document.createElement('div');
+  topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
+  backBtn.innerHTML = '← Zurück';
+  backBtn.onclick = function(){ ov.remove(); buildChCards(); };
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'flex:1;font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+  titleEl.textContent = '🌟 Community Challenges';
   var postBtn = document.createElement('button');
-  postBtn.style.cssText = 'background:rgba(78,205,196,0.1);color:#4ECDC4;border:1px solid rgba(78,205,196,0.3);border-radius:8px;font-family:inherit;font-size:10px;padding:7px 12px;cursor:pointer;';
-  postBtn.textContent = '+ POSTEN';
-  postBtn.onclick = function(){ closeChDrawer(); setTimeout(showCommPostModal, 300); };
-  hdrRow.appendChild(hdr);
-  hdrRow.appendChild(postBtn);
-  el.appendChild(hdrRow);
+  postBtn.style.cssText = 'background:#4ECDC4;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;white-space:nowrap;';
+  postBtn.textContent = '+ Posten';
+  postBtn.onclick = function(){ showCommPostModal(); };
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(postBtn);
+  ov.appendChild(topBar);
 
-  var feedWrap = document.createElement('div');
-  feedWrap.id = 'comm-feed-drawer';
-  feedWrap.innerHTML = '<div style="text-align:center;padding:20px 0;font-size:12px;color:var(--muted);">Wird geladen...</div>';
-  el.appendChild(feedWrap);
+  var scroll = document.createElement('div');
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
+  var feedEl = document.createElement('div');
+  feedEl.id = 'comm-feed';
+  scroll.appendChild(feedEl);
+  ov.appendChild(scroll);
+  document.body.appendChild(ov);
 
-  // Load feed into drawer
-  if(!currentUser){
-    feedWrap.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;font-size:12px;color:var(--muted);">Einloggen um Community Challenges zu sehen.</div>';
-    return;
-  }
-  db.collection('communityChallenges').orderBy('createdAt','desc').limit(20).get()
-    .then(function(snap){
-      feedWrap.innerHTML = '';
-      if(snap.empty){
-        feedWrap.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:22px;margin-bottom:8px;">\uD83C\uDFC6</div><div style="font-size:12px;color:var(--muted);">Noch keine Community Challenges. Sei der Erste!</div></div>';
-        return;
-      }
-      snap.forEach(function(doc){ feedWrap.appendChild(buildCommCard(doc.id, doc.data())); });
-    })
-    .catch(function(){ feedWrap.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px 0;">Fehler beim Laden.</div>'; });
+  loadCommFeed();
 }
 
 function buildStartChallengeWidget(){
@@ -70,7 +66,7 @@ function buildStartChallengeWidget(){
 
   var arr = document.createElement('div');
   arr.style.cssText = 'color:var(--muted);font-size:14px;';
-  arr.textContent = done ? '\u2713' : '\u203A';
+  arr.textContent = done ? '✓' : '›';
 
   row.appendChild(icon);
   row.appendChild(txt);
@@ -91,103 +87,49 @@ function buildStartChallengeWidget(){
 // ---- PRESET CHALLENGES ----
 var PRESET_CHALLENGES = [
   {
-    id:'p1', icon:'\uD83D\uDCAF', title:'100 Klimmzuge Challenge',
+    id:'p1', icon:'💯', title:'100 Klimmzuge Challenge',
     desc:'Schaffe 100 Klimmzuge in einer einzigen Einheit. Pause erlaubt, aber kein Verlassen der Stange fur mehr als 3 Minuten.',
     explanation:'Verteile die 100 Wdh auf so viele Satze wie du brauchst. Ziel: maximale Gesamtmenge. Starte mit deinen starksten Satzen.',
     target:100, metric:'session_total', exName:'Klimmzuge'
   },
   {
-    id:'p2', icon:'\u23F1', title:'1-Minuten Muscle-Up',
+    id:'p2', icon:'⏱', title:'1-Minuten Muscle-Up',
     desc:'Schaffe so viele Muscle-Ups wie moglich in 60 Sekunden.',
     explanation:'Starte den Timer, gib alles. Technik ist zweitrangig - Tempo ist alles. Weltrekord liegt bei ~26.',
     target:5, metric:'session_best', exName:'Muscle-Ups'
   },
   {
-    id:'p3', icon:'\uD83D\uDD3A', title:'Klimmzug Pyramide bis 10',
+    id:'p3', icon:'🔺', title:'Klimmzug Pyramide bis 10',
     desc:'1-2-3-4-5-6-7-8-9-10-9-8-7-6-5-4-3-2-1 Klimmzuge. Keine Pause uber 90 Sekunden.',
     explanation:'Insgesamt 100 Wdh in Pyramidenform. Eine der besten Methoden fur Volumen und Ausdauer gleichzeitig.',
     target:100, metric:'session_total', exName:'Klimmzuge'
   },
   {
-    id:'p4', icon:'\uD83C\uDFCB?', title:'Weighted Dips 5x5',
+    id:'p4', icon:'🏋?', title:'Weighted Dips 5x5',
     desc:'5 Satze je 5 Dips mit Gewichtsgurtel. Steigere das Gewicht jeden Satz.',
     explanation:'Klassisches Kraftprotokoll. Fange leicht an (z.B. 5kg) und steigere um 2-5kg pro Satz. Volle ROM!',
     target:25, metric:'session_total', exName:'Dips'
   },
   {
-    id:'p5', icon:'\uD83D\uDD50', title:'Plank 5 Minuten',
+    id:'p5', icon:'🕐', title:'Plank 5 Minuten',
     desc:'Halte die Plank-Position fur 5 Minuten am Stuck.',
     explanation:'Erlaubt: kurze Positionskorrektur. Nicht erlaubt: Knie auf den Boden. Mentale Starke ist hier 80% der Ubung.',
     target:300, metric:'session_single', exName:'Plank'
   },
   {
-    id:'p6', icon:'\uD83D\uDCA5', title:'Explosive Push Week',
+    id:'p6', icon:'💥', title:'Explosive Push Week',
     desc:'Mache diese Woche 200 Liegestutze gesamt - verteilt auf beliebig viele Workouts.',
     explanation:'Liegestutze in jedem Workout zahlen. Geht schneller als du denkst wenn du sie in jede Einheit packst.',
     target:200, metric:'week_total', exName:'Liegestutze'
   },
   {
-    id:'p7', icon:'\uD83C\uDF19', title:'Tuck Front Lever 30 Sek',
+    id:'p7', icon:'🌙', title:'Tuck Front Lever 30 Sek',
     desc:'Halte den Tuck Front Lever fur 30 Sekunden ohne Unterbrechung.',
     explanation:'Baue auf mit 3x10s, dann 2x15s, dann 1x20s. Wenn du 30s schaffst, bist du bereit fur den Advanced Tuck.',
     target:30, metric:'session_single', exName:'Tuck Front Lever Hold'
   },
   {
-    id:'p8', icon:'\uD83D\uDD25', title:'7-Tage Streak',
-    desc:'Trainiere 7 Tage in Folge - jede Einheit zahlt, auch kurze.',
-    explanation:'Auch 15 Minuten zahlen! Der Punkt ist die Gewohnheit. Nutze leichte Tage fur Mobilitat oder Skills.',
-    target:7, metric:'streak_days', exName:''
-  },
-];
-
-var showPresets = false;
-
-// ---- PRESET CHALLENGES ----
-var PRESET_CHALLENGES = [
-  {
-    id:'p1', icon:'\uD83D\uDCAF', title:'100 Klimmzuge Challenge',
-    desc:'Schaffe 100 Klimmzuge in einer einzigen Einheit. Pause erlaubt, aber kein Verlassen der Stange fur mehr als 3 Minuten.',
-    explanation:'Verteile die 100 Wdh auf so viele Satze wie du brauchst. Ziel: maximale Gesamtmenge. Starte mit deinen starksten Satzen.',
-    target:100, metric:'session_total', exName:'Klimmzuge'
-  },
-  {
-    id:'p2', icon:'\u23F1', title:'1-Minuten Muscle-Up',
-    desc:'Schaffe so viele Muscle-Ups wie moglich in 60 Sekunden.',
-    explanation:'Starte den Timer, gib alles. Technik ist zweitrangig - Tempo ist alles. Weltrekord liegt bei ~26.',
-    target:5, metric:'session_best', exName:'Muscle-Ups'
-  },
-  {
-    id:'p3', icon:'\uD83D\uDD3A', title:'Klimmzug Pyramide bis 10',
-    desc:'1-2-3-4-5-6-7-8-9-10-9-8-7-6-5-4-3-2-1 Klimmzuge. Keine Pause uber 90 Sekunden.',
-    explanation:'Insgesamt 100 Wdh in Pyramidenform. Eine der besten Methoden fur Volumen und Ausdauer gleichzeitig.',
-    target:100, metric:'session_total', exName:'Klimmzuge'
-  },
-  {
-    id:'p4', icon:'\uD83C\uDFCB?', title:'Weighted Dips 5x5',
-    desc:'5 Satze je 5 Dips mit Gewichtsgurtel. Steigere das Gewicht jeden Satz.',
-    explanation:'Klassisches Kraftprotokoll. Fange leicht an (z.B. 5kg) und steigere um 2-5kg pro Satz. Volle ROM!',
-    target:25, metric:'session_total', exName:'Dips'
-  },
-  {
-    id:'p5', icon:'\uD83D\uDD50', title:'Plank 5 Minuten',
-    desc:'Halte die Plank-Position fur 5 Minuten am Stuck.',
-    explanation:'Erlaubt: kurze Positionskorrektur. Nicht erlaubt: Knie auf den Boden. Mentale Starke ist hier 80% der Ubung.',
-    target:300, metric:'session_single', exName:'Plank'
-  },
-  {
-    id:'p6', icon:'\uD83D\uDCA5', title:'Explosive Push Week',
-    desc:'Mache diese Woche 200 Liegestutze gesamt - verteilt auf beliebig viele Workouts.',
-    explanation:'Liegestutze in jedem Workout zahlen. Geht schneller als du denkst wenn du sie in jede Einheit packst.',
-    target:200, metric:'week_total', exName:'Liegestutze'
-  },
-  {
-    id:'p7', icon:'\uD83C\uDF19', title:'Tuck Front Lever 30 Sek',
-    desc:'Halte den Tuck Front Lever fur 30 Sekunden ohne Unterbrechung.',
-    explanation:'Baue auf mit 3x10s, dann 2x15s, dann 1x20s. Wenn du 30s schaffst, bist du bereit fur den Advanced Tuck.',
-    target:30, metric:'session_single', exName:'Tuck Front Lever Hold'
-  },
-  {
-    id:'p8', icon:'\uD83D\uDD25', title:'7-Tage Streak',
+    id:'p8', icon:'🔥', title:'7-Tage Streak',
     desc:'Trainiere 7 Tage in Folge - jede Einheit zahlt, auch kurze.',
     explanation:'Auch 15 Minuten zahlen! Der Punkt ist die Gewohnheit. Nutze leichte Tage fur Mobilitat oder Skills.',
     target:7, metric:'streak_days', exName:''

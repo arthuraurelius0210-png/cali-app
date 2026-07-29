@@ -701,7 +701,7 @@ function buildChCardCommunity(){
     '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">0 Challenges</div>'+
     '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">Von Athleten erstellt & bewertet</div>'+
     '<div id="ch-community-creators" style="display:flex;align-items:center;margin-bottom:10px;min-height:24px;"></div>'+
-    '<button onclick="event.stopPropagation();closeChDrawer();setTimeout(showCommPostModal,50);" style="background:none;border:1px solid rgba(78,205,196,0.4);color:#4ECDC4;border-radius:20px;font-family:inherit;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;">+ Posten</button>';
+    '<button onclick="event.stopPropagation();showCommPostModal();" style="background:none;border:1px solid rgba(78,205,196,0.4);color:#4ECDC4;border-radius:20px;font-family:inherit;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;">+ Posten</button>';
   if(currentUser){
     db.collection('communityChallenges').get().then(function(snap){
       if(!el) return;
@@ -887,8 +887,6 @@ function openChDrawer(type){
     buildDrawerPersonal(content);
   } else if(type === 'preset'){
     buildDrawerPreset(content);
-  } else if(type === 'community'){
-    buildDrawerCommunity(content);
   }
 
   drawer.appendChild(content);

@@ -489,11 +489,14 @@ function buildCommCard(docId, data){
   }
 
   // Exercises tag
-  if(data.exercises){
-    var exTag = document.createElement('div');
-    exTag.style.cssText = 'display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);margin-bottom:10px;';
-    exTag.textContent = '\uD83D\uDCAA ' + data.exercises;
-    card.appendChild(exTag);
+  if(data.exercises && data.exercises.length){
+    var exNames = data.exercises.map(function(e){ return (typeof e === 'string') ? e : e.name; }).filter(Boolean);
+    if(exNames.length){
+      var exTag = document.createElement('div');
+      exTag.style.cssText = 'display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);margin-bottom:10px;';
+      exTag.textContent = '\uD83D\uDCAA ' + exNames.join(', ');
+      card.appendChild(exTag);
+    }
   }
 
   // Action row: like, try, comment
