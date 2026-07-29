@@ -135,7 +135,7 @@ function awardXP(amount, reason){
 // ── LEVEL-UP ANIMATION ────────────────────────────────────
 function showLevelUpAnimation(oldLevel, newLevel, diamonds){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:center;justify-content:center;';
   ov.innerHTML =
     '<div style="text-align:center;animation:fadeIn 0.5s ease;">'+
       '<div style="font-size:60px;margin-bottom:8px;">🎉</div>'+
@@ -203,7 +203,7 @@ function buildXPWidget(el){
 // ── XP VERLAUF ────────────────────────────────────────────
 function openXPHistory(uid){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;max-height:80vh;overflow-y:auto;';
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
@@ -238,7 +238,7 @@ function openXPHistory(uid){
 // ── MONATLICHE RANGLISTE ──────────────────────────────────
 function openMonthlyLeaderboard(){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';

@@ -37,7 +37,7 @@ function buildPfSets(){
     h+='<div class="snum" style="color:'+co+'">'+(i+1)+'</div>';
     h+='<input class="sinp" type="number" placeholder="Ziel Wdh" value="'+(pfSets[i].n||'')+'" oninput="pfSetVal('+i+',this.value)">';
     h+='<div></div>';
-    h+='<button class="sdel" onclick="pfDelSet('+i+')">&#x2715;</button>';
+    h+='<button class="sdel" aria-label="Satz entfernen" onclick="pfDelSet('+i+')">&#x2715;</button>';
     h+='</div>';
   }
   box.innerHTML=h;
@@ -71,7 +71,7 @@ function buildPfExList(){
     h+='<div class="pf-ex-item">';
     h+='<div class="plan-dot" style="background:'+col+'"></div>';
     h+='<div class="pf-ex-col"><div class="pf-ex-name">'+ex.name+'</div><div class="pf-ex-sets">'+st+'</div></div>';
-    h+='<button class="pf-ex-del" onclick="pfDelEx('+i+')">&#x2715;</button>';
+    h+='<button class="pf-ex-del" aria-label="Übung entfernen" onclick="pfDelEx('+i+')">&#x2715;</button>';
     h+='</div>';
   }
   el.innerHTML=h;
@@ -312,7 +312,7 @@ function buildMaxList(){
     h+='<div class="ed">'+e.date.slice(5).replace('-','.')+'</div>';
     h+='<div class="en">'+e.name+'</div>';
     h+='<div style="font-family:inherit;font-size:22px;font-weight:800;color:var(--accent);">'+e.val+' <span style="font-size:11px;font-weight:600;color:var(--muted)">'+e.unit+'</span></div>';
-    h+='<button class="edel" onclick="delMaxEntry('+e.id+')">&#x2715;</button>';
+    h+='<button class="edel" aria-label="Eintrag löschen" onclick="delMaxEntry('+e.id+')">&#x2715;</button>';
     h+='</div></div>';
   }
   el.innerHTML=h;
@@ -598,7 +598,7 @@ function showSkipModal(){
   if(ex) ex.remove();
   var modal = document.createElement('div');
   modal.id = 'skip-currency-modal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9990;display:flex;align-items:flex-end;justify-content:center;padding:16px;';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;padding:16px;';
 
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg2);border-radius:20px 20px 16px 16px;padding:24px 20px 32px;width:100%;max-width:480px;';
@@ -871,7 +871,7 @@ function openChDrawer(type){
 
   var ov = document.createElement('div');
   ov.id = 'ch-drawer-overlay';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:8000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var drawer = document.createElement('div');
   drawer.style.cssText = 'background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:0 0 40px;border-top:1px solid var(--border);transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);';
@@ -1101,7 +1101,7 @@ function openDayListModal(focusIdx){
   var ex = document.getElementById('week-cal-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'week-cal-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   // Top bar
   var topBar = document.createElement('div');
@@ -1299,6 +1299,7 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   var prevBtn = document.createElement('button');
   prevBtn.style.cssText = 'background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:4px 8px;';
   prevBtn.textContent = '‹';
+  prevBtn.setAttribute('aria-label', 'Vorheriger Monat');
   prevBtn.onclick = function(){ weekCalMonthOffset--; rerenderFn(); };
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'font-size:13px;font-weight:800;color:var(--text);';
@@ -1306,6 +1307,7 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   var nextBtn = document.createElement('button');
   nextBtn.style.cssText = 'background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:4px 8px;';
   nextBtn.textContent = '›';
+  nextBtn.setAttribute('aria-label', 'Nächster Monat');
   nextBtn.onclick = function(){ weekCalMonthOffset++; rerenderFn(); };
   hdr.appendChild(prevBtn); hdr.appendChild(titleEl); hdr.appendChild(nextBtn);
   card.appendChild(hdr);
@@ -1408,7 +1410,7 @@ function openDayEditor(dayIdx, calScroll){
   var dayPlans = wp[dayIdx] || [];
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;max-height:80vh;overflow-y:auto;';
 
@@ -1453,7 +1455,7 @@ function openDayEditor(dayIdx, calScroll){
     box.appendChild(addLabel);
 
     var sel = document.createElement('select');
-    sel.style.cssText = 'width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+    sel.style.cssText = 'width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
     var defOpt = document.createElement('option'); defOpt.value=''; defOpt.textContent='— Plan auswählen —'; sel.appendChild(defOpt);
 
     // My plans

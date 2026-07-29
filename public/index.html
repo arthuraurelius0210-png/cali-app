@@ -16,6 +16,10 @@
 :root{--bg:#F5F3ED;--bg2:#ffffff;--accent:#ff5500;--muted:#8B8474;--muted2:#B8B09C;--text:#18140F;--border:#E2DECE;}
 html,body{height:100%;overflow-x:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
+:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,85,0,0.45);border-radius:4px;}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
+}
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;border-bottom:1px solid var(--border);background:rgba(245,243,237,0.92);backdrop-filter:blur(16px);}
 .nav-logo{font-family:'Bebas Neue';font-size:26px;letter-spacing:3px;color:var(--text);}
 .nav-cta{background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:700;font-size:13px;padding:9px 18px;cursor:pointer;}

@@ -314,7 +314,7 @@ function buildProfilStreakSection(){
 
     expandBtn.onclick=function(){
       var overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
       var box = document.createElement('div');
       box.style.cssText = 'background:var(--bg);border-radius:18px;width:100%;max-width:440px;padding:20px;margin:auto;';
       var hdr = document.createElement('div');
@@ -444,7 +444,7 @@ function showMilestoneDetail(m){
   if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'ms-detail-modal';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9995;display:flex;align-items:center;justify-content:center;padding:24px;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
 
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg2);border-radius:20px;padding:32px 24px;width:100%;max-width:360px;text-align:center;border:1px solid var(--border);';
@@ -537,7 +537,7 @@ function showOnboarding(){
   if(existing) existing.remove();
   var m = document.createElement('div');
   m.id = 'ob-modal';
-  m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9998;overflow-y:auto;padding:24px;box-sizing:border-box;';
+  m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:1000;overflow-y:auto;padding:24px;box-sizing:border-box;';
   document.body.appendChild(m);
   obStep = 0;
   renderObStep();

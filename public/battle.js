@@ -29,7 +29,7 @@ function openBattleOverview(){
   var ex = document.getElementById('battle-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'battle-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   // Top bar
   var topBar = document.createElement('div');
@@ -205,7 +205,7 @@ function openChallengeSomeone(parentOv){
   if(!userLat || !userLng){ alert('Bitte zuerst Standort aktivieren!'); return; }
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
@@ -218,7 +218,7 @@ function openChallengeSomeone(parentOv){
   var searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.placeholder = 'Name suchen...';
-  searchInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);box-sizing:border-box;';
+  searchInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);box-sizing:border-box;';
   var resultsList = document.createElement('div');
   resultsList.style.cssText = 'margin-top:8px;';
 
@@ -272,13 +272,14 @@ function openChallengeSetup(opponent, parentOv){
   var myName = (typeof prData !== 'undefined' && prData && prData.name) ? prData.name : 'Ich';
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
   backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '&#8592;';
+  backBtn.setAttribute('aria-label', 'Zurück');
   backBtn.onclick = function(){ ov.remove(); };
   topBar.innerHTML = '';
   topBar.appendChild(backBtn);
@@ -407,13 +408,14 @@ function acceptBattle(battleId, d){
 
   // Gegner wählt seine 2 Übungen
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
   backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '&#8592;';
+  backBtn.setAttribute('aria-label', 'Zurück');
   backBtn.onclick = function(){ ov.remove(); };
   topBar.appendChild(backBtn);
   var ttl = document.createElement('div');
@@ -516,13 +518,14 @@ function declineBattle(battleId){
 // ── AKTIVES BATTLE ────────────────────────────────────────
 function openActiveBattle(battleId, d, myUid){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
   backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '&#8592;';
+  backBtn.setAttribute('aria-label', 'Zurück');
   backBtn.onclick = function(){ ov.remove(); };
   topBar.appendChild(backBtn);
   var opponentName = d.challengerId===myUid ? d.challengedName : d.challengerName;

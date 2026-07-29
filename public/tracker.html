@@ -48,6 +48,10 @@
   --display:'Bebas Neue',sans-serif;--body:'DM Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;}
+:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,85,0,0.45);border-radius:4px;}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
+}
 
 /* ── NAV ── */
 nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
@@ -115,13 +119,13 @@ nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;j
 
 /* ── INPUT ── */
 .bsets{display:flex;gap:8px;margin-top:12px;align-items:center;}
-.bsets input,.bsets-add{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:15px;font-weight:600;outline:none;}
+.bsets input,.bsets-add{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:16px;font-weight:600;outline:none;}
 .bsets-add{flex:none;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
 
 /* ── FORM ── */
 .fg{margin-bottom:12px;}
 .fg label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;}
-.fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;outline:none;}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:16px;outline:none;}
 .fg input:focus,.fg select:focus{border-color:var(--border2);}
 
 /* ── EXERCISE ROW ── */
@@ -252,8 +256,8 @@ canvas{max-width:100%;}
 .badge-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 
 /* ── TOAST ── */
-#toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s;z-index:9999;white-space:nowrap;pointer-events:none;}
-.toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;white-space:nowrap;pointer-events:none;animation:fadeout 2s forwards;}
+#toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s;z-index:3000;white-space:nowrap;pointer-events:none;}
+.toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:3000;white-space:nowrap;pointer-events:none;animation:fadeout 2s forwards;}
 @keyframes fadeout{0%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
 
 /* ── HINT ── */
@@ -279,13 +283,13 @@ canvas{max-width:100%;}
 
 
 <!-- LOADING SCREEN -->
-<div id="loading-screen" style="display:none;visibility:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;">
+<div id="loading-screen" style="display:none;visibility:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;">
   <div style="font-family:inherit;font-size:52px;letter-spacing:6px;color:var(--accent);">CALI</div>
   <div style="font-size:13px;color:var(--muted2);margin-top:8px;font-family:inherit;">Lädt...</div>
 </div>
 
 <!-- LOGIN SCREEN -->
-<div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;">
+<div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;">
   <div style="font-family:inherit;font-size:52px;letter-spacing:6px;color:var(--accent);margin-bottom:8px;">CALI</div>
   <div style="font-size:13px;color:var(--muted);margin-bottom:40px;">Calisthenics Tracker</div>
   <div style="display:flex;gap:0;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px;width:100%;max-width:320px;">
@@ -295,15 +299,15 @@ canvas{max-width:100%;}
   <div style="width:100%;max-width:320px;">
     <div style="margin-bottom:12px;">
       <div style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:700;margin-bottom:6px;">E-Mail</div>
-      <input type="email" id="auth-email" placeholder="deine@email.com" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box;">
+      <input type="email" id="auth-email" placeholder="deine@email.com" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
     </div>
     <div style="margin-bottom:12px;">
       <div style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:700;margin-bottom:6px;">Passwort</div>
-      <input type="password" id="auth-password" placeholder="Mindestens 6 Zeichen" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box;">
+      <input type="password" id="auth-password" placeholder="Mindestens 6 Zeichen" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
     </div>
     <div id="auth-name-row" style="display:none;margin-bottom:12px;">
       <div style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:700;margin-bottom:6px;">Name</div>
-      <input type="text" id="auth-name" placeholder="Dein Name" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box;">
+      <input type="text" id="auth-name" placeholder="Dein Name" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
     </div>
     <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;padding:14px;cursor:pointer;margin-bottom:16px;">Einloggen</button>
     <div style="text-align:center;color:var(--muted2);font-size:12px;margin-bottom:16px;">-- oder --</div>
@@ -381,15 +385,15 @@ canvas{max-width:100%;}
     <div id="emom-mode-desc" style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Eine Ubung fur alle Minuten — jede Minute gleiche Ubung.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
       <div class="fg"><label>MINUTEN TOTAL</label>
-        <input type="number" id="emom-minutes" value="10" min="1" max="60" oninput="if(emomMode==='mix')emomBuildMixGrid()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;width:100%;box-sizing:border-box;">
+        <input type="number" id="emom-minutes" value="10" min="1" max="60" oninput="if(emomMode==='mix')emomBuildMixGrid()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;width:100%;box-sizing:border-box;">
       </div>
       <div class="fg"><label>SEKUNDEN/MIN</label>
-        <input type="number" id="emom-secs" value="60" min="1" max="20" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;width:100%;box-sizing:border-box;">
+        <input type="number" id="emom-secs" value="60" min="1" max="20" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;width:100%;box-sizing:border-box;">
       </div>
     </div>
     <div id="emom-single-section">
       <div class="fg" style="margin-bottom:12px;"><label>UBUNG</label>
-        <select id="emom-ex-pick" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;"></select>
+        <select id="emom-ex-pick" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
       </div>
     </div>
     <div id="emom-mix-section" style="display:none;">
@@ -472,7 +476,7 @@ canvas{max-width:100%;}
     <div class="card" id="plan-add-form" style="display:none;">
       <div style="margin-bottom:10px;">
         <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">KATEGORIE</div>
-        <select id="wo-cat-sel" onchange="woCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;margin-bottom:10px;">
+        <select id="wo-cat-sel" onchange="woCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;margin-bottom:10px;">
           <option value="Alle">Alle Kategorien</option>
           <option value="Pull">Pull</option>
           <option value="Push">Push</option>
@@ -483,7 +487,7 @@ canvas{max-width:100%;}
           
         </select>
         <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">UBUNG</div>
-        <select id="wo-ex-sel" onchange="woExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;"></select>
+        <select id="wo-ex-sel" onchange="woExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
       </div>
 
       <div id="band-row" style="display:none;margin-bottom:12px;">
@@ -586,7 +590,7 @@ canvas{max-width:100%;}
         <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:8px;">UBUNG HINZUFUGEN</div>
         <div style="margin-bottom:8px;">
           <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">KATEGORIE</div>
-          <select id="pf-cat-sel" onchange="pfCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;margin-bottom:10px;">
+          <select id="pf-cat-sel" onchange="pfCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;margin-bottom:10px;">
             <option value="Alle">Alle Kategorien</option>
             <option value="Pull">Pull</option>
             <option value="Push">Push</option>
@@ -597,7 +601,7 @@ canvas{max-width:100%;}
             
           </select>
           <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">UBUNG</div>
-          <select id="pf-ex-sel" onchange="pfExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;"></select>
+          <select id="pf-ex-sel" onchange="pfExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
         </div>
         <div style="font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:6px;">GEPLANTE SATZE</div>
         <div class="sh"><span>#</span><span id="pf-lbl-n">WDHS (ZIEL)</span><span></span><span></span></div>
@@ -640,7 +644,7 @@ canvas{max-width:100%;}
     var ex=document.getElementById('feedback-ov'); if(ex) ex.remove();
     var ov=document.createElement('div');
     ov.id='feedback-ov';
-    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
     var box=document.createElement('div');
     box.style.cssText='background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
     box.innerHTML='<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+

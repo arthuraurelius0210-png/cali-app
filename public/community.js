@@ -23,7 +23,7 @@ function showCommPostModal(){
 
   var ov = document.createElement('div');
   ov.id = 'comm-post-overlay';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;';
@@ -40,6 +40,7 @@ function showCommPostModal(){
   var closeX = document.createElement('button');
   closeX.style.cssText = 'background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;color:var(--muted);';
   closeX.textContent = '\u00D7';
+  closeX.setAttribute('aria-label', 'Schlie\u00DFen');
   closeX.onclick = function(){ ov.remove(); };
   hdrRow.appendChild(hdrTitle); hdrRow.appendChild(closeX);
   var stepBar = document.createElement('div');
@@ -99,7 +100,7 @@ function showCommPostModal(){
     var w2=document.createElement('div'); w2.style.marginBottom='14px';
     w2.appendChild(lbl('BESCHREIBUNG'));
     var ta=document.createElement('textarea'); ta.id='ch-desc'; ta.placeholder='Erkläre die Challenge genau...'; ta.value=challengeData.desc||'';
-    ta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;resize:none;height:90px;box-sizing:border-box;';
+    ta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:90px;box-sizing:border-box;';
     w2.appendChild(ta);
     var w25=document.createElement('div'); w25.style.marginBottom='14px';
     w25.appendChild(lbl('ERKLÄR-VIDEO (optional)'));
@@ -293,7 +294,7 @@ function showCommPostModal(){
     var now=document.createElement('div'); now.style.marginBottom='10px';
     now.appendChild(lbl('AUSFÜHRUNG (optional)'));
     var nta=document.createElement('textarea'); nta.value=ex.notes||''; nta.placeholder='z.B. volle Streckung, kein Schwung...';
-    nta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-family:inherit;font-size:12px;color:var(--text);outline:none;resize:none;height:55px;box-sizing:border-box;';
+    nta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:55px;box-sizing:border-box;';
     nta.oninput=function(){challengeData.exercises[idx].notes=this.value;};
     now.appendChild(nta); card.appendChild(now);
 
@@ -453,7 +454,7 @@ function buildCommCard(docId, data){
   titleEl.textContent = data.title;
 
   var meta = document.createElement('div');
-  meta.style.cssText = 'font-size:10px;color:var(--muted);margin-top:3px;';
+  meta.style.cssText = 'font-size:16px;color:var(--muted);margin-top:3px;';
   var dateStr = data.createdAt ? new Date(data.createdAt).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) : '';
   meta.textContent = (data.authorName || 'Athlet') + ' \u00B7 ' + dateStr;
 
@@ -604,7 +605,7 @@ function buildCommSection(el, docId, data){
   txta.type = 'text';
   txta.maxLength = 200;
   txta.placeholder = 'Kommentar schreiben...';
-  txta.style.cssText = 'flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:12px;color:var(--text);outline:none;';
+  txta.style.cssText = 'flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;';
   var sendBtn = document.createElement('button');
   sendBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;padding:9px 14px;cursor:pointer;white-space:nowrap;';
   sendBtn.textContent = 'OK';

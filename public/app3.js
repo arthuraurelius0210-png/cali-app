@@ -3,7 +3,7 @@ function openCommunityPage(){
   var ex = document.getElementById('comm-page-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'comm-page-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';

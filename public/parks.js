@@ -185,7 +185,7 @@ function openParkDetail(idx){
   var ex = document.getElementById('park-modal-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'park-modal-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:9800;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border);';
@@ -369,7 +369,8 @@ function buildParkLeaderboard(el, parkId, parkName){
           var vidBtn = document.createElement('a');
           vidBtn.href = d.videoUrl; vidBtn.target='_blank';
           vidBtn.style.cssText = 'font-size:18px;text-decoration:none;flex-shrink:0;';
-          vidBtn.textContent = '&#127909;';
+          vidBtn.innerHTML = '&#127909;';
+          vidBtn.setAttribute('aria-label', 'Video ansehen');
           row.appendChild(vidBtn);
         }
         el.appendChild(row);
@@ -383,7 +384,7 @@ function showLeaderboardSubmit(parkId, parkName){
   var ex2 = document.getElementById('lb-submit-ov'); if(ex2) ex2.remove();
   var ov2 = document.createElement('div');
   ov2.id = 'lb-submit-ov';
-  ov2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9900;display:flex;align-items:flex-end;justify-content:center;';
+  ov2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box2 = document.createElement('div');
   box2.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
@@ -514,7 +515,7 @@ function openAdminPanel(){
   var ex = document.getElementById('admin-panel-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'admin-panel-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
@@ -624,7 +625,7 @@ function openParkNav(idx){
   var ex = document.getElementById('park-modal-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'park-modal-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9800;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
   var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
@@ -680,7 +681,7 @@ function openParkDetail(idx){
   var ex = document.getElementById('park-detail-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'park-detail-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9900;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   // Top bar — gleicher Look wie Rekorde
   var topBar = document.createElement('div');
@@ -901,6 +902,7 @@ function loadParkLb(el, parkId, ex){
           var vBtn = document.createElement('button');
           vBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:14px;cursor:pointer;flex-shrink:0;';
           vBtn.innerHTML = '&#9654;';
+          vBtn.setAttribute('aria-label', 'Video abspielen');
           vBtn.onclick = function(){ playVideo(d.videoUrl); };
           row.appendChild(vBtn);
         }
@@ -978,7 +980,7 @@ function openParkRecordSubmit(idx){
 
 function showParkRecordGPSError(parkName, msg){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;';
   box.innerHTML =
@@ -1001,7 +1003,7 @@ function openSuggestPark(){
   var ex = document.getElementById('suggest-park-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'suggest-park-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
@@ -1011,13 +1013,13 @@ function openSuggestPark(){
   // Name
   var nameInput = document.createElement('input');
   nameInput.type = 'text'; nameInput.placeholder = 'Park-Name';
-  nameInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  nameInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
   box.appendChild(nameInput);
 
   // Beschreibung
   var descInput = document.createElement('textarea');
   descInput.placeholder = 'Beschreibung (Adresse, Ausstattung...)';
-  descInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;height:80px;resize:none;';
+  descInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;height:80px;resize:none;';
   box.appendChild(descInput);
 
   // GPS Status
@@ -1048,10 +1050,10 @@ function openSuggestPark(){
   manualWrap.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
   var latInput = document.createElement('input');
   latInput.type = 'number'; latInput.placeholder = 'Latitude (z.B. 52.5200)'; latInput.step = '0.0001';
-  latInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;background:var(--bg2);color:var(--text);';
+  latInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
   var lngInput = document.createElement('input');
   lngInput.type = 'number'; lngInput.placeholder = 'Longitude (z.B. 13.4050)'; lngInput.step = '0.0001';
-  lngInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;background:var(--bg2);color:var(--text);';
+  lngInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
   manualWrap.appendChild(latInput); manualWrap.appendChild(lngInput);
   box.appendChild(manualWrap);
 

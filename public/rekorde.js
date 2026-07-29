@@ -284,6 +284,7 @@ function loadRekList(el){
           var vBtn=document.createElement('button');
           vBtn.style.cssText='background:none;border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:14px;cursor:pointer;flex-shrink:0;';
           vBtn.innerHTML='&#9654;';
+          vBtn.setAttribute('aria-label','Video abspielen');
           vBtn.onclick=function(){playVideo(d.videoUrl);};
           row.appendChild(vBtn);
         }
@@ -409,7 +410,7 @@ function openAllMyParks(){
   if(typeof db === 'undefined' || !db || !firebase.auth().currentUser) return;
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;';
@@ -434,7 +435,7 @@ function openAllMyParks(){
 
 function openParkLeaderboardById(parkId, parkName){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9960;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
@@ -615,7 +616,7 @@ function openParkLeaderboardById(parkId, parkName){
   var ex = document.getElementById('park-detail-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'park-detail-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9900;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   // Top bar
   var topBar = document.createElement('div');
@@ -647,7 +648,7 @@ function openMyParksOverview(){
   var ex = document.getElementById('my-parks-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'my-parks-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   // Top bar
   var topBar = document.createElement('div');
@@ -961,7 +962,7 @@ function openSuggestExercise(){
   var ex = document.getElementById('suggest-ex-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'suggest-ex-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
@@ -970,18 +971,18 @@ function openSuggestExercise(){
 
   var nameInput = document.createElement('input');
   nameInput.type = 'text'; nameInput.placeholder = 'Übungsname (z.B. Typewriter Pull-Up)';
-  nameInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  nameInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
 
   // Kategorie
   var catSelect = document.createElement('select');
-  catSelect.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  catSelect.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
   ['Pull','Push','Core','Legs','Skills'].forEach(function(c){
     var opt = document.createElement('option'); opt.value=c; opt.textContent=c;
     catSelect.appendChild(opt);
   });
 
   var unitSelect = document.createElement('select');
-  unitSelect.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  unitSelect.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
   ['Wdh','Sek','Min'].forEach(function(u){
     var opt = document.createElement('option'); opt.value=u; opt.textContent=u;
     unitSelect.appendChild(opt);
@@ -989,7 +990,7 @@ function openSuggestExercise(){
 
   var descInput = document.createElement('textarea');
   descInput.placeholder = 'Kurze Beschreibung (optional)';
-  descInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);margin-bottom:16px;box-sizing:border-box;height:70px;resize:none;';
+  descInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:16px;box-sizing:border-box;height:70px;resize:none;';
 
   var sendBtn = document.createElement('button');
   sendBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:15px;cursor:pointer;margin-bottom:8px;';

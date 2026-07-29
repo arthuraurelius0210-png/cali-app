@@ -28,7 +28,7 @@ function openGlobalLeaderboard(){
   var ex = document.getElementById('lb-global-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'lb-global-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:9950;display:flex;flex-direction:column;overflow:hidden;';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   // Top bar
   var topBar = document.createElement('div');
@@ -173,7 +173,7 @@ function loadLeaderboard(exId, radiusOpt, el){
 // ── VIDEO ABSPIELEN ────────────────────────────────────────
 function playVideo(url){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;';
   var vid = document.createElement('video');
   vid.src = url;
   vid.controls = true;
@@ -197,7 +197,7 @@ function openRecordSubmit(parkId, parkName){
   var ex = document.getElementById('lb-submit-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'lb-submit-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
@@ -453,7 +453,7 @@ function checkPersonalBest(entry){
 function showToast(msg){
   try{ toast(msg); } catch(e){
     var t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:3000;';
     t.textContent = msg;
     document.body.appendChild(t);
     setTimeout(function(){ t.remove(); }, 3000);

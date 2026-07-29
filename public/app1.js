@@ -431,12 +431,13 @@ function bsets(){
     inp.type = 'number';
     inp.placeholder = '0';
     inp.value = sets[i].n || '';
-    inp.style.cssText = 'background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 8px;font-size:14px;font-family:inherit;outline:none;width:100%;text-align:center;';
+    inp.style.cssText = 'background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 8px;font-size:16px;font-family:inherit;outline:none;width:100%;text-align:center;';
     inp.setAttribute('data-i', String(i));
     inp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].n=this.value;};
     inp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].n=this.value;};
     var del = document.createElement('button');
     del.innerHTML = '&#x2715;';
+    del.setAttribute('aria-label', 'Satz entfernen');
     del.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;text-align:center;';
     del.setAttribute('data-i', String(i));
     del.onclick = function(){
@@ -450,7 +451,7 @@ function bsets(){
       binp.type = 'number';
       binp.placeholder = '0';
       binp.value = sets[i].b || '';
-      binp.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid #F59E0B;color:#F59E0B;border-radius:8px;padding:9px 8px;font-size:14px;font-family:var(--body);outline:none;width:100%;text-align:center;';
+      binp.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid #F59E0B;color:#F59E0B;border-radius:8px;padding:9px 8px;font-size:16px;font-family:var(--body);outline:none;width:100%;text-align:center;';
       binp.setAttribute('data-i', String(i));
       binp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].b=this.value;};
       binp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].b=this.value;};
@@ -461,7 +462,7 @@ function bsets(){
       kinp.type = 'number';
       kinp.placeholder = '0';
       kinp.value = sets[i].kg || beltKgVal || '';
-      kinp.style.cssText = 'background:rgba(56,189,248,0.08);border:1px solid #38BDF8;color:#38BDF8;border-radius:8px;padding:9px 8px;font-size:14px;font-family:var(--body);outline:none;width:100%;text-align:center;';
+      kinp.style.cssText = 'background:rgba(56,189,248,0.08);border:1px solid #38BDF8;color:#38BDF8;border-radius:8px;padding:9px 8px;font-size:16px;font-family:var(--body);outline:none;width:100%;text-align:center;';
       kinp.setAttribute('data-i', String(i));
       kinp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].kg=this.value;};
       kinp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].kg=this.value;};
@@ -616,7 +617,7 @@ function bhr(){
   if(!hrs.length){g.innerHTML='';l.style.display='none';return;}
   l.style.display='block';
   var rv=hrs.slice().reverse();var h='';
-  for(var i=0;i<rv.length;i++){var img=rv[i];h+='<div class="hi"><img src="'+img.src+'" alt="HF"><div class="hii"><div class="hd">'+img.date+'</div><button class="hdel" onclick="dhr('+img.id+')">&#x2715;</button></div></div>';}
+  for(var i=0;i<rv.length;i++){var img=rv[i];h+='<div class="hi"><img src="'+img.src+'" alt="HF"><div class="hii"><div class="hd">'+img.date+'</div><button class="hdel" aria-label="Screenshot löschen" onclick="dhr('+img.id+')">&#x2715;</button></div></div>';}
   g.innerHTML=h;
 }
 
