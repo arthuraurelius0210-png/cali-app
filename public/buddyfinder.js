@@ -10,6 +10,7 @@ var buddySelectedPark = null; // {name, lat, lng} während Anfrage-Erstellung
 var buddyFilterDist = 0; // 0 = alle, sonst Meter
 var buddyFilterLevel = 'all';
 var buddyFilterTime = 'all';
+var buddyFilterWeekday = null; // nur relevant wenn buddyFilterTime === 'wochentag'
 var BUDDY_DIST_OPTIONS = [{id:0,label:'Alle'},{id:2000,label:'2 km'},{id:5000,label:'5 km'},{id:10000,label:'10 km'}];
 var BUDDY_LEVEL_FILTER_OPTIONS = [{id:'all',label:'Alle'},{id:'anfaenger',label:'&#127793; Anfänger'},{id:'fortgeschritten',label:'&#128293; Fortgeschritten'},{id:'egal',label:'&#129309; Egal'}];
 var BUDDY_TIME_FILTER_OPTIONS = [{id:'all',label:'Alle'},{id:'jetzt',label:'&#9889; Jetzt'},{id:'heute',label:'&#128197; Heute'},{id:'woche',label:'&#128198; Diese Woche'},{id:'wochentag',label:'&#128260; Fester Tag'}];
@@ -33,7 +34,7 @@ function buildBuddyFilterChipRow(container, options, getSelected, onSelect){
 function openBuddyFinderPage(){
   if(!currentUser){ toast('Bitte erst einloggen!'); return; }
   var ex = document.getElementById('buddy-page-ov'); if(ex) ex.remove();
-  buddyFilterDist = 0; buddyFilterLevel = 'all'; buddyFilterTime = 'all';
+  buddyFilterDist = 0; buddyFilterLevel = 'all'; buddyFilterTime = 'all'; buddyFilterWeekday = null;
 
   var ov = document.createElement('div');
   ov.id = 'buddy-page-ov';
@@ -100,9 +101,45 @@ function openBuddyFinderPage(){
   }
   filterPanel.appendChild(filterRow('ENTFERNUNG', BUDDY_DIST_OPTIONS, function(){ return buddyFilterDist; }, function(v){ buddyFilterDist = v; }));
   filterPanel.appendChild(filterRow('LEVEL', BUDDY_LEVEL_FILTER_OPTIONS, function(){ return buddyFilterLevel; }, function(v){ buddyFilterLevel = v; }));
-  var lastFilterRow = filterRow('ZEITPUNKT', BUDDY_TIME_FILTER_OPTIONS, function(){ return buddyFilterTime; }, function(v){ buddyFilterTime = v; });
-  lastFilterRow.style.marginBottom = '0';
-  filterPanel.appendChild(lastFilterRow);
+
+  var timeFilterWrap = document.createElement('div');
+  timeFilterWrap.style.cssText = 'margin-bottom:0;';
+  var timeFilterLbl = document.createElement('div');
+  timeFilterLbl.className = 'stitle'; timeFilterLbl.style.cssText = 'margin:0 0 6px;';
+  timeFilterLbl.textContent = 'ZEITPUNKT';
+  timeFilterWrap.appendChild(timeFilterLbl);
+  var timeFilterChips = document.createElement('div');
+  timeFilterChips.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;';
+  timeFilterWrap.appendChild(timeFilterChips);
+
+  // Wochentag-Unterfilter — nur sichtbar wenn ZEITPUNKT="Fester Tag" gewählt ist.
+  // Erst mit gewähltem Wochentag ergibt der Filter Sinn (zeigt nur Angebote an diesem Tag).
+  var weekdayFilterWrap = document.createElement('div');
+  weekdayFilterWrap.style.cssText = 'display:'+(buddyFilterTime==='wochentag'?'block':'none')+';margin-top:8px;';
+  var weekdayFilterHint = document.createElement('div');
+  weekdayFilterHint.style.cssText = 'font-size:10px;color:var(--muted);margin-bottom:6px;';
+  weekdayFilterHint.textContent = 'Welcher Wochentag?';
+  weekdayFilterWrap.appendChild(weekdayFilterHint);
+  var weekdayFilterChips = document.createElement('div');
+  weekdayFilterChips.style.cssText = 'display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;';
+  weekdayFilterWrap.appendChild(weekdayFilterChips);
+  var weekdayFilterOptions = BUDDY_WEEKDAYS.map(function(d){ return {id:d, label:d}; });
+  buildBuddyFilterChipRow(weekdayFilterChips, weekdayFilterOptions, function(){ return buddyFilterWeekday; }, function(v){ buddyFilterWeekday = v; });
+  timeFilterWrap.appendChild(weekdayFilterWrap);
+
+  buildBuddyFilterChipRow(timeFilterChips, BUDDY_TIME_FILTER_OPTIONS, function(){ return buddyFilterTime; }, function(v){
+    buddyFilterTime = v;
+    if(v === 'wochentag'){
+      weekdayFilterWrap.style.display = 'block';
+      if(!buddyFilterWeekday) buddyFilterWeekday = BUDDY_WEEKDAYS[0];
+    } else {
+      weekdayFilterWrap.style.display = 'none';
+      buddyFilterWeekday = null;
+    }
+    buildBuddyFilterChipRow(weekdayFilterChips, weekdayFilterOptions, function(){ return buddyFilterWeekday; }, function(v2){ buddyFilterWeekday = v2; });
+  });
+
+  filterPanel.appendChild(timeFilterWrap);
   scroll.appendChild(filterPanel);
 
   var listWrap = document.createElement('div');
@@ -149,7 +186,10 @@ function getFilteredBuddyRequests(){
   return buddyRequestsData.filter(function(item){
     if(buddyFilterDist > 0 && (item._dist == null || item._dist > buddyFilterDist)) return false;
     if(buddyFilterLevel !== 'all' && item.data.level !== buddyFilterLevel) return false;
-    if(buddyFilterTime !== 'all' && item.data.timeLabel !== buddyFilterTime) return false;
+    if(buddyFilterTime !== 'all'){
+      if(item.data.timeLabel !== buddyFilterTime) return false;
+      if(buddyFilterTime === 'wochentag' && buddyFilterWeekday && item.data.weekday !== buddyFilterWeekday) return false;
+    }
     return true;
   });
 }
