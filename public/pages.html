@@ -294,11 +294,15 @@
 
 <!-- PARKS PAGE -->
 <div class="page" id="page-parks">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:14px;">
-    <div style="font-size:10px;font-weight:700;color:var(--muted);">CALISTHENICS PARKS</div>
-<button onclick="openMyParksOverview()" style="background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;padding:8px 12px;cursor:pointer;">&#127942; REKORDE</button>
-    <button onclick="openSuggestPark()" style="background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;padding:8px 12px;cursor:pointer;">&#43; PARK MELDEN</button>
-    <button id="parks-locate-btn" onclick="locateAndLoad()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;padding:8px 14px;cursor:pointer;">&#9657; STANDORT</button>
+  <div style="margin-top:20px;margin-bottom:16px;">
+    <div style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:0;">Calisthenics Parks</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Finde Parks in deiner Nähe und trainiere draußen.</div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:14px;">
+    <button onclick="openMyParksOverview()" style="flex:1;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:12px;font-weight:700;padding:12px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#127942; Rekorde</button>
+    <button onclick="openSuggestPark()" style="flex:1;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:12px;font-weight:700;padding:12px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#43; Park melden</button>
+    <button id="parks-locate-btn" onclick="locateAndLoad()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:12px;font-weight:700;padding:12px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128205; Standort</button>
   </div>
 
   <div id="parks-status" style="font-size:11px;color:var(--muted);margin-bottom:10px;min-height:18px;"></div>
@@ -314,18 +318,34 @@
   </div>
 
   <!-- Radius-Auswahl -->
-  <div style="display:flex;gap:6px;margin-bottom:12px;" id="parks-radius-btns">
-    <button onclick="setRadius(2000)" id="rbtn-2" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">2 km</button>
-    <button onclick="setRadius(5000)" id="rbtn-5" style="flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">5 km</button>
-    <button onclick="setRadius(10000)" id="rbtn-10" style="flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">10 km</button>
-    <button onclick="setRadius(20000)" id="rbtn-20" style="flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:10px;font-weight:700;padding:7px 0;cursor:pointer;">20 km</button>
+  <div style="display:flex;gap:8px;margin-bottom:14px;" id="parks-radius-btns">
+    <button onclick="setRadius(2000)" id="rbtn-2" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">2 km</button>
+    <button onclick="setRadius(5000)" id="rbtn-5" style="flex:1;background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">5 km</button>
+    <button onclick="setRadius(10000)" id="rbtn-10" style="flex:1;background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">10 km</button>
+    <button onclick="setRadius(20000)" id="rbtn-20" style="flex:1;background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">20 km</button>
   </div>
 
   <!-- Karte -->
-  <div id="parks-map" style="width:100%;height:520px;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px;background:var(--bg3);"></div>
+  <div style="position:relative;margin-bottom:16px;">
+    <div id="parks-map" style="width:100%;height:420px;border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--bg3);"></div>
+    <button onclick="locateAndLoad()" style="position:absolute;left:12px;bottom:12px;background:var(--bg2);color:var(--text);border:none;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.15);font-family:inherit;font-size:11.5px;font-weight:700;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#8982; Mein Standort</button>
+    <button onclick="document.getElementById('parks-list-section').scrollIntoView({behavior:'smooth'})" style="position:absolute;right:12px;bottom:12px;background:var(--bg2);color:var(--text);border:none;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.15);font-family:inherit;font-size:11.5px;font-weight:700;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#9776; Liste</button>
+  </div>
 
   <!-- Park-Liste -->
-  <div id="parks-list"></div>
+  <div id="parks-list-section">
+    <div id="parks-list-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"></div>
+    <div id="parks-list"></div>
+  </div>
+
+  <!-- Hinweis -->
+  <div style="display:flex;align-items:center;gap:14px;background:rgba(255,85,0,0.06);border-radius:16px;padding:16px;margin-top:6px;">
+    <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,85,0,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">&#128506;&#65039;</div>
+    <div style="flex:1;">
+      <div style="font-size:13px;font-weight:800;color:var(--text);">Respektiere die Parks</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5;">Halte die Parks sauber und nimm Rücksicht auf andere.</div>
+    </div>
+  </div>
 </div>
 
 <!-- SKILLS PAGE -->

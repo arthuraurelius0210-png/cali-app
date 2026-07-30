@@ -41,7 +41,7 @@ function setRadius(r){
       if(v===r){
         btn.style.background='var(--accent)'; btn.style.color='#fff'; btn.style.border='none';
       } else {
-        btn.style.background='var(--bg3)'; btn.style.color='var(--muted)'; btn.style.border='1px solid var(--border)';
+        btn.style.background='var(--bg2)'; btn.style.color='var(--muted)'; btn.style.border='1.5px solid var(--border)';
       }
     }
   });
@@ -51,7 +51,7 @@ function setRadius(r){
 function locateAndLoad(){
   var statusEl = document.getElementById('parks-status');
   statusEl.textContent = 'Standort wird ermittelt...';
-  document.getElementById('parks-locate-btn').textContent = '...';
+  document.getElementById('parks-locate-btn').textContent = '…';
 
   if(!navigator.geolocation){
     statusEl.textContent = 'Geolocation wird nicht unterstützt.';
@@ -61,12 +61,12 @@ function locateAndLoad(){
     function(pos){
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
-      document.getElementById('parks-locate-btn').textContent = '\u2713 STANDORT';
+      document.getElementById('parks-locate-btn').textContent = '\u2713 Standort';
       loadParks();
     },
     function(err){
       statusEl.textContent = 'Standort konnte nicht ermittelt werden. Bitte Berechtigung erlauben.';
-      document.getElementById('parks-locate-btn').textContent = '\u25B7 STANDORT';
+      document.getElementById('parks-locate-btn').textContent = '\u25B7 Standort';
     },
     {enableHighAccuracy:true, timeout:10000}
   );
@@ -103,6 +103,7 @@ function loadParks(){
     if(parksData.length === 0){ statusEl.textContent = 'Keine Parks gefunden. Versuch einen groesseren Radius.'; return; }
     statusEl.textContent = parksData.length + ' Parks gefunden im Umkreis von '+(currentRadius/1000)+' km';
     var parkIcon = L.divIcon({html:'<div style="background:#ff5500;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);">&#128170;</div>',className:'',iconAnchor:[17,17]});
+    var parkIconDim = L.divIcon({html:'<div style="background:#18140F;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.25);">&#128170;</div>',className:'',iconAnchor:[15,15]});
     parksData.forEach(function(p){ var lat=p.lat||(p.center&&p.center.lat); var lng=p.lon||(p.center&&p.center.lon); if(!lat||!lng) return; p._lat=lat; p._lng=lng; p._dist=calcDist(userLat,userLng,lat,lng); });
     parksData=parksData.filter(function(p){return p._lat;});
     var unique=[];
@@ -114,19 +115,19 @@ function loadParks(){
     parksData.sort(function(a,b){return a._dist-b._dist;});
     parksData.forEach(function(park,idx){
       var name=park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
-      var marker=L.marker([park._lat,park._lng],{icon:parkIcon});
+      var marker=L.marker([park._lat,park._lng],{icon: idx===0 ? parkIcon : parkIconDim});
       if(clusterGroup){ clusterGroup.addLayer(marker); } else { marker.addTo(parksMap); }
       marker.bindPopup('<div style="font-family:system-ui;min-width:190px;padding:4px 0;"><div style="font-size:14px;font-weight:800;margin-bottom:2px;">'+name+'</div><div style="font-size:11px;color:#999;margin-bottom:10px;">'+formatDist(park._dist)+' entfernt</div><button onclick="openParkDetail('+idx+')" style="background:#ff5500;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">&#128170; Park ansehen</button><button onclick="openParkNav('+idx+')" style="background:none;border:1.5px solid #ddd;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%;color:#555;">&#128205; Navigation</button></div>');
       parksMarkers.push(marker);
     });
     buildParksList();
-    document.getElementById('parks-locate-btn').textContent='✓ STANDORT';
+    document.getElementById('parks-locate-btn').textContent='✓ Standort';
   }
 
   function tryProxy(idx){
     if(idx>=proxies.length){
       statusEl.textContent='Fehler beim Laden. Bitte nochmal versuchen.';
-      document.getElementById('parks-locate-btn').textContent='▷ STANDORT';
+      document.getElementById('parks-locate-btn').textContent='▷ Standort';
       return;
     }
     statusEl.textContent='Parks werden geladen...';
@@ -145,28 +146,153 @@ function loadParks(){
   tryProxy(0);
 }
 
-function buildParksList(){
-  var listEl = document.getElementById('parks-list');
-  listEl.innerHTML = '<div class="stitle" style="color:var(--accent);margin:0 0 10px;">PARKS IN DER NÄHE</div>';
+// ── Gespeicherte Parks (real, lokal persistiert) ───────────
+function getParkId(park){
+  return 'park_'+(park.id || Math.round(park._lat*1000)+'_'+Math.round(park._lng*1000));
+}
+function getSavedParkIds(){
+  try{ return JSON.parse(localStorage.getItem('cali_saved_parks')||'[]'); }catch(x){ return []; }
+}
+function isParkSaved(parkId){
+  return getSavedParkIds().indexOf(parkId) > -1;
+}
+function toggleParkSaved(parkId){
+  var saved = getSavedParkIds();
+  var idx = saved.indexOf(parkId);
+  if(idx>-1){ saved.splice(idx,1); } else { saved.push(parkId); }
+  try{ localStorage.setItem('cali_saved_parks', JSON.stringify(saved)); }catch(x){}
+  return idx===-1;
+}
 
-  parksData.slice(0,15).forEach(function(park, idx){
+// Nur echte, aus OSM-Tags ableitbare Infos — keine erfundenen Bewertungen/Ausstattungslisten.
+function parkLocationLabel(park){
+  var t = park.tags || {};
+  return t['addr:suburb'] || t['addr:city'] || t['addr:street'] || '';
+}
+function parkAccessLabel(park){
+  var a = park.tags && park.tags.access;
+  if(a === 'private' || a === 'no') return 'Privat';
+  if(a === 'yes' || a === 'public' || a === 'permissive') return 'Öffentlich';
+  return null;
+}
+function parkRealTags(park){
+  var t = park.tags || {};
+  var tags = [];
+  function addTag(raw){
+    if(!raw) return;
+    String(raw).split(';').forEach(function(part){
+      var label = part.trim().replace(/_/g,' ');
+      if(!label) return;
+      label = label.charAt(0).toUpperCase()+label.slice(1);
+      if(tags.indexOf(label)===-1) tags.push(label);
+    });
+  }
+  addTag(t.fitness_station);
+  if(t.sport && t.sport !== 'calisthenics' && t.sport !== 'fitness') addTag(t.sport);
+  return tags.slice(0,3);
+}
+
+var parksListExpanded = false;
+
+function buildParksList(){
+  parksListExpanded = false;
+  renderParksListHeader();
+  renderParksListItems();
+}
+
+function renderParksListHeader(){
+  var headerEl = document.getElementById('parks-list-header');
+  if(!headerEl) return;
+  headerEl.innerHTML = '';
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:16px;font-weight:800;color:var(--text);';
+  title.textContent = 'Parks in der Nähe';
+  headerEl.appendChild(title);
+  if(parksData.length > 5){
+    var link = document.createElement('button');
+    link.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0;';
+    link.innerHTML = parksListExpanded ? 'Weniger' : 'Alle anzeigen &#8250;';
+    link.onclick = function(){ parksListExpanded = !parksListExpanded; renderParksListHeader(); renderParksListItems(); };
+    headerEl.appendChild(link);
+  }
+}
+
+function renderParksListItems(){
+  var listEl = document.getElementById('parks-list');
+  if(!listEl) return;
+  listEl.innerHTML = '';
+  var items = parksListExpanded ? parksData : parksData.slice(0,5);
+
+  items.forEach(function(park, idx){
     var name = park.tags && (park.tags.name || park.tags['name:de']) ? (park.tags.name || park.tags['name:de']) : 'Calisthenics Park';
-    var addr = '';
-    if(park.tags){
-      if(park.tags['addr:street']) addr = park.tags['addr:street'] + (park.tags['addr:housenumber']?' '+park.tags['addr:housenumber']:'');
-      else if(park.tags['addr:city']) addr = park.tags['addr:city'];
-    }
+    var parkId = getParkId(park);
+    var locLabel = parkLocationLabel(park);
+    var accessLabel = parkAccessLabel(park);
+    var tags = parkRealTags(park);
+    var saved = isParkSaved(parkId);
 
     var card = document.createElement('div');
-    card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;';
-    card.onclick = function(){ openParkDetail(idx); };
-    card.innerHTML =
-      '<div style="font-size:22px;flex-shrink:0;">\uD83D\uDCAA</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+
-        (addr?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+addr+'</div>':'')+
-      '</div>'+
-      '<div style="font-family:inherit;font-weight:800;font-size:15px;color:var(--accent);flex-shrink:0;">'+formatDist(park._dist)+'</div>';
+    card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px 16px;margin-bottom:10px;';
+
+    var topRow = document.createElement('div');
+    topRow.style.cssText = 'display:flex;align-items:flex-start;gap:12px;';
+
+    var icon = document.createElement('div');
+    icon.style.cssText = 'width:52px;height:52px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;cursor:pointer;';
+    icon.innerHTML = '&#128170;';
+    icon.onclick = function(){ openParkDetail(idx); };
+
+    var info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0;cursor:pointer;';
+    info.onclick = function(){ openParkDetail(idx); };
+    var nameRow = document.createElement('div');
+    nameRow.style.cssText = 'font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    nameRow.textContent = name;
+    var locRow = document.createElement('div');
+    locRow.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+    locRow.innerHTML = '&#128205; ' + (locLabel ? locLabel+' &middot; ' : '') + formatDist(park._dist);
+    info.appendChild(nameRow); info.appendChild(locRow);
+    if(accessLabel){
+      var accessRow = document.createElement('div');
+      accessRow.style.cssText = 'font-size:10.5px;color:var(--muted);margin-top:3px;';
+      accessRow.textContent = accessLabel;
+      info.appendChild(accessRow);
+    }
+
+    var bookmarkBtn = document.createElement('button');
+    bookmarkBtn.setAttribute('aria-label', saved ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen');
+    bookmarkBtn.style.cssText = 'background:none;border:none;color:'+(saved?'var(--accent)':'var(--muted2)')+';font-size:18px;cursor:pointer;flex-shrink:0;padding:2px;';
+    bookmarkBtn.innerHTML = '&#128278;';
+    bookmarkBtn.onclick = function(e){
+      e.stopPropagation();
+      toggleParkSaved(parkId);
+      renderParksListItems();
+    };
+
+    topRow.appendChild(icon); topRow.appendChild(info); topRow.appendChild(bookmarkBtn);
+    card.appendChild(topRow);
+
+    if(tags.length){
+      var tagRow = document.createElement('div');
+      tagRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;';
+      tags.forEach(function(t){
+        var chip = document.createElement('div');
+        chip.style.cssText = 'background:var(--bg3);border-radius:20px;padding:4px 10px;font-size:10px;color:var(--muted);font-weight:600;';
+        chip.textContent = t;
+        tagRow.appendChild(chip);
+      });
+      card.appendChild(tagRow);
+    }
+
+    var detailRow = document.createElement('div');
+    detailRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:8px;';
+    var detailLink = document.createElement('button');
+    detailLink.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0;';
+    detailLink.innerHTML = 'Details &#8250;';
+    detailLink.onclick = function(){ openParkDetail(idx); };
+    detailRow.appendChild(detailLink);
+    card.appendChild(detailRow);
+
     listEl.appendChild(card);
   });
 }
