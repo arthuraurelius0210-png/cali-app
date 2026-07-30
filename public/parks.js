@@ -242,7 +242,7 @@ function renderParksListItems(){
 
     var icon = document.createElement('div');
     icon.style.cssText = 'width:56px;height:56px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;cursor:pointer;';
-    icon.innerHTML = '&#128170;';
+    icon.innerHTML = '<div style="width:26px;height:26px;">'+ci('flex')+'</div>';
     icon.onclick = function(){ openParkDetail(idx); };
 
     var info = document.createElement('div');
@@ -265,7 +265,7 @@ function renderParksListItems(){
     var bookmarkBtn = document.createElement('button');
     bookmarkBtn.setAttribute('aria-label', saved ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen');
     bookmarkBtn.style.cssText = 'background:none;border:none;color:'+(saved?'var(--accent)':'var(--muted2)')+';font-size:23px;cursor:pointer;flex-shrink:0;padding:2px;line-height:1;';
-    bookmarkBtn.innerHTML = '&#128278;';
+    bookmarkBtn.innerHTML = '<div style="width:20px;height:20px;">'+ci('bookmark')+'</div>';
     bookmarkBtn.onclick = function(e){
       e.stopPropagation();
       toggleParkSaved(parkId);

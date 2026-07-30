@@ -1,3 +1,41 @@
+// ── CUSTOM ICON SET (matches the CALI icon-sheet: line-art, orange accents) ──
+var CALI_ICONS = {
+  flame: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2c1 4-4 5-4 9a4 4 0 008 0c0-1.5-1-2-1-3.5 2 1 3 3 3 5.5a6 6 0 01-12 0C6 8 9 6 12 2z"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4a3 3 0 003 3M17 5h3a3 3 0 01-3 3"/><path d="M12 13v3M9 20h6M9.5 20c0-2 1-2.5 2.5-3s2.5-1 2.5-3"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
+  trend: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6z"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="var(--accent)"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2a7 7 0 00-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5" fill="#fff"/></svg>',
+  handshake: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-3 4 2 3-2 3 2 4-2 2 3-3 5-3-1-3 2-3-2-3 1-4-5z"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-5-5"/></svg>',
+  bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M8 5v14l11-7z"/></svg>',
+  lightbulb: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.5.4.8 1 .8 1.6V16h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0012 3z"/></svg>',
+  dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 000-3l2-1.5-2-3.5-2.4 1a7.6 7.6 0 00-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 00-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 000 3l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 002.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 002.6-1.5l2.4 1 2-3.5z"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 0112 0c0 4 1.5 5 1.5 5h-15S6 14 6 10z"/><path d="M10 19a2 2 0 004 0"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 6"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg>',
+  flex: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M4 14c0-2 1-3 2-3 0-2 1-3 2.5-3 .3-1.5 1.5-3 3.5-3 3 0 4.5 2 4.5 5 1.5 0 2.5 1.5 2.5 3 1 .3 1.5 1.3 1.5 2.5C20.5 18 18 20 15 20H8c-2.5 0-4-2-4-4v-2z"/></svg>',
+  people: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c.2-2.5 1.8-4 4-4"/></svg>'
+};
+function ci(name){
+  var svg = CALI_ICONS[name] || '';
+  return svg.replace('<svg ', '<svg width="100%" height="100%" style="display:block;" ');
+}
+function iconWrap(name, opts){
+  opts = opts || {};
+  var size = opts.size || 20;
+  var box = opts.box || 44;
+  var bg = opts.bg || 'rgba(255,85,0,0.1)';
+  var radius = opts.radius != null ? opts.radius : Math.round(box*0.32);
+  return '<div style="width:'+box+'px;height:'+box+'px;border-radius:'+radius+'px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+    '<div style="width:'+size+'px;height:'+size+'px;">'+ci(name)+'</div></div>';
+}
+
 var DB   = 'cali_v4';
 var DHR  = 'cali_hr';
 var ents = [];
@@ -562,7 +600,7 @@ function bb(){
     el.className='pk-card';
     el.style.cssText='display:flex;align-items:center;gap:16px;padding:20px;';
     el.innerHTML=
-      '<div style="width:52px;height:52px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">&#127942;</div>'+
+      iconWrap('trophy',{size:24,box:52,radius:16})+
       '<div style="flex:1;min-width:0;">'+
         '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;">Noch keine Rekorde</div>'+
         '<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px;">Schließe dein erstes Workout ab, um persönliche Bestleistungen zu speichern.</div>'+
@@ -583,9 +621,9 @@ function buildStartDashboard(){
   var bestsCount=countPersonalBests();
 
   var tiles=[
-    {icon:'&#128293;', val:weekDone+' / '+weekGoal, label:'Workouts diese Woche', bar:weekPct},
-    {icon:'&#128200;', val:streak+' Tage', label:'Aktueller Streak', hint:streak===0?'Bleib dran und baue Kontinuität auf.':''},
-    {icon:'&#127942;', val:String(bestsCount), label:'Persönliche Bestleistungen', hint:bestsCount===0?'Schließe Workouts ab, um Bestleistungen zu erzielen.':''}
+    {icon:'flame', val:weekDone+' / '+weekGoal, label:'Workouts diese Woche', bar:weekPct},
+    {icon:'trend', val:streak+' Tage', label:'Aktueller Streak', hint:streak===0?'Bleib dran und baue Kontinuität auf.':''},
+    {icon:'trophy', val:String(bestsCount), label:'Persönliche Bestleistungen', hint:bestsCount===0?'Schließe Workouts ab, um Bestleistungen zu erzielen.':''}
   ];
 
   var grid=document.createElement('div');
@@ -595,7 +633,7 @@ function buildStartDashboard(){
     tile.className='pk-card';
     tile.style.cssText='padding:14px;';
     tile.innerHTML=
-      '<div style="width:34px;height:34px;border-radius:11px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px;">'+t.icon+'</div>'+
+      '<div style="margin-bottom:10px;">'+iconWrap(t.icon,{size:16,box:34,radius:11})+'</div>'+
       '<div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.2;">'+t.val+'</div>'+
       '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+t.label+'</div>'+
       (typeof t.bar==='number'?'<div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:'+t.bar+'%;background:var(--accent);border-radius:4px;"></div></div>':'')+

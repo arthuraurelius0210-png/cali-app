@@ -1117,8 +1117,8 @@ function buildTodayHeroCard(container, wp, todayIdx){
   card.style.cssText = 'position:relative;overflow:hidden;background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:22px;margin-bottom:20px;border-left:4px solid var(--accent);';
 
   var deco = document.createElement('div');
-  deco.style.cssText = 'position:absolute;right:-8px;bottom:-14px;font-size:88px;opacity:0.07;line-height:1;pointer-events:none;';
-  deco.textContent = hasWorkout ? '💪' : '😴';
+  deco.style.cssText = 'position:absolute;right:-6px;bottom:-6px;width:130px;height:130px;opacity:0.07;pointer-events:none;';
+  deco.innerHTML = ci(hasWorkout ? 'flex' : 'moon');
   card.appendChild(deco);
 
   var content = document.createElement('div');
@@ -1136,7 +1136,7 @@ function buildTodayHeroCard(container, wp, todayIdx){
 
   var statusRow = document.createElement('div');
   statusRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;';
-  statusRow.innerHTML = '<span style="font-size:22px;">'+(hasWorkout?'💪':'😴')+'</span>'+
+  statusRow.innerHTML = '<span style="display:inline-flex;width:22px;height:22px;vertical-align:middle;">'+ci(hasWorkout?'flex':'moon')+'</span>'+
     '<span style="font-size:16px;font-weight:700;color:var(--text);">'+(hasWorkout?firstPlan.name:'Ruhetag')+'</span>';
   content.appendChild(statusRow);
 
@@ -1252,13 +1252,13 @@ function renderDayList(scroll, focusIdx){
   var statsBar = document.createElement('div');
   statsBar.style.cssText = 'display:flex;gap:8px;background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:12px;margin-bottom:12px;flex-wrap:wrap;';
   [
-    {icon:'💪', val:stats.workouts, label:'Workouts'},
-    {icon:'😴', val:stats.restDays, label:'Ruhetage'},
-    {icon:'🔥', val:stats.totalEx, label:'Übungen'}
+    {icon:'flex', val:stats.workouts, label:'Workouts'},
+    {icon:'moon', val:stats.restDays, label:'Ruhetage'},
+    {icon:'flame', val:stats.totalEx, label:'Übungen'}
   ].forEach(function(s){
     var pill = document.createElement('div');
     pill.style.cssText = 'flex:1;min-width:90px;display:flex;align-items:center;gap:8px;';
-    pill.innerHTML = '<div style="font-size:18px;">'+s.icon+'</div><div><div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.1;">'+s.val+'</div><div style="font-size:10px;color:var(--muted);">'+s.label+'</div></div>';
+    pill.innerHTML = '<div style="width:20px;height:20px;">'+ci(s.icon)+'</div><div><div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.1;">'+s.val+'</div><div style="font-size:10px;color:var(--muted);">'+s.label+'</div></div>';
     statsBar.appendChild(pill);
   });
   left.appendChild(statsBar);
@@ -1283,7 +1283,7 @@ function renderDayList(scroll, focusIdx){
     var dayHdr = document.createElement('div');
     dayHdr.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;';
     dayHdr.innerHTML =
-      '<div style="width:34px;height:34px;border-radius:10px;background:'+(hasWorkout?'rgba(255,85,0,0.12)':'rgba(150,150,150,0.15)')+';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+(hasWorkout?'💪':'😴')+'</div>'+
+      iconWrap(hasWorkout?'flex':'moon',{size:16,box:34,radius:10,bg:hasWorkout?'rgba(255,85,0,0.12)':'rgba(150,150,150,0.15)'})+
       '<div style="flex-shrink:0;width:44px;">'+
         '<div style="font-size:10px;font-weight:800;color:'+(isToday?'var(--accent)':'var(--muted)')+';">'+WEEK_DAYS[i].toUpperCase()+'</div>'+
         '<div style="font-size:10px;color:var(--muted);">'+formatDayDate(weekDates[i])+'</div>'+
@@ -1488,7 +1488,7 @@ function buildInlineDayDetail(container, dayIdx, wp){
 
   var hdr = document.createElement('div');
   hdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:12px;';
-  hdr.innerHTML = '<span style="font-size:18px;">'+(hasWorkout?'💪':'😴')+'</span>'+
+  hdr.innerHTML = '<span style="display:inline-flex;width:18px;height:18px;vertical-align:middle;">'+ci(hasWorkout?'flex':'moon')+'</span>'+
     '<span style="font-size:14px;font-weight:700;color:var(--text);">'+WEEK_DAYS_FULL[dayIdx]+'</span>'+
     '<span style="font-size:13px;color:var(--muted);">— '+(hasWorkout?firstPlan.name:'Ruhetag')+'</span>';
   box.appendChild(hdr);
@@ -1543,13 +1543,13 @@ function buildWeekSummaryCard(container, stats){
   var tileRow = document.createElement('div');
   tileRow.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;';
   [
-    {icon:'💪', val:stats.workouts, label:'Workout'+(stats.workouts===1?'':'s')},
-    {icon:'😴', val:stats.restDays, label:'Ruhetage'},
-    {icon:'🔥', val:stats.totalEx, label:'Übungen'}
+    {icon:'flex', val:stats.workouts, label:'Workout'+(stats.workouts===1?'':'s')},
+    {icon:'moon', val:stats.restDays, label:'Ruhetage'},
+    {icon:'flame', val:stats.totalEx, label:'Übungen'}
   ].forEach(function(s){
     var tile = document.createElement('div');
     tile.style.cssText = 'background:var(--bg3);border-radius:16px;padding:14px 8px;text-align:center;';
-    tile.innerHTML = '<div style="width:36px;height:36px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 8px;">'+s.icon+'</div>'+
+    tile.innerHTML = '<div style="width:36px;height:36px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><div style="width:16px;height:16px;">'+ci(s.icon)+'</div></div>'+
       '<div style="font-size:18px;font-weight:700;color:var(--text);">'+s.val+'</div>'+
       '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+s.label+'</div>';
     tileRow.appendChild(tile);
@@ -1569,10 +1569,10 @@ function buildWeekTipCard(container){
   var card = document.createElement('div');
   card.style.cssText = 'display:flex;align-items:center;gap:14px;background:rgba(255,85,0,0.07);border-radius:20px;padding:16px 18px;margin-bottom:20px;';
 
-  var iconWrap = document.createElement('div');
-  iconWrap.style.cssText = 'font-size:22px;flex-shrink:0;';
-  iconWrap.textContent = '💡';
-  card.appendChild(iconWrap);
+  var tipIconWrap = document.createElement('div');
+  tipIconWrap.style.cssText = 'width:22px;height:22px;flex-shrink:0;';
+  tipIconWrap.innerHTML = ci('lightbulb');
+  card.appendChild(tipIconWrap);
 
   var textWrap = document.createElement('div');
   textWrap.style.cssText = 'flex:1;min-width:0;';

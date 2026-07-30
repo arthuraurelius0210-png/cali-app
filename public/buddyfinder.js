@@ -263,8 +263,8 @@ function buildBuddyCard(docId, data, dist){
   hdRow.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;';
 
   var avatarEl = document.createElement('div');
-  avatarEl.style.cssText = 'width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;';
-  avatarEl.innerHTML = '&#128170;';
+  avatarEl.style.cssText = 'width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;';
+  avatarEl.innerHTML = '<div style="width:16px;height:16px;">'+ci('flex')+'</div>';
   if(data.uid){
     db.collection('users').doc(data.uid).get().then(function(doc){
       if(!doc.exists) return;
