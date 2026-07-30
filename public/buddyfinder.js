@@ -6,9 +6,34 @@
 var buddyRequestsData = [];
 var buddySelectedPark = null; // {name, lat, lng} während Anfrage-Erstellung
 
+// ── FILTER ─────────────────────────────────────────────────
+var buddyFilterDist = 0; // 0 = alle, sonst Meter
+var buddyFilterLevel = 'all';
+var buddyFilterTime = 'all';
+var BUDDY_DIST_OPTIONS = [{id:0,label:'Alle'},{id:2000,label:'2 km'},{id:5000,label:'5 km'},{id:10000,label:'10 km'}];
+var BUDDY_LEVEL_FILTER_OPTIONS = [{id:'all',label:'Alle'},{id:'anfaenger',label:'&#127793; Anfänger'},{id:'fortgeschritten',label:'&#128293; Fortgeschritten'},{id:'egal',label:'&#129309; Egal'}];
+var BUDDY_TIME_FILTER_OPTIONS = [{id:'all',label:'Alle'},{id:'jetzt',label:'&#9889; Jetzt'},{id:'heute',label:'&#128197; Heute'},{id:'woche',label:'&#128198; Diese Woche'},{id:'wochentag',label:'&#128260; Fester Tag'}];
+
+function buildBuddyFilterChipRow(container, options, getSelected, onSelect){
+  container.innerHTML = '';
+  options.forEach(function(opt){
+    var btn = document.createElement('button');
+    var isActive = opt.id === getSelected();
+    btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    btn.innerHTML = opt.label;
+    btn.onclick = function(){
+      onSelect(opt.id);
+      buildBuddyFilterChipRow(container, options, getSelected, onSelect);
+      renderBuddyList();
+    };
+    container.appendChild(btn);
+  });
+}
+
 function openBuddyFinderPage(){
   if(!currentUser){ toast('Bitte erst einloggen!'); return; }
   var ex = document.getElementById('buddy-page-ov'); if(ex) ex.remove();
+  buddyFilterDist = 0; buddyFilterLevel = 'all'; buddyFilterTime = 'all';
 
   var ov = document.createElement('div');
   ov.id = 'buddy-page-ov';
@@ -44,6 +69,41 @@ function openBuddyFinderPage(){
   safety.style.cssText = 'background:rgba(255,85,0,0.07);border:1px solid rgba(255,85,0,0.2);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:14px;';
   safety.innerHTML = '&#128737;&#65039; <b style="color:var(--text);">Sicherheitshinweis:</b> Trefft euch an öffentlichen, belebten Orten und teilt vorher jemandem eure Pläne mit.';
   scroll.appendChild(safety);
+
+  // Filter
+  var filterToggleRow = document.createElement('div');
+  filterToggleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;';
+  var filterToggleBtn = document.createElement('button');
+  filterToggleBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;color:var(--text);';
+  filterToggleBtn.innerHTML = '&#128269; Filter';
+  var filterPanel = document.createElement('div');
+  filterPanel.style.cssText = 'display:none;background:var(--bg2);border-radius:14px;padding:14px;margin-bottom:14px;';
+  filterToggleBtn.onclick = function(){
+    var open = filterPanel.style.display !== 'none';
+    filterPanel.style.display = open ? 'none' : 'block';
+  };
+  filterToggleRow.appendChild(filterToggleBtn);
+  scroll.appendChild(filterToggleRow);
+
+  function filterRow(labelText, options, getSelected, onSelect){
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:12px;';
+    var lbl = document.createElement('div');
+    lbl.className = 'stitle'; lbl.style.cssText = 'margin:0 0 6px;';
+    lbl.textContent = labelText;
+    wrap.appendChild(lbl);
+    var chips = document.createElement('div');
+    chips.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;';
+    wrap.appendChild(chips);
+    buildBuddyFilterChipRow(chips, options, getSelected, onSelect);
+    return wrap;
+  }
+  filterPanel.appendChild(filterRow('ENTFERNUNG', BUDDY_DIST_OPTIONS, function(){ return buddyFilterDist; }, function(v){ buddyFilterDist = v; }));
+  filterPanel.appendChild(filterRow('LEVEL', BUDDY_LEVEL_FILTER_OPTIONS, function(){ return buddyFilterLevel; }, function(v){ buddyFilterLevel = v; }));
+  var lastFilterRow = filterRow('ZEITPUNKT', BUDDY_TIME_FILTER_OPTIONS, function(){ return buddyFilterTime; }, function(v){ buddyFilterTime = v; });
+  lastFilterRow.style.marginBottom = '0';
+  filterPanel.appendChild(lastFilterRow);
+  scroll.appendChild(filterPanel);
 
   var listWrap = document.createElement('div');
   listWrap.id = 'buddy-list';
@@ -85,6 +145,15 @@ function loadBuddyRequests(){
     .catch(function(){ listWrap.innerHTML = '<div style="text-align:center;padding:20px 0;font-size:12px;color:var(--muted);">Fehler beim Laden.</div>'; });
 }
 
+function getFilteredBuddyRequests(){
+  return buddyRequestsData.filter(function(item){
+    if(buddyFilterDist > 0 && (item._dist == null || item._dist > buddyFilterDist)) return false;
+    if(buddyFilterLevel !== 'all' && item.data.level !== buddyFilterLevel) return false;
+    if(buddyFilterTime !== 'all' && item.data.timeLabel !== buddyFilterTime) return false;
+    return true;
+  });
+}
+
 function renderBuddyList(){
   var listWrap = document.getElementById('buddy-list');
   if(!listWrap) return;
@@ -95,7 +164,13 @@ function renderBuddyList(){
     return;
   }
 
-  buddyRequestsData.forEach(function(item){
+  var filtered = getFilteredBuddyRequests();
+  if(filtered.length === 0){
+    listWrap.innerHTML = '<div style="text-align:center;padding:30px 0;font-size:12px;color:var(--muted);">Keine Anfragen passen zu deinem Filter.</div>';
+    return;
+  }
+
+  filtered.forEach(function(item){
     var placeholder = document.createElement('div');
     listWrap.appendChild(placeholder);
     var isOwn = currentUser && item.data.uid === currentUser.uid;
@@ -118,8 +193,18 @@ function renderBuddyList(){
   });
 }
 
-var BUDDY_TIME_LABELS = {jetzt:'&#9889; Jetzt', heute:'&#128197; Heute', woche:'&#128198; Diese Woche'};
+var BUDDY_TIME_LABELS = {jetzt:'&#9889; Jetzt', heute:'&#128197; Heute', woche:'&#128198; Diese Woche', wochentag:'&#128260; Fester Tag'};
 var BUDDY_LEVEL_LABELS = {anfaenger:'&#127793; Anfänger', fortgeschritten:'&#128293; Fortgeschritten', egal:'&#129309; Egal'};
+var BUDDY_WEEKDAYS = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+var BUDDY_WEEKDAY_NAMES = {Mo:'Montag', Di:'Dienstag', Mi:'Mittwoch', Do:'Donnerstag', Fr:'Freitag', Sa:'Samstag', So:'Sonntag'};
+
+function buddyTimeBadgeLabel(data){
+  if(data.timeLabel === 'wochentag' && data.weekday){
+    var dayName = BUDDY_WEEKDAY_NAMES[data.weekday] || data.weekday;
+    return '&#128260; Jeden ' + dayName + (data.weekdayTime ? ', ' + data.weekdayTime + ' Uhr' : '');
+  }
+  return BUDDY_TIME_LABELS[data.timeLabel];
+}
 
 function buildBuddyCard(docId, data, dist){
   var card = document.createElement('div');
@@ -174,7 +259,7 @@ function buildBuddyCard(docId, data, dist){
 
   var badgeRow = document.createElement('div');
   badgeRow.style.cssText = 'display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;';
-  [data.timeLabel && BUDDY_TIME_LABELS[data.timeLabel], data.level && BUDDY_LEVEL_LABELS[data.level]].forEach(function(label){
+  [data.timeLabel && buddyTimeBadgeLabel(data), data.level && BUDDY_LEVEL_LABELS[data.level]].forEach(function(label){
     if(!label) return;
     var b = document.createElement('div');
     b.style.cssText = 'background:var(--bg3);border-radius:20px;padding:4px 10px;font-size:10px;color:var(--muted);font-weight:700;';
@@ -359,8 +444,37 @@ function openCreateBuddyRequest(){
   timeLabel.textContent = 'WANN';
   box.appendChild(timeLabel);
   var timeWrap = document.createElement('div');
-  timeWrap.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;';
+  timeWrap.style.cssText = 'display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;';
   var selectedTime = 'heute';
+
+  // Wochentag-Unterauswahl (nur sichtbar bei "Fester Tag")
+  var weekdayWrap = document.createElement('div');
+  weekdayWrap.style.cssText = 'display:none;margin-bottom:14px;';
+  var selectedWeekday = null;
+  var wdChips = document.createElement('div');
+  wdChips.style.cssText = 'display:flex;gap:5px;margin-bottom:8px;';
+  BUDDY_WEEKDAYS.forEach(function(day){
+    var wbtn = document.createElement('button');
+    wbtn.dataset.day = day;
+    wbtn.style.cssText = 'flex:1;padding:9px 2px;border-radius:10px;border:1.5px solid var(--border);background:none;color:var(--muted);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+    wbtn.textContent = day;
+    wbtn.onclick = function(){
+      selectedWeekday = day;
+      wdChips.querySelectorAll('button').forEach(function(b){
+        var a = b.dataset.day === selectedWeekday;
+        b.style.borderColor = a?'var(--accent)':'var(--border)';
+        b.style.background = a?'var(--accent)':'none';
+        b.style.color = a?'#fff':'var(--muted)';
+      });
+    };
+    wdChips.appendChild(wbtn);
+  });
+  weekdayWrap.appendChild(wdChips);
+  var wdTimeInp = document.createElement('input');
+  wdTimeInp.type = 'time';
+  wdTimeInp.style.cssText = 'width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
+  weekdayWrap.appendChild(wdTimeInp);
+
   Object.keys(BUDDY_TIME_LABELS).forEach(function(key){
     var btn = document.createElement('button');
     btn.dataset.key = key;
@@ -375,10 +489,12 @@ function openCreateBuddyRequest(){
         b.style.background = a?'var(--accent)':'none';
         b.style.color = a?'#fff':'var(--muted)';
       });
+      weekdayWrap.style.display = (selectedTime === 'wochentag') ? 'block' : 'none';
     };
     timeWrap.appendChild(btn);
   });
   box.appendChild(timeWrap);
+  box.appendChild(weekdayWrap);
 
   // Level
   var levelLabel = document.createElement('div');
@@ -423,6 +539,7 @@ function openCreateBuddyRequest(){
   submitBtn.textContent = 'ANFRAGE ERSTELLEN';
   submitBtn.onclick = function(){
     if(!buddySelectedPark){ toast('Bitte einen Park wählen!'); return; }
+    if(selectedTime === 'wochentag' && !selectedWeekday){ toast('Bitte einen Wochentag wählen!'); return; }
     if(prData && prData.isPublic === false){ toast('&#128274; Profil ist privat.'); return; }
 
     var entry = {
@@ -437,6 +554,10 @@ function openCreateBuddyRequest(){
       replies: [],
       createdAt: new Date().toISOString()
     };
+    if(selectedTime === 'wochentag'){
+      entry.weekday = selectedWeekday;
+      if(wdTimeInp.value) entry.weekdayTime = wdTimeInp.value;
+    }
 
     db.collection('trainingBuddies').add(entry)
       .then(function(){
