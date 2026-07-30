@@ -836,7 +836,7 @@ function renderTrendingCard(container, id, stats){
   var views = stats.views || 0;
 
   var card = document.createElement('div');
-  card.style.cssText = 'background:#fff;border-radius:16px;overflow:hidden;flex:0 0 62%;min-width:190px;max-width:220px;box-shadow:0 2px 12px rgba(0,0,0,0.06);';
+  card.style.cssText = 'background:#fff;border-radius:16px;overflow:hidden;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.06);';
 
   var header = document.createElement('div');
   header.style.cssText = photoUrl
