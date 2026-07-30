@@ -2,6 +2,7 @@
 // Öffentliche Anfragen: "Ich trainiere heute im Park X, wer ist dabei?"
 // Antworten sind ein öffentlicher Reply-Thread (kein Chat/DM-System).
 // Respektiert prData.isPublic: private Profile werden nirgendwo angezeigt.
+// Anfragen laufen nach 7 Tagen ab (expiresAt) und werden dann gelöscht.
 
 var buddyRequestsData = [];
 var buddySelectedPark = null; // {name, lat, lng} während Anfrage-Erstellung
@@ -158,11 +159,19 @@ function loadBuddyRequests(){
   if(!listWrap) return;
   db.collection('trainingBuddies').orderBy('createdAt','desc').limit(50).get()
     .then(function(snap){
-      var cutoff = Date.now() - 7*24*60*60*1000; // Anfragen älter als 7 Tage ausblenden
+      var now = Date.now();
       var docs = [];
       snap.forEach(function(doc){
         var d = doc.data();
-        if(new Date(d.createdAt).getTime() < cutoff) return;
+        // Anfragen sind höchstens 1 Woche live. expiresAt ist ein Firestore-Timestamp;
+        // ältere Dokumente ohne das Feld fallen auf createdAt+7 Tage zurück.
+        var expiresAtMs = (d.expiresAt && typeof d.expiresAt.toMillis === 'function')
+          ? d.expiresAt.toMillis()
+          : new Date(d.createdAt).getTime() + 7*24*60*60*1000;
+        if(expiresAtMs < now){
+          doc.ref.delete().catch(function(){});
+          return;
+        }
         docs.push({id: doc.id, data: d});
       });
       if(typeof userLat === 'number' && typeof userLng === 'number'){
@@ -592,7 +601,8 @@ function openCreateBuddyRequest(){
       level: selectedLevel,
       message: msgInp.value.trim().slice(0,200),
       replies: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 7*24*60*60*1000))
     };
     if(selectedTime === 'wochentag'){
       entry.weekday = selectedWeekday;
