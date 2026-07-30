@@ -1321,10 +1321,18 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   var card = document.createElement('div');
   card.style.cssText = 'background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:20px;margin-bottom:20px;';
 
+  var sectionTitleRow = document.createElement('div');
+  sectionTitleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
   var sectionTitle = document.createElement('div');
-  sectionTitle.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;';
+  sectionTitle.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;';
   sectionTitle.innerHTML = '📅 Wochenplan';
-  card.appendChild(sectionTitle);
+  sectionTitleRow.appendChild(sectionTitle);
+  var fullWeekBtn = document.createElement('button');
+  fullWeekBtn.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;';
+  fullWeekBtn.innerHTML = 'Ganze Woche →';
+  fullWeekBtn.onclick = function(){ openDayListModal((new Date().getDay()+6)%7); };
+  sectionTitleRow.appendChild(fullWeekBtn);
+  card.appendChild(sectionTitleRow);
 
   var hdr = document.createElement('div');
   hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
