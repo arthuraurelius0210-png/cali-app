@@ -14,7 +14,7 @@ function buildChallengePresets(){
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
     (function(ch){
       var card = document.createElement('div');
-      card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;';
+      card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:8px;';
 
       var top = document.createElement('div');
       top.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
@@ -328,7 +328,7 @@ function buildProfilStatsDetail(){
   grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;';
   for(var i=0;i<bigStats.length;i++){
     var box=document.createElement('div');
-    box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;';
+    box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;';
     var val=document.createElement('div');
     val.style.cssText='font-family:inherit;font-weight:800;font-size:26px;color:var(--accent);line-height:1;margin-bottom:3px;';
     val.textContent=bigStats[i].value;
@@ -453,7 +453,7 @@ function buildProfilUI(){
     sr.innerHTML='';
     for(var i=0;i<stats.length;i++){
       var box=document.createElement('div');
-      box.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;';
+      box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px 8px;text-align:center;';
       var val=document.createElement('div');
       val.style.cssText='font-family:inherit;font-weight:800;font-size:30px;color:var(--accent);line-height:1;';
       val.textContent=String(stats[i].value);
@@ -515,7 +515,7 @@ function buildProfilUI(){
       for(var name in bestMap){
         var me=bestMap[name];
         var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;';
+        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:6px;';
         var left=document.createElement('div');
         left.style.cssText='font-size:13px;font-weight:500;color:var(--text);';
         left.textContent=name.replace(' Max','');
@@ -538,7 +538,7 @@ function buildProfilUI(){
     sorted.sort(function(a,b){return b.total-a.total;});
     for(var i=0;i<sorted.length&&i<10;i++){
       var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;';
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:6px;';
       var rank=document.createElement('div');
       rank.style.cssText='font-family:inherit;font-size:13px;color:var(--muted);width:20px;text-align:center;';
       rank.textContent=String(i+1);

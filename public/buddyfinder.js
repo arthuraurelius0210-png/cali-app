@@ -44,7 +44,7 @@ function openBuddyFinderPage(){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
+  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
   backBtn.innerHTML = '&#8592; Zurück';
   backBtn.onclick = function(){ ov.remove(); };
   var titleWrap = document.createElement('div');
@@ -76,7 +76,7 @@ function openBuddyFinderPage(){
   var filterToggleRow = document.createElement('div');
   filterToggleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;';
   var filterToggleBtn = document.createElement('button');
-  filterToggleBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;color:var(--text);';
+  filterToggleBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;color:var(--text);';
   filterToggleBtn.innerHTML = '&#128269; Filter';
   var filterPanel = document.createElement('div');
   filterPanel.style.cssText = 'display:none;background:var(--bg2);border-radius:14px;padding:14px;margin-bottom:14px;';
@@ -437,7 +437,7 @@ function openCreateBuddyRequest(){
     parkPickWrap.innerHTML = '';
     if(!parksData || parksData.length === 0){
       var noParks = document.createElement('div');
-      noParks.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;';
+      noParks.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;';
       noParks.textContent = 'Noch keine Parks geladen.';
       var loadBtn = document.createElement('button');
       loadBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:11px;cursor:pointer;margin-top:8px;';

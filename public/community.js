@@ -334,7 +334,7 @@ function showCommPostModal(){
     }
     content.appendChild(card);
     if(challengeData.videoUrl){
-      var vPrev=document.createElement('div'); vPrev.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;';
+      var vPrev=document.createElement('div'); vPrev.style.cssText='background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;';
       var vIcon=document.createElement('div'); vIcon.style.cssText='font-size:20px;flex-shrink:0;'; vIcon.textContent='\uD83C\uDFA5';
       var vInfo=document.createElement('div'); vInfo.style.cssText='flex:1;min-width:0;';
       var vLbl=document.createElement('div'); vLbl.className='stitle'; vLbl.style.cssText='color:var(--accent);margin:0 0 3px;'; vLbl.textContent='ERKLÄR-VIDEO';

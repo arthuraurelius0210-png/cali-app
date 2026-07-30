@@ -178,7 +178,7 @@ function emomRenderExList(){
   for(var i = 0; i < emomExList.length; i++){
     (function(idx){
       var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;';
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:10px 14px;margin-bottom:6px;';
       var num = document.createElement('div');
       num.style.cssText = 'font-family:inherit;font-size:13px;color:var(--accent);margin-right:10px;';
       num.textContent = String(idx+1);

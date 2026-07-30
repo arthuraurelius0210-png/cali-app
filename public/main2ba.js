@@ -40,7 +40,7 @@ function buildProfilStreakSection(){
   var strEl=document.getElementById('pr-streak-section');
   if(strEl){
     strEl.innerHTML='';
-    var strCard=document.createElement('div');strCard.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;';
+    var strCard=document.createElement('div');strCard.style.cssText='background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:16px;';
     var strRow=document.createElement('div');strRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
     var strL=document.createElement('div');
     var sfEl=document.createElement('div');sfEl.style.cssText='font-size:22px;';sfEl.textContent=streakData.currentStreak>0?getFlames(Math.min(streakData.currentStreak,5))+' '+streakData.currentStreak+' Tage':'Kein Streak';
@@ -136,7 +136,7 @@ function buildProfilStreakSection(){
 
     // Kompakter Header-Button
     var msBtn = document.createElement('div');
-    msBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;';
+    msBtn.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;';
     msBtn.innerHTML =
       '<div style="font-size:24px;">\uD83D\uDC0E</div>'+
       '<div style="flex:1;">'+
@@ -590,7 +590,7 @@ function renderObStep(){
           '<input id="ob-height" type="number" value="'+obData.height+'" placeholder="z.B. 180" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;outline:none;box-sizing:border-box;">'+
         '</div>'+
       '</div>'+
-      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);line-height:1.6;">'+
+      '<div style="background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;font-size:11px;color:var(--muted);line-height:1.6;">'+
         '&#128274; Deine Körperdaten sind privat und werden nur lokal gespeichert.'+
       '</div>';
   } else if(obStep===2){

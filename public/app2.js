@@ -982,7 +982,7 @@ function buildDrawerPreset(el){
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
     (function(ch){
       var card = document.createElement('div');
-      card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;';
+      card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:10px;';
       card.onclick = function(){ trackChallengeView(ch.id); };
       card.innerHTML =
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
@@ -1107,7 +1107,7 @@ function openDayListModal(focusIdx){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
+  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
   backBtn.innerHTML = '← Zurück';
   backBtn.onclick = function(){ ov.remove(); };
   var titleEl = document.createElement('div');

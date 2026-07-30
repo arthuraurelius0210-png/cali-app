@@ -597,7 +597,7 @@ function buildPrivacyToggle(){
   var isPublic = prData && prData.isPublic !== false; // default public
 
   var wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;';
+  wrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:10px;';
   wrap.innerHTML =
     '<div>'+
       '<div style="font-size:13px;font-weight:700;color:var(--text);">Profil ' + (isPublic?'&#127758; Öffentlich':'&#128274; Privat') + '</div>'+
@@ -699,7 +699,7 @@ function openAdminPanel(){
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;';
+        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
         card.innerHTML =
           '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
@@ -816,7 +816,7 @@ function openParkDetail(idx){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '&#8592; Zurück';
   backBtn.onclick = function(){ ov.remove(); };
   var titleEl = document.createElement('div');
@@ -1153,7 +1153,7 @@ function openSuggestPark(){
 
   // GPS Status
   var gpsEl = document.createElement('div');
-  gpsEl.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;';
+  gpsEl.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;margin-bottom:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;';
   gpsEl.innerHTML = '<span style="font-size:18px;">&#128205;</span><span id="suggest-gps-status">GPS wird ermittelt...</span>';
   box.appendChild(gpsEl);
 
@@ -1238,7 +1238,7 @@ function loadApprovedEntries(el){
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;';
+        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
         card.innerHTML =
           '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
@@ -1275,7 +1275,7 @@ function loadRejectedEntries(el){
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;';
+        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
         card.innerHTML =
           '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
@@ -1312,7 +1312,7 @@ function loadParkSuggestions(el){
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;';
+        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
         card.innerHTML =
           '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; '+d.name+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Von: '+(d.submitterName||'Anonym')+'</div>'+

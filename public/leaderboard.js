@@ -34,7 +34,7 @@ function openGlobalLeaderboard(){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '&#8592; Zurück';
   backBtn.onclick = function(){ ov.remove(); };
   var titleEl = document.createElement('div');
