@@ -206,7 +206,7 @@ function goPage(p){
     var endX = e.changedTouches[0].clientX;
     var deltaY = endY - startY;
     var deltaX = endX - startX;
-    if(Math.abs(deltaY) < 70 || Math.abs(deltaX) > Math.abs(deltaY)) return;
+    if(Math.abs(deltaY) < 40 || Math.abs(deltaX) > Math.abs(deltaY)) return;
 
     var currentPage = document.querySelector('.page.on');
     if(!currentPage) return;
