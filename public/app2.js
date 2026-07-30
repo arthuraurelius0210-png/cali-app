@@ -1040,51 +1040,76 @@ function buildWeekPlan(){
 
   el.innerHTML = '';
 
-  // Monatskalender + Wochenübersicht + Tipp der Woche direkt auf der Seite
+  buildTodayHeroCard(el, wp, todayIdx);
   buildMonthCalendarCard(el, wp, buildWeekPlan);
   buildWeekSummaryCard(el, stats);
   buildWeekTipCard(el);
+}
 
-  // Kompakter Button der die Tagesansicht öffnet
-  var previewBtn = document.createElement('div');
-  previewBtn.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:12px;';
-  previewBtn.onclick = function(){ openDayListModal(todayIdx); };
+function computeWeekWorkoutsDone(){
+  var dates = getWeekDates();
+  var doneDates = {};
+  for(var i=0;i<ents.length;i++){ doneDates[ents[i].date] = true; }
+  var count = 0;
+  dates.forEach(function(d){ if(doneDates[d.toISOString().slice(0,10)]) count++; });
+  return count;
+}
 
-  // Zeige Heute als Preview
-  var todayPlans = wp[todayIdx] || [];
-  var previewLeft = document.createElement('div');
-  previewLeft.innerHTML =
-    '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;">Heute — '+WEEK_DAYS_FULL[todayIdx]+'</div>'+
-    (todayPlans.length===0
-      ? '<div style="font-size:13px;color:var(--muted);">😴 Ruhetag</div>'
-      : todayPlans.slice(0,2).map(function(id){
-          var p=getPlanById(id);
-          return '<div style="font-size:13px;font-weight:700;color:var(--text);">💪 '+(p?p.name:'Plan')+'</div>';
-        }).join('')+(todayPlans.length>2?'<div style="font-size:11px;color:var(--muted);">+'+( todayPlans.length-2)+' weitere</div>':'')
-    );
+function buildTodayHeroCard(container, wp, todayIdx){
+  var dayPlans = wp[todayIdx] || [];
+  var hasWorkout = dayPlans.length > 0;
+  var firstPlan = hasWorkout ? getPlanById(dayPlans[0]) : null;
+  if(hasWorkout && !firstPlan) hasWorkout = false;
 
-  var previewRight = document.createElement('div');
-  previewRight.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
-  // Mini 7-day dots — jeweils klickbar
-  var dotsRow = document.createElement('div');
-  dotsRow.style.cssText = 'display:flex;gap:3px;margin-bottom:4px;';
-  WEEK_DAYS.forEach(function(d,i){
-    var dot = document.createElement('div');
-    var dayPl = wp[i]||[];
-    dot.style.cssText = 'width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;background:'+(i===todayIdx?'var(--accent)':'var(--bg3)')+';color:'+(i===todayIdx?'#fff':'var(--muted)')+';cursor:pointer;';
-    dot.textContent = d;
-    dot.onclick = function(e){ e.stopPropagation(); openDayListModal(i); };
-    dotsRow.appendChild(dot);
-  });
-  previewRight.appendChild(dotsRow);
-  var linkLabel = document.createElement('div');
-  linkLabel.style.cssText = 'font-size:12px;color:var(--muted);';
-  linkLabel.textContent = 'Kalender öffnen ›';
-  previewRight.appendChild(linkLabel);
+  var today = new Date();
+  var dateStr = today.getDate()+'. '+MONTH_NAMES[today.getMonth()]+' '+today.getFullYear();
 
-  previewBtn.appendChild(previewLeft);
-  previewBtn.appendChild(previewRight);
-  el.appendChild(previewBtn);
+  var card = document.createElement('div');
+  card.style.cssText = 'position:relative;overflow:hidden;background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:22px;margin-bottom:20px;border-left:4px solid var(--accent);';
+
+  var deco = document.createElement('div');
+  deco.style.cssText = 'position:absolute;right:-8px;bottom:-14px;font-size:88px;opacity:0.07;line-height:1;pointer-events:none;';
+  deco.textContent = hasWorkout ? '💪' : '😴';
+  card.appendChild(deco);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'position:relative;';
+
+  var eyebrow = document.createElement('div');
+  eyebrow.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.5px;margin-bottom:6px;';
+  eyebrow.textContent = 'HEUTE';
+  content.appendChild(eyebrow);
+
+  var dateRow = document.createElement('div');
+  dateRow.style.cssText = 'font-size:19px;font-weight:700;color:var(--text);margin-bottom:14px;';
+  dateRow.textContent = WEEK_DAYS_FULL[todayIdx]+' • '+dateStr;
+  content.appendChild(dateRow);
+
+  var statusRow = document.createElement('div');
+  statusRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;';
+  statusRow.innerHTML = '<span style="font-size:22px;">'+(hasWorkout?'💪':'😴')+'</span>'+
+    '<span style="font-size:16px;font-weight:700;color:var(--text);">'+(hasWorkout?firstPlan.name:'Ruhetag')+'</span>';
+  content.appendChild(statusRow);
+
+  var tipRow = document.createElement('div');
+  tipRow.style.cssText = 'font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;max-width:80%;';
+  tipRow.textContent = hasWorkout
+    ? (firstPlan.exercises.length+' Übungen warten auf dich. Bleib fokussiert und achte auf saubere Technik.')
+    : 'Nutze heute die Zeit für Regeneration und Mobility.';
+  content.appendChild(tipRow);
+
+  var editBtn = document.createElement('button');
+  editBtn.className = 'pk-btn';
+  editBtn.style.cssText = 'background:'+(hasWorkout?'var(--accent)':'#fff')+';color:'+(hasWorkout?'#fff':'var(--text)')+';border:'+(hasWorkout?'none':'1.5px solid var(--border)')+';border-radius:14px;font-family:inherit;font-size:12.5px;font-weight:700;padding:11px 18px;cursor:pointer;';
+  editBtn.innerHTML = hasWorkout ? '▶ Workout starten' : '✎ Plan bearbeiten';
+  editBtn.onclick = function(){
+    if(hasWorkout){ startWorkout(firstPlan.id); }
+    else { openDayEditor(todayIdx, null); }
+  };
+  content.appendChild(editBtn);
+
+  card.appendChild(content);
+  container.appendChild(card);
 }
 
 var weekCalMonthOffset = 0;
@@ -1283,6 +1308,8 @@ function renderDayList(scroll, focusIdx){
   scroll.appendChild(left);
 }
 
+var weekCalExpandedDay = null; // 0-6 oder null — welcher Wochentag ist inline aufgeklappt
+
 function buildMonthCalendarCard(container, wp, rerenderFn){
   var now = new Date();
   var viewDate = new Date(now.getFullYear(), now.getMonth()+weekCalMonthOffset, 1);
@@ -1292,38 +1319,43 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   var prevMonthDays = new Date(year, month, 0).getDate();
 
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;margin-bottom:12px;';
+  card.style.cssText = 'background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:20px;margin-bottom:20px;';
+
+  var sectionTitle = document.createElement('div');
+  sectionTitle.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;';
+  sectionTitle.innerHTML = '📅 Wochenplan';
+  card.appendChild(sectionTitle);
 
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
   var prevBtn = document.createElement('button');
-  prevBtn.style.cssText = 'background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:4px 8px;';
-  prevBtn.textContent = '‹';
+  prevBtn.style.cssText = 'background:var(--bg3);border:none;border-radius:12px;font-size:16px;color:var(--text);cursor:pointer;width:36px;height:36px;';
+  prevBtn.textContent = '←';
   prevBtn.setAttribute('aria-label', 'Vorheriger Monat');
   prevBtn.onclick = function(){ weekCalMonthOffset--; rerenderFn(); };
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:13px;font-weight:800;color:var(--text);';
+  titleEl.style.cssText = 'font-size:16px;font-weight:700;color:var(--text);';
   titleEl.textContent = MONTH_NAMES[month]+' '+year;
   var nextBtn = document.createElement('button');
-  nextBtn.style.cssText = 'background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:4px 8px;';
-  nextBtn.textContent = '›';
+  nextBtn.style.cssText = 'background:var(--bg3);border:none;border-radius:12px;font-size:16px;color:var(--text);cursor:pointer;width:36px;height:36px;';
+  nextBtn.textContent = '→';
   nextBtn.setAttribute('aria-label', 'Nächster Monat');
   nextBtn.onclick = function(){ weekCalMonthOffset++; rerenderFn(); };
   hdr.appendChild(prevBtn); hdr.appendChild(titleEl); hdr.appendChild(nextBtn);
   card.appendChild(hdr);
 
   var weekHdrRow = document.createElement('div');
-  weekHdrRow.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;';
+  weekHdrRow.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px;';
   WEEK_DAYS.forEach(function(d){
     var c = document.createElement('div');
-    c.style.cssText = 'text-align:center;font-size:9px;font-weight:700;color:var(--muted);';
+    c.style.cssText = 'text-align:center;font-size:10px;font-weight:700;color:var(--muted);';
     c.textContent = d.toUpperCase();
     weekHdrRow.appendChild(c);
   });
   card.appendChild(weekHdrRow);
 
   var grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:12px;';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px;';
 
   var totalCells = startOffset + daysInMonth;
   var trailingCells = (7 - (totalCells % 7)) % 7;
@@ -1339,63 +1371,164 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
     var isRealToday = inMonth && weekCalMonthOffset===0 && dateNum === now.getDate();
     var dayPlans = wp[dowIdx] || [];
     var hasW = dayPlans.length > 0;
+    var isSkillDay = hasW && dayPlans.some(function(pid){ var p=getPlanById(pid); return p && /skill/i.test(p.name); });
 
     var cell = document.createElement('div');
-    cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:4px 0;';
+    cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:6px 0;border-radius:12px;'+(inMonth?'cursor:pointer;':'')+(weekCalExpandedDay===dowIdx && inMonth?'background:rgba(255,85,0,0.08);':'');
+    if(inMonth){
+      cell.onclick = function(dIdx){ return function(){ weekCalExpandedDay = (weekCalExpandedDay===dIdx) ? null : dIdx; rerenderFn(); }; }(dowIdx);
+    }
 
     var numEl = document.createElement('div');
-    numEl.style.cssText = 'width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:'+(isRealToday?'800':'600')+';'+
+    numEl.style.cssText = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:'+(isRealToday?'700':'600')+';'+
       (isRealToday ? 'background:var(--accent);color:#fff;' : 'color:'+(inMonth?'var(--text)':'var(--muted)')+';opacity:'+(inMonth?'1':'0.4')+';');
     numEl.textContent = dateNum;
     cell.appendChild(numEl);
 
-    var dot = document.createElement('div');
-    dot.style.cssText = 'width:5px;height:5px;border-radius:50%;margin-top:3px;background:'+(hasW?'var(--accent)':'var(--muted)')+';opacity:'+(inMonth?(hasW?'1':'0.5'):'0.25')+';';
-    cell.appendChild(dot);
+    var marker = document.createElement('div');
+    marker.style.cssText = 'margin-top:4px;opacity:'+(inMonth?(hasW?'1':'0.5'):'0.25')+';';
+    if(isSkillDay){
+      marker.style.fontSize = '9px';
+      marker.style.color = 'var(--accent)';
+      marker.textContent = '★';
+    } else {
+      marker.style.cssText += 'width:5px;height:5px;border-radius:50%;background:'+(hasW?'var(--accent)':'var(--muted)')+';';
+    }
+    cell.appendChild(marker);
 
     grid.appendChild(cell);
   }
   card.appendChild(grid);
 
   var legend = document.createElement('div');
-  legend.style.cssText = 'display:flex;gap:14px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border);';
-  [{c:'var(--accent)',l:'Workout'},{c:'var(--muted)',l:'Ruhetag'}].forEach(function(li){
+  legend.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border);margin-bottom:'+(weekCalExpandedDay!=null?'14px':'0')+';';
+  [{icon:'●',c:'var(--accent)',l:'Workout'},{icon:'★',c:'var(--accent)',l:'Skill'},{icon:'●',c:'var(--muted)',l:'Ruhetag'}].forEach(function(li){
     var item = document.createElement('div');
-    item.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);';
-    item.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:'+li.c+';"></div>'+li.l;
+    item.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted);';
+    item.innerHTML = '<span style="color:'+li.c+';font-size:9px;">'+li.icon+'</span>'+li.l;
     legend.appendChild(item);
   });
   card.appendChild(legend);
 
+  var detailPanel = document.createElement('div');
+  detailPanel.style.cssText = 'overflow:hidden;max-height:'+(weekCalExpandedDay!=null?'400px':'0')+';opacity:'+(weekCalExpandedDay!=null?'1':'0')+';transition:max-height 0.2s ease,opacity 0.2s ease;';
+  if(weekCalExpandedDay!=null){
+    buildInlineDayDetail(detailPanel, weekCalExpandedDay, wp);
+  }
+  card.appendChild(detailPanel);
+
   container.appendChild(card);
+}
+
+function buildInlineDayDetail(container, dayIdx, wp){
+  var dayPlans = wp[dayIdx] || [];
+  var hasWorkout = dayPlans.length > 0;
+  var firstPlan = hasWorkout ? getPlanById(dayPlans[0]) : null;
+  if(hasWorkout && !firstPlan) hasWorkout = false;
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg3);border-radius:16px;padding:16px;';
+
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:12px;';
+  hdr.innerHTML = '<span style="font-size:18px;">'+(hasWorkout?'💪':'😴')+'</span>'+
+    '<span style="font-size:14px;font-weight:700;color:var(--text);">'+WEEK_DAYS_FULL[dayIdx]+'</span>'+
+    '<span style="font-size:13px;color:var(--muted);">— '+(hasWorkout?firstPlan.name:'Ruhetag')+'</span>';
+  box.appendChild(hdr);
+
+  if(hasWorkout){
+    var meta = document.createElement('div');
+    meta.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:12px;';
+    meta.textContent = firstPlan.exercises.length+' Übungen'+(dayPlans.length>1?' • +'+(dayPlans.length-1)+' weitere':'');
+    box.appendChild(meta);
+
+    var startBtn = document.createElement('button');
+    startBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;cursor:pointer;margin-bottom:8px;';
+    startBtn.innerHTML = '▶ Workout starten';
+    startBtn.onclick = function(){ startWorkout(firstPlan.id); };
+    box.appendChild(startBtn);
+  }
+
+  var editBtn = document.createElement('button');
+  editBtn.style.cssText = 'width:100%;background:#fff;border:none;border-radius:12px;color:var(--muted);font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,0.05);';
+  editBtn.innerHTML = hasWorkout ? '✎ Plan bearbeiten' : '+ Plan hinzufügen';
+  editBtn.onclick = function(){ openDayEditor(dayIdx, null); };
+  box.appendChild(editBtn);
+
+  container.appendChild(box);
 }
 
 function buildWeekSummaryCard(container, stats){
+  var goal = (typeof streakData !== 'undefined' && streakData.weeklyGoal) ? streakData.weeklyGoal : 3;
+  var done = computeWeekWorkoutsDone();
+  var pct = Math.min(100, Math.round((done/goal)*100));
+
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;margin-bottom:12px;';
+  card.style.cssText = 'background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:20px;margin-bottom:20px;';
+
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;';
-  title.textContent = 'Wochenübersicht';
+  title.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;';
+  title.innerHTML = '📊 Diese Woche';
   card.appendChild(title);
-  var rows = [
-    {icon:'💪', label:'Workouts', val:stats.workouts},
-    {icon:'😴', label:'Ruhetage', val:stats.restDays},
-    {icon:'🔥', label:'Übungen gesamt', val:stats.totalEx}
-  ];
-  rows.forEach(function(r,idx){
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;'+(idx<rows.length-1?'border-bottom:1px solid var(--border);':'');
-    row.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);"><span>'+r.icon+'</span>'+r.label+'</div><div style="font-size:15px;font-weight:800;color:var(--text);">'+r.val+'</div>';
-    card.appendChild(row);
+
+  var progLbl = document.createElement('div');
+  progLbl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:8px;';
+  progLbl.innerHTML = '<span>Fortschritt</span><span style="font-weight:700;color:var(--text);">'+done+' / '+goal+' Workouts &middot; '+pct+'%</span>';
+  card.appendChild(progLbl);
+
+  var track = document.createElement('div');
+  track.style.cssText = 'height:8px;background:var(--bg3);border-radius:8px;overflow:hidden;margin-bottom:18px;';
+  var bar = document.createElement('div');
+  bar.style.cssText = 'height:100%;width:'+pct+'%;background:var(--accent);border-radius:8px;transition:width 0.3s ease;';
+  track.appendChild(bar);
+  card.appendChild(track);
+
+  var tileRow = document.createElement('div');
+  tileRow.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;';
+  [
+    {icon:'💪', val:stats.workouts, label:'Workout'+(stats.workouts===1?'':'s')},
+    {icon:'😴', val:stats.restDays, label:'Ruhetage'},
+    {icon:'🔥', val:stats.totalEx, label:'Übungen'}
+  ].forEach(function(s){
+    var tile = document.createElement('div');
+    tile.style.cssText = 'background:var(--bg3);border-radius:16px;padding:14px 8px;text-align:center;';
+    tile.innerHTML = '<div style="width:36px;height:36px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 8px;">'+s.icon+'</div>'+
+      '<div style="font-size:18px;font-weight:700;color:var(--text);">'+s.val+'</div>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+s.label+'</div>';
+    tileRow.appendChild(tile);
   });
+  card.appendChild(tileRow);
+
   container.appendChild(card);
 }
 
+var weekTipIdx = null;
+
 function buildWeekTipCard(container){
+  if(weekTipIdx === null){
+    var dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+    weekTipIdx = dayOfYear % WEEK_TIPS.length;
+  }
   var card = document.createElement('div');
-  card.style.cssText = 'background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:14px;';
-  card.innerHTML = '<div style="font-size:12px;font-weight:800;color:var(--accent);margin-bottom:6px;">💡 Tipp der Woche</div>'+
-    '<div style="font-size:12px;color:var(--text);line-height:1.5;">'+getWeekTip()+'</div>';
+  card.style.cssText = 'display:flex;align-items:center;gap:14px;background:rgba(255,85,0,0.07);border-radius:20px;padding:16px 18px;margin-bottom:20px;';
+
+  var iconWrap = document.createElement('div');
+  iconWrap.style.cssText = 'font-size:22px;flex-shrink:0;';
+  iconWrap.textContent = '💡';
+  card.appendChild(iconWrap);
+
+  var textWrap = document.createElement('div');
+  textWrap.style.cssText = 'flex:1;min-width:0;';
+  textWrap.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:2px;">Tipp der Woche</div>'+
+    '<div style="font-size:12.5px;color:var(--text);line-height:1.5;">'+WEEK_TIPS[weekTipIdx]+'</div>';
+  card.appendChild(textWrap);
+
+  var moreBtn = document.createElement('button');
+  moreBtn.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+  moreBtn.innerHTML = 'Mehr Tipps →';
+  moreBtn.onclick = function(){ weekTipIdx = (weekTipIdx+1) % WEEK_TIPS.length; buildWeekPlan(); };
+  card.appendChild(moreBtn);
+
   container.appendChild(card);
 }
 
