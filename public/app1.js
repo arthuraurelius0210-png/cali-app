@@ -191,7 +191,7 @@ function goPage(p){
   var startY = 0, startX = 0, startScrollTop = 0, swiping = false;
 
   document.addEventListener('touchstart', function(e){
-    var pageEl = e.target.closest('.page.on');
+    var pageEl = e.target.closest('.page.on') || e.target.closest('nav');
     if(!pageEl || e.touches.length !== 1){ swiping = false; return; }
     swiping = true;
     startY = e.touches[0].clientY;
