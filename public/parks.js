@@ -39,9 +39,11 @@ function setRadius(r){
     var btn = document.getElementById('rbtn-'+v/1000);
     if(btn){
       if(v===r){
-        btn.style.background='var(--accent)'; btn.style.color='#fff'; btn.style.border='none';
+        btn.style.background='var(--accent)'; btn.style.color='#fff'; btn.style.fontWeight='700';
+        btn.style.boxShadow='0 8px 20px rgba(255,85,0,0.25)';
       } else {
-        btn.style.background='var(--bg2)'; btn.style.color='var(--muted)'; btn.style.border='1.5px solid var(--border)';
+        btn.style.background='#fff'; btn.style.color='var(--muted)'; btn.style.fontWeight='600';
+        btn.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)';
       }
     }
   });
@@ -102,8 +104,8 @@ function loadParks(){
     parksData = data.elements || [];
     if(parksData.length === 0){ statusEl.textContent = 'Keine Parks gefunden. Versuch einen groesseren Radius.'; return; }
     statusEl.textContent = parksData.length + ' Parks gefunden im Umkreis von '+(currentRadius/1000)+' km';
-    var parkIcon = L.divIcon({html:'<div style="background:#ff5500;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.3);">&#128170;</div>',className:'',iconAnchor:[17,17]});
-    var parkIconDim = L.divIcon({html:'<div style="background:#18140F;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.25);">&#128170;</div>',className:'',iconAnchor:[15,15]});
+    var parkIcon = L.divIcon({html:'<div style="background:var(--accent,#ff5500);color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;border:3px solid #fff;box-shadow:0 8px 20px rgba(255,85,0,0.35);">&#128170;</div>',className:'',iconAnchor:[19,19]});
+    var parkIconDim = L.divIcon({html:'<div style="background:#18140F;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,0.22);">&#128170;</div>',className:'',iconAnchor:[16,16]});
     parksData.forEach(function(p){ var lat=p.lat||(p.center&&p.center.lat); var lng=p.lon||(p.center&&p.center.lon); if(!lat||!lng) return; p._lat=lat; p._lng=lng; p._dist=calcDist(userLat,userLng,lat,lng); });
     parksData=parksData.filter(function(p){return p._lat;});
     var unique=[];
@@ -205,12 +207,12 @@ function renderParksListHeader(){
   if(!headerEl) return;
   headerEl.innerHTML = '';
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:16px;font-weight:800;color:var(--text);';
-  title.textContent = 'Parks in der Nähe';
+  title.style.cssText = 'font-size:24px;font-weight:700;color:var(--text);';
+  title.textContent = 'Parks in deiner Nähe';
   headerEl.appendChild(title);
   if(parksData.length > 5){
     var link = document.createElement('button');
-    link.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0;';
+    link.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;';
     link.innerHTML = parksListExpanded ? 'Weniger' : 'Alle anzeigen &#8250;';
     link.onclick = function(){ parksListExpanded = !parksListExpanded; renderParksListHeader(); renderParksListItems(); };
     headerEl.appendChild(link);
@@ -232,36 +234,37 @@ function renderParksListItems(){
     var saved = isParkSaved(parkId);
 
     var card = document.createElement('div');
-    card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px 16px;margin-bottom:10px;';
+    card.className = 'pk-card';
+    card.style.cssText = 'padding:20px 22px;margin-bottom:16px;';
 
     var topRow = document.createElement('div');
-    topRow.style.cssText = 'display:flex;align-items:flex-start;gap:12px;';
+    topRow.style.cssText = 'display:flex;align-items:flex-start;gap:14px;';
 
     var icon = document.createElement('div');
-    icon.style.cssText = 'width:52px;height:52px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;cursor:pointer;';
+    icon.style.cssText = 'width:56px;height:56px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;cursor:pointer;';
     icon.innerHTML = '&#128170;';
     icon.onclick = function(){ openParkDetail(idx); };
 
     var info = document.createElement('div');
-    info.style.cssText = 'flex:1;min-width:0;cursor:pointer;';
+    info.style.cssText = 'flex:1;min-width:0;cursor:pointer;padding-top:2px;';
     info.onclick = function(){ openParkDetail(idx); };
     var nameRow = document.createElement('div');
-    nameRow.style.cssText = 'font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    nameRow.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     nameRow.textContent = name;
     var locRow = document.createElement('div');
-    locRow.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+    locRow.style.cssText = 'font-size:12px;font-weight:400;color:var(--muted);margin-top:5px;';
     locRow.innerHTML = '&#128205; ' + (locLabel ? locLabel+' &middot; ' : '') + formatDist(park._dist);
     info.appendChild(nameRow); info.appendChild(locRow);
     if(accessLabel){
       var accessRow = document.createElement('div');
-      accessRow.style.cssText = 'font-size:10.5px;color:var(--muted);margin-top:3px;';
+      accessRow.style.cssText = 'font-size:11.5px;font-weight:400;color:var(--muted);margin-top:4px;';
       accessRow.textContent = accessLabel;
       info.appendChild(accessRow);
     }
 
     var bookmarkBtn = document.createElement('button');
     bookmarkBtn.setAttribute('aria-label', saved ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen');
-    bookmarkBtn.style.cssText = 'background:none;border:none;color:'+(saved?'var(--accent)':'var(--muted2)')+';font-size:18px;cursor:pointer;flex-shrink:0;padding:2px;';
+    bookmarkBtn.style.cssText = 'background:none;border:none;color:'+(saved?'var(--accent)':'var(--muted2)')+';font-size:23px;cursor:pointer;flex-shrink:0;padding:2px;line-height:1;';
     bookmarkBtn.innerHTML = '&#128278;';
     bookmarkBtn.onclick = function(e){
       e.stopPropagation();
@@ -274,10 +277,10 @@ function renderParksListItems(){
 
     if(tags.length){
       var tagRow = document.createElement('div');
-      tagRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;';
+      tagRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;';
       tags.forEach(function(t){
         var chip = document.createElement('div');
-        chip.style.cssText = 'background:var(--bg3);border-radius:20px;padding:4px 10px;font-size:10px;color:var(--muted);font-weight:600;';
+        chip.style.cssText = 'background:var(--bg3);border-radius:20px;padding:7px 14px;font-size:11px;color:var(--muted);font-weight:500;';
         chip.textContent = t;
         tagRow.appendChild(chip);
       });
@@ -285,9 +288,9 @@ function renderParksListItems(){
     }
 
     var detailRow = document.createElement('div');
-    detailRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:8px;';
+    detailRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:14px;';
     var detailLink = document.createElement('button');
-    detailLink.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0;';
+    detailLink.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;';
     detailLink.innerHTML = 'Details &#8250;';
     detailLink.onclick = function(){ openParkDetail(idx); };
     detailRow.appendChild(detailLink);

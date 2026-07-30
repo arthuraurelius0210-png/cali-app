@@ -294,56 +294,56 @@
 
 <!-- PARKS PAGE -->
 <div class="page" id="page-parks">
-  <div style="margin-top:20px;margin-bottom:16px;">
-    <div style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:0;">Calisthenics Parks</div>
-    <div style="font-size:12.5px;color:var(--muted);margin-top:3px;">Finde Parks in deiner Nähe und trainiere draußen.</div>
+  <div style="margin-top:24px;margin-bottom:32px;">
+    <div style="font-size:44px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.05;">Calisthenics Parks</div>
+    <div style="font-size:17px;font-weight:500;color:var(--muted);margin-top:8px;">Finde Parks in deiner Nähe und trainiere draußen.</div>
   </div>
 
-  <div style="display:flex;gap:8px;margin-bottom:14px;">
-    <button onclick="openMyParksOverview()" style="flex:1;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:12px;font-weight:700;padding:12px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#127942; Rekorde</button>
-    <button onclick="openSuggestPark()" style="flex:1;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:14px;font-family:inherit;font-size:12px;font-weight:700;padding:12px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#43; Park melden</button>
-    <button id="parks-locate-btn" onclick="locateAndLoad()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:12px;font-weight:700;padding:12px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128205; Standort</button>
+  <div style="display:flex;gap:12px;margin-bottom:28px;">
+    <button onclick="openMyParksOverview()" class="pk-btn" style="flex:1;background:#fff;color:var(--text);border:none;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);font-family:inherit;font-size:12.5px;font-weight:600;padding:16px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#127942; Rekorde</button>
+    <button onclick="openSuggestPark()" class="pk-btn" style="flex:1;background:#fff;color:var(--text);border:none;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);font-family:inherit;font-size:12.5px;font-weight:600;padding:16px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#43; Park melden</button>
+    <button id="parks-locate-btn" onclick="locateAndLoad()" class="pk-btn" style="flex:1.15;background:var(--accent);color:#fff;border:none;border-radius:20px;box-shadow:0 12px 30px rgba(255,85,0,0.22);font-family:inherit;font-size:12.5px;font-weight:700;padding:17px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128205; Standort</button>
   </div>
 
-  <div id="parks-status" style="font-size:11px;color:var(--muted);margin-bottom:10px;min-height:18px;"></div>
+  <div id="parks-status" style="font-size:11.5px;color:var(--muted);margin-bottom:16px;min-height:18px;"></div>
 
   <!-- Trainingspartner finden -->
-  <div onclick="openBuddyFinderPage()" style="display:flex;align-items:center;gap:12px;background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px 16px;margin-bottom:14px;cursor:pointer;">
-    <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">&#129309;</div>
+  <div onclick="openBuddyFinderPage()" class="pk-card" style="display:flex;align-items:center;gap:16px;padding:22px 22px;margin-bottom:28px;cursor:pointer;">
+    <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">&#129309;</div>
     <div style="flex:1;min-width:0;">
-      <div style="font-size:13px;font-weight:800;color:var(--text);">Trainingspartner finden</div>
-      <div style="font-size:10.5px;color:var(--muted);margin-top:1px;">Finde Leute in deiner Nähe zum Trainieren</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);">Trainingspartner finden</div>
+      <div style="font-size:12px;font-weight:400;color:var(--muted);margin-top:3px;">Finde Leute in deiner Nähe zum Trainieren</div>
     </div>
-    <div style="color:var(--muted);font-size:16px;">&#8250;</div>
+    <div style="color:var(--muted);font-size:20px;flex-shrink:0;">&#8250;</div>
   </div>
 
   <!-- Radius-Auswahl -->
-  <div style="display:flex;gap:8px;margin-bottom:14px;" id="parks-radius-btns">
-    <button onclick="setRadius(2000)" id="rbtn-2" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">2 km</button>
-    <button onclick="setRadius(5000)" id="rbtn-5" style="flex:1;background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">5 km</button>
-    <button onclick="setRadius(10000)" id="rbtn-10" style="flex:1;background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">10 km</button>
-    <button onclick="setRadius(20000)" id="rbtn-20" style="flex:1;background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);border-radius:24px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 0;cursor:pointer;">20 km</button>
+  <div style="display:flex;gap:10px;margin-bottom:28px;" id="parks-radius-btns">
+    <button onclick="setRadius(2000)" id="rbtn-2" class="pk-btn" style="flex:1;height:48px;background:var(--accent);color:#fff;border:none;border-radius:24px;box-shadow:0 8px 20px rgba(255,85,0,0.25);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">2 km</button>
+    <button onclick="setRadius(5000)" id="rbtn-5" class="pk-btn" style="flex:1;height:48px;background:#fff;color:var(--muted);border:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-radius:24px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">5 km</button>
+    <button onclick="setRadius(10000)" id="rbtn-10" class="pk-btn" style="flex:1;height:48px;background:#fff;color:var(--muted);border:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-radius:24px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">10 km</button>
+    <button onclick="setRadius(20000)" id="rbtn-20" class="pk-btn" style="flex:1;height:48px;background:#fff;color:var(--muted);border:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-radius:24px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">20 km</button>
   </div>
 
   <!-- Karte -->
-  <div style="position:relative;margin-bottom:16px;">
-    <div id="parks-map" style="width:100%;height:420px;border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--bg3);"></div>
-    <button onclick="locateAndLoad()" style="position:absolute;left:12px;bottom:12px;background:var(--bg2);color:var(--text);border:none;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.15);font-family:inherit;font-size:11.5px;font-weight:700;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#8982; Mein Standort</button>
-    <button onclick="document.getElementById('parks-list-section').scrollIntoView({behavior:'smooth'})" style="position:absolute;right:12px;bottom:12px;background:var(--bg2);color:var(--text);border:none;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.15);font-family:inherit;font-size:11.5px;font-weight:700;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#9776; Liste</button>
+  <div style="position:relative;margin-bottom:32px;">
+    <div id="parks-map" style="width:100%;height:460px;border-radius:24px;overflow:hidden;background:var(--bg3);box-shadow:0 12px 30px rgba(0,0,0,0.08);"></div>
+    <button onclick="locateAndLoad()" style="position:absolute;left:20px;bottom:20px;background:#fff;color:var(--text);border:none;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,0.16);font-family:inherit;font-size:12px;font-weight:700;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#8982; Mein Standort</button>
+    <button onclick="document.getElementById('parks-list-section').scrollIntoView({behavior:'smooth'})" style="position:absolute;right:20px;bottom:20px;background:#fff;color:var(--text);border:none;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,0.16);font-family:inherit;font-size:12px;font-weight:700;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#9776; Liste</button>
   </div>
 
   <!-- Park-Liste -->
   <div id="parks-list-section">
-    <div id="parks-list-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"></div>
+    <div id="parks-list-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"></div>
     <div id="parks-list"></div>
   </div>
 
   <!-- Hinweis -->
-  <div style="display:flex;align-items:center;gap:14px;background:rgba(255,85,0,0.06);border-radius:16px;padding:16px;margin-top:6px;">
-    <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,85,0,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">&#128506;&#65039;</div>
+  <div style="display:flex;align-items:center;gap:18px;background:rgba(255,85,0,0.07);border-radius:24px;padding:24px;margin-top:12px;">
+    <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,85,0,0.12);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">&#128506;&#65039;</div>
     <div style="flex:1;">
-      <div style="font-size:13px;font-weight:800;color:var(--text);">Respektiere die Parks</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5;">Halte die Parks sauber und nimm Rücksicht auf andere.</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);">Respektiere die Parks</div>
+      <div style="font-size:12.5px;font-weight:400;color:var(--muted);margin-top:4px;line-height:1.6;">Halte die Parks sauber und nimm Rücksicht auf andere.</div>
     </div>
   </div>
 </div>
