@@ -199,6 +199,20 @@ function startPreset(idx){
   toast('Preset "'+pl.name+'" geladen!');
 }
 
+function getPlanCategoryTags(pl){
+  var tags=[];
+  for(var i=0;i<pl.exercises.length;i++){
+    var exName=pl.exercises[i].name;
+    for(var j=0;j<EX_DB.length;j++){
+      if(EX_DB[j].name===exName && EX_DB[j].cat){
+        if(tags.indexOf(EX_DB[j].cat)===-1) tags.push(EX_DB[j].cat);
+        break;
+      }
+    }
+  }
+  return tags.slice(0,3);
+}
+
 function buildStartPlanBtns(){
   var el=document.getElementById('plan-btns');
   if(!el)return;
@@ -206,17 +220,52 @@ function buildStartPlanBtns(){
   if(!plans.length){
     var hint=document.createElement('div');
     hint.style.cssText='font-size:12px;color:var(--muted2);text-align:center;padding:8px 0;';
-    hint.textContent='Geh zu PLANE um einen Plan hinzuzufugen';
+    hint.textContent='Geh zu Pläne um einen Plan hinzuzufügen';
     el.appendChild(hint);
     return;
   }
   for(var i=0;i<plans.length;i++){
     (function(pl){
-      var btn=document.createElement('button');
-      btn.style.cssText='background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px;';
-      btn.innerHTML=pl.name+'<span style="font-size:10px;color:var(--muted)">'+pl.exercises.length+' Ubungen</span>';
-      btn.onclick=function(){startWorkout(pl.id);};
-      el.appendChild(btn);
+      var totalSets=0;
+      for(var s=0;s<pl.exercises.length;s++){ totalSets+=(pl.exercises[s].sets||[]).length; }
+      var tags=getPlanCategoryTags(pl);
+
+      var card=document.createElement('div');
+      card.className='pk-card';
+      card.style.cssText='display:flex;align-items:center;gap:14px;padding:16px;cursor:pointer;';
+      card.onclick=function(){startWorkout(pl.id);};
+
+      var icon=document.createElement('div');
+      icon.style.cssText='width:44px;height:44px;border-radius:14px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:var(--accent);';
+      icon.innerHTML='&#128170;';
+
+      var info=document.createElement('div');
+      info.style.cssText='flex:1;min-width:0;';
+      var nameRow=document.createElement('div');
+      nameRow.style.cssText='font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      nameRow.textContent=pl.name;
+      var metaRow=document.createElement('div');
+      metaRow.style.cssText='font-size:11px;color:var(--muted);margin-top:3px;';
+      metaRow.textContent=pl.exercises.length+' Übungen · '+totalSets+' Sätze';
+      info.appendChild(nameRow); info.appendChild(metaRow);
+      if(tags.length){
+        var tagRow=document.createElement('div');
+        tagRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;';
+        tags.forEach(function(t){
+          var chip=document.createElement('div');
+          chip.style.cssText='background:var(--bg3);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);font-weight:600;';
+          chip.textContent=t;
+          tagRow.appendChild(chip);
+        });
+        info.appendChild(tagRow);
+      }
+
+      var chevron=document.createElement('div');
+      chevron.style.cssText='color:var(--muted);font-size:18px;flex-shrink:0;';
+      chevron.innerHTML='&#8250;';
+
+      card.appendChild(icon); card.appendChild(info); card.appendChild(chevron);
+      el.appendChild(card);
     })(plans[i]);
   }
 }

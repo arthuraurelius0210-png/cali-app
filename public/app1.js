@@ -524,10 +524,19 @@ function toast(m){
 }
 
 // ── BESTS ─────────────────────────────────────────────────
+var BEST_TRACKED_NAMES=['Klimmzuge','Dips','Liegestutze','Plank','Muscle-Ups','L-Sit Hold','Tuck Front Lever'];
+function countPersonalBests(){
+  var count=0;
+  for(var i=0;i<BEST_TRACKED_NAMES.length;i++){
+    var n=BEST_TRACKED_NAMES[i];
+    for(var j=0;j<ents.length;j++){ if(ents[j].name===n){ count++; break; } }
+  }
+  return count;
+}
 function bb(){
   var el=document.getElementById('bests');
   if(!el)return;
-  var nm=['Klimmzuge','Dips','Liegestutze','Plank','Muscle-Ups','L-Sit Hold','Tuck Front Lever'];
+  var nm=BEST_TRACKED_NAMES;
   var h='';
   for(var i=0;i<nm.length;i++){
     var n=nm[i];var f=[];
@@ -545,7 +554,56 @@ function bb(){
     h+='<div style="font-size:11px;color:var(--muted2);margin-top:3px">'+e.date+(e.band?' &bull; '+e.band:'')+'</div>';
     h+='<div style="font-size:12px;color:var(--muted2);margin-top:5px">'+st+'</div></div>';
   }
-  el.innerHTML=h||'<div class="empty">Noch keine Eintrage.</div>';
+  if(h){
+    el.className='';
+    el.style.cssText='';
+    el.innerHTML=h;
+  } else {
+    el.className='pk-card';
+    el.style.cssText='display:flex;align-items:center;gap:16px;padding:20px;';
+    el.innerHTML=
+      '<div style="width:52px;height:52px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">&#127942;</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;">Noch keine Rekorde</div>'+
+        '<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px;">Schließe dein erstes Workout ab, um persönliche Bestleistungen zu speichern.</div>'+
+        '<button onclick="startWorkout(null)" style="background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 16px;cursor:pointer;">Workout starten</button>'+
+      '</div>';
+  }
+}
+
+// ── START-SEITE DASHBOARD (Wochenfortschritt) ──────────────
+function buildStartDashboard(){
+  var el=document.getElementById('start-dashboard');
+  if(!el)return;
+
+  var weekDone=(typeof getWeeklyProgress==='function')?getWeeklyProgress():0;
+  var weekGoal=(typeof streakData!=='undefined'&&streakData.weeklyGoal)?streakData.weeklyGoal:3;
+  var weekPct=weekGoal>0?Math.min(100,Math.round((weekDone/weekGoal)*100)):0;
+  var streak=(typeof streakData!=='undefined')?(streakData.currentStreak||0):0;
+  var bestsCount=countPersonalBests();
+
+  var tiles=[
+    {icon:'&#128293;', val:weekDone+' / '+weekGoal, label:'Workouts diese Woche', bar:weekPct},
+    {icon:'&#128200;', val:streak+' Tage', label:'Aktueller Streak', hint:streak===0?'Bleib dran und baue Kontinuität auf.':''},
+    {icon:'&#127942;', val:String(bestsCount), label:'Persönliche Bestleistungen', hint:bestsCount===0?'Schließe Workouts ab, um Bestleistungen zu erzielen.':''}
+  ];
+
+  var grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:10px;';
+  tiles.forEach(function(t){
+    var tile=document.createElement('div');
+    tile.className='pk-card';
+    tile.style.cssText='padding:14px;';
+    tile.innerHTML=
+      '<div style="width:34px;height:34px;border-radius:11px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px;">'+t.icon+'</div>'+
+      '<div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.2;">'+t.val+'</div>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+t.label+'</div>'+
+      (typeof t.bar==='number'?'<div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:'+t.bar+'%;background:var(--accent);border-radius:4px;"></div></div>':'')+
+      (t.hint?'<div style="font-size:9.5px;color:var(--muted);margin-top:6px;line-height:1.4;">'+t.hint+'</div>':'');
+    grid.appendChild(tile);
+  });
+  el.innerHTML='';
+  el.appendChild(grid);
 }
 
 // ── WORKOUT HISTORY ───────────────────────────────────────
