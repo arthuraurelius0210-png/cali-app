@@ -221,10 +221,6 @@ function goPage(p){
   if(p==='sk'){buildSkillUI();}
   if(p==='h')bhr();
   if(p==='parks'){initParksPage();}
-  if(typeof caliStaggerPage === 'function'){
-    var onPg = document.getElementById('page-'+p);
-    if(onPg) caliStaggerPage(onPg);
-  }
 }
 
 // ── SWIPE NAVIGATION (TikTok-style: swipe down at top = next tab, swipe up at bottom = previous tab) ──
@@ -382,7 +378,6 @@ function endWorkout(){
   bb();
   calcStreak();buildStreakWidget();
   toast('Workout gespeichert! Dauer: '+durStr);
-  if(typeof caliConfetti === 'function') caliConfetti();
   fbSave();
 }
 
@@ -626,9 +621,9 @@ function buildStartDashboard(){
   var bestsCount=countPersonalBests();
 
   var tiles=[
-    {icon:'flame', val:'<span class="cali-count" data-target="'+weekDone+'">'+weekDone+'</span> / '+weekGoal, label:'Workouts diese Woche', bar:weekPct},
-    {icon:'trend', val:'<span class="cali-count" data-target="'+streak+'">'+streak+'</span> Tage', label:'Aktueller Streak', hint:streak===0?'Bleib dran und baue Kontinuität auf.':''},
-    {icon:'trophy', val:'<span class="cali-count" data-target="'+bestsCount+'">'+bestsCount+'</span>', label:'Persönliche Bestleistungen', hint:bestsCount===0?'Schließe Workouts ab, um Bestleistungen zu erzielen.':''}
+    {icon:'flame', val:weekDone+' / '+weekGoal, label:'Workouts diese Woche', bar:weekPct},
+    {icon:'trend', val:streak+' Tage', label:'Aktueller Streak', hint:streak===0?'Bleib dran und baue Kontinuität auf.':''},
+    {icon:'trophy', val:String(bestsCount), label:'Persönliche Bestleistungen', hint:bestsCount===0?'Schließe Workouts ab, um Bestleistungen zu erzielen.':''}
   ];
 
   var grid=document.createElement('div');
@@ -641,13 +636,12 @@ function buildStartDashboard(){
       '<div style="margin-bottom:10px;">'+iconWrap(t.icon,{size:16,box:34,radius:11})+'</div>'+
       '<div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.2;">'+t.val+'</div>'+
       '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+t.label+'</div>'+
-      (typeof t.bar==='number'?'<div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px;"><div class="cali-bar" data-pct="'+t.bar+'" style="height:100%;width:'+t.bar+'%;background:var(--accent);border-radius:4px;"></div></div>':'')+
+      (typeof t.bar==='number'?'<div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:'+t.bar+'%;background:var(--accent);border-radius:4px;"></div></div>':'')+
       (t.hint?'<div style="font-size:9.5px;color:var(--muted);margin-top:6px;line-height:1.4;">'+t.hint+'</div>':'');
     grid.appendChild(tile);
   });
   el.innerHTML='';
   el.appendChild(grid);
-  if(typeof caliAnimateCounts === 'function'){ caliAnimateCounts(el); caliAnimateBars(el); }
 }
 
 // ── WORKOUT HISTORY ───────────────────────────────────────

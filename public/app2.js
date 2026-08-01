@@ -1457,12 +1457,6 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   }
   card.appendChild(grid);
 
-  // Zellen nur aufploppen lassen, wenn sich der Monat ändert (nicht bei Tag-Klicks)
-  if(typeof caliPopIn === 'function' && window.__caliCalMonth !== month+'-'+year){
-    window.__caliCalMonth = month+'-'+year;
-    caliPopIn(grid.children);
-  }
-
   var legend = document.createElement('div');
   legend.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border);margin-bottom:'+(weekCalExpandedDay!=null?'14px':'0')+';';
   [{icon:'●',c:'var(--accent)',l:'Workout'},{icon:'★',c:'var(--accent)',l:'Skill'},{icon:'●',c:'var(--muted)',l:'Ruhetag'}].forEach(function(li){
@@ -1542,9 +1536,7 @@ function buildWeekSummaryCard(container, stats){
   var track = document.createElement('div');
   track.style.cssText = 'height:8px;background:var(--bg3);border-radius:8px;overflow:hidden;margin-bottom:18px;';
   var bar = document.createElement('div');
-  bar.className = 'cali-bar';
-  bar.setAttribute('data-pct', pct);
-  bar.style.cssText = 'height:100%;width:'+pct+'%;background:var(--accent);border-radius:8px;';
+  bar.style.cssText = 'height:100%;width:'+pct+'%;background:var(--accent);border-radius:8px;transition:width 0.3s ease;';
   track.appendChild(bar);
   card.appendChild(track);
 
@@ -1558,14 +1550,13 @@ function buildWeekSummaryCard(container, stats){
     var tile = document.createElement('div');
     tile.style.cssText = 'background:var(--bg3);border-radius:16px;padding:14px 8px;text-align:center;';
     tile.innerHTML = '<div style="width:36px;height:36px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><div style="width:16px;height:16px;">'+ci(s.icon)+'</div></div>'+
-      '<div style="font-size:18px;font-weight:700;color:var(--text);"><span class="cali-count" data-target="'+s.val+'">'+s.val+'</span></div>'+
+      '<div style="font-size:18px;font-weight:700;color:var(--text);">'+s.val+'</div>'+
       '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+s.label+'</div>';
     tileRow.appendChild(tile);
   });
   card.appendChild(tileRow);
 
   container.appendChild(card);
-  if(typeof caliAnimateCounts === 'function'){ caliAnimateCounts(card); caliAnimateBars(card); }
 }
 
 var weekTipIdx = null;

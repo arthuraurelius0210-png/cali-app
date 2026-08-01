@@ -15,7 +15,7 @@ function buildStreakWidget(){
   var top=document.createElement('div');top.style.cssText='position:relative;display:flex;align-items:center;justify-content:space-between;';
   var flBadge=document.createElement('div');
   flBadge.style.cssText='background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#fff;';
-  flBadge.innerHTML='<span class="cali-flame" style="display:inline-block;">'+(streak>0?getFlames(streak):'\uD83D\uDD25')+'</span><span>'+(streak>0?streak+' Tage Streak':'Noch kein Streak')+'</span>';
+  flBadge.innerHTML='<span>'+(streak>0?getFlames(streak):'\uD83D\uDD25')+'</span><span>'+(streak>0?streak+' Tage Streak':'Noch kein Streak')+'</span>';
   var lvBadge=document.createElement('div');lvBadge.style.cssText='background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);color:'+lv.color+';border-radius:20px;font-family:inherit;font-size:10px;font-weight:700;padding:5px 10px;';lvBadge.textContent=lv.label;
   top.appendChild(flBadge);top.appendChild(lvBadge);
   card.appendChild(top);
@@ -42,7 +42,6 @@ function buildStreakWidget(){
   el.appendChild(card);
   buildProfilStreakSection();
   if(typeof buildStartDashboard==='function') buildStartDashboard();
-  if(typeof caliPulse==='function'){ var fl=card.querySelector('.cali-flame'); if(fl) caliPulse(fl, 1.15); }
 }
 
 function buildProfilStreakSection(){
