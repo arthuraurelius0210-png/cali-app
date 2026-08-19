@@ -6,9 +6,10 @@ function buildChallengePresets(){
   if(!el) return;
   el.innerHTML = '';
 
-  var title = document.createElement('div');
-  title.style.cssText = 'font-size:9px;color:var(--accent);font-family:inherit;margin-bottom:10px;';
-  title.textContent = 'VORGEFERTIGTE CHALLENGES';
+  var title = document.createElement('h2');
+  title.className = 'stitle';
+  title.style.cssText = 'margin:0 0 10px;';
+  title.textContent = 'Vorgefertigte Challenges';
   el.appendChild(title);
 
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
@@ -27,7 +28,7 @@ function buildChallengePresets(){
       info.style.cssText = 'flex:1;';
 
       var t = document.createElement('div');
-      t.style.cssText = 'font-family:inherit;font-size:15px;color:var(--text);';
+      t.style.cssText = 'font-family:inherit;font-size:15px;font-weight:700;color:var(--text);';
       t.textContent = ch.title;
 
       var d = document.createElement('div');
@@ -44,8 +45,9 @@ function buildChallengePresets(){
       exp.textContent = ch.explanation;
 
       var btn = document.createElement('button');
-      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;padding:9px;cursor:pointer;width:100%;margin-top:10px;';
-      btn.textContent = 'CHALLENGE ANNEHMEN';
+      btn.className = 'pressable';
+      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;cursor:pointer;width:100%;margin-top:10px;min-height:36px;';
+      btn.textContent = 'Challenge annehmen';
       btn.onclick = function(){
         activeChallenge = {
           id: ch.id, title: ch.title, desc: ch.desc,
@@ -64,6 +66,7 @@ function buildChallengePresets(){
       el.appendChild(card);
     })(PRESET_CHALLENGES[i]);
   }
+  if(window.caliMotion) caliMotion.stagger(el);
 }
 
 loadChallenges();
@@ -124,15 +127,16 @@ function getPercentile(exName, val, gender){
   return table[0][1];
 }
 
+// color = Textfarbe (Ink-Variante, AA-Kontrast), fill = Balkenfüllung (helles Original)
 function getPercentileLabel(pct){
-  if(pct>=99.5) return {text:'Legendar! Top 0.5%', color:'#F59E0B'};
-  if(pct>=99)   return {text:'Weltklasse! Top 1%', color:'#F59E0B'};
-  if(pct>=95)   return {text:'Elite! Top 5%', color:'var(--accent)'};
-  if(pct>=90)   return {text:'Stark! Top 10%', color:'var(--accent)'};
-  if(pct>=75)   return {text:'Gut! Top 25%', color:'#4ECDC4'};
-  if(pct>=50)   return {text:'Solide! Besser als die Halfte', color:'#4ECDC4'};
-  if(pct>=25)   return {text:'Weiter so! Guter Start', color:'#888'};
-  return {text:'Bleib dran! Jeder fangt irgendwo an', color:'#888'};
+  if(pct>=99.5) return {text:'Legendär! Top 0.5%', color:'var(--amber-ink)', fill:'var(--amber)'};
+  if(pct>=99)   return {text:'Weltklasse! Top 1%', color:'var(--amber-ink)', fill:'var(--amber)'};
+  if(pct>=95)   return {text:'Elite! Top 5%', color:'var(--accent-ink)', fill:'var(--accent)'};
+  if(pct>=90)   return {text:'Stark! Top 10%', color:'var(--accent-ink)', fill:'var(--accent)'};
+  if(pct>=75)   return {text:'Gut! Top 25%', color:'var(--teal-ink)', fill:'var(--teal)'};
+  if(pct>=50)   return {text:'Solide! Besser als die Hälfte', color:'var(--teal-ink)', fill:'var(--teal)'};
+  if(pct>=25)   return {text:'Weiter so! Guter Start', color:'var(--muted)', fill:'var(--muted)'};
+  return {text:'Bleib dran! Jeder fängt irgendwo an', color:'var(--muted)', fill:'var(--muted)'};
 }
 
 function showPercentile(exName, val, gender){
@@ -145,14 +149,14 @@ function showPercentile(exName, val, gender){
   var lbl = getPercentileLabel(pct);
 
   var card = document.createElement('div');
-  card.style.cssText='background:rgba(255,85,0,0.05);border:2px solid var(--accent);border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 0 20px rgba(255,85,0,0.12);';
+  card.style.cssText='background:#fff;border:none;border-left:4px solid var(--accent);border-radius:20px;padding:18px;margin-top:12px;box-shadow:0 12px 30px rgba(0,0,0,0.06);';
 
   var title = document.createElement('div');
-  title.style.cssText='font-family:inherit;font-size:11px;color:var(--muted);margin-bottom:10px;';
-  title.textContent='WELTWEITER VERGLEICH';
+  title.style.cssText='font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;';
+  title.textContent='Weltweiter Vergleich';
 
   var pctText = document.createElement('div');
-  pctText.style.cssText='font-family:inherit;font-weight:700;font-size:24px;color:'+lbl.color+';line-height:1.3;margin-bottom:4px;';
+  pctText.style.cssText='font-family:inherit;font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;color:'+lbl.color+';line-height:1.3;margin-bottom:4px;';
   var displayPct = Math.min(99.9, Math.round(pct*10)/10);
   pctText.textContent='Besser als '+displayPct+'%';
 
@@ -160,20 +164,20 @@ function showPercentile(exName, val, gender){
   sub.style.cssText='font-size:12px;color:var(--muted);margin-bottom:14px;';
   sub.textContent='aller Menschen weltweit';
 
-  // Progress bar
+  // Progress bar — startet bei 0 und füllt sich sichtbar
   var barWrap = document.createElement('div');
   barWrap.style.cssText='background:var(--bg3);border-radius:20px;height:10px;overflow:hidden;margin-bottom:8px;';
   var bar = document.createElement('div');
-  bar.style.cssText='height:100%;border-radius:20px;background:'+lbl.color+';width:'+Math.min(99.9,Math.round(pct*10)/10)+'%;transition:width 0.8s;';
+  bar.style.cssText='height:100%;border-radius:20px;background:'+(lbl.fill||lbl.color)+';width:0%;transition:width var(--dur-slow) var(--ease-out);';
   barWrap.appendChild(bar);
 
   var labelDiv = document.createElement('div');
-  labelDiv.style.cssText='font-family:inherit;font-size:14px;color:'+lbl.color+';';
+  labelDiv.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:'+lbl.color+';';
   labelDiv.textContent=lbl.text;
 
   var source = document.createElement('div');
-  source.style.cssText='font-size:10px;color:var(--muted2);margin-top:8px;';
-  source.textContent='Daten: strengthlevel.com (4.8M+ Eintrage)';
+  source.style.cssText='font-size:11px;color:var(--muted);margin-top:8px;';
+  source.textContent='Daten: strengthlevel.com (4.8M+ Einträge)';
 
   card.appendChild(title);
   card.appendChild(pctText);
@@ -182,6 +186,8 @@ function showPercentile(exName, val, gender){
   card.appendChild(labelDiv);
   card.appendChild(source);
   el.appendChild(card);
+  if(window.caliMotion) caliMotion.animateBar(bar, displayPct);
+  else bar.style.width = displayPct+'%';
 }
 
 
@@ -194,11 +200,36 @@ var BADGES = [
   {id:'10_workouts',   icon:'&#x1F525;', title:'10 Workouts',    desc:'10 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=10;}},
   {id:'50_workouts',   icon:'&#x1F3C6;', title:'50 Workouts',    desc:'50 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=50;}},
   {id:'first_max',     icon:'&#x2B50;',  title:'Max Getestet',   desc:'Ersten Max-Test eingetragen',      check:function(){return maxEntries.length>0;}},
-  {id:'elite_pullup',  icon:'&#x1F451;', title:'Klimmzug Elite', desc:'Mehr als 20 Klimmzuge Max',        check:function(){for(var i=0;i<maxEntries.length;i++){if(maxEntries[i].name==='Klimmzuge Max'&&parseFloat(maxEntries[i].val)>=20)return true;}return false;}},
+  {id:'elite_pullup',  icon:'&#x1F451;', title:'Klimmzug Elite', desc:'Mehr als 20 Klimmzüge Max',        check:function(){for(var i=0;i<maxEntries.length;i++){if(maxEntries[i].name==='Klimmzuge Max'&&parseFloat(maxEntries[i].val)>=20)return true;}return false;}},
   {id:'challenge_done',icon:'&#x1F3AF;', title:'Challenge Held', desc:'Eine Challenge abgeschlossen',     check:function(){return activeChallenge&&activeChallenge.params&&calcChallengeProgress()>=activeChallenge.params.target;}},
   {id:'streak_7',      icon:'&#x1F525;', title:'7-Tage Streak',  desc:'7 Tage in Folge trainiert',        check:function(){var dates=[];for(var i=0;i<ents.length;i++){if(dates.indexOf(ents[i].date)===-1)dates.push(ents[i].date);}dates.sort();var streak=1;for(var i=1;i<dates.length;i++){var d1=new Date(dates[i-1]);var d2=new Date(dates[i]);if((d2-d1)/(86400000)===1){streak++;if(streak>=7)return true;}else{streak=1;}}return false;}},
-  {id:'variety',       icon:'&#x1F3CB;', title:'Allrounder',     desc:'10 verschiedene Ubungen trainiert',check:function(){var ex={};for(var i=0;i<ents.length;i++)ex[ents[i].name]=1;return Object.keys(ex).length>=10;}},
+  {id:'variety',       icon:'&#x1F3CB;', title:'Allrounder',     desc:'10 verschiedene Übungen trainiert',check:function(){var ex={};for(var i=0;i<ents.length;i++)ex[ents[i].name]=1;return Object.keys(ex).length>=10;}},
 ];
+
+// ── ABZEICHEN-PERSISTENZ ──────────────────────────────────
+// Einmal verdiente Abzeichen bleiben verdient (auch wenn z.B. die aktive
+// Challenge wechselt). Neu verdiente werden mit Toast gefeiert.
+// Auch aus endWorkout aufrufbar, damit der Unlock im Moment des Verdienens landet.
+function checkBadgeUnlocks(){
+  var earned={};
+  try{ earned=JSON.parse(localStorage.getItem('cali_badges_earned')||'{}')||{}; }catch(x){ earned={}; }
+  var newly=[];
+  for(var i=0;i<BADGES.length;i++){
+    var b=BADGES[i];
+    if(earned[b.id]) continue;
+    var has=false;
+    try{ has=b.check(); }catch(e){}
+    if(has){ earned[b.id]=1; newly.push(b); }
+  }
+  if(newly.length){
+    try{ localStorage.setItem('cali_badges_earned',JSON.stringify(earned)); }catch(x){}
+    if(typeof toast==='function'){
+      if(newly.length===1) toast('🏅 Abzeichen freigeschaltet: '+newly[0].title);
+      else toast('🏅 '+newly.length+' Abzeichen freigeschaltet!');
+    }
+  }
+  return earned;
+}
 
 function lpr(){
   try{
@@ -224,9 +255,15 @@ function prSave(){
   buildProfilUI();
 }
 
+// Kein natives prompt(): öffnet das Einstellungen-Sheet und fokussiert das Namensfeld
 function prEditName(){
-  var n = prompt('Dein Name:', prData.name||'');
-  if(n!==null){ prData.name=n.trim(); spr(); buildProfilUI(); }
+  if(typeof openSettings !== 'function') return;
+  openSettings();
+  setTimeout(function(){
+    var inp = document.getElementById('pr-inp-name');
+    if(!inp) return;
+    try{ inp.focus(); if(inp.select) inp.select(); }catch(x){}
+  }, 320);
 }
 
 function prSetAvatar(inp){
@@ -241,15 +278,16 @@ function prSetAvatar(inp){
   reader.readAsDataURL(inp.files[0]);
 }
 
+// Literale Hex-Ink-Töne (AA als Text, hexToRgb braucht echtes Hex für den Tint)
 function prGetLevel(){
   var d={};
   for(var i=0;i<ents.length;i++) d[ents[i].date]=1;
   var days = Object.keys(d).length;
-  if(days>=100) return {label:'ELITE',     color:'#F59E0B'};
-  if(days>=50)  return {label:'ADVANCED',  color:'var(--accent)'};
-  if(days>=20)  return {label:'INTERMEDIATE', color:'#4ECDC4'};
-  if(days>=5)   return {label:'NOVICE',    color:'#A78BFA'};
-  return        {label:'BEGINNER',         color:'#888'};
+  if(days>=100) return {label:'Elite',           color:'#B45309'}; // amber-ink
+  if(days>=50)  return {label:'Erfahren',        color:'#C24400'}; // accent-ink
+  if(days>=20)  return {label:'Fortgeschritten', color:'#0E7C72'}; // teal-ink
+  if(days>=5)   return {label:'Einsteiger',      color:'#6D4AD1'}; // purple-ink
+  return        {label:'Starter',                color:'#6E6759'}; // muted
 }
 
 
@@ -316,12 +354,12 @@ function buildProfilStatsDetail(){
 
   // ── Big stat cards ──
   var bigStats = [
-    {label:'GESAMT TRAININGSZEIT', value:fmtTime(totalDuration), sub:'seit Beginn'},
-    {label:'DURCHSCHNITT PRO TAG', value:fmtTime(avgDurSec), sub:'pro Trainingstag'},
-    {label:'LANGSTER TRAININGSTAG', value:fmtTime(maxDurDay), sub:'an einem Tag'},
-    {label:'GESAMT WIEDERHOLUNGEN', value:totalRepsAll.toLocaleString(), sub:'alle Ubungen'},
-    {label:'GESAMT SATZE', value:totalSets.toLocaleString(), sub:'alle Satze'},
-    {label:'TRAININGSTAGE', value:String(totalWorkoutDays), sub:'Tage trainiert'},
+    {label:'Gesamte Trainingszeit', value:fmtTime(totalDuration), sub:'seit Beginn'},
+    {label:'Durchschnitt pro Tag', value:fmtTime(avgDurSec), sub:'pro Trainingstag'},
+    {label:'Längster Trainingstag', value:fmtTime(maxDurDay), sub:'an einem Tag'},
+    {label:'Gesamte Wiederholungen', value:totalRepsAll.toLocaleString(), sub:'alle Übungen'},
+    {label:'Gesamte Sätze', value:totalSets.toLocaleString(), sub:'alle Sätze'},
+    {label:'Trainingstage', value:String(totalWorkoutDays), sub:'Tage trainiert'},
   ];
 
   var grid = document.createElement('div');
@@ -330,23 +368,25 @@ function buildProfilStatsDetail(){
     var box=document.createElement('div');
     box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;';
     var val=document.createElement('div');
-    val.style.cssText='font-family:inherit;font-weight:800;font-size:26px;color:var(--accent);line-height:1;margin-bottom:3px;';
+    val.className='num';
+    val.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1.1;margin-bottom:3px;';
     val.textContent=bigStats[i].value;
     var lbl=document.createElement('div');
-    lbl.style.cssText='font-size:9px;color:var(--muted);font-family:inherit;';
+    lbl.style.cssText='font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;';
     lbl.textContent=bigStats[i].label;
     var sub=document.createElement('div');
-    sub.style.cssText='font-size:10px;color:var(--muted2);margin-top:2px;';
+    sub.style.cssText='font-size:11px;color:var(--muted);margin-top:2px;';
     sub.textContent=bigStats[i].sub;
     box.appendChild(val);box.appendChild(lbl);box.appendChild(sub);
     grid.appendChild(box);
   }
   el.appendChild(grid);
+  if(window.caliMotion) caliMotion.stagger(grid);
 
   // ── Wdh per exercise ranking ──
   var title2=document.createElement('div');
-  title2.style.cssText='font-size:9px;color:var(--muted);font-family:inherit;margin-bottom:8px;margin-top:4px;';
-  title2.textContent='ALLE UBUNGEN — GESAMTE WIEDERHOLUNGEN';
+  title2.style.cssText='font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;margin-top:4px;';
+  title2.textContent='Alle Übungen · Wiederholungen gesamt';
   el.appendChild(title2);
 
   var sorted=[];
@@ -355,7 +395,7 @@ function buildProfilStatsDetail(){
 
   if(!sorted.length){
     var none=document.createElement('div');
-    none.style.cssText='font-size:12px;color:var(--muted2);padding:8px 0;';
+    none.style.cssText='font-size:12px;color:var(--muted);padding:8px 0;';
     none.textContent='Noch keine Workouts eingetragen.';
     el.appendChild(none);
     return;
@@ -372,16 +412,19 @@ function buildProfilStatsDetail(){
     nm.style.cssText='font-size:12px;color:var(--text);';
     nm.textContent=sorted[i].name;
     var vl=document.createElement('div');
-    vl.style.cssText='font-family:inherit;font-size:14px;color:var(--accent);';
+    vl.className='num';
+    vl.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:var(--accent-ink);';
     vl.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
     top.appendChild(nm);top.appendChild(vl);
-    // Bar
+    // Bar — füllt sich von 0
     var barWrap=document.createElement('div');
-    barWrap.style.cssText='background:var(--bg3);border-radius:4px;height:4px;';
+    barWrap.style.cssText='background:var(--bg3);border-radius:4px;height:4px;overflow:hidden;';
     var bar=document.createElement('div');
     var pct=maxVal>0?Math.round((sorted[i].total/maxVal)*100):0;
-    bar.style.cssText='height:100%;border-radius:4px;background:var(--accent);width:'+pct+'%;';
+    bar.style.cssText='height:100%;border-radius:4px;background:var(--accent);width:0%;transition:width var(--dur-slow) var(--ease-out);';
     barWrap.appendChild(bar);
+    if(window.caliMotion) caliMotion.animateBar(bar, pct);
+    else bar.style.width = pct+'%';
     row.appendChild(top);row.appendChild(barWrap);
     el.appendChild(row);
   }
@@ -398,7 +441,7 @@ function buildProfilUI(){
   };
   for(var id in fields){
     var el=document.getElementById(id);
-    if(el&&!document.activeElement||document.activeElement.id!==id) el.value=fields[id];
+    if(el&&(!document.activeElement||document.activeElement.id!==id)) el.value=fields[id];
   }
   var gEl=document.getElementById('pr-inp-gender');
   if(gEl) gEl.value=prData.gender||'m';
@@ -407,7 +450,7 @@ function buildProfilUI(){
 
   // Name display
   var nd=document.getElementById('pr-name-display');
-  if(nd) nd.textContent=(prData.name||'DEIN NAME').toUpperCase();
+  if(nd) nd.textContent=prData.name||'Dein Name';
 
   // Level
   var lv=prGetLevel();
@@ -446,7 +489,7 @@ function buildProfilUI(){
   var stats=[
     {label:'Workouts', value:totalWorkouts},
     {label:'Ges. Wdh', value:totalReps},
-    {label:'Ubungen', value:Object.keys(exSet).length}
+    {label:'Übungen', value:Object.keys(exSet).length}
   ];
   var sr=document.getElementById('pr-stats-row');
   if(sr){
@@ -455,36 +498,39 @@ function buildProfilUI(){
       var box=document.createElement('div');
       box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px 8px;text-align:center;';
       var val=document.createElement('div');
-      val.style.cssText='font-family:inherit;font-weight:800;font-size:30px;color:var(--accent);line-height:1;';
+      val.className='num';
+      val.style.cssText='font-family:inherit;font-weight:800;font-size:28px;color:var(--accent);line-height:1.1;';
       val.textContent=String(stats[i].value);
       var lbl=document.createElement('div');
-      lbl.style.cssText='font-size:9px;color:var(--muted);font-family:inherit;margin-top:3px;';
+      lbl.style.cssText='font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;margin-top:3px;';
       lbl.textContent=stats[i].label;
       box.appendChild(val);box.appendChild(lbl);
       sr.appendChild(box);
+      if(window.caliMotion) caliMotion.countUp(val, Math.round(stats[i].value), {duration:600});
     }
+    if(window.caliMotion) caliMotion.stagger(sr);
   }
 
-  // Badges
+  // Badges (persistiert — einmal verdient bleibt verdient)
   var badgeEl=document.getElementById('pr-badges');
   if(badgeEl){
     badgeEl.innerHTML='';
+    var earnedMap=checkBadgeUnlocks();
     var earned=0;
     for(var i=0;i<BADGES.length;i++){
       var b=BADGES[i];
-      var has=false;
-      try{has=b.check();}catch(e){}
+      var has=!!earnedMap[b.id];
       var box=document.createElement('div');
-      box.style.cssText='background:'+(has?'rgba(255,85,0,0.06)':'var(--bg2)')+';border:1px solid '+(has?'rgba(255,85,0,0.3)':'var(--border)')+';border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;opacity:'+(has?'1':'0.35')+';width:100%;';
+      box.style.cssText='background:'+(has?'rgba(255,85,0,0.06)':'var(--bg2)')+';border:1px solid '+(has?'rgba(255,85,0,0.3)':'var(--border)')+';border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:8px;opacity:'+(has?'1':'0.35')+';width:100%;';
       var icon=document.createElement('div');
       icon.style.cssText='font-size:22px;flex-shrink:0;';
       icon.innerHTML=b.icon;
       var info=document.createElement('div');
       var t=document.createElement('div');
-      t.style.cssText='font-family:inherit;font-size:13px;color:'+(has?'var(--accent)':'var(--muted)')+';';
+      t.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:'+(has?'var(--accent-ink)':'var(--muted)')+';';
       t.textContent=b.title;
       var d2=document.createElement('div');
-      d2.style.cssText='font-size:10px;color:var(--muted2);margin-top:1px;';
+      d2.style.cssText='font-size:11px;color:var(--muted);margin-top:1px;';
       d2.textContent=b.desc;
       info.appendChild(t);info.appendChild(d2);
       box.appendChild(icon);box.appendChild(info);
@@ -493,10 +539,11 @@ function buildProfilUI(){
     }
     if(!earned){
       var hint=document.createElement('div');
-      hint.style.cssText='font-size:12px;color:var(--muted2);padding:8px 0;';
+      hint.style.cssText='font-size:12px;color:var(--muted);padding:8px 0;';
       hint.textContent='Noch keine Abzeichen. Fang an zu trainieren!';
       badgeEl.appendChild(hint);
     }
+    if(window.caliMotion) caliMotion.stagger(badgeEl);
   }
 
   // Best performances from maxEntries
@@ -504,7 +551,7 @@ function buildProfilUI(){
   if(bests){
     bests.innerHTML='';
     if(!maxEntries.length){
-      bests.innerHTML='<div style="font-size:12px;color:var(--muted2);padding:8px 0;">Noch keine Max-Werte eingetragen.</div>';
+      bests.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Noch keine Max-Werte eingetragen.</div>';
     } else {
       var bestMap={};
       for(var i=0;i<maxEntries.length;i++){
@@ -520,6 +567,7 @@ function buildProfilUI(){
         left.style.cssText='font-size:13px;font-weight:500;color:var(--text);';
         left.textContent=name.replace(' Max','');
         var right=document.createElement('div');
+        right.className='num';
         right.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);';
         right.textContent=me.val+' '+me.unit;
         row.appendChild(left);row.appendChild(right);
@@ -540,19 +588,21 @@ function buildProfilUI(){
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:6px;';
       var rank=document.createElement('div');
+      rank.className='num';
       rank.style.cssText='font-family:inherit;font-size:13px;color:var(--muted);width:20px;text-align:center;';
       rank.textContent=String(i+1);
       var name2=document.createElement('div');
       name2.style.cssText='font-size:13px;color:var(--text);flex:1;';
       name2.textContent=sorted[i].name;
       var total=document.createElement('div');
+      total.className='num';
       total.style.cssText='font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);';
       total.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
       row.appendChild(rank);row.appendChild(name2);row.appendChild(total);
       repsEl.appendChild(row);
     }
     if(!sorted.length){
-      repsEl.innerHTML='<div style="font-size:12px;color:var(--muted2);padding:8px 0;">Noch keine Wdh eingetragen.</div>';
+      repsEl.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Noch keine Wdh eingetragen.</div>';
     }
   }
   // Always build streak section at end
@@ -598,18 +648,18 @@ function showAuthTab(mode){
   var submitBtn   = document.getElementById('auth-submit-btn');
   var nameRow     = document.getElementById('auth-name-row');
   if(mode==='login'){
-    loginBtn.style.background    = 'var(--accent)';
-    loginBtn.style.color         = '#000';
+    loginBtn.style.background    = 'var(--accent-deep)';
+    loginBtn.style.color         = '#fff';
     registerBtn.style.background = 'none';
-    registerBtn.style.color      = '#888';
-    submitBtn.textContent        = 'EINLOGGEN';
+    registerBtn.style.color      = 'var(--muted)';
+    submitBtn.textContent        = 'Einloggen';
     if(nameRow) nameRow.style.display = 'none';
   } else {
-    registerBtn.style.background = 'var(--accent)';
-    registerBtn.style.color      = '#000';
+    registerBtn.style.background = 'var(--accent-deep)';
+    registerBtn.style.color      = '#fff';
     loginBtn.style.background    = 'none';
-    loginBtn.style.color         = '#888';
-    submitBtn.textContent        = 'REGISTRIEREN';
+    loginBtn.style.color         = 'var(--muted)';
+    submitBtn.textContent        = 'Registrieren';
     if(nameRow) nameRow.style.display = 'block';
   }
   var err = document.getElementById('auth-error');
@@ -665,6 +715,19 @@ function authLogout(){
   auth.signOut();
 }
 
+// Logout-Bestätigung über das Sheet statt des nativen confirm() (Fallback bleibt)
+function confirmLogout(){
+  if(typeof confirmSheet === 'function'){
+    confirmSheet({
+      title:'Wirklich ausloggen?',
+      confirmLabel:'Ausloggen',
+      onConfirm:function(){ authLogout(); }
+    });
+  } else if(confirm('Wirklich ausloggen?')){
+    authLogout();
+  }
+}
+
 // ── EINSTELLUNGEN (Zahnrad im Profil) ─────────────────────
 function openSettings(){
   var exOv = document.getElementById('settings-ov'); if(exOv) exOv.remove();
@@ -673,18 +736,20 @@ function openSettings(){
 
   var ov = document.createElement('div');
   ov.id = 'settings-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
   box.id = 'settings-box';
+  box.className = 'sheet-scroll';
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
-  box.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;">&#9881;&#65039; EINSTELLUNGEN</div>';
+  box.innerHTML = '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;">&#9881;&#65039; Einstellungen</div>';
 
   box.appendChild(panel);
   try{ buildPrivacyToggle(); }catch(e){}
   try{ checkAndShowAdminBtn(); }catch(e){}
 
   var closeBtn = document.createElement('button');
+  closeBtn.className = 'pressable';
   closeBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:12px;cursor:pointer;';
   closeBtn.textContent = 'Schließen';
   closeBtn.onclick = function(){ closeSettings(); };
@@ -693,6 +758,7 @@ function openSettings(){
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) closeSettings(); };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }
 
 function closeSettings(){
@@ -708,7 +774,12 @@ function settingsStub(label){
 }
 
 function checkForAppUpdate(){
-  if(!('serviceWorker' in navigator)){ if(typeof toast==='function') toast('Nicht unterstutzt.'); return; }
+  if(!('serviceWorker' in navigator)){ if(typeof toast==='function') toast('Nicht unterstützt.'); return; }
+  // Laufendes Workout nicht durch den Reload zerstören
+  if(typeof woActive!=='undefined' && woActive){
+    if(typeof toast==='function') toast('Update nach dem Workout — Training läuft noch');
+    return;
+  }
   if(typeof toast === 'function') toast('Suche nach Updates...');
   navigator.serviceWorker.getRegistrations().then(function(regs){
     Promise.all(regs.map(function(r){ return r.update(); })).then(function(){
@@ -837,23 +908,4 @@ function fbSave(){
 var cexEl=document.getElementById('cex');
 if(cexEl){for(var xi=0;xi<EX_DB.length;xi++){var opt=document.createElement('option');opt.textContent=EX_DB[xi].name;cexEl.appendChild(opt);}}
 
-// ── DEMO MODUS ────────────────────────────────────────────
-function startDemo(){
-  var loadEl = document.getElementById('loading-screen');
-  if(loadEl) loadEl.style.display = 'none';
-  var ls = document.getElementById('login-screen');
-  if(ls) ls.style.display = 'none';
-  document.getElementById('page-e').className = 'page on';
-  var nav = document.getElementById('main-nav');
-  if(nav) nav.style.display = '';
-  // Show nav tabs
-  var navEl = document.querySelector('nav');
-  if(navEl) navEl.style.display = '';
-  // Load local data
-  lmax();lpd();lpr();lstreak();ld();loadChallenges();
-  bb();bhr();buildStartPlanBtns();buildStartChallengeWidget();buildStreakWidget();
-  setTimeout(function(){
-    if(!streakData.goalSet) showWeeklyGoalModal();
-  }, 500);
-  toast('Demo Modus - Daten werden nur lokal gespeichert');
-}
+// Demo-Modus: demoLogin() in main2ba.js (das frühere startDemo hier war unreferenziert)

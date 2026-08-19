@@ -7,12 +7,17 @@ var userLat = null;
 var userLng = null;
 var currentRadius = 2000;
 var parksData = [];
+var parksMapInitPending = false;
 
 function initParksPage(){
   if(!parksMap){
+    if(parksMapInitPending) return;
+    parksMapInitPending = true;
     // Kleine Verzögerung damit das DOM-Element sichtbar ist
     setTimeout(function(){
-      if(typeof L === 'undefined'){ setTimeout(initParksPage, 300); return; }
+      if(typeof L === 'undefined'){ parksMapInitPending = false; setTimeout(initParksPage, 300); return; }
+      var cont = document.getElementById('parks-map');
+      if(!cont || cont._leaflet_id){ parksMapInitPending = false; return; }
       parksMap = L.map('parks-map', {zoomControl:true, preferCanvas:true}).setView([52.52, 13.40], 11);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
@@ -23,6 +28,7 @@ function initParksPage(){
         clusterGroup = L.markerClusterGroup({maxClusterRadius:50, spiderfyOnMaxZoom:true, showCoverageOnHover:false, zoomToBoundsOnClick:true});
         parksMap.addLayer(clusterGroup);
       }
+      parksMapInitPending = false;
       // Force redraw
       setTimeout(function(){ parksMap.invalidateSize(); }, 300);
       document.getElementById('parks-status').textContent = 'Tippe auf "Standort" um Parks in deiner N\u00e4he zu finden.';
@@ -39,11 +45,11 @@ function setRadius(r){
     var btn = document.getElementById('rbtn-'+v/1000);
     if(btn){
       if(v===r){
-        btn.style.background='var(--accent)'; btn.style.color='#fff'; btn.style.fontWeight='700';
-        btn.style.boxShadow='0 8px 20px rgba(255,85,0,0.25)';
+        btn.style.background='var(--accent-deep)'; btn.style.color='#fff'; btn.style.fontWeight='700';
+        btn.style.boxShadow='0 12px 30px rgba(255,85,0,0.22)';
       } else {
         btn.style.background='#fff'; btn.style.color='var(--muted)'; btn.style.fontWeight='600';
-        btn.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)';
+        btn.style.boxShadow='0 8px 20px rgba(0,0,0,0.05)';
       }
     }
   });
@@ -102,7 +108,7 @@ function loadParks(){
 
   function processParks(data){
     parksData = data.elements || [];
-    if(parksData.length === 0){ statusEl.textContent = 'Keine Parks gefunden. Versuch einen groesseren Radius.'; return; }
+    if(parksData.length === 0){ statusEl.textContent = 'Keine Parks gefunden. Versuch einen größeren Radius.'; return; }
     statusEl.textContent = parksData.length + ' Parks gefunden im Umkreis von '+(currentRadius/1000)+' km';
     var parkIcon = L.divIcon({html:'<div style="background:var(--accent,#ff5500);color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;border:3px solid #fff;box-shadow:0 8px 20px rgba(255,85,0,0.35);">&#128170;</div>',className:'',iconAnchor:[19,19]});
     var parkIconDim = L.divIcon({html:'<div style="background:#18140F;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,0.22);">&#128170;</div>',className:'',iconAnchor:[16,16]});
@@ -119,7 +125,7 @@ function loadParks(){
       var name=park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
       var marker=L.marker([park._lat,park._lng],{icon: idx===0 ? parkIcon : parkIconDim});
       if(clusterGroup){ clusterGroup.addLayer(marker); } else { marker.addTo(parksMap); }
-      marker.bindPopup('<div style="font-family:system-ui;min-width:190px;padding:4px 0;"><div style="font-size:14px;font-weight:800;margin-bottom:2px;">'+name+'</div><div style="font-size:11px;color:#999;margin-bottom:10px;">'+formatDist(park._dist)+' entfernt</div><button onclick="openParkDetail('+idx+')" style="background:#ff5500;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">&#128170; Park ansehen</button><button onclick="openParkNav('+idx+')" style="background:none;border:1.5px solid #ddd;border-radius:8px;padding:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%;color:#555;">&#128205; Navigation</button></div>');
+      marker.bindPopup('<div style="font-family:system-ui;min-width:190px;padding:4px 0;"><div style="font-size:14px;font-weight:800;margin-bottom:2px;">'+name+'</div><div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+formatDist(park._dist)+' entfernt</div><button onclick="openParkDetail('+idx+')" style="background:var(--accent-deep);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">&#128170; Park ansehen</button><button onclick="openParkNav('+idx+')" style="background:none;border:1px solid var(--border2);border-radius:10px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;width:100%;color:var(--muted);">&#128205; Navigation</button></div>');
       parksMarkers.push(marker);
     });
     buildParksList();
@@ -206,13 +212,14 @@ function renderParksListHeader(){
   var headerEl = document.getElementById('parks-list-header');
   if(!headerEl) return;
   headerEl.innerHTML = '';
-  var title = document.createElement('div');
-  title.style.cssText = 'font-size:24px;font-weight:700;color:var(--text);';
+  var title = document.createElement('h2');
+  title.className = 'stitle';
+  title.style.cssText = 'margin:0;';
   title.textContent = 'Parks in deiner Nähe';
   headerEl.appendChild(title);
   if(parksData.length > 5){
     var link = document.createElement('button');
-    link.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;';
+    link.style.cssText = 'background:none;border:none;color:var(--accent-ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0;';
     link.innerHTML = parksListExpanded ? 'Weniger' : 'Alle anzeigen &#8250;';
     link.onclick = function(){ parksListExpanded = !parksListExpanded; renderParksListHeader(); renderParksListItems(); };
     headerEl.appendChild(link);
@@ -234,20 +241,28 @@ function renderParksListItems(){
     var saved = isParkSaved(parkId);
 
     var card = document.createElement('div');
-    card.className = 'pk-card';
-    card.style.cssText = 'padding:20px 22px;margin-bottom:16px;';
+    card.className = 'pk-card pressable';
+    card.style.cssText = 'padding:20px 22px;margin-bottom:12px;cursor:pointer;content-visibility:auto;contain-intrinsic-size:auto 150px;';
+    card.setAttribute('role','button');
+    card.setAttribute('tabindex','0');
+    card.setAttribute('aria-label', name + ' öffnen');
+    card.onclick = function(e){
+      if(e.target && e.target.closest && e.target.closest('button')) return;
+      openParkDetail(idx);
+    };
+    card.onkeydown = function(e){
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openParkDetail(idx); }
+    };
 
     var topRow = document.createElement('div');
     topRow.style.cssText = 'display:flex;align-items:flex-start;gap:14px;';
 
     var icon = document.createElement('div');
-    icon.style.cssText = 'width:56px;height:56px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;cursor:pointer;';
+    icon.style.cssText = 'width:56px;height:56px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;';
     icon.innerHTML = '<div style="width:26px;height:26px;">'+ci('flex')+'</div>';
-    icon.onclick = function(){ openParkDetail(idx); };
 
     var info = document.createElement('div');
-    info.style.cssText = 'flex:1;min-width:0;cursor:pointer;padding-top:2px;';
-    info.onclick = function(){ openParkDetail(idx); };
+    info.style.cssText = 'flex:1;min-width:0;padding-top:2px;';
     var nameRow = document.createElement('div');
     nameRow.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     nameRow.textContent = name;
@@ -257,19 +272,23 @@ function renderParksListItems(){
     info.appendChild(nameRow); info.appendChild(locRow);
     if(accessLabel){
       var accessRow = document.createElement('div');
-      accessRow.style.cssText = 'font-size:11.5px;font-weight:400;color:var(--muted);margin-top:4px;';
+      accessRow.style.cssText = 'font-size:12px;font-weight:400;color:var(--muted);margin-top:4px;';
       accessRow.textContent = accessLabel;
       info.appendChild(accessRow);
     }
 
     var bookmarkBtn = document.createElement('button');
     bookmarkBtn.setAttribute('aria-label', saved ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen');
-    bookmarkBtn.style.cssText = 'background:none;border:none;color:'+(saved?'var(--accent)':'var(--muted2)')+';font-size:23px;cursor:pointer;flex-shrink:0;padding:2px;line-height:1;';
+    bookmarkBtn.style.cssText = 'background:none;border:none;color:'+(saved?'var(--accent)':'var(--muted)')+';font-size:23px;cursor:pointer;flex-shrink:0;padding:6px;margin:-4px;line-height:1;';
     bookmarkBtn.innerHTML = '<div style="width:20px;height:20px;">'+ci('bookmark')+'</div>';
     bookmarkBtn.onclick = function(e){
       e.stopPropagation();
-      toggleParkSaved(parkId);
-      renderParksListItems();
+      var nowSaved = toggleParkSaved(parkId);
+      bookmarkBtn.style.color = nowSaved ? 'var(--accent)' : 'var(--muted)';
+      bookmarkBtn.setAttribute('aria-label', nowSaved ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen');
+      if(bookmarkBtn.animate && !(window.caliMotion && caliMotion.reduced())){
+        bookmarkBtn.animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:250,easing:'cubic-bezier(0.34,1.56,0.64,1)'});
+      }
     };
 
     topRow.appendChild(icon); topRow.appendChild(info); topRow.appendChild(bookmarkBtn);
@@ -290,7 +309,7 @@ function renderParksListItems(){
     var detailRow = document.createElement('div');
     detailRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:14px;';
     var detailLink = document.createElement('button');
-    detailLink.style.cssText = 'background:none;border:none;color:var(--accent);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;';
+    detailLink.style.cssText = 'background:none;border:none;color:var(--accent-ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0;';
     detailLink.innerHTML = 'Details &#8250;';
     detailLink.onclick = function(){ openParkDetail(idx); };
     detailRow.appendChild(detailLink);
@@ -298,282 +317,7 @@ function renderParksListItems(){
 
     listEl.appendChild(card);
   });
-}
-
-function openParkDetail(idx){
-  var park = parksData[idx];
-  if(!park) return;
-  var name = park.tags && (park.tags.name || park.tags['name:de']) ? (park.tags.name || park.tags['name:de']) : 'Calisthenics Park';
-  var parkId = 'park_'+(park.id||Math.round(park._lat*1000)+'_'+Math.round(park._lng*1000));
-  var addr = '';
-  if(park.tags){
-    if(park.tags['addr:street']) addr = park.tags['addr:street'] + (park.tags['addr:housenumber']?' '+park.tags['addr:housenumber']:'');
-    if(park.tags['addr:city']) addr += (addr?', ':'')+park.tags['addr:city'];
-  }
-
-  var ex = document.getElementById('park-modal-ov'); if(ex) ex.remove();
-  var ov = document.createElement('div');
-  ov.id = 'park-modal-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
-
-  var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border);';
-
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:16px auto 14px;"></div>';
-
-  // Header
-  var hdr = document.createElement('div');
-  hdr.style.cssText = 'padding:0 20px 14px;';
-  hdr.innerHTML =
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">'+
-      '<div style="font-size:32px;">&#128170;</div>'+
-      '<div style="flex:1;">'+
-        '<div style="font-size:17px;font-weight:800;color:var(--text);">'+name+'</div>'+
-        (addr?'<div style="font-size:10px;color:var(--muted);">'+addr+'</div>':'')+
-        '<div style="font-size:11px;color:var(--accent);font-weight:700;">&#128205; '+formatDist(park._dist)+' entfernt</div>'+
-      '</div>'+
-    '</div>';
-  box.appendChild(hdr);
-
-  // Tab navigation
-  var tabBar = document.createElement('div');
-  tabBar.style.cssText = 'display:flex;border-top:1px solid var(--border);border-bottom:1px solid var(--border);';
-  var tabs = ['NAVIGATION','MEINE STATS','BESTENLISTE'];
-  var tabContents = [];
-  var activeTab = 0;
-
-  tabs.forEach(function(t, ti){
-    var tb = document.createElement('button');
-    tb.style.cssText = 'flex:1;padding:11px 4px;font-family:inherit;font-weight:800;font-size:13px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent)':'var(--muted)')+';';
-    tb.textContent = t;
-    var content = document.createElement('div');
-    content.style.cssText = 'padding:16px 20px 32px;display:'+(ti===0?'block':'none')+';';
-    tabContents.push(content);
-    tb.onclick = (function(tIdx, tEl){
-      return function(){
-        activeTab = tIdx;
-        tabBar.querySelectorAll('button').forEach(function(b,bi){
-          b.style.borderBottomColor = bi===tIdx?'var(--accent)':'transparent';
-          b.style.color = bi===tIdx?'var(--accent)':'var(--muted)';
-        });
-        tabContents.forEach(function(c,ci){ c.style.display=ci===tIdx?'block':'none'; });
-        if(tIdx===1) buildParkStats(content, parkId);
-        if(tIdx===2) buildParkLeaderboard(content, parkId, name);
-      };
-    })(ti, tb);
-    tabBar.appendChild(tb);
-    box.appendChild(tabBar);
-  });
-
-  // TAB 0: Navigation
-  var navContent = tabContents[0];
-  navContent.innerHTML =
-    '<div class="stitle" style="margin:0 0 12px;">NAVIGATION &#214;FFNEN MIT</div>';
-
-  var gBtn = document.createElement('button');
-  gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
-  gBtn.innerHTML = '<img src="https://www.google.com/favicon.ico" style="width:18px;height:18px;border-radius:3px;"> Google Maps';
-  gBtn.onclick = function(){ window.open('https://www.google.com/maps/dir/?api=1&destination='+park._lat+','+park._lng+'&travelmode=walking','_blank'); ov.remove(); };
-
-  var aBtn = document.createElement('button');
-  aBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
-  aBtn.innerHTML = '<span style="font-size:18px;">&#128506;&#65039;</span> Apple Maps';
-  aBtn.onclick = function(){ window.location.href='maps://maps.apple.com/?daddr='+park._lat+','+park._lng+'&dirflg=w'; ov.remove(); };
-
-  var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;';
-  cancelBtn.textContent = 'Schlie\u00dfen';
-  cancelBtn.onclick = function(){ ov.remove(); };
-
-  navContent.appendChild(gBtn);
-  navContent.appendChild(aBtn);
-  navContent.appendChild(cancelBtn);
-  box.appendChild(navContent);
-  box.appendChild(tabContents[1]);
-  box.appendChild(tabContents[2]);
-
-  ov.appendChild(box);
-  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
-  document.body.appendChild(ov);
-  if(parksMap) parksMap.setView([park._lat, park._lng], 16);
-}
-
-// ── PARK STATS (meine Workouts dort) ─────────────────────
-function buildParkStats(el, parkId){
-  el.innerHTML = '<div style="text-align:center;padding:20px 0;font-size:12px;color:var(--muted);">Wird geladen...</div>';
-  if(!currentUser){ el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px;">Einloggen um Stats zu sehen.</div>'; return; }
-
-  // Find workouts near this park
-  var parkCoords = parkId.split('_');
-  // We stored workouts with location? No — show general stats for now
-  // Count workouts that match by checking ents
-  var totalWorkouts = ents.length;
-  var exCounts = {};
-  ents.forEach(function(e){
-    if(e.sets) e.sets.forEach(function(s){
-      if(s.ex){ exCounts[s.ex] = (exCounts[s.ex]||0) + (parseInt(s.n)||0); }
-    });
-  });
-  var topEx = Object.keys(exCounts).sort(function(a,b){ return exCounts[b]-exCounts[a]; }).slice(0,5);
-
-  el.innerHTML = '';
-  var note = document.createElement('div');
-  note.style.cssText = 'background:rgba(255,85,0,0.07);border:1px solid rgba(255,85,0,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;';
-  note.innerHTML = '&#128205; GPS-Tracking kommt in Phase 2. Hier siehst du jetzt deine gesamten Trainings-Stats.';
-  el.appendChild(note);
-
-  var stats = [
-    {label:'Gesamt Workouts', val: totalWorkouts},
-    {label:'Verschiedene Übungen', val: Object.keys(exCounts).length},
-  ];
-  stats.forEach(function(s){
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;';
-    row.innerHTML = '<span style="color:var(--muted);">'+s.label+'</span><span style="font-family:inherit;font-weight:800;font-size:20px;color:var(--text);">'+s.val+'</span>';
-    el.appendChild(row);
-  });
-
-  if(topEx.length > 0){
-    var t = document.createElement('div');
-    t.className = 'stitle';
-    t.style.cssText = 'color:var(--accent);margin:16px 0 10px;';
-    t.textContent = 'TOP ÜBUNGEN';
-    el.appendChild(t);
-    topEx.forEach(function(ex, i){
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
-      row.innerHTML = '<span style="color:var(--text);">'+(i+1)+'. '+ex+'</span><span style="font-family:inherit;font-weight:800;font-size:16px;color:var(--accent);">'+exCounts[ex]+' Wdh</span>';
-      el.appendChild(row);
-    });
-  }
-}
-
-// ── PARK LEADERBOARD ──────────────────────────────────────
-function buildParkLeaderboard(el, parkId, parkName){
-  el.innerHTML = '<div style="text-align:center;padding:16px 0;font-size:12px;color:var(--muted);">Wird geladen...</div>';
-  if(!currentUser){ el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px;">Einloggen um die Bestenliste zu sehen.</div>'; return; }
-
-  // Load leaderboard from Firestore
-  db.collection('parkLeaderboard').where('parkId','==',parkId).orderBy('reps','desc').limit(20).get()
-    .then(function(snap){
-      el.innerHTML = '';
-
-      // Submit button
-      var subBtn = document.createElement('button');
-      subBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:14px;cursor:pointer;margin-bottom:16px;';
-      subBtn.textContent = '+ EINTRAG EINREICHEN';
-      subBtn.onclick = function(){ showLeaderboardSubmit(parkId, parkName); };
-      el.appendChild(subBtn);
-
-      var title = document.createElement('div');
-      title.className = 'stitle';
-      title.style.cssText = 'color:var(--accent);margin:0 0 12px;';
-      title.textContent = 'BESTENLISTE — '+parkName.toUpperCase();
-      el.appendChild(title);
-
-      if(snap.empty){
-        var empty = document.createElement('div');
-        empty.style.cssText = 'text-align:center;padding:20px 0;font-size:12px;color:var(--muted);';
-        empty.innerHTML = '&#127942; Noch keine Einträge.<br>Sei der Erste!';
-        el.appendChild(empty);
-        return;
-      }
-
-      snap.forEach(function(doc, idx){
-        var d = doc.data();
-        var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:'+(idx===0?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1px solid '+(idx===0?'rgba(255,85,0,0.25)':'var(--border)')+';';
-        var medal = idx===0?'&#127947;':idx===1?'&#129352;':idx===2?'&#129353;':(idx+1)+'.';
-        var statusBadge = d.status==='approved'?'<span style="font-size:8px;background:rgba(0,200,100,0.15);color:#00c864;border:1px solid rgba(0,200,100,0.3);border-radius:20px;padding:2px 7px;margin-left:6px;">&#10003; OK</span>':
-                          d.status==='pending'?'<span style="font-size:8px;background:rgba(255,170,0,0.15);color:#ffaa00;border:1px solid rgba(255,170,0,0.3);border-radius:20px;padding:2px 7px;margin-left:6px;">&#9203; Prüfung</span>':
-                          '<span style="font-size:8px;background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:20px;padding:2px 7px;margin-left:6px;">&#10007; Abgelehnt</span>';
-        row.innerHTML =
-          '<div style="font-size:18px;flex-shrink:0;width:28px;text-align:center;">'+medal+'</div>'+
-          '<div style="flex:1;min-width:0;">'+
-            '<div style="font-size:12px;font-weight:700;color:var(--text);">'+d.userName+'</div>'+
-            '<div style="font-size:10px;color:var(--muted);">'+d.exercise+statusBadge+'</div>'+
-          '</div>'+
-          '<div style="font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);">'+d.reps+' Wdh</div>';
-        if(d.videoUrl){
-          var vidBtn = document.createElement('a');
-          vidBtn.href = d.videoUrl; vidBtn.target='_blank';
-          vidBtn.style.cssText = 'font-size:18px;text-decoration:none;flex-shrink:0;';
-          vidBtn.innerHTML = '&#127909;';
-          vidBtn.setAttribute('aria-label', 'Video ansehen');
-          row.appendChild(vidBtn);
-        }
-        el.appendChild(row);
-      });
-    })
-    .catch(function(){ el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px 0;">Fehler beim Laden.</div>'; });
-}
-
-// ── LEADERBOARD SUBMIT MODAL ──────────────────────────────
-function showLeaderboardSubmit(parkId, parkName){
-  var ex2 = document.getElementById('lb-submit-ov'); if(ex2) ex2.remove();
-  var ov2 = document.createElement('div');
-  ov2.id = 'lb-submit-ov';
-  ov2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
-
-  var box2 = document.createElement('div');
-  box2.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
-
-  box2.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px;">EINTRAG EINREICHEN</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.5;">'+parkName+' &middot; Video-Beweis Pflicht &middot; Ich prüfe deinen Eintrag</div>';
-
-  function inpRow(lbl, id, ph, type){
-    var w=document.createElement('div'); w.style.cssText='margin-bottom:12px;';
-    var l=document.createElement('div'); l.className='stitle'; l.style.cssText='margin:0 0 5px;'; l.textContent=lbl;
-    var i=document.createElement('input'); i.id=id; i.type=type||'text'; i.placeholder=ph;
-    i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;';
-    w.appendChild(l); w.appendChild(i); return w;
-  }
-
-  box2.appendChild(inpRow('ÜBUNG', 'lb-ex', 'z.B. Klimmzüge'));
-  box2.appendChild(inpRow('WIEDERHOLUNGEN', 'lb-reps', 'z.B. 25', 'number'));
-  box2.appendChild(inpRow('VIDEO-LINK (YouTube/Instagram)', 'lb-video', 'https://...'));
-
-  var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;margin-top:6px;';
-  submitBtn.textContent = 'EINREICHEN';
-  submitBtn.onclick = function(){
-    var exVal = document.getElementById('lb-ex').value.trim();
-    var repsVal = parseInt(document.getElementById('lb-reps').value);
-    var videoVal = document.getElementById('lb-video').value.trim();
-    if(!exVal){ toast('Übung eingeben!'); return; }
-    if(!repsVal || repsVal < 1){ toast('Wiederholungen eingeben!'); return; }
-    if(!videoVal || !videoVal.startsWith('http')){ toast('Video-Link eingeben!'); return; }
-
-    var entry = {
-      parkId: parkId,
-      parkName: parkName,
-      uid: currentUser.uid,
-      userName: (prData&&prData.name) ? prData.name : 'Athlet',
-      exercise: exVal,
-      reps: repsVal,
-      videoUrl: videoVal,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-
-    db.collection('parkLeaderboard').add(entry)
-      .then(function(){
-        ov2.remove();
-        toast('&#127942; Eingereicht! Ich prüfe deinen Eintrag.');
-      })
-      .catch(function(){ toast('Fehler beim Einreichen.'); });
-  };
-
-  var cancelBtn2 = document.createElement('button');
-  cancelBtn2.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;';
-  cancelBtn2.textContent = 'Abbrechen';
-  cancelBtn2.onclick = function(){ ov2.remove(); };
-
-  box2.appendChild(submitBtn);
-  box2.appendChild(cancelBtn2);
-  ov2.appendChild(box2);
-  ov2.onclick = function(e){ if(e.target===ov2) ov2.remove(); };
-  document.body.appendChild(ov2);
+  if(window.caliMotion) caliMotion.stagger(listEl);
 }
 
 function calcDist(lat1, lon1, lat2, lon2){
@@ -598,15 +342,27 @@ function buildPrivacyToggle(){
 
   var wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:10px;';
-  wrap.innerHTML =
-    '<div>'+
-      '<div style="font-size:13px;font-weight:700;color:var(--text);">Profil ' + (isPublic?'&#127758; Öffentlich':'&#128274; Privat') + '</div>'+
-      '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+(isPublic?'Andere können dich in Bestenlisten sehen':'Dein Name bleibt anonym')+'</div>'+
-    '</div>';
+  var txtWrap = document.createElement('div');
+  var titleEl = document.createElement('div');
+  titleEl.style.cssText = 'font-size:13px;font-weight:700;color:var(--text);';
+  var subEl = document.createElement('div');
+  subEl.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+  function renderLabels(){
+    titleEl.innerHTML = 'Profil ' + (isPublic?'&#127758; Öffentlich':'&#128274; Privat');
+    subEl.textContent = isPublic?'Andere können dich in Bestenlisten sehen':'Dein Name bleibt anonym';
+  }
+  renderLabels();
+  txtWrap.appendChild(titleEl); txtWrap.appendChild(subEl);
+  wrap.appendChild(txtWrap);
 
   var toggle = document.createElement('button');
-  toggle.style.cssText = 'width:48px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:'+(isPublic?'var(--accent)':'#ccc')+';transition:background 0.2s;flex-shrink:0;';
-  toggle.innerHTML = '<div style="position:absolute;top:3px;'+(isPublic?'right:3px':'left:3px')+';width:20px;height:20px;border-radius:50%;background:#fff;transition:all 0.2s;"></div>';
+  toggle.setAttribute('role','switch');
+  toggle.setAttribute('aria-checked', isPublic?'true':'false');
+  toggle.setAttribute('aria-label','Profil öffentlich anzeigen');
+  toggle.style.cssText = 'width:48px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:'+(isPublic?'var(--accent)':'var(--border2)')+';transition:background var(--dur-med) var(--ease-out);flex-shrink:0;';
+  var knob = document.createElement('div');
+  knob.style.cssText = 'position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform var(--dur-med) var(--ease-out);transform:translateX('+(isPublic?'22px':'0')+');';
+  toggle.appendChild(knob);
   toggle.onclick = function(){
     isPublic = !isPublic;
     if(typeof prData === 'undefined' || !prData) window.prData = {};
@@ -614,8 +370,11 @@ function buildPrivacyToggle(){
     try{ localStorage.setItem('cali_profile', JSON.stringify(prData)); }catch(x){}
     if(typeof spr === 'function') spr();
     if(typeof fbSave === 'function') fbSave();
-    buildPrivacyToggle();
-    if(typeof toast === 'function') toast(isPublic ? '&#127758; Profil öffentlich' : '&#128274; Profil privat');
+    toggle.style.background = isPublic?'var(--accent)':'var(--border2)';
+    knob.style.transform = 'translateX('+(isPublic?'22px':'0')+')';
+    toggle.setAttribute('aria-checked', isPublic?'true':'false');
+    renderLabels();
+    if(typeof toast === 'function') toast(isPublic ? '🌍 Profil öffentlich' : '🔒 Profil privat');
   };
   wrap.appendChild(toggle);
   el.appendChild(wrap);
@@ -644,13 +403,14 @@ function openAdminPanel(){
   var ex = document.getElementById('admin-panel-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'admin-panel-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
+  box.className = 'sheet-scroll';
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
 
   box.innerHTML =
-    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;">&#128274; ADMIN PANEL</div>';
+    '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:12px;">&#128274; Admin-Panel</div>';
 
   // Tabs
   var tabWrap = document.createElement('div');
@@ -664,7 +424,8 @@ function openAdminPanel(){
 
   tabs2.forEach(function(t){
     var btn = document.createElement('button');
-    btn.style.cssText = 'flex:1;padding:8px;border-radius:10px;border:1.5px solid '+(t.id===activeAdminTab?'var(--accent)':'var(--border)')+';background:'+(t.id===activeAdminTab?'rgba(255,85,0,0.1)':'none')+';color:'+(t.id===activeAdminTab?'var(--accent)':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+    btn.style.cssText = 'flex:1;padding:8px;border-radius:10px;border:1px solid '+(t.id===activeAdminTab?'var(--accent)':'var(--border)')+';background:'+(t.id===activeAdminTab?'rgba(255,85,0,0.1)':'none')+';color:'+(t.id===activeAdminTab?'var(--accent-ink)':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;min-height:36px;cursor:pointer;';
+    btn.classList.add('pressable');
     btn.innerHTML = t.label;
     btn.onclick = function(){
       activeAdminTab = t.id;
@@ -672,7 +433,7 @@ function openAdminPanel(){
         var a = tabs2[bi].id===activeAdminTab;
         b.style.borderColor=a?'var(--accent)':'var(--border)';
         b.style.background=a?'rgba(255,85,0,0.1)':'none';
-        b.style.color=a?'var(--accent)':'var(--muted)';
+        b.style.color=a?'var(--accent-ink)':'var(--muted)';
       });
       listEl.style.display = t.id==='pending'?'block':'none';
       approvedEl.style.display = t.id==='approved'?'block':'none';
@@ -704,24 +465,26 @@ function openAdminPanel(){
           '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
-          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'<div style="font-size:11px;color:#ff4444;margin-bottom:10px;">Kein Video!</div>');
+          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'<div style="font-size:11px;color:var(--red);margin-bottom:10px;">Kein Video!</div>');
 
         var btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:8px;';
 
         var approveBtn = document.createElement('button');
-        approveBtn.style.cssText = 'flex:1;background:rgba(0,200,100,0.1);color:#00c864;border:1px solid rgba(0,200,100,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
-        approveBtn.textContent = '&#10003; GENEHMIGEN';
+        approveBtn.style.cssText = 'flex:1;background:rgba(34,197,94,0.1);color:var(--success-ink);border:1px solid rgba(34,197,94,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
+        approveBtn.classList.add('pressable');
+        approveBtn.textContent = '✓ Genehmigen';
         approveBtn.onclick = function(){
           doc.ref.update({status:'approved'}).then(function(){
             card.remove();
-            toast('&#10003; Genehmigt!');
+            toast('✓ Genehmigt!');
           });
         };
 
         var rejectBtn = document.createElement('button');
-        rejectBtn.style.cssText = 'flex:1;background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
-        rejectBtn.textContent = '&#10007; ABLEHNEN';
+        rejectBtn.style.cssText = 'flex:1;background:rgba(217,48,54,0.08);color:var(--red);border:1px solid rgba(217,48,54,0.25);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
+        rejectBtn.classList.add('pressable');
+        rejectBtn.textContent = '✗ Ablehnen';
         rejectBtn.onclick = function(){
           doc.ref.update({status:'rejected'}).then(function(){
             card.remove();
@@ -734,6 +497,7 @@ function openAdminPanel(){
         card.appendChild(btnRow);
         listEl.appendChild(card);
       });
+      if(window.caliMotion) caliMotion.stagger(listEl);
     })
     .catch(function(){ listEl.innerHTML = '<div style="font-size:12px;color:var(--muted);">Fehler beim Laden.</div>'; });
 
@@ -746,6 +510,7 @@ function openAdminPanel(){
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }
 // ── PARK NAVIGATION (direkt) ───────────────────────────────
 function openParkNav(idx){
@@ -754,7 +519,7 @@ function openParkNav(idx){
   var ex = document.getElementById('park-modal-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'park-modal-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
   var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
@@ -766,23 +531,26 @@ function openParkNav(idx){
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
     '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">'+name+'</div>'+
     (addr?'<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">'+addr+'</div>':'')+
-    '<div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:12px;">NAVIGATION ÖFFNEN MIT</div>';
+    '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:12px;">Navigation öffnen mit</div>';
 
   // Google Maps
   var gBtn = document.createElement('button');
-  gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
-  gBtn.innerHTML = '<img src="https://www.google.com/favicon.ico" style="width:18px;height:18px;border-radius:3px;"> Google Maps';
+  gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  gBtn.classList.add('pressable');
+  gBtn.innerHTML = '<span style="width:18px;height:18px;display:inline-block;flex-shrink:0;">'+(typeof ci==='function'?ci('pin'):'&#128205;')+'</span> Google Maps';
   gBtn.onclick = function(){ window.open('https://www.google.com/maps/dir/?api=1&destination='+park._lat+','+park._lng+'&travelmode=walking','_blank'); ov.remove(); };
 
   // Apple Maps
   var aBtn = document.createElement('button');
-  aBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  aBtn.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  aBtn.classList.add('pressable');
   aBtn.innerHTML = '<span style="font-size:20px;">&#63743;</span> Apple Maps';
   aBtn.onclick = function(){ window.location.href='maps://maps.apple.com/?daddr='+park._lat+','+park._lng+'&dirflg=w'; ov.remove(); };
 
   // Adresse kopieren
   var copyBtn = document.createElement('button');
-  copyBtn.style.cssText = 'width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  copyBtn.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
+  copyBtn.classList.add('pressable');
   copyBtn.innerHTML = '<span style="font-size:18px;">&#128203;</span> Adresse kopieren';
   copyBtn.onclick = function(){
     var txt = (addr || (park._lat+', '+park._lng));
@@ -798,6 +566,7 @@ function openParkNav(idx){
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }
 
 // ── PARK DETAIL VOLLBILD ───────────────────────────────────
@@ -816,69 +585,75 @@ function openParkDetail(idx){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;color:var(--text);font-family:inherit;transition:transform var(--dur-fast) var(--ease-out);';
+  backBtn.classList.add('pressable');
   backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.onclick = function(){ ov.remove(); };
+  backBtn.onclick = function(){
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+  };
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'flex:1;min-width:0;';
   titleEl.innerHTML = '<div style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&#128170; '+name+'</div>'+
-    '<div style="font-size:11px;color:var(--accent);font-weight:600;">&#128205; '+formatDist(park._dist)+' entfernt</div>';
+    '<div style="font-size:11px;color:var(--accent-ink);font-weight:600;">&#128205; '+formatDist(park._dist)+' entfernt</div>';
   var recBtn2 = document.createElement('button');
-  recBtn2.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;';
-  recBtn2.innerHTML = '&#127942; REKORD';
+  recBtn2.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;min-height:36px;cursor:pointer;flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
+  recBtn2.classList.add('pressable');
+  recBtn2.innerHTML = '&#127942; Rekord';
   recBtn2.onclick = function(){ openParkRecordSubmit(idx); };
   var navBtn = document.createElement('button');
-  navBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;';
-  navBtn.innerHTML = '&#128205; NAV';
-  navBtn.onclick = function(){ ov.remove(); openParkNav(idx); };
+  navBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;min-height:36px;cursor:pointer;flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
+  navBtn.classList.add('pressable');
+  navBtn.innerHTML = '&#128205; Nav';
+  navBtn.onclick = function(){
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+    openParkNav(idx);
+  };
   topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(recBtn2); topBar.appendChild(navBtn);
   ov.appendChild(topBar);
 
-  // Haupt-Layout: links Tabs, rechts Inhalt
-  var layout = document.createElement('div');
-  layout.style.cssText = 'display:flex;flex:1;overflow:hidden;';
-
-  // Linke Spalte
-  var leftCol = document.createElement('div');
-  leftCol.style.cssText = 'width:120px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;';
+  // Tabs horizontal — gleiches Muster wie die Battles-Übersicht
+  var tabBar = document.createElement('div');
+  tabBar.style.cssText = 'display:flex;border-bottom:1px solid var(--border);flex-shrink:0;';
   var tabDefs = [
-    {label:'&#127942; Bestenliste', id:'lb'},
-    {label:'&#128200; Meine Stats', id:'stats'},
-    {label:'&#128101; Community', id:'comm'},
+    {label:'Bestenliste', id:'lb'},
+    {label:'Meine Stats', id:'stats'},
+    {label:'Community', id:'comm'},
   ];
   var bodies = [];
   tabDefs.forEach(function(t, ti){
     var btn = document.createElement('button');
-    btn.style.cssText = 'width:100%;padding:14px 10px;border:none;border-bottom:1px solid var(--border);background:'+(ti===0?'rgba(255,85,0,0.08)':'none')+';color:'+(ti===0?'var(--accent)':'var(--muted)')+';font-family:inherit;font-weight:800;font-size:14px;letter-spacing:0.5px;cursor:pointer;text-align:left;border-left:3px solid '+(ti===0?'var(--accent)':'transparent')+';line-height:1.4;';
-    btn.innerHTML = t.label;
+    btn.style.cssText = 'flex:1;padding:12px 4px;min-height:44px;font-family:inherit;font-weight:700;font-size:13px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent-ink)':'var(--muted)')+';white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+    btn.classList.add('pressable');
+    btn.textContent = t.label;
     var body = document.createElement('div');
-    body.style.cssText = 'display:'+(ti===0?'block':'none')+';padding:14px;overflow-y:auto;';
+    body.className = 'sheet-scroll';
+    body.style.cssText = 'display:'+(ti===0?'block':'none')+';flex:1;padding:14px 16px 40px;overflow-y:auto;';
     bodies.push(body);
-    btn.onclick = (function(tIdx, tBtn){
+    btn.onclick = (function(tIdx){
       return function(){
-        leftCol.querySelectorAll('button').forEach(function(b,bi){
-          b.style.background = bi===tIdx?'rgba(255,85,0,0.08)':'none';
-          b.style.color = bi===tIdx?'var(--accent)':'var(--muted)';
-          b.style.borderLeftColor = bi===tIdx?'var(--accent)':'transparent';
+        tabBar.querySelectorAll('button').forEach(function(b,bi){
+          b.style.borderBottomColor = bi===tIdx?'var(--accent)':'transparent';
+          b.style.color = bi===tIdx?'var(--accent-ink)':'var(--muted)';
         });
         bodies.forEach(function(b,bi){ b.style.display=bi===tIdx?'block':'none'; });
         if(tIdx===0 && !bodies[0]._loaded){ buildParkDetailLeaderboard(bodies[0], parkId, name); bodies[0]._loaded=true; }
         if(tIdx===1 && !bodies[1]._loaded){ buildParkDetailStats(bodies[1], parkId); bodies[1]._loaded=true; }
         if(tIdx===2 && !bodies[2]._loaded){ buildParkDetailCommunity(bodies[2], parkId, name); bodies[2]._loaded=true; }
       };
-    })(ti, btn);
-    leftCol.appendChild(btn);
+    })(ti);
+    tabBar.appendChild(btn);
   });
-  layout.appendChild(leftCol);
+  ov.appendChild(tabBar);
 
-  // Rechte Spalte
-  var rightCol = document.createElement('div');
-  rightCol.style.cssText = 'flex:1;overflow-y:auto;';
-  bodies.forEach(function(b){ rightCol.appendChild(b); });
-  layout.appendChild(rightCol);
-  ov.appendChild(layout);
+  var contentWrap = document.createElement('div');
+  contentWrap.style.cssText = 'flex:1;overflow:hidden;display:flex;flex-direction:column;';
+  bodies.forEach(function(b){ contentWrap.appendChild(b); });
+  ov.appendChild(contentWrap);
 
   document.body.appendChild(ov);
+  // Hardware-Zurück schließt das Overlay statt der App
+  if(typeof overlayPush === 'function') overlayPush(ov);
+  if(window.caliMotion) caliMotion.overlayIn(ov);
   buildParkDetailLeaderboard(bodies[0], parkId, name);
   bodies[0]._loaded = true;
 }
@@ -891,16 +666,17 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
 
   // Eintrag einreichen Button
   var subBtn = document.createElement('button');
-  subBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:12px;cursor:pointer;margin-bottom:14px;';
-  subBtn.innerHTML = '+ EINTRAG EINREICHEN';
+  subBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;margin-bottom:14px;transition:transform var(--dur-fast) var(--ease-out);';
+  subBtn.classList.add('pressable');
+  subBtn.innerHTML = '+ Eintrag einreichen';
   subBtn.onclick = function(){ openRecordSubmit(parkId, parkName); };
   el.appendChild(subBtn);
 
   // Übungs-Auswahl horizontal (wie globale Bestenliste)
-  var exLabel = document.createElement('div');
+  var exLabel = document.createElement('h2');
   exLabel.className = 'stitle';
   exLabel.style.cssText = 'margin:0 0 8px;';
-  exLabel.textContent = 'ÜBUNG';
+  exLabel.textContent = 'Übung';
   el.appendChild(exLabel);
 
   var exWrap = document.createElement('div');
@@ -922,14 +698,15 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
     var btn = document.createElement('button');
     btn.dataset.catId = cat.id;
     var isActive = cat.id === activeCat;
-    btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    btn.style.cssText = 'flex-shrink:0;padding:9px 14px;min-height:36px;border-radius:20px;border:1px solid '+(isActive?'var(--accent-deep)':'var(--border)')+';background:'+(isActive?'var(--accent-deep)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+    btn.classList.add('pressable');
     btn.innerHTML = cat.icon+' '+cat.label;
     btn.onclick = function(){
       activeCat = cat.id;
       catWrap.querySelectorAll('button').forEach(function(b){
         var a = b.dataset.catId === activeCat;
-        b.style.borderColor = a?'var(--accent)':'var(--border)';
-        b.style.background = a?'var(--accent)':'none';
+        b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
+        b.style.background = a?'var(--accent-deep)':'none';
         b.style.color = a?'#fff':'var(--muted)';
       });
       rebuildExWrap();
@@ -977,14 +754,15 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
       var btn = document.createElement('button');
       btn.dataset.exId = ex.id;
       var isActive = selEx && ex.id === selEx.id;
-      btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+      btn.style.cssText = 'flex-shrink:0;padding:9px 14px;min-height:36px;border-radius:20px;border:1px solid '+(isActive?'var(--accent-deep)':'var(--border)')+';background:'+(isActive?'var(--accent-deep)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+      btn.classList.add('pressable');
       btn.textContent = ex.name;
       btn.onclick = function(){
         selEx = ex;
         exWrap2.querySelectorAll('button').forEach(function(b){
           var a = b.dataset.exId === selEx.id;
-          b.style.borderColor = a?'var(--accent)':'var(--border)';
-          b.style.background = a?'var(--accent)':'none';
+          b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
+          b.style.background = a?'var(--accent-deep)':'none';
           b.style.color = a?'#fff':'var(--muted)';
         });
         loadParkLb(listEl2, parkId, selEx);
@@ -1010,26 +788,27 @@ function loadParkLb(el, parkId, ex){
         return;
       }
       var uid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
-      snap.forEach(function(doc, i){
+      snap.docs.forEach(function(doc, i){
         var d = doc.data();
         var rank = i+1;
         var medal = rank===1?'&#129351;':rank===2?'&#129352;':rank===3?'&#129353;':'';
         var isMe = uid && d.uid === uid;
         var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';';
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';content-visibility:auto;contain-intrinsic-size:auto 64px;';
         var rankEl = document.createElement('div');
         rankEl.style.cssText = 'width:28px;text-align:center;flex-shrink:0;';
-        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span style="font-family:inherit;font-weight:800;font-size:15px;color:var(--muted);">#'+rank+'</span>';
+        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span class="num" style="font-family:inherit;font-weight:800;font-size:15px;color:var(--muted);">#'+rank+'</span>';
         var infoEl = document.createElement('div');
         infoEl.style.cssText = 'flex:1;min-width:0;';
-        infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+' </div>';
+        infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:10px;color:var(--accent-ink);border:1px solid var(--accent-ink);border-radius:6px;padding:1px 5px;">Du</span>':'')+' </div>';
         var valEl = document.createElement('div');
         valEl.style.cssText = 'text-align:right;flex-shrink:0;';
-        valEl.innerHTML = '<div style="font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">'+ex.unit+'</div>';
+        valEl.innerHTML = '<div class="num" style="font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+ex.unit+'</div>';
         row.appendChild(rankEl); row.appendChild(infoEl); row.appendChild(valEl);
         if(d.videoUrl){
           var vBtn = document.createElement('button');
-          vBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:14px;cursor:pointer;flex-shrink:0;';
+          vBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:14px;cursor:pointer;flex-shrink:0;';
+          vBtn.classList.add('pressable');
           vBtn.innerHTML = '&#9654;';
           vBtn.setAttribute('aria-label', 'Video abspielen');
           vBtn.onclick = function(){ playVideo(d.videoUrl); };
@@ -1043,7 +822,7 @@ function loadParkLb(el, parkId, ex){
 }
 
 function buildParkDetailStats(el, parkId){
-  el.innerHTML = '<div class="stitle" style="color:var(--accent);margin:0 0 16px;">&#128200; MEINE STATS</div>';
+  el.innerHTML = '<h2 class="stitle" style="margin:0 0 16px;">Meine Stats</h2>';
   if(typeof db === 'undefined' || !db || !firebase.auth().currentUser){
     el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Einloggen um deine Stats zu sehen.</div>'; return;
   }
@@ -1060,24 +839,24 @@ function buildParkDetailStats(el, parkId){
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);';
       row.innerHTML = '<div style="font-size:13px;color:var(--muted);">'+s.label+'</div>'+
-        '<div style="font-family:inherit;font-weight:800;font-size:22px;color:var(--text);">'+s.value+' <span style="font-family:var(--body);font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
+        '<div class="num" style="font-family:inherit;font-weight:800;font-size:22px;color:var(--text);">'+s.value+' <span style="font-family:var(--body);font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
       el.appendChild(row);
     });
   }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler.</div>'; });
 }
 
 function buildParkDetailCommunity(el, parkId, parkName){
-  el.innerHTML = '<div class="stitle" style="color:var(--accent);margin:0 0 16px;">&#128101; COMMUNITY WORKOUTS</div>';
+  el.innerHTML = '<h2 class="stitle" style="margin:0 0 16px;">Community-Workouts</h2>';
   if(typeof db === 'undefined' || !db){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Einloggen um Community zu sehen.</div>'; return; }
   db.collection('parkWorkouts').doc(parkId).collection('posts').orderBy('date','desc').limit(20).get().then(function(snap){
     if(snap.empty){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Community-Workouts hier.<br>Sei der Erste!</div>'; return; }
     snap.forEach(function(doc){
       var d = doc.data();
       var card = document.createElement('div');
-      card.style.cssText = 'background:var(--bg2);border-radius:12px;padding:14px;margin-bottom:10px;';
+      card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
       card.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'+
         '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.userName||'Anonym')+'</div>'+
-        '<div style="font-size:10px;color:var(--muted);">'+(d.date?d.date.slice(0,10):'')+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);">'+(d.date?d.date.slice(0,10):'')+'</div>'+
         '</div>'+
         '<div style="font-size:12px;color:var(--muted);">'+(d.summary||'')+'</div>';
       el.appendChild(card);
@@ -1109,46 +888,49 @@ function openParkRecordSubmit(idx){
 
 function showParkRecordGPSError(parkName, msg){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;';
+  box.style.cssText = 'background:var(--bg);border-radius:20px;padding:24px;max-width:340px;width:100%;text-align:center;';
   box.innerHTML =
     '<div style="font-size:40px;margin-bottom:12px;">📍</div>'+
     '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">'+parkName+'</div>'+
-    '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;">'+msg+'</div>';
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;white-space:pre-line;">'+msg+'</div>';
   var closeBtn = document.createElement('button');
-  closeBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;cursor:pointer;';
+  closeBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:14px;cursor:pointer;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out);';
+  closeBtn.classList.add('pressable');
   closeBtn.textContent = 'OK, verstanden';
   closeBtn.onclick = function(){ ov.remove(); };
   box.appendChild(closeBtn);
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.overlayIn(ov);
 }
 
 // ── PARK VORSCHLAGEN ───────────────────────────────────────
 function openSuggestPark(){
-  if(!firebase.auth().currentUser){ alert('Bitte einloggen!'); return; }
+  if(!firebase.auth().currentUser){ if(typeof toast==='function') toast('Bitte erst einloggen!'); else alert('Bitte einloggen!'); return; }
   var ex = document.getElementById('suggest-park-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'suggest-park-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
+  box.className = 'sheet-scroll';
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
-    '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; PARK VORSCHLAGEN</div>'+
+    '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; Park vorschlagen</div>'+
     '<div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Admin prüft deinen Vorschlag bevor er erscheint.</div>';
 
   // Name
   var nameInput = document.createElement('input');
   nameInput.type = 'text'; nameInput.placeholder = 'Park-Name';
-  nameInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  nameInput.style.cssText = 'width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
   box.appendChild(nameInput);
 
   // Beschreibung
   var descInput = document.createElement('textarea');
   descInput.placeholder = 'Beschreibung (Adresse, Ausstattung...)';
-  descInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;height:80px;resize:none;';
+  descInput.style.cssText = 'width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;height:80px;resize:none;';
   box.appendChild(descInput);
 
   // GPS Status
@@ -1156,21 +938,21 @@ function openSuggestPark(){
   gpsEl.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;margin-bottom:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;';
   gpsEl.innerHTML = '<span style="font-size:18px;">&#128205;</span><span id="suggest-gps-status">GPS wird ermittelt...</span>';
   box.appendChild(gpsEl);
+  // Direkte Referenz statt getElementById: das Sheet hängt hier noch nicht im DOM.
+  var gpsStatusEl = gpsEl.querySelector('#suggest-gps-status');
 
   var suggestLat = null, suggestLng = null;
 
   // Auto-GPS
   if(userLat && userLng){
     suggestLat = userLat; suggestLng = userLng;
-    document.getElementById('suggest-gps-status').textContent = 'Aktueller Standort: '+userLat.toFixed(5)+', '+userLng.toFixed(5);
+    if(gpsStatusEl) gpsStatusEl.textContent = 'Aktueller Standort: '+userLat.toFixed(5)+', '+userLng.toFixed(5);
   } else {
     navigator.geolocation.getCurrentPosition(function(pos){
       suggestLat = pos.coords.latitude; suggestLng = pos.coords.longitude;
-      var el = document.getElementById('suggest-gps-status');
-      if(el) el.textContent = 'Standort: '+suggestLat.toFixed(5)+', '+suggestLng.toFixed(5);
+      if(gpsStatusEl) gpsStatusEl.textContent = 'Standort: '+suggestLat.toFixed(5)+', '+suggestLng.toFixed(5);
     }, function(){
-      var el = document.getElementById('suggest-gps-status');
-      if(el) el.textContent = 'GPS nicht verfügbar — bitte manuell eingeben';
+      if(gpsStatusEl) gpsStatusEl.textContent = 'GPS nicht verfügbar — bitte manuell eingeben';
     });
   }
 
@@ -1179,23 +961,24 @@ function openSuggestPark(){
   manualWrap.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
   var latInput = document.createElement('input');
   latInput.type = 'number'; latInput.placeholder = 'Latitude (z.B. 52.5200)'; latInput.step = '0.0001';
-  latInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
+  latInput.style.cssText = 'flex:1;padding:11px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
   var lngInput = document.createElement('input');
   lngInput.type = 'number'; lngInput.placeholder = 'Longitude (z.B. 13.4050)'; lngInput.step = '0.0001';
-  lngInput.style.cssText = 'flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
+  lngInput.style.cssText = 'flex:1;padding:11px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
   manualWrap.appendChild(latInput); manualWrap.appendChild(lngInput);
   box.appendChild(manualWrap);
 
   // Submit
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:15px;cursor:pointer;margin-bottom:8px;';
-  submitBtn.textContent = 'VORSCHLAG SENDEN';
+  submitBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:8px;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out);';
+  submitBtn.classList.add('pressable');
+  submitBtn.textContent = 'Vorschlag senden';
   submitBtn.onclick = function(){
     var name = nameInput.value.trim();
-    if(!name){ alert('Bitte Park-Namen eingeben!'); return; }
+    if(!name){ if(typeof toast==='function') toast('Bitte Park-Namen eingeben!'); else alert('Bitte Park-Namen eingeben!'); return; }
     var lat = parseFloat(latInput.value) || suggestLat;
     var lng = parseFloat(lngInput.value) || suggestLng;
-    if(!lat || !lng){ alert('Bitte Standort angeben oder GPS aktivieren!'); return; }
+    if(!lat || !lng){ if(typeof toast==='function') toast('Bitte Standort angeben oder GPS aktivieren!'); else alert('Bitte Standort angeben oder GPS aktivieren!'); return; }
     submitBtn.textContent = 'Wird gesendet...'; submitBtn.disabled = true;
     var user = firebase.auth().currentUser;
     db.collection('parkSuggestions').add({
@@ -1208,9 +991,9 @@ function openSuggestPark(){
       createdAt: Date.now(),
     }).then(function(){
       ov.remove();
-      if(typeof toast==='function') toast('&#128170; Vorschlag gesendet! Admin prüft ihn.');
+      if(typeof toast==='function') toast('💪 Vorschlag gesendet! Admin prüft ihn.');
       else alert('Vorschlag gesendet!');
-    }).catch(function(e){ alert('Fehler: '+e.message); submitBtn.disabled=false; submitBtn.textContent='VORSCHLAG SENDEN'; });
+    }).catch(function(e){ if(typeof toast==='function') toast('Fehler: '+e.message); else alert('Fehler: '+e.message); submitBtn.disabled=false; submitBtn.textContent='Vorschlag senden'; });
   };
   box.appendChild(submitBtn);
 
@@ -1223,6 +1006,7 @@ function openSuggestPark(){
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }
 
 // ── ADMIN: GENEHMIGTE EINTRÄGE (mit Rückgängig) ───────────
@@ -1243,11 +1027,12 @@ function loadApprovedEntries(el){
           '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
-          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'');
+          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'');
 
         var undoBtn = document.createElement('button');
-        undoBtn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
-        undoBtn.innerHTML = '&#8617; RÜCKGÄNGIG';
+        undoBtn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+        undoBtn.classList.add('pressable');
+        undoBtn.innerHTML = '&#8617; Rückgängig';
         undoBtn.onclick = function(){
           doc.ref.update({status:'pending'}).then(function(){
             card.remove();
@@ -1258,6 +1043,7 @@ function loadApprovedEntries(el){
         card.appendChild(undoBtn);
         el.appendChild(card);
       });
+      if(window.caliMotion) caliMotion.stagger(el);
     })
     .catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
 }
@@ -1280,11 +1066,12 @@ function loadRejectedEntries(el){
           '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
-          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'');
+          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'');
 
         var undoBtn = document.createElement('button');
-        undoBtn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
-        undoBtn.innerHTML = '&#8617; RÜCKGÄNGIG';
+        undoBtn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+        undoBtn.classList.add('pressable');
+        undoBtn.innerHTML = '&#8617; Rückgängig';
         undoBtn.onclick = function(){
           doc.ref.update({status:'pending'}).then(function(){
             card.remove();
@@ -1295,6 +1082,7 @@ function loadRejectedEntries(el){
         card.appendChild(undoBtn);
         el.appendChild(card);
       });
+      if(window.caliMotion) caliMotion.stagger(el);
     })
     .catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
 }
@@ -1317,15 +1105,16 @@ function loadParkSuggestions(el){
           '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; '+d.name+'</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Von: '+(d.submitterName||'Anonym')+'</div>'+
           (d.description?'<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+d.description+'</div>':'')+
-          '<div style="font-size:11px;color:var(--accent);margin-bottom:10px;">&#128205; '+d.lat.toFixed(5)+', '+d.lng.toFixed(5)+
-          ' <a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" style="color:var(--accent);">(Maps öffnen)</a></div>';
+          '<div style="font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#128205; '+d.lat.toFixed(5)+', '+d.lng.toFixed(5)+
+          ' <a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" style="color:var(--accent-ink);">(Maps öffnen)</a></div>';
 
         var btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:8px;';
 
         var approveBtn = document.createElement('button');
-        approveBtn.style.cssText = 'flex:1;background:rgba(0,200,100,0.1);color:#00c864;border:1px solid rgba(0,200,100,0.3);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
-        approveBtn.innerHTML = '&#10003; GENEHMIGEN';
+        approveBtn.style.cssText = 'flex:1;background:rgba(34,197,94,0.1);color:var(--success-ink);border:1px solid rgba(34,197,94,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
+        approveBtn.classList.add('pressable');
+        approveBtn.innerHTML = '&#10003; Genehmigen';
         approveBtn.onclick = function(){
           // Park zu Overpass-ähnlicher Struktur hinzufügen (als custom park)
           db.collection('customParks').add({
@@ -1336,13 +1125,14 @@ function loadParkSuggestions(el){
             return doc.ref.update({status:'approved'});
           }).then(function(){
             card.remove();
-            toast('&#10003; Park genehmigt und hinzugefügt!');
+            toast('✓ Park genehmigt und hinzugefügt!');
           });
         };
 
         var rejectBtn = document.createElement('button');
-        rejectBtn.style.cssText = 'flex:1;background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;padding:10px;cursor:pointer;';
-        rejectBtn.innerHTML = '&#10007; ABLEHNEN';
+        rejectBtn.style.cssText = 'flex:1;background:rgba(217,48,54,0.08);color:var(--red);border:1px solid rgba(217,48,54,0.25);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
+        rejectBtn.classList.add('pressable');
+        rejectBtn.innerHTML = '&#10007; Ablehnen';
         rejectBtn.onclick = function(){
           doc.ref.update({status:'rejected'}).then(function(){ card.remove(); toast('Abgelehnt.'); });
         };
@@ -1351,6 +1141,7 @@ function loadParkSuggestions(el){
         card.appendChild(btnRow);
         el.appendChild(card);
       });
+      if(window.caliMotion) caliMotion.stagger(el);
     }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
 }
 
@@ -1359,11 +1150,21 @@ function addMonthlyBonusAdminBtn(box){
   var now = new Date();
   var prevMonth = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
   var btn = document.createElement('button');
-  btn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);border:1.5px solid var(--accent);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:12px;cursor:pointer;color:var(--accent);margin-bottom:14px;';
-  btn.innerHTML = '🏆 MONATSBONI VERGEBEN ('+prevMonth+')';
+  btn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);border:1px solid var(--accent);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:36px;cursor:pointer;color:var(--accent-ink);margin-bottom:14px;transition:transform var(--dur-fast) var(--ease-out);';
+  btn.classList.add('pressable');
+  btn.innerHTML = '🏆 Monatsboni vergeben ('+prevMonth+')';
   btn.onclick = function(){
-    if(confirm('Monatsboni für '+prevMonth+' vergeben? Das kann nicht rückgängig gemacht werden!')){
-      awardMonthlyBonuses(prevMonth);
+    var doAward = function(){ awardMonthlyBonuses(prevMonth); };
+    if(typeof confirmSheet === 'function'){
+      confirmSheet({
+        title: 'Monatsboni vergeben?',
+        desc: 'Die Boni für '+prevMonth+' werden vergeben. Das kann nicht rückgängig gemacht werden.',
+        confirmLabel: 'Vergeben',
+        danger: true,
+        onConfirm: doAward
+      });
+    } else if(confirm('Monatsboni für '+prevMonth+' vergeben? Das kann nicht rückgängig gemacht werden!')){
+      doAward();
     }
   };
   box.insertBefore(btn, box.firstChild);

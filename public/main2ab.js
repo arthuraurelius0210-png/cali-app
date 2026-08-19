@@ -4,15 +4,22 @@ var streakData={currentStreak:0,longestStreak:0,weeklyGoal:3,goalSet:false};
 function lstreak(){try{var d=localStorage.getItem('cali_streak');if(d)streakData=JSON.parse(d);}catch(x){}}
 function sstreak(){try{localStorage.setItem('cali_streak',JSON.stringify(streakData));}catch(x){}}
 function calcStreak(){
-  var _prevStreak = streakData.currentStreak||0;
-  var dates=[];for(var i=0;i<ents.length;i++){if(dates.indexOf(ents[i].date)===-1)dates.push(ents[i].date);}dates.sort();
-  if(!dates.length){streakData.currentStreak=0;sstreak();return;}
-  var today=new Date().toISOString().slice(0,10);
-  var yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
-  var lastDate=dates[dates.length-1];
-  if(lastDate!==today&&lastDate!==yesterday){streakData.currentStreak=0;sstreak();return;}
-  var streak=1;
-  for(var i=dates.length-1;i>0;i--){var d1=new Date(dates[i-1]);var d2=new Date(dates[i]);if((d2-d1)/86400000===1){streak++;}else{break;}}
+  var have={};for(var i=0;i<ents.length;i++){if(ents[i].date)have[ents[i].date]=1;}
+  // Eis-Tage (Streak auf Eis) überbrücken Lücken, zählen aber nicht als Trainingstag
+  var ice={};try{ice=JSON.parse(localStorage.getItem('cali_ice_dates')||'{}');}catch(x){}
+  if(!Object.keys(have).length){streakData.currentStreak=0;sstreak();return;}
+  var cur=new Date();
+  var curStr=cur.toISOString().slice(0,10);
+  // Heute noch nicht trainiert (und nicht geschützt): Streak ab gestern prüfen
+  if(!have[curStr]&&!ice[curStr]){cur=new Date(cur.getTime()-86400000);curStr=cur.toISOString().slice(0,10);}
+  var streak=0;var guard=0;
+  while(guard++<3650){
+    if(have[curStr]){streak++;}
+    else if(ice[curStr]){/* Eis-Tag: überbrücken */}
+    else break;
+    cur=new Date(cur.getTime()-86400000);
+    curStr=cur.toISOString().slice(0,10);
+  }
   streakData.currentStreak=streak;if(streak>streakData.longestStreak)streakData.longestStreak=streak;sstreak();
 }
 function getWeeklyProgress(){
@@ -25,27 +32,29 @@ function getFlames(n){var f='';var c=Math.min(n,5);for(var i=0;i<c;i++)f+='\uD83
 
 function showWeeklyGoalModal(){
   var ex=document.getElementById('weekly-goal-modal');if(ex)ex.remove();
+  var prevGoal=streakData.weeklyGoal||3;
   var modal=document.createElement('div');modal.id='weekly-goal-modal';
   modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;';
-  var box=document.createElement('div');box.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:28px 24px;width:100%;max-width:320px;text-align:center;';
-  var flame=document.createElement('div');flame.style.cssText='font-size:48px;margin-bottom:12px;';flame.textContent='\uD83D\uDD25';
-  var title=document.createElement('div');title.style.cssText='font-family:inherit;font-weight:800;font-size:26px;color:var(--accent);margin-bottom:8px;';title.textContent='Trainings-Streak';
-  var sub=document.createElement('div');sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;';sub.textContent='Wie oft willst du diese Woche trainieren?';
-  var lbl=document.createElement('div');lbl.style.cssText='font-family:inherit;font-weight:800;font-size:13px;color:var(--muted);margin-bottom:12px;';lbl.textContent='Wochenziel';
+  var box=document.createElement('div');box.style.cssText='background:var(--bg2);border:none;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:28px 24px;width:100%;max-width:320px;text-align:center;';
+  var flame=document.createElement('div');flame.style.cssText='font-size:48px;margin-bottom:12px;';flame.innerHTML='<span class="flame-pulse">\uD83D\uDD25</span>';
+  var title=document.createElement('div');title.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--text);margin-bottom:8px;';title.textContent='Trainings-Streak';
+  var sub=document.createElement('div');sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px;';sub.textContent='Wie oft willst du diese Woche trainieren?';
+  var lbl=document.createElement('div');lbl.style.cssText='font-family:inherit;font-weight:600;font-size:12px;color:var(--muted);margin-bottom:12px;';lbl.textContent='Wochenziel';
   var btnRow=document.createElement('div');btnRow.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;';
   var goalBtns=[];
   for(var i=1;i<=7;i++){
     (function(n){
-      var btn=document.createElement('button');btn.textContent=String(n);
-      btn.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 4px;font-family:inherit;font-weight:800;font-size:18px;cursor:pointer;';
-      btn.onclick=function(){for(var j=0;j<goalBtns.length;j++){goalBtns[j].style.background='var(--bg3)';goalBtns[j].style.borderColor='var(--border)';goalBtns[j].style.color='var(--muted)';}btn.style.background='rgba(255,85,0,0.1)';btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';streakData.weeklyGoal=n;};
+      var btn=document.createElement('button');btn.textContent=String(n);btn.className='pressable';
+      btn.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:12px 4px;font-family:inherit;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;cursor:pointer;transition:background-color var(--dur-fast) ease,border-color var(--dur-fast) ease,color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out);';
+      btn.setAttribute('aria-label',n+' Workouts pro Woche');
+      btn.onclick=function(){for(var j=0;j<goalBtns.length;j++){goalBtns[j].style.background='var(--bg3)';goalBtns[j].style.borderColor='var(--border)';goalBtns[j].style.color='var(--muted)';}btn.style.background='rgba(255,85,0,0.1)';btn.style.borderColor='var(--accent)';btn.style.color='var(--accent-ink)';streakData.weeklyGoal=n;};
       goalBtns.push(btn);btnRow.appendChild(btn);
     })(i);
   }
   var selIdx = (streakData.weeklyGoal||3) - 1;
-  goalBtns[selIdx].style.background='rgba(255,85,0,0.1)';goalBtns[selIdx].style.borderColor='var(--accent)';goalBtns[selIdx].style.color='var(--accent)';
-  var saveBtn=document.createElement('button');saveBtn.style.cssText='width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:16px;padding:14px;cursor:pointer;';
-  saveBtn.textContent='LOS GEHT\'S!';
+  goalBtns[selIdx].style.background='rgba(255,85,0,0.1)';goalBtns[selIdx].style.borderColor='var(--accent)';goalBtns[selIdx].style.color='var(--accent-ink)';
+  var saveBtn=document.createElement('button');saveBtn.className='pk-btn';saveBtn.style.cssText='width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:14px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  saveBtn.textContent='Los geht\'s!';
   saveBtn.onclick=function(){
   streakData.goalSet=true;
   sstreak();
@@ -54,16 +63,38 @@ function showWeeklyGoalModal(){
   goPage('pr');
   toast('Ziel: '+streakData.weeklyGoal+'x pro Woche!');
 };
-  box.appendChild(flame);box.appendChild(title);box.appendChild(sub);box.appendChild(lbl);box.appendChild(btnRow);box.appendChild(saveBtn);
+  var cancelBtn=document.createElement('button');
+  cancelBtn.className='pressable';
+  cancelBtn.style.cssText='width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:12px;margin-top:4px;cursor:pointer;';
+  cancelBtn.textContent='Abbrechen';
+  cancelBtn.onclick=function(){
+    streakData.weeklyGoal=prevGoal;
+    streakData.goalSet=true;
+    sstreak();
+    modal.remove();
+    buildStreakWidget();
+  };
+  box.appendChild(flame);box.appendChild(title);box.appendChild(sub);box.appendChild(lbl);box.appendChild(btnRow);box.appendChild(saveBtn);box.appendChild(cancelBtn);
   modal.appendChild(box);document.body.appendChild(modal);
+  modal.onclick=function(e){
+    if(e.target===modal){
+      streakData.weeklyGoal=prevGoal;
+      streakData.goalSet=true;
+      sstreak();
+      modal.remove();
+      buildStreakWidget();
+    }
+  };
+  if(window.caliMotion){ caliMotion.sheetIn(null, modal); caliMotion.overlayIn(box); }
 }
 
+// Labels sitzen auf dunklem Blur-Chip im Hero — helle Originalfarben sind hier richtig
 function getLevel(){
   var streak = streakData.currentStreak || 0;
-  if(streak >= 365) return {label:'LEGEND', color:'#FFD700'};
-  if(streak >= 180) return {label:'ELITE', color:'#FF5500'};
-  if(streak >= 90)  return {label:'PRO', color:'#FF8C00'};
-  if(streak >= 30)  return {label:'FORTGESCHRITTEN', color:'#22C55E'};
-  if(streak >= 7)   return {label:'BEGINNER', color:'#3B82F6'};
-  return {label:'STARTER', color:'#999'};
+  if(streak >= 365) return {label:'Legend', color:'#FFD700'};
+  if(streak >= 180) return {label:'Elite', color:'#FF5500'};
+  if(streak >= 90)  return {label:'Pro', color:'#FF8C00'};
+  if(streak >= 30)  return {label:'Fortgeschritten', color:'#22C55E'};
+  if(streak >= 7)   return {label:'Beginner', color:'#38BDF8'};
+  return {label:'Starter', color:'#CFC7B0'};
 }

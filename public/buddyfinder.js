@@ -21,7 +21,8 @@ function buildBuddyFilterChipRow(container, options, getSelected, onSelect){
   options.forEach(function(opt){
     var btn = document.createElement('button');
     var isActive = opt.id === getSelected();
-    btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    btn.style.cssText = 'flex-shrink:0;padding:9px 14px;min-height:36px;border-radius:20px;border:1px solid '+(isActive?'var(--accent-deep)':'var(--border)')+';background:'+(isActive?'var(--accent-deep)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+    btn.classList.add('pressable');
     btn.innerHTML = opt.label;
     btn.onclick = function(){
       onSelect(opt.id);
@@ -44,9 +45,12 @@ function openBuddyFinderPage(){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
+  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;color:var(--text);flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
+  backBtn.classList.add('pressable');
   backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.onclick = function(){ ov.remove(); };
+  backBtn.onclick = function(){
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+  };
   var titleWrap = document.createElement('div');
   titleWrap.style.cssText = 'flex:1;min-width:0;';
   var titleEl = document.createElement('div');
@@ -57,18 +61,20 @@ function openBuddyFinderPage(){
   subtitleEl.textContent = 'Finde Leute in deiner Nähe zum Trainieren';
   titleWrap.appendChild(titleEl); titleWrap.appendChild(subtitleEl);
   var newBtn = document.createElement('button');
-  newBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;white-space:nowrap;';
+  newBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+  newBtn.classList.add('pressable');
   newBtn.textContent = '+ Anfrage';
   newBtn.onclick = function(){ openCreateBuddyRequest(); };
   topBar.appendChild(backBtn); topBar.appendChild(titleWrap); topBar.appendChild(newBtn);
   ov.appendChild(topBar);
 
   var scroll = document.createElement('div');
-  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
+  scroll.className = 'sheet-scroll';
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:20px;';
 
   // Safety-Hinweis
   var safety = document.createElement('div');
-  safety.style.cssText = 'background:rgba(255,85,0,0.07);border:1px solid rgba(255,85,0,0.2);border-radius:12px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:14px;';
+  safety.style.cssText = 'background:rgba(255,85,0,0.07);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:14px;';
   safety.innerHTML = '&#128737;&#65039; <b style="color:var(--text);">Sicherheitshinweis:</b> Trefft euch an öffentlichen, belebten Orten und teilt vorher jemandem eure Pläne mit.';
   scroll.appendChild(safety);
 
@@ -76,13 +82,19 @@ function openBuddyFinderPage(){
   var filterToggleRow = document.createElement('div');
   filterToggleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;';
   var filterToggleBtn = document.createElement('button');
-  filterToggleBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;color:var(--text);';
+  filterToggleBtn.setAttribute('aria-expanded','false');
+  filterToggleBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;color:var(--text);transition:transform var(--dur-fast) var(--ease-out);';
+  filterToggleBtn.classList.add('pressable');
   filterToggleBtn.innerHTML = '&#128269; Filter';
+  var filterAcc = document.createElement('div');
+  filterAcc.className = 'acc-body';
   var filterPanel = document.createElement('div');
-  filterPanel.style.cssText = 'display:none;background:var(--bg2);border-radius:14px;padding:14px;margin-bottom:14px;';
+  filterPanel.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:14px;';
+  filterAcc.appendChild(filterPanel);
   filterToggleBtn.onclick = function(){
-    var open = filterPanel.style.display !== 'none';
-    filterPanel.style.display = open ? 'none' : 'block';
+    var open = filterAcc.classList.contains('open');
+    if(open){ filterAcc.classList.remove('open'); } else { filterAcc.classList.add('open'); }
+    filterToggleBtn.setAttribute('aria-expanded', open?'false':'true');
   };
   filterToggleRow.appendChild(filterToggleBtn);
   scroll.appendChild(filterToggleRow);
@@ -91,7 +103,7 @@ function openBuddyFinderPage(){
     var wrap = document.createElement('div');
     wrap.style.cssText = 'margin-bottom:12px;';
     var lbl = document.createElement('div');
-    lbl.className = 'stitle'; lbl.style.cssText = 'margin:0 0 6px;';
+    lbl.style.cssText = 'font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;';
     lbl.textContent = labelText;
     wrap.appendChild(lbl);
     var chips = document.createElement('div');
@@ -100,14 +112,14 @@ function openBuddyFinderPage(){
     buildBuddyFilterChipRow(chips, options, getSelected, onSelect);
     return wrap;
   }
-  filterPanel.appendChild(filterRow('ENTFERNUNG', BUDDY_DIST_OPTIONS, function(){ return buddyFilterDist; }, function(v){ buddyFilterDist = v; }));
-  filterPanel.appendChild(filterRow('LEVEL', BUDDY_LEVEL_FILTER_OPTIONS, function(){ return buddyFilterLevel; }, function(v){ buddyFilterLevel = v; }));
+  filterPanel.appendChild(filterRow('Entfernung', BUDDY_DIST_OPTIONS, function(){ return buddyFilterDist; }, function(v){ buddyFilterDist = v; }));
+  filterPanel.appendChild(filterRow('Level', BUDDY_LEVEL_FILTER_OPTIONS, function(){ return buddyFilterLevel; }, function(v){ buddyFilterLevel = v; }));
 
   var timeFilterWrap = document.createElement('div');
   timeFilterWrap.style.cssText = 'margin-bottom:0;';
   var timeFilterLbl = document.createElement('div');
-  timeFilterLbl.className = 'stitle'; timeFilterLbl.style.cssText = 'margin:0 0 6px;';
-  timeFilterLbl.textContent = 'ZEITPUNKT';
+  timeFilterLbl.style.cssText = 'font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;';
+  timeFilterLbl.textContent = 'Zeitpunkt';
   timeFilterWrap.appendChild(timeFilterLbl);
   var timeFilterChips = document.createElement('div');
   timeFilterChips.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;';
@@ -118,7 +130,7 @@ function openBuddyFinderPage(){
   var weekdayFilterWrap = document.createElement('div');
   weekdayFilterWrap.style.cssText = 'display:'+(buddyFilterTime==='wochentag'?'block':'none')+';margin-top:8px;';
   var weekdayFilterHint = document.createElement('div');
-  weekdayFilterHint.style.cssText = 'font-size:10px;color:var(--muted);margin-bottom:6px;';
+  weekdayFilterHint.style.cssText = 'font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;';
   weekdayFilterHint.textContent = 'Welcher Wochentag?';
   weekdayFilterWrap.appendChild(weekdayFilterHint);
   var weekdayFilterChips = document.createElement('div');
@@ -141,7 +153,7 @@ function openBuddyFinderPage(){
   });
 
   filterPanel.appendChild(timeFilterWrap);
-  scroll.appendChild(filterPanel);
+  scroll.appendChild(filterAcc);
 
   var listWrap = document.createElement('div');
   listWrap.id = 'buddy-list';
@@ -150,6 +162,9 @@ function openBuddyFinderPage(){
 
   ov.appendChild(scroll);
   document.body.appendChild(ov);
+  // Hardware-Zurück schließt das Overlay statt der App
+  if(typeof overlayPush === 'function') overlayPush(ov);
+  if(window.caliMotion) caliMotion.overlayIn(ov);
 
   loadBuddyRequests();
 }
@@ -257,7 +272,8 @@ function buddyTimeBadgeLabel(data){
 
 function buildBuddyCard(docId, data, dist){
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:16px;margin-bottom:10px;';
+  card.className = 'anim-in';
+  card.style.cssText = 'background:var(--bg2);border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:16px;margin-bottom:12px;';
 
   var hdRow = document.createElement('div');
   hdRow.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;';
@@ -281,25 +297,36 @@ function buildBuddyCard(docId, data, dist){
   var left = document.createElement('div');
   left.style.cssText = 'flex:1;min-width:0;';
   var nameEl = document.createElement('div');
-  nameEl.style.cssText = 'font-size:14px;font-weight:800;color:var(--text);';
+  nameEl.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);';
   nameEl.textContent = data.authorName || 'Athlet';
   var parkEl = document.createElement('div');
-  parkEl.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+  parkEl.style.cssText = 'font-size:12px;color:var(--muted);margin-top:4px;';
   parkEl.innerHTML = '&#128205; ' + (data.parkName || 'Park') + (dist != null ? ' &middot; ' + formatDist(dist) : '');
   left.appendChild(nameEl); left.appendChild(parkEl);
   hdRow.appendChild(avatarEl); hdRow.appendChild(left);
 
   if(currentUser && data.uid === currentUser.uid){
     var moreBtn = document.createElement('button');
-    moreBtn.setAttribute('aria-label', 'Optionen');
-    moreBtn.style.cssText = 'background:none;border:none;color:var(--muted);font-size:16px;font-weight:800;cursor:pointer;padding:0 4px;flex-shrink:0;';
+    moreBtn.setAttribute('aria-label', 'Anfrage löschen');
+    moreBtn.style.cssText = 'background:none;border:none;color:var(--muted);font-size:16px;font-weight:800;cursor:pointer;padding:6px 10px;margin:-6px -6px 0 0;flex-shrink:0;';
     moreBtn.textContent = '⋯';
     moreBtn.onclick = function(){
-      if(confirm('Diese Anfrage wirklich löschen?')){
+      var doDelete = function(){
         db.collection('trainingBuddies').doc(docId).delete().then(function(){
           toast('Anfrage gelöscht');
           loadBuddyRequests();
         }).catch(function(){ toast('Fehler beim Löschen.'); });
+      };
+      if(typeof confirmSheet === 'function'){
+        confirmSheet({
+          title: 'Anfrage löschen?',
+          desc: 'Deine Anfrage wird für alle entfernt.',
+          confirmLabel: 'Löschen',
+          danger: true,
+          onConfirm: doDelete
+        });
+      } else if(confirm('Diese Anfrage wirklich löschen?')){
+        doDelete();
       }
     };
     hdRow.appendChild(moreBtn);
@@ -311,7 +338,7 @@ function buildBuddyCard(docId, data, dist){
   [data.timeLabel && buddyTimeBadgeLabel(data), data.level && BUDDY_LEVEL_LABELS[data.level]].forEach(function(label){
     if(!label) return;
     var b = document.createElement('div');
-    b.style.cssText = 'background:var(--bg3);border-radius:20px;padding:4px 10px;font-size:10px;color:var(--muted);font-weight:700;';
+    b.style.cssText = 'background:var(--bg3);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--muted);font-weight:600;';
     b.innerHTML = label;
     badgeRow.appendChild(b);
   });
@@ -319,7 +346,7 @@ function buildBuddyCard(docId, data, dist){
 
   if(data.message){
     var msgEl = document.createElement('div');
-    msgEl.style.cssText = 'font-size:12px;color:var(--text);line-height:1.6;margin-bottom:12px;';
+    msgEl.style.cssText = 'font-size:13px;color:var(--text);line-height:1.5;margin-bottom:12px;';
     msgEl.textContent = data.message;
     card.appendChild(msgEl);
   }
@@ -329,15 +356,25 @@ function buildBuddyCard(docId, data, dist){
 
   var replyCount = (data.replies || []).length;
   var replyBtn = document.createElement('button');
-  replyBtn.style.cssText = 'flex:1;background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;padding:9px 12px;cursor:pointer;';
-  replyBtn.innerHTML = '&#128170; ICH BIN DABEI (' + replyCount + ')';
+  replyBtn.setAttribute('aria-expanded','false');
+  replyBtn.style.cssText = 'flex:1;background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 12px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  replyBtn.classList.add('pressable');
+  replyBtn.innerHTML = '&#128170; Ich bin dabei (' + replyCount + ')';
 
   var replySection = document.createElement('div');
-  replySection.style.cssText = 'display:none;margin-top:12px;';
+  replySection.className = 'acc-body';
+  var replyInner = document.createElement('div');
+  replyInner.style.cssText = 'margin-top:12px;';
+  replySection.appendChild(replyInner);
   replyBtn.onclick = function(){
-    var isOpen = replySection.style.display !== 'none';
-    replySection.style.display = isOpen ? 'none' : 'block';
-    if(!isOpen) buildBuddyReplySection(replySection, docId, data);
+    var isOpen = replySection.classList.contains('open');
+    if(isOpen){
+      replySection.classList.remove('open');
+    } else {
+      buildBuddyReplySection(replyInner, docId, data);
+      replySection.classList.add('open');
+    }
+    replyBtn.setAttribute('aria-expanded', isOpen?'false':'true');
   };
 
   actRow.appendChild(replyBtn);
@@ -361,7 +398,7 @@ function buildBuddyReplySection(el, docId, data){
       var row = document.createElement('div');
       row.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--border);';
       var rname = document.createElement('div');
-      rname.style.cssText = 'font-size:10px;font-weight:700;color:var(--accent);margin-bottom:2px;';
+      rname.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent-ink);margin-bottom:2px;';
       rname.textContent = r.authorName || 'Athlet';
       var rtxt = document.createElement('div');
       rtxt.style.cssText = 'font-size:12px;color:var(--text);line-height:1.5;';
@@ -378,14 +415,16 @@ function buildBuddyReplySection(el, docId, data){
   inp.type = 'text';
   inp.maxLength = 200;
   inp.placeholder = 'Antworten...';
-  inp.style.cssText = 'flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;';
+  inp.style.cssText = 'flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);';
   var sendBtn = document.createElement('button');
-  sendBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;padding:9px 14px;cursor:pointer;white-space:nowrap;';
+  sendBtn.setAttribute('aria-label','Antwort senden');
+  sendBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+  sendBtn.classList.add('pressable');
   sendBtn.textContent = 'OK';
   sendBtn.onclick = function(){
     var txt = inp.value.trim();
     if(txt.length < 2){ toast('Antwort zu kurz!'); return; }
-    if(prData && prData.isPublic === false){ toast('&#128274; Aktiviere ein öffentliches Profil, um zu antworten.'); return; }
+    if(prData && prData.isPublic === false){ toast('🔒 Aktiviere ein öffentliches Profil, um zu antworten.'); return; }
     var newReply = {
       uid: currentUser.uid,
       authorName: (prData && prData.name) ? prData.name : 'Athlet',
@@ -396,7 +435,7 @@ function buildBuddyReplySection(el, docId, data){
       replies: firebase.firestore.FieldValue.arrayUnion(newReply)
     }).then(function(){
       inp.value = '';
-      toast('&#128170; Antwort gesendet!');
+      toast('💪 Antwort gesendet!');
       loadBuddyRequests();
     }).catch(function(){ toast('Fehler beim Antworten.'); });
   };
@@ -408,7 +447,7 @@ function buildBuddyReplySection(el, docId, data){
 function openCreateBuddyRequest(){
   if(!currentUser){ toast('Bitte erst einloggen!'); return; }
   if(prData && prData.isPublic === false){
-    toast('&#128274; Mit privatem Profil kannst du keine Anfrage erstellen. Stelle dein Profil im Profil-Tab auf öffentlich.');
+    toast('🔒 Mit privatem Profil kannst du keine Anfrage erstellen. Stelle dein Profil im Profil-Tab auf öffentlich.');
     return;
   }
 
@@ -416,17 +455,18 @@ function openCreateBuddyRequest(){
   var ex = document.getElementById('buddy-create-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'buddy-create-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px 20px 32px;';
+  box.className = 'sheet-scroll';
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:24px 20px 32px;';
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
     '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:14px;">&#129309; Trainingspartner-Anfrage</div>';
 
   // Park-Auswahl
   var parkLabel = document.createElement('div');
-  parkLabel.className = 'stitle'; parkLabel.style.cssText = 'margin:0 0 6px;';
-  parkLabel.textContent = 'PARK';
+  parkLabel.style.cssText = 'font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;';
+  parkLabel.textContent = 'Park';
   box.appendChild(parkLabel);
 
   var parkPickWrap = document.createElement('div');
@@ -440,7 +480,8 @@ function openCreateBuddyRequest(){
       noParks.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;';
       noParks.textContent = 'Noch keine Parks geladen.';
       var loadBtn = document.createElement('button');
-      loadBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:11px;cursor:pointer;margin-top:8px;';
+      loadBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;min-height:44px;cursor:pointer;margin-top:8px;transition:transform var(--dur-fast) var(--ease-out);';
+      loadBtn.classList.add('pressable');
       loadBtn.textContent = 'Standort verwenden & Parks laden';
       loadBtn.onclick = function(){
         loadBtn.textContent = 'Lädt...';
@@ -463,15 +504,17 @@ function openCreateBuddyRequest(){
       return;
     }
     var list = document.createElement('div');
+    list.className = 'sheet-scroll';
     list.style.cssText = 'max-height:180px;overflow-y:auto;margin-bottom:12px;';
     parksData.slice(0,15).forEach(function(park){
       var name = park.tags && (park.tags.name || park.tags['name:de']) ? (park.tags.name || park.tags['name:de']) : 'Calisthenics Park';
-      var row = document.createElement('div');
+      var row = document.createElement('button');
       var isSel = buddySelectedPark && buddySelectedPark.name === name && buddySelectedPark.lat === park._lat;
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;cursor:pointer;background:'+(isSel?'rgba(255,85,0,0.1)':'var(--bg2)')+';border:1.5px solid '+(isSel?'var(--accent)':'var(--border)')+';';
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;text-align:left;font-family:inherit;padding:10px 12px;min-height:44px;border-radius:10px;margin-bottom:6px;cursor:pointer;background:'+(isSel?'rgba(255,85,0,0.1)':'var(--bg2)')+';border:1px solid '+(isSel?'var(--accent)':'var(--border)')+';transition:transform var(--dur-fast) var(--ease-out);';
+      row.classList.add('pressable');
       row.innerHTML = '<div style="font-size:16px;flex-shrink:0;">&#128170;</div>'+
-        '<div style="flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+
-        '<div style="font-size:11px;color:var(--accent);font-weight:800;flex-shrink:0;">'+formatDist(park._dist)+'</div>';
+        '<div style="flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+
+        '<div style="font-size:11px;color:var(--accent-ink);font-weight:700;flex-shrink:0;">'+formatDist(park._dist)+'</div>';
       row.onclick = function(){
         buddySelectedPark = {name: name, lat: park._lat, lng: park._lng};
         renderParkPicker();
@@ -489,8 +532,8 @@ function openCreateBuddyRequest(){
 
   // Zeitpunkt
   var timeLabel = document.createElement('div');
-  timeLabel.className = 'stitle'; timeLabel.style.cssText = 'margin:6px 0 6px;';
-  timeLabel.textContent = 'WANN';
+  timeLabel.style.cssText = 'font-size:12px;font-weight:600;color:var(--muted);margin:6px 0 6px;';
+  timeLabel.textContent = 'Wann';
   box.appendChild(timeLabel);
   var timeWrap = document.createElement('div');
   timeWrap.style.cssText = 'display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;';
@@ -505,14 +548,15 @@ function openCreateBuddyRequest(){
   BUDDY_WEEKDAYS.forEach(function(day){
     var wbtn = document.createElement('button');
     wbtn.dataset.day = day;
-    wbtn.style.cssText = 'flex:1;padding:9px 2px;border-radius:10px;border:1.5px solid var(--border);background:none;color:var(--muted);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+    wbtn.style.cssText = 'flex:1;padding:9px 2px;min-height:36px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+    wbtn.classList.add('pressable');
     wbtn.textContent = day;
     wbtn.onclick = function(){
       selectedWeekday = day;
       wdChips.querySelectorAll('button').forEach(function(b){
         var a = b.dataset.day === selectedWeekday;
-        b.style.borderColor = a?'var(--accent)':'var(--border)';
-        b.style.background = a?'var(--accent)':'none';
+        b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
+        b.style.background = a?'var(--accent-deep)':'none';
         b.style.color = a?'#fff':'var(--muted)';
       });
     };
@@ -521,21 +565,22 @@ function openCreateBuddyRequest(){
   weekdayWrap.appendChild(wdChips);
   var wdTimeInp = document.createElement('input');
   wdTimeInp.type = 'time';
-  wdTimeInp.style.cssText = 'width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
+  wdTimeInp.style.cssText = 'width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);box-sizing:border-box;';
   weekdayWrap.appendChild(wdTimeInp);
 
   Object.keys(BUDDY_TIME_LABELS).forEach(function(key){
     var btn = document.createElement('button');
     btn.dataset.key = key;
     var isActive = key === selectedTime;
-    btn.style.cssText = 'flex:1;padding:9px 4px;border-radius:10px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+    btn.style.cssText = 'flex:1;padding:9px 4px;min-height:36px;border-radius:10px;border:1px solid '+(isActive?'var(--accent-deep)':'var(--border)')+';background:'+(isActive?'var(--accent-deep)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+    btn.classList.add('pressable');
     btn.innerHTML = BUDDY_TIME_LABELS[key];
     btn.onclick = function(){
       selectedTime = key;
       timeWrap.querySelectorAll('button').forEach(function(b){
         var a = b.dataset.key === selectedTime;
-        b.style.borderColor = a?'var(--accent)':'var(--border)';
-        b.style.background = a?'var(--accent)':'none';
+        b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
+        b.style.background = a?'var(--accent-deep)':'none';
         b.style.color = a?'#fff':'var(--muted)';
       });
       weekdayWrap.style.display = (selectedTime === 'wochentag') ? 'block' : 'none';
@@ -547,8 +592,8 @@ function openCreateBuddyRequest(){
 
   // Level
   var levelLabel = document.createElement('div');
-  levelLabel.className = 'stitle'; levelLabel.style.cssText = 'margin:0 0 6px;';
-  levelLabel.textContent = 'LEVEL';
+  levelLabel.style.cssText = 'font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;';
+  levelLabel.textContent = 'Level';
   box.appendChild(levelLabel);
   var levelWrap = document.createElement('div');
   levelWrap.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;';
@@ -557,14 +602,15 @@ function openCreateBuddyRequest(){
     var btn = document.createElement('button');
     btn.dataset.key = key;
     var isActive = key === selectedLevel;
-    btn.style.cssText = 'flex:1;padding:9px 4px;border-radius:10px;border:1.5px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+    btn.style.cssText = 'flex:1;padding:9px 4px;min-height:36px;border-radius:10px;border:1px solid '+(isActive?'var(--accent-deep)':'var(--border)')+';background:'+(isActive?'var(--accent-deep)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+    btn.classList.add('pressable');
     btn.innerHTML = BUDDY_LEVEL_LABELS[key];
     btn.onclick = function(){
       selectedLevel = key;
       levelWrap.querySelectorAll('button').forEach(function(b){
         var a = b.dataset.key === selectedLevel;
-        b.style.borderColor = a?'var(--accent)':'var(--border)';
-        b.style.background = a?'var(--accent)':'none';
+        b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
+        b.style.background = a?'var(--accent-deep)':'none';
         b.style.color = a?'#fff':'var(--muted)';
       });
     };
@@ -574,22 +620,23 @@ function openCreateBuddyRequest(){
 
   // Nachricht
   var msgLabel = document.createElement('div');
-  msgLabel.className = 'stitle'; msgLabel.style.cssText = 'margin:0 0 6px;';
-  msgLabel.textContent = 'NACHRICHT (OPTIONAL)';
+  msgLabel.style.cssText = 'font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;';
+  msgLabel.textContent = 'Nachricht (optional)';
   box.appendChild(msgLabel);
   var msgInp = document.createElement('textarea');
   msgInp.maxLength = 200;
   msgInp.placeholder = 'z.B. Suche jemanden für Klimmzüge und Dips...';
-  msgInp.style.cssText = 'width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:64px;box-sizing:border-box;margin-bottom:16px;';
+  msgInp.style.cssText = 'width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);resize:none;height:64px;box-sizing:border-box;margin-bottom:16px;';
   box.appendChild(msgInp);
 
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;margin-bottom:6px;';
-  submitBtn.textContent = 'ANFRAGE ERSTELLEN';
+  submitBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:16px;cursor:pointer;margin-bottom:6px;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out);';
+  submitBtn.classList.add('pressable');
+  submitBtn.textContent = 'Anfrage erstellen';
   submitBtn.onclick = function(){
     if(!buddySelectedPark){ toast('Bitte einen Park wählen!'); return; }
     if(selectedTime === 'wochentag' && !selectedWeekday){ toast('Bitte einen Wochentag wählen!'); return; }
-    if(prData && prData.isPublic === false){ toast('&#128274; Profil ist privat.'); return; }
+    if(prData && prData.isPublic === false){ toast('🔒 Profil ist privat.'); return; }
 
     var entry = {
       uid: currentUser.uid,
@@ -612,7 +659,7 @@ function openCreateBuddyRequest(){
     db.collection('trainingBuddies').add(entry)
       .then(function(){
         ov.remove();
-        toast('&#129309; Anfrage erstellt!');
+        toast('🤝 Anfrage erstellt!');
         loadBuddyRequests();
       })
       .catch(function(){ toast('Fehler beim Erstellen.'); });
@@ -628,4 +675,5 @@ function openCreateBuddyRequest(){
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }

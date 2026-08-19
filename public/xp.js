@@ -120,32 +120,76 @@ function awardXP(amount, reason){
         if(diamondBonus > 0) msg += ' +'+diamondBonus+' 💎';
         if(typeof toast==='function') toast(msg);
         showLevelUpAnimation(oldLevel.level, newLevel.level, diamondBonus);
-        // Sync diamonds to main currency
-        if(typeof currencyData!=='undefined'){
-          currencyData.diamonds = (currencyData.diamonds||0) + diamondBonus;
+        // Sync diamonds to main currency (spendable wallet: Streak-Eis, Challenge-Skip …)
+        if(diamondBonus > 0 && typeof currency!=='undefined'){
+          currency.diamonds = (currency.diamonds||0) + diamondBonus;
           if(typeof saveCurrency==='function') saveCurrency();
         }
       } else {
-        if(typeof toast==='function') toast('+'+amount+' XP — '+reason);
+        showXPFloat(amount, reason);
       }
     });
   }).catch(function(e){ console.log('XP error:', e.message); });
 }
 
+// ── XP FLOAT (Mikro-Belohnung statt generischem Toast) ────
+function showXPFloat(amount, reason){
+  var canAnimate = window.caliMotion && !caliMotion.reduced() && document.body && typeof document.body.animate === 'function';
+  if(!canAnimate){
+    if(typeof toast==='function') toast('+'+amount+' XP — '+reason);
+    return;
+  }
+  var el = document.createElement('div');
+  el.setAttribute('aria-hidden','true');
+  el.style.cssText = 'position:fixed;bottom:150px;left:50%;transform:translate(-50%,0);background:var(--accent-deep);color:#fff;font-family:inherit;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;padding:8px 16px;border-radius:20px;box-shadow:0 12px 30px rgba(255,85,0,0.3);z-index:3000;pointer-events:none;white-space:nowrap;';
+  el.textContent = '+'+amount+' XP';
+  document.body.appendChild(el);
+  try{
+    el.animate([
+      {transform:'translate(-50%,16px) scale(0.9)',opacity:0},
+      {transform:'translate(-50%,0) scale(1)',opacity:1,offset:0.15},
+      {transform:'translate(-50%,-8px)',opacity:1,offset:0.75},
+      {transform:'translate(-50%,-48px) scale(0.95)',opacity:0}
+    ],{duration:1400,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
+  }catch(e){}
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1500);
+}
+
 // ── LEVEL-UP ANIMATION ────────────────────────────────────
 function showLevelUpAnimation(oldLevel, newLevel, diamonds){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:center;justify-content:center;cursor:pointer;';
   ov.innerHTML =
-    '<div style="text-align:center;animation:fadeIn 0.5s ease;">'+
-      '<div style="font-size:60px;margin-bottom:8px;">🎉</div>'+
-      '<div style="font-family:inherit;font-weight:800;font-size:16px;color:#ff5500;margin-bottom:8px;">Level up!</div>'+
-      '<div style="font-family:inherit;font-weight:800;font-size:72px;color:#fff;margin-bottom:4px;line-height:1;">'+newLevel+'</div>'+
-      (diamonds>0?'<div style="font-family:inherit;font-weight:800;font-size:22px;color:#ffd700;margin-bottom:16px;">+'+diamonds+' 💎</div>':'')+
-      '<div style="font-size:13px;color:#999;">Tippen um fortzufahren</div>'+
+    '<div style="text-align:center;">'+
+      '<div data-lvlup="emoji" style="font-size:60px;margin-bottom:8px;">🎉</div>'+
+      '<div style="font-family:inherit;font-weight:800;font-size:16px;color:var(--accent);margin-bottom:8px;">Level up!</div>'+
+      '<div data-lvlup="num" class="num" style="font-family:inherit;font-weight:800;font-size:72px;color:#fff;margin-bottom:4px;line-height:1;">'+newLevel+'</div>'+
+      (diamonds>0?'<div data-lvlup="dia" style="font-family:inherit;font-weight:800;font-size:22px;color:#ffd700;margin-bottom:16px;">+'+diamonds+' 💎</div>':'')+
+      '<div style="font-size:13px;color:rgba(255,255,255,0.75);">Tippen um fortzufahren</div>'+
     '</div>';
   ov.onclick = function(){ ov.remove(); };
   document.body.appendChild(ov);
+  if(window.caliMotion){
+    caliMotion.sheetIn(null, ov); // Backdrop-Fade
+    caliMotion.celebrate('burst');
+    if(!caliMotion.reduced()){
+      // 3-Beat-Reveal: Emoji → Levelzahl → Diamanten
+      var beats = [['emoji',0],['num',150],['dia',350]];
+      for(var i=0;i<beats.length;i++){
+        var be = ov.querySelector('[data-lvlup="'+beats[i][0]+'"]');
+        if(be && typeof be.animate==='function'){
+          try{
+            be.animate(
+              [{transform:'scale(0.6)',opacity:0},{transform:'scale(1.08)',opacity:1,offset:0.7},{transform:'scale(1)',opacity:1}],
+              {duration:500,delay:beats[i][1],easing:'cubic-bezier(0.34,1.56,0.64,1)',fill:'backwards'}
+            );
+          }catch(e){}
+        }
+      }
+      var numEl = ov.querySelector('[data-lvlup="num"]');
+      if(numEl) caliMotion.countUp(numEl, newLevel, {duration:600, from:Math.max(0, oldLevel||0)});
+    }
+  }
   setTimeout(function(){ if(ov.parentNode) ov.remove(); }, 4000);
 }
 
@@ -168,31 +212,39 @@ function buildXPWidget(el){
     el.innerHTML = '';
 
     var card = document.createElement('div');
-    card.style.cssText = 'background:var(--bg2);border-radius:16px;padding:16px;border:1px solid var(--border);';
+    card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:16px;';
 
     // Level Badge + Name
     var levelLabel = lv.level<=5?'Starter':lv.level<=10?'Beginner':lv.level<=20?'Fortgeschritten':lv.level<=30?'Pro':lv.level<=40?'Elite':'Legend';
     card.innerHTML =
       '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">'+
-        '<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#ff5500,#ff8c00);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:20px;color:#fff;flex-shrink:0;">'+lv.level+'</div>'+
+        '<div class="num" style="width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:20px;color:#fff;flex-shrink:0;">'+lv.level+'</div>'+
         '<div style="flex:1;">'+
           '<div style="font-size:16px;font-weight:800;color:var(--text);">Level '+lv.level+' — '+levelLabel+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);">'+lv.xp.toLocaleString()+' XP gesamt · '+monthlyXP.toLocaleString()+' XP diesen Monat</div>'+
+          '<div class="num" style="font-size:11px;color:var(--muted);">'+lv.xp.toLocaleString()+' XP gesamt · '+monthlyXP.toLocaleString()+' XP diesen Monat</div>'+
         '</div>'+
       '</div>'+
       // Progress bar
-      '<div style="font-size:10px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;">'+
+      '<div class="num" style="font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;">'+
         '<span>Level '+lv.level+'</span>'+
-        (lv.level<50?'<span>'+lv.xpToNext.toLocaleString()+' XP bis Level '+(lv.level+1)+'</span>':'<span>MAX LEVEL</span>')+
+        (lv.level<50?'<span>'+lv.xpToNext.toLocaleString()+' XP bis Level '+(lv.level+1)+'</span>':'<span>Max. Level</span>')+
       '</div>'+
       '<div style="background:var(--bg3);border-radius:20px;height:10px;overflow:hidden;">'+
-        '<div style="height:100%;width:'+lv.progress+'%;background:linear-gradient(90deg,#ff5500,#ff8c00);border-radius:20px;transition:width 0.5s;"></div>'+
+        '<div data-xpfill style="height:100%;width:0%;background:var(--accent);border-radius:20px;transition:width var(--dur-slow) var(--ease-out);"></div>'+
       '</div>';
 
     el.appendChild(card);
 
+    // Bar von 0 auf Zielwert füllen (überlebt Re-Render, reduced-motion springt ans Ziel)
+    var xpFill = card.querySelector('[data-xpfill]');
+    if(xpFill){
+      if(window.caliMotion) caliMotion.animateBar(xpFill, lv.progress);
+      else xpFill.style.width = lv.progress+'%';
+    }
+
     // XP verdienen Button
     var histBtn = document.createElement('button');
+    histBtn.className = 'pressable';
     histBtn.style.cssText = 'width:100%;background:none;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;color:var(--muted);margin-top:8px;';
     histBtn.textContent = '📊 XP Verlauf';
     histBtn.onclick = function(){ openXPHistory(uid); };
@@ -203,16 +255,18 @@ function buildXPWidget(el){
 // ── XP VERLAUF ────────────────────────────────────────────
 function openXPHistory(uid){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
+  box.className = 'sheet-scroll';
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;max-height:80vh;overflow-y:auto;';
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
-    '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px;">📊 XP VERLAUF</div>'+
+    '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:14px;">📊 XP-Verlauf</div>'+
     '<div id="xp-hist-list" style="color:var(--muted);font-size:12px;">Lädt...</div>';
 
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 
   db.collection('xpLog').where('uid','==',uid).orderBy('date','desc').limit(30).get()
     .then(function(snap){
@@ -227,9 +281,9 @@ function openXPHistory(uid){
         row.innerHTML =
           '<div>'+
             '<div style="font-size:12px;font-weight:700;color:var(--text);">'+d.reason+'</div>'+
-            '<div style="font-size:10px;color:var(--muted);">'+new Date(d.date).toLocaleDateString('de-DE')+'</div>'+
+            '<div style="font-size:11px;color:var(--muted);">'+new Date(d.date).toLocaleDateString('de-DE')+'</div>'+
           '</div>'+
-          '<div style="font-family:inherit;font-weight:800;font-size:19px;color:var(--accent);">+'+d.amount+' XP</div>';
+          '<div class="num" style="font-family:inherit;font-weight:800;font-size:19px;color:var(--accent);">+'+d.amount+' XP</div>';
         el.appendChild(row);
       });
     });
@@ -243,22 +297,29 @@ function openMonthlyLeaderboard(){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
   var backBtn = document.createElement('button');
+  backBtn.className = 'pressable';
   backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '← Zurück';
-  backBtn.onclick = function(){ ov.remove(); };
+  backBtn.onclick = function(){
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+  };
   var now2 = new Date();
-  var monthName = now2.toLocaleString('de-DE',{month:'long',year:'numeric'}).toUpperCase();
+  var monthName = now2.toLocaleString('de-DE',{month:'long',year:'numeric'});
   var titleEl = document.createElement('div');
   titleEl.style.cssText = 'flex:1;';
-  titleEl.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);">🏆 MONATSRANGLISTE</div><div style="font-size:10px;color:var(--muted);">'+monthName+'</div>';
+  titleEl.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);">🏆 Monatsrangliste</div><div style="font-size:11px;color:var(--muted);">'+monthName+'</div>';
   topBar.appendChild(backBtn); topBar.appendChild(titleEl);
   ov.appendChild(topBar);
 
   var listEl = document.createElement('div');
+  listEl.className = 'sheet-scroll';
   listEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
   listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">⏳ Lade...</div>';
   ov.appendChild(listEl);
   document.body.appendChild(ov);
+  // Hardware-Zurück schließt das Overlay statt der App
+  if(typeof overlayPush === 'function') overlayPush(ov);
+  if(window.caliMotion) caliMotion.overlayIn(ov);
 
   var monthKey = now2.toISOString().slice(0,7);
   var myUid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
@@ -276,7 +337,7 @@ function openMonthlyLeaderboard(){
 
     // XP Bonus Info
     var infoEl = document.createElement('div');
-    infoEl.style.cssText = 'background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:12px;padding:12px;margin-bottom:16px;font-size:11px;color:var(--muted);line-height:1.6;';
+    infoEl.style.cssText = 'background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:12px;margin-bottom:16px;font-size:11px;color:var(--muted);line-height:1.6;';
     infoEl.innerHTML = '🏆 Am Monatsende erhalten die Top 100 XP-Boni!<br>Platz 1: +2000 XP · Platz 2: +1500 XP · Platz 3: +1200 XP ...';
     listEl.appendChild(infoEl);
 
@@ -291,31 +352,32 @@ function openMonthlyLeaderboard(){
       var isMe = e.uid===myUid;
       var bonus = MONTHLY_RANK_BONUS.find(function(b){ return rank>=b.from&&rank<=b.to; });
       var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:'+(isMe?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1.5px solid '+(isMe?'var(--accent)':'var(--border)')+';';
+      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;margin-bottom:8px;background:'+(isMe?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1px solid '+(isMe?'var(--accent)':'transparent')+';box-shadow:0 8px 20px rgba(0,0,0,0.05);content-visibility:auto;contain-intrinsic-size:auto 64px;';
 
       // Load name from users collection
       row.innerHTML =
-        '<div style="width:28px;text-align:center;flex-shrink:0;">'+(medal?'<span style="font-size:20px;">'+medal+'</span>':'<span style="font-size:12px;font-weight:700;color:var(--muted);">#'+rank+'</span>')+'</div>'+
-        '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ff5500,#ff8c00);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;">'+e.level+'</div>'+
+        '<div style="width:28px;text-align:center;flex-shrink:0;">'+(medal?'<span style="font-size:20px;">'+medal+'</span>':'<span class="num" style="font-size:12px;font-weight:700;color:var(--muted);">#'+rank+'</span>')+'</div>'+
+        '<div class="num" style="width:32px;height:32px;border-radius:50%;background:var(--accent-deep);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;">'+e.level+'</div>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(isMe?'Du':'Spieler')+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'')+' </div>'+
-          (bonus?'<div style="font-size:9px;color:var(--accent);">+'+bonus.xp+' XP Bonus</div>':'')+
+          '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(isMe?'Du':'Spieler')+(isMe?' <span style="font-size:11px;font-weight:700;color:var(--accent-ink);border:1px solid var(--accent);border-radius:20px;padding:0 6px;">Du</span>':'')+' </div>'+
+          (bonus?'<div class="num" style="font-size:11px;color:var(--accent-ink);">+'+bonus.xp+' XP Bonus</div>':'')+
         '</div>'+
         '<div style="text-align:right;flex-shrink:0;">'+
-          '<div style="font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);">'+e.monthlyXP.toLocaleString()+'</div>'+
-          '<div style="font-size:9px;color:var(--muted);">XP</div>'+
+          '<div class="num" style="font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);">'+e.monthlyXP.toLocaleString()+'</div>'+
+          '<div style="font-size:11px;color:var(--muted);">XP</div>'+
         '</div>';
 
       // Load real name async
       db.collection('users').doc(e.uid).get().then(function(userDoc){
         if(userDoc.exists && userDoc.data().prData && userDoc.data().prData.name){
           var nameEl = row.querySelector('div[style*="font-size:13px"]');
-          if(nameEl) nameEl.innerHTML = userDoc.data().prData.name+(isMe?' <span style="font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:0 3px;">DU</span>':'');
+          if(nameEl) nameEl.innerHTML = userDoc.data().prData.name+(isMe?' <span style="font-size:11px;font-weight:700;color:var(--accent-ink);border:1px solid var(--accent);border-radius:20px;padding:0 6px;">Du</span>':'');
         }
       });
 
       listEl.appendChild(row);
     });
+    if(window.caliMotion) caliMotion.stagger(listEl);
   }).catch(function(e){ listEl.innerHTML='<div style="color:var(--muted);">Fehler: '+e.message+'</div>'; });
 }
 
@@ -390,14 +452,25 @@ function updateXPRing(){
       var circumference = 251.2; // 2 * PI * 40
       var offset = circumference - (lv.progress / 100 * circumference);
       ring.style.strokeDashoffset = offset;
-      // Color by level
-      var color = lv.level<=10?'#3b82f6':lv.level<=20?'#22c55e':lv.level<=35?'#f59e0b':'#ff5500';
+      // Color by level (Füllung → helle Original-Tokens)
+      var color = lv.level<=10?'var(--blue)':lv.level<=20?'var(--success)':lv.level<=35?'var(--amber)':'var(--accent)';
       ring.style.stroke = color;
     }
     if(badge){
-      badge.textContent = 'LVL '+lv.level;
+      var wasHidden = badge.style.display !== 'block';
+      badge.textContent = 'Lvl '+lv.level;
       badge.style.display = 'block';
-      badge.style.background = lv.level<=10?'#3b82f6':lv.level<=20?'#22c55e':lv.level<=35?'#f59e0b':'#ff5500';
+      // Weißer Text auf dem Badge → dunkle Ink-Töne (Kontrast)
+      badge.style.background = lv.level<=10?'var(--blue-ink)':lv.level<=20?'var(--success-ink)':lv.level<=35?'var(--amber-ink)':'var(--accent-deep)';
+      // Spring-Pop beim Einblenden — translateX(-50%) MUSS in den Keyframes bleiben (zentriert via transform)
+      if(wasHidden && badge.animate && !(window.caliMotion && caliMotion.reduced())){
+        try{
+          badge.animate(
+            [{transform:'translateX(-50%) scale(0)'},{transform:'translateX(-50%) scale(1)'}],
+            {duration:300, easing:'cubic-bezier(0.34,1.56,0.64,1)'}
+          );
+        }catch(e){}
+      }
     }
   }).catch(function(){});
 }

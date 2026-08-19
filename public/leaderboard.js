@@ -34,15 +34,19 @@ function openGlobalLeaderboard(){
   var topBar = document.createElement('div');
   topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
+  backBtn.className = 'pressable';
+  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;min-height:36px;cursor:pointer;color:var(--text);';
   backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.onclick = function(){ ov.remove(); };
+  backBtn.onclick = function(){
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+  };
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;font-size:16px;font-weight:800;color:var(--text);';
-  titleEl.innerHTML = '🏆 BESTENLISTE';
+  titleEl.style.cssText = 'flex:1;font-size:17px;font-weight:700;color:var(--text);';
+  titleEl.innerHTML = '🏆 Bestenliste';
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:8px 12px;cursor:pointer;';
-  submitBtn.textContent = '+ EINTRAG';
+  submitBtn.className = 'pressable';
+  submitBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 16px;min-height:36px;cursor:pointer;box-shadow:0 12px 30px rgba(255,85,0,0.22);';
+  submitBtn.textContent = '+ Eintrag';
   submitBtn.onclick = function(){ openRecordSubmit(null, null); };
   topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(submitBtn);
   ov.appendChild(topBar);
@@ -59,15 +63,16 @@ function openGlobalLeaderboard(){
 
   LB_EXERCISES.forEach(function(ex){
     var btn = document.createElement('button');
+    btn.className = 'pressable';
     btn.dataset.exId = ex.id;
-    btn.style.cssText = 'flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid '+(ex.id===selectedEx?'var(--accent)':'var(--border)')+';background:'+(ex.id===selectedEx?'var(--accent)':'none')+';color:'+(ex.id===selectedEx?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    btn.style.cssText = 'flex-shrink:0;padding:9px 14px;min-height:36px;border-radius:20px;border:1px solid '+(ex.id===selectedEx?'var(--accent-deep)':'var(--border)')+';background:'+(ex.id===selectedEx?'var(--accent-deep)':'none')+';color:'+(ex.id===selectedEx?'#fff':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
     btn.textContent = ex.icon+' '+ex.name;
     btn.onclick = function(){
       selectedEx = ex.id;
       exWrap.querySelectorAll('button').forEach(function(b){
         var active = b.dataset.exId === selectedEx;
-        b.style.borderColor = active?'var(--accent)':'var(--border)';
-        b.style.background = active?'var(--accent)':'none';
+        b.style.borderColor = active?'var(--accent-deep)':'var(--border)';
+        b.style.background = active?'var(--accent-deep)':'none';
         b.style.color = active?'#fff':'var(--muted)';
       });
       loadLeaderboard(selectedEx, selectedRadius, listEl);
@@ -81,17 +86,18 @@ function openGlobalLeaderboard(){
   radWrap.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;';
   LB_RADIUS_OPTIONS.forEach(function(opt, oi){
     var btn = document.createElement('button');
+    btn.className = 'pressable';
     btn.dataset.ri = oi;
     var isActive = opt.label === selectedRadius.label;
-    btn.style.cssText = 'flex-shrink:0;padding:4px 10px;border-radius:20px;border:1px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'rgba(255,85,0,0.1)':'none')+';color:'+(isActive?'var(--accent)':'var(--muted)')+';font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;';
+    btn.style.cssText = 'flex-shrink:0;padding:8px 12px;min-height:34px;border-radius:20px;border:1px solid '+(isActive?'var(--accent-ink)':'var(--border)')+';background:'+(isActive?'rgba(255,85,0,0.1)':'none')+';color:'+(isActive?'var(--accent-ink)':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
     btn.textContent = opt.label;
     btn.onclick = function(){
       selectedRadius = opt;
       radWrap.querySelectorAll('button').forEach(function(b, bi){
         var a = bi===oi;
-        b.style.borderColor = a?'var(--accent)':'var(--border)';
+        b.style.borderColor = a?'var(--accent-ink)':'var(--border)';
         b.style.background = a?'rgba(255,85,0,0.1)':'none';
-        b.style.color = a?'var(--accent)':'var(--muted)';
+        b.style.color = a?'var(--accent-ink)':'var(--muted)';
       });
       loadLeaderboard(selectedEx, selectedRadius, listEl);
     };
@@ -106,6 +112,9 @@ function openGlobalLeaderboard(){
   ov.appendChild(listEl);
 
   document.body.appendChild(ov);
+  // Hardware-Zurück schließt das Overlay statt der App
+  if(typeof overlayPush === 'function') overlayPush(ov);
+  if(window.caliMotion) caliMotion.overlayIn(ov);
   loadLeaderboard(selectedEx, selectedRadius, listEl);
 }
 
@@ -126,7 +135,7 @@ function loadLeaderboard(exId, radiusOpt, el){
     .then(function(snap){
       el.innerHTML = '';
       if(snap.empty){
-        el.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:40px;margin-bottom:12px;">🏆</div><div style="font-size:14px;color:var(--muted);">Noch keine Einträge für '+exInfo.name+'.<br>Sei der Erste!</div></div>';
+        el.innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:40px;margin-bottom:12px;">🏆</div><div style="font-size:15px;color:var(--muted);">Noch keine Einträge für '+exInfo.name+'.<br>Sei der Erste!</div></div>';
         return;
       }
       var entries = [];
@@ -145,25 +154,28 @@ function loadLeaderboard(exId, radiusOpt, el){
         return;
       }
 
+      var frag = document.createDocumentFragment();
       entries.forEach(function(d, i){
         var rank = i+1;
         var medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank;
         var isMe = firebase.auth().currentUser && d.uid === firebase.auth().currentUser.uid;
         var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:12px;margin-bottom:8px;background:'+(isMe?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1px solid '+(isMe?'var(--accent)':'var(--border)')+';';
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;border:none;border-radius:16px;margin-bottom:8px;background:'+(isMe?'rgba(255,85,0,0.08)':'#fff')+';box-shadow:0 8px 20px rgba(0,0,0,0.05);';
         row.innerHTML =
           '<div style="font-size:22px;width:36px;text-align:center;">'+medal+'</div>'+
-          '<div style="flex:1;">'+
-            '<div style="font-size:14px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:10px;color:var(--accent);">(Du)</span>':'')+' </div>'+
-            '<div style="font-size:10px;color:var(--muted);">'+(d.location||'')+(d.parkName?' · '+d.parkName:'')+'</div>'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'Anonym')+(isMe?' <span style="font-size:11px;font-weight:700;color:var(--accent-ink);background:rgba(255,85,0,0.12);border-radius:20px;padding:1px 8px;">Du</span>':'')+' </div>'+
+            '<div style="font-size:11px;color:var(--muted);">'+(d.location||'')+(d.parkName?' · '+d.parkName:'')+'</div>'+
           '</div>'+
-          '<div style="text-align:right;">'+
-            '<div style="font-size:22px;font-weight:800;color:var(--accent);">'+d.value+'</div>'+
-            '<div style="font-size:10px;color:var(--muted);">'+exInfo.unit+'</div>'+
+          '<div style="text-align:right;flex-shrink:0;">'+
+            '<div class="num" style="font-size:22px;font-weight:800;color:var(--accent);line-height:1;">'+d.value+'</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+exInfo.unit+'</div>'+
           '</div>'+
-          (d.videoUrl?'<button onclick="playVideo(\''+d.videoUrl+'\')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;">▶️</button>':'');
-        el.appendChild(row);
+          (d.videoUrl?'<button class="pressable" onclick="playVideo(\''+d.videoUrl+'\')" aria-label="Video abspielen" style="background:none;border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-height:36px;min-width:36px;font-size:14px;cursor:pointer;flex-shrink:0;">▶️</button>':'');
+        frag.appendChild(row);
       });
+      el.appendChild(frag);
+      if(window.caliMotion) caliMotion.stagger(el);
     })
     .catch(function(e){
       el.innerHTML = '<div style="color:var(--muted);padding:20px;">Fehler: '+e.message+'</div>';
@@ -178,14 +190,16 @@ function playVideo(url){
   vid.src = url;
   vid.controls = true;
   vid.autoplay = true;
-  vid.style.cssText = 'width:100%;max-width:500px;max-height:80vh;border-radius:12px;';
+  vid.style.cssText = 'width:100%;max-width:500px;max-height:80vh;border-radius:16px;';
   var closeBtn = document.createElement('button');
-  closeBtn.style.cssText = 'margin-top:16px;background:rgba(255,255,255,0.2);border:none;color:#fff;font-family:inherit;font-size:14px;font-weight:700;padding:10px 24px;border-radius:10px;cursor:pointer;';
+  closeBtn.className = 'pressable';
+  closeBtn.style.cssText = 'margin-top:16px;background:rgba(255,255,255,0.2);border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 24px;min-height:44px;border-radius:10px;cursor:pointer;';
   closeBtn.textContent = '✕ Schließen';
   closeBtn.onclick = function(){ vid.pause(); ov.remove(); };
   ov.appendChild(vid); ov.appendChild(closeBtn);
   ov.onclick = function(e){ if(e.target===ov){ vid.pause(); ov.remove(); } };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.overlayIn(ov);
 }
 
 // ── REKORD EINREICHEN ──────────────────────────────────────
@@ -197,35 +211,37 @@ function openRecordSubmit(parkId, parkName){
   var ex = document.getElementById('lb-submit-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'lb-submit-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
   box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
+  box.classList.add('sheet-scroll');
   box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
-    '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;">🏆 REKORD EINREICHEN</div>'+
-    (parkName?'<div style="font-size:11px;color:var(--accent);margin-bottom:16px;">📍 '+parkName+'</div>':'<div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Globale Bestenliste</div>');
+    '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;">Rekord einreichen</div>'+
+    (parkName?'<div style="font-size:13px;color:var(--accent-ink);margin-bottom:16px;">📍 '+parkName+'</div>':'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Globale Bestenliste</div>');
 
   // Step 1: Übung wählen
   var s1 = document.createElement('div');
-  s1.innerHTML = '<div class="stitle" style="margin:0 0 10px;">SCHRITT 1 — ÜBUNG WÄHLEN</div>';
+  s1.innerHTML = '<h2 class="stitle" style="margin:0 0 10px;">Schritt 1: Übung wählen</h2>';
   var exGrid = document.createElement('div');
   exGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;max-height:260px;overflow-y:auto;';
   var recordExercises = getRekExercises('all');
   var selectedExId = recordExercises[0].id;
   recordExercises.forEach(function(ex){
     var btn = document.createElement('button');
+    btn.className = 'pressable';
     btn.dataset.exId = ex.id;
-    btn.style.cssText = 'padding:10px;border-radius:10px;border:1.5px solid '+(ex.id===selectedExId?'var(--accent)':'var(--border)')+';background:'+(ex.id===selectedExId?'rgba(255,85,0,0.1)':'none')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--text);text-align:left;';
-    btn.innerHTML = ex.name+'<div style="font-size:9px;color:var(--muted);font-weight:400;">'+ex.unit+'</div>';
+    btn.style.cssText = 'padding:10px 12px;min-height:44px;border-radius:10px;border:1px solid '+(ex.id===selectedExId?'var(--accent-deep)':'var(--border)')+';background:'+(ex.id===selectedExId?'rgba(255,85,0,0.1)':'none')+';font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--text);text-align:left;';
+    btn.innerHTML = ex.name+'<div style="font-size:11px;color:var(--muted);font-weight:400;">'+ex.unit+'</div>';
     btn.onclick = function(){
       selectedExId = ex.id;
       exGrid.querySelectorAll('button').forEach(function(b){
         var a = b.dataset.exId === selectedExId;
-        b.style.borderColor = a?'var(--accent)':'var(--border)';
+        b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
         b.style.background = a?'rgba(255,85,0,0.1)':'none';
       });
       var exInfo = recordExercises.find(function(e){ return e.id===selectedExId; });
-      valLabel.textContent = 'ERGEBNIS ('+exInfo.unit.toUpperCase()+')';
+      valLabel.textContent = 'Schritt 2: Ergebnis ('+exInfo.unit+')';
     };
     exGrid.appendChild(btn);
   });
@@ -234,21 +250,22 @@ function openRecordSubmit(parkId, parkName){
 
   // Step 2: Wert eingeben
   var s2 = document.createElement('div');
-  var valLabel = document.createElement('div');
+  var valLabel = document.createElement('h2');
   valLabel.className = 'stitle';
   valLabel.style.cssText = 'margin:0 0 8px;';
-  valLabel.textContent = 'SCHRITT 2 — ERGEBNIS (WDH)';
+  valLabel.textContent = 'Schritt 2: Ergebnis (Wdh)';
   var valInput = document.createElement('input');
   valInput.type = 'number';
   valInput.min = '1';
   valInput.placeholder = 'z.B. 20';
-  valInput.style.cssText = 'width:100%;padding:14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:18px;font-weight:800;text-align:center;background:var(--bg2);color:var(--text);margin-bottom:20px;box-sizing:border-box;';
+  valInput.className = 'num';
+  valInput.style.cssText = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:17px;font-weight:700;text-align:center;background:#fff;color:var(--text);margin-bottom:20px;box-sizing:border-box;';
   s2.appendChild(valLabel); s2.appendChild(valInput);
   box.appendChild(s2);
 
   // Step 3: Video aufnehmen
   var s3 = document.createElement('div');
-  s3.innerHTML = '<div class="stitle" style="margin:0 0 10px;">SCHRITT 3 — VIDEOBEWEIS (PFLICHT)</div>';
+  s3.innerHTML = '<h2 class="stitle" style="margin:0 0 10px;">Schritt 3: Videobeweis (Pflicht)</h2>';
 
   var videoBlob = null;
   var mediaRecorder = null;
@@ -256,7 +273,7 @@ function openRecordSubmit(parkId, parkName){
   var stream = null;
 
   var camWrap = document.createElement('div');
-  camWrap.style.cssText = 'border-radius:12px;overflow:hidden;background:#000;margin-bottom:12px;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center;';
+  camWrap.style.cssText = 'border-radius:16px;overflow:hidden;background:#000;margin-bottom:12px;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center;';
 
   var preview = document.createElement('video');
   preview.style.cssText = 'width:100%;max-height:300px;display:none;';
@@ -279,11 +296,13 @@ function openRecordSubmit(parkId, parkName){
   camBtnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:20px;';
 
   var startCamBtn = document.createElement('button');
-  startCamBtn.style.cssText = 'flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:12px;cursor:pointer;color:var(--text);';
+  startCamBtn.style.cssText = 'flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;color:var(--text);transition:transform var(--dur-fast) var(--ease-out);';
+  startCamBtn.classList.add('pressable');
   startCamBtn.textContent = '📷 Kamera starten';
 
   var recBtn = document.createElement('button');
-  recBtn.style.cssText = 'flex:1;background:#e74c3c;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:12px;cursor:pointer;color:#fff;display:none;';
+  recBtn.style.cssText = 'flex:1;background:var(--red);border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;color:#fff;display:none;transition:transform var(--dur-fast) var(--ease-out);';
+  recBtn.classList.add('pressable');
   recBtn.textContent = '⏺ Aufnahme starten';
 
   var isRecording = false;
@@ -322,7 +341,7 @@ function openRecordSubmit(parkId, parkName){
       mediaRecorder.start();
       isRecording = true;
       recBtn.textContent = '⏹ Aufnahme stoppen';
-      recBtn.style.background = '#e74c3c';
+      recBtn.style.background = 'var(--red)';
     } else {
       mediaRecorder.stop();
       isRecording = false;
@@ -335,8 +354,9 @@ function openRecordSubmit(parkId, parkName){
 
   // Submit button
   var submitBtn2 = document.createElement('button');
-  submitBtn2.style.cssText = 'width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;padding:16px;cursor:pointer;opacity:0.4;';
-  submitBtn2.textContent = 'EINREICHEN';
+  submitBtn2.className = 'pressable';
+  submitBtn2.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:15px;min-height:48px;cursor:pointer;opacity:0.4;box-shadow:0 12px 30px rgba(255,85,0,0.22);';
+  submitBtn2.textContent = 'Einreichen';
   submitBtn2.disabled = true;
 
   submitBtn2.onclick = function(){
@@ -345,7 +365,7 @@ function openRecordSubmit(parkId, parkName){
     if(!val || val < 1){ alert('Bitte Ergebnis eingeben!'); return; }
     var exInfo = recordExercises.find(function(e){ return e.id===selectedExId; });
     var user = firebase.auth().currentUser;
-    submitBtn2.textContent = 'WIRD HOCHGELADEN...';
+    submitBtn2.textContent = 'Wird hochgeladen…';
     submitBtn2.disabled = true;
 
     // Upload video to Firebase Storage
@@ -384,7 +404,7 @@ function openRecordSubmit(parkId, parkName){
         saveLeaderboardEntry(entry, parkId, ov);
       }
     }).catch(function(e){
-      submitBtn2.textContent = 'EINREICHEN';
+      submitBtn2.textContent = 'Einreichen';
       submitBtn2.disabled = false;
       alert('Upload Fehler: '+e.message);
     });
@@ -410,6 +430,7 @@ function openRecordSubmit(parkId, parkName){
     }
   };
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }
 
 function saveLeaderboardEntry(entry, parkId, ov){
@@ -445,7 +466,21 @@ function checkPersonalBest(entry){
       // New personal best!
       bests[entry.exercise] = entry.value;
       db.collection('personalBests').doc(uid).set(bests, {merge:true});
-      showToast('🎉 Neuer persönlicher Rekord: '+entry.value+' '+entry.unit+'!');
+      // Gleicher Moment wie saveMaxEntry → gleiche Feier statt nur Toast
+      var exLabel = entry.exerciseName || entry.exercise || '';
+      var subLine = current > 0
+        ? exLabel + ' · Vorher: ' + current + ' ' + entry.unit
+        : exLabel + ' · Dein erster Eintrag';
+      if(typeof showCelebrationOverlay === 'function'){
+        showCelebrationOverlay({
+          icon:'🏆',
+          title:'Neuer Rekord!',
+          big: entry.value + ' ' + entry.unit,
+          sub: subLine
+        });
+      } else {
+        showToast('🎉 Neuer persönlicher Rekord: '+entry.value+' '+entry.unit+'!');
+      }
     }
   });
 }
@@ -453,7 +488,7 @@ function checkPersonalBest(entry){
 function showToast(msg){
   try{ toast(msg); } catch(e){
     var t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:3000;';
+    t.className = 'toast';
     t.textContent = msg;
     document.body.appendChild(t);
     setTimeout(function(){ t.remove(); }, 3000);

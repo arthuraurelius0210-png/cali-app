@@ -23,10 +23,10 @@ function showCommPostModal(){
 
   var ov = document.createElement('div');
   ov.id = 'comm-post-overlay';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;';
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;';
 
   var header = document.createElement('div');
   header.style.cssText = 'padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;';
@@ -35,7 +35,7 @@ function showCommPostModal(){
   var hdrRow = document.createElement('div');
   hdrRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
   var hdrTitle = document.createElement('div');
-  hdrTitle.style.cssText = 'font-size:15px;font-weight:800;color:var(--text);';
+  hdrTitle.style.cssText = 'font-size:17px;font-weight:700;color:var(--text);';
   hdrTitle.textContent = 'Challenge erstellen';
   var closeX = document.createElement('button');
   closeX.style.cssText = 'background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;color:var(--muted);';
@@ -43,28 +43,33 @@ function showCommPostModal(){
   closeX.setAttribute('aria-label', 'Schlie\u00DFen');
   closeX.onclick = function(){ ov.remove(); };
   hdrRow.appendChild(hdrTitle); hdrRow.appendChild(closeX);
+  var stepLbl = document.createElement('div');
+  stepLbl.style.cssText = 'font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;';
+  stepLbl.textContent = 'Schritt 1 von 4 — Info';
   var stepBar = document.createElement('div');
   stepBar.style.cssText = 'display:flex;gap:4px;';
   for(var si=1;si<=4;si++){
     var sd=document.createElement('div'); sd.id='step-dot-'+si;
-    sd.style.cssText='flex:1;height:3px;border-radius:3px;background:'+(si===1?'var(--accent)':'var(--bg3)')+';transition:background 0.2s;';
+    sd.style.cssText='flex:1;height:3px;border-radius:3px;background:'+(si===1?'var(--accent)':'var(--bg3)')+';transition:background var(--dur-med) var(--ease-out);';
     stepBar.appendChild(sd);
   }
-  header.appendChild(handleBar); header.appendChild(hdrRow); header.appendChild(stepBar);
+  header.appendChild(handleBar); header.appendChild(hdrRow); header.appendChild(stepLbl); header.appendChild(stepBar);
   box.appendChild(header);
 
   var content = document.createElement('div');
   content.style.cssText = 'flex:1;overflow-y:auto;padding:20px;';
+  content.classList.add('sheet-scroll');
   box.appendChild(content);
 
   var footer = document.createElement('div');
   footer.style.cssText = 'padding:12px 20px 24px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:10px;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;display:none;';
-  backBtn.textContent = '\u2190 ZURÜCK';
+  backBtn.style.cssText = 'flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;display:none;transition:transform var(--dur-fast) var(--ease-out);';
+  backBtn.textContent = '\u2190 Zurück';
   var nextBtn = document.createElement('button');
-  nextBtn.style.cssText = 'flex:2;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:14px;cursor:pointer;';
-  nextBtn.textContent = 'WEITER \u2192';
+  nextBtn.style.cssText = 'flex:2;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  nextBtn.textContent = 'Weiter \u2192';
+  backBtn.classList.add('pressable'); nextBtn.classList.add('pressable');
   footer.appendChild(backBtn); footer.appendChild(nextBtn);
   box.appendChild(footer);
 
@@ -85,25 +90,25 @@ function showCommPostModal(){
     else if(step===4) renderStep4();
   }
 
-  function lbl(t){ var d=document.createElement('div'); d.className='stitle'; d.style.cssText='margin:0 0 6px;'; d.textContent=t; return d; }
+  function lbl(t){ var d=document.createElement('div'); d.style.cssText='font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;'; d.textContent=t; return d; }
   function styledInp(id,ph,val){
     var i=document.createElement('input'); i.type='text'; i.id=id; i.placeholder=ph; i.value=val||'';
-    i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;box-sizing:border-box;';
+    i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
     return i;
   }
 
   function renderStep1(){
-    hdrTitle.textContent='SCHRITT 1 \u2014 INFO';
-    nextBtn.textContent='WEITER \u2192';
+    stepLbl.textContent='Schritt 1 von 4 \u2014 Info';
+    nextBtn.textContent='Weiter \u2192';
     var w1=document.createElement('div'); w1.style.marginBottom='14px';
-    w1.appendChild(lbl('TITEL')); w1.appendChild(styledInp('ch-title','z.B. 100 Klimmzüge Non-Stop',challengeData.title));
+    w1.appendChild(lbl('Titel')); w1.appendChild(styledInp('ch-title','z.B. 100 Klimmzüge Non-Stop',challengeData.title));
     var w2=document.createElement('div'); w2.style.marginBottom='14px';
-    w2.appendChild(lbl('BESCHREIBUNG'));
+    w2.appendChild(lbl('Beschreibung'));
     var ta=document.createElement('textarea'); ta.id='ch-desc'; ta.placeholder='Erkläre die Challenge genau...'; ta.value=challengeData.desc||'';
     ta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:90px;box-sizing:border-box;';
     w2.appendChild(ta);
     var w25=document.createElement('div'); w25.style.marginBottom='14px';
-    w25.appendChild(lbl('ERKLÄR-VIDEO (optional)'));
+    w25.appendChild(lbl('Erklär-Video (optional)'));
 
     // Video file input (hidden, accepts camera or file)
     var vFileInp=document.createElement('input');
@@ -112,9 +117,9 @@ function showCommPostModal(){
 
     // Status display
     var vStatus=document.createElement('div'); vStatus.id='ch-video-status';
-    vStatus.style.cssText='font-size:10px;color:var(--muted);margin-top:6px;min-height:16px;';
+    vStatus.style.cssText='font-size:11px;color:var(--muted);margin-top:6px;min-height:16px;';
     if(challengeData.videoUrl){
-      vStatus.innerHTML='<span style="color:var(--accent);">✓ Video hochgeladen</span>';
+      vStatus.innerHTML='<span style="color:var(--success-ink);">✓ Video hochgeladen</span>';
     }
 
     // Buttons row
@@ -122,14 +127,16 @@ function showCommPostModal(){
 
     var vCamBtn=document.createElement('button');
     vCamBtn.type='button';
-    vCamBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
-    vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> VIDEO AUFNEHMEN';
+    vCamBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform var(--dur-fast) var(--ease-out);';
+    vCamBtn.classList.add('pressable');
+    vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> Video aufnehmen';
     vCamBtn.onclick=function(e){ e.preventDefault(); vFileInp.removeAttribute('capture'); vFileInp.setAttribute('capture','environment'); vFileInp.click(); };
 
     var vFileBtn=document.createElement('button');
     vFileBtn.type='button';
-    vFileBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
-    vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> DATEI WÄHLEN';
+    vFileBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform var(--dur-fast) var(--ease-out);';
+    vFileBtn.classList.add('pressable');
+    vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> Datei wählen';
     vFileBtn.onclick=function(e){ e.preventDefault(); vFileInp.removeAttribute('capture'); vFileInp.click(); };
 
     vFileInp.onchange=function(){
@@ -148,18 +155,18 @@ function showCommPostModal(){
           vStatus.innerHTML='⏳ '+pct+'% hochgeladen...';
         },
         function(err){
-          vStatus.innerHTML='<span style="color:#ef4444;">Fehler: '+err.message+'</span>';
+          vStatus.innerHTML='<span style="color:var(--red);">Fehler: '+err.message+'</span>';
           vCamBtn.disabled=false; vFileBtn.disabled=false;
           vCamBtn.style.opacity='1'; vFileBtn.style.opacity='1';
         },
         function(){
           uploadTask.snapshot.ref.getDownloadURL().then(function(url){
             challengeData.videoUrl=url;
-            vStatus.innerHTML='<span style="color:var(--accent);">✓ Video hochgeladen!</span>';
+            vStatus.innerHTML='<span style="color:var(--success-ink);">✓ Video hochgeladen!</span>';
             vCamBtn.disabled=false; vFileBtn.disabled=false;
             vCamBtn.style.opacity='1'; vFileBtn.style.opacity='1';
-            vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> NEU AUFNEHMEN';
-            vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> ANDERE DATEI';
+            vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> Neu aufnehmen';
+            vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> Andere Datei';
           });
         }
       );
@@ -169,16 +176,17 @@ function showCommPostModal(){
     w25.appendChild(vBtnRow); w25.appendChild(vFileInp); w25.appendChild(vStatus);
 
     var w3=document.createElement('div');
-    w3.appendChild(lbl('SCHWIERIGKEIT'));
+    w3.appendChild(lbl('Schwierigkeit'));
     var dr=document.createElement('div'); dr.style.cssText='display:flex;gap:6px;';
     for(var d=1;d<=5;d++){
       (function(dv){
         var b=document.createElement('button'); b.id='diff-btn-'+dv;
-        b.style.cssText='flex:1;padding:9px 0;border-radius:8px;border:1px solid '+(dv===challengeData.difficulty?'rgba(255,85,0,0.4)':'var(--border)')+';background:'+(dv===challengeData.difficulty?'rgba(255,85,0,0.12)':'var(--bg3)')+';font-family:inherit;font-size:13px;cursor:pointer;color:'+(dv===challengeData.difficulty?'var(--accent)':'var(--muted)')+';';
+        b.style.cssText='flex:1;padding:9px 0;border-radius:10px;border:1px solid '+(dv===challengeData.difficulty?'rgba(255,85,0,0.4)':'var(--border)')+';background:'+(dv===challengeData.difficulty?'rgba(255,85,0,0.12)':'var(--bg3)')+';font-family:inherit;font-size:13px;cursor:pointer;color:'+(dv===challengeData.difficulty?'var(--accent-ink)':'var(--muted)')+';transition:transform var(--dur-fast) var(--ease-out);';
+        b.classList.add('pressable');
         b.textContent='\u2605'.repeat(dv);
         b.onclick=function(){
           challengeData.difficulty=dv;
-          for(var i=1;i<=5;i++){var bb=document.getElementById('diff-btn-'+i);if(bb){bb.style.background=i===dv?'rgba(255,85,0,0.12)':'var(--bg3)';bb.style.borderColor=i===dv?'rgba(255,85,0,0.4)':'var(--border)';bb.style.color=i===dv?'var(--accent)':'var(--muted)';}}
+          for(var i=1;i<=5;i++){var bb=document.getElementById('diff-btn-'+i);if(bb){bb.style.background=i===dv?'rgba(255,85,0,0.12)':'var(--bg3)';bb.style.borderColor=i===dv?'rgba(255,85,0,0.4)':'var(--border)';bb.style.color=i===dv?'var(--accent-ink)':'var(--muted)';}}
         };
         dr.appendChild(b);
       })(d);
@@ -188,18 +196,20 @@ function showCommPostModal(){
   }
 
   function renderStep2(){
-    hdrTitle.textContent='SCHRITT 2 \u2014 TYP';
+    stepLbl.textContent='Schritt 2 von 4 \u2014 Typ';
+    nextBtn.textContent='Weiter \u2192';
     var types=[
-      {id:'once',icon:'&#127937;',label:'EINMALIG',desc:'Einmal vollständig schaffen'},
-      {id:'weekly',icon:'&#128197;',label:'WÖCHENTLICH',desc:'X mal pro Woche trainieren'},
-      {id:'timed',icon:'&#9201;',label:'ZEITLIMIT',desc:'Alles in X Minuten schaffen'},
-      {id:'streak',icon:'&#128293;',label:'STREAK',desc:'X Tage in Folge trainieren'},
+      {id:'once',icon:'&#127937;',label:'Einmalig',desc:'Einmal vollständig schaffen'},
+      {id:'weekly',icon:'&#128197;',label:'Wöchentlich',desc:'X mal pro Woche trainieren'},
+      {id:'timed',icon:'&#9201;',label:'Zeitlimit',desc:'Alles in X Minuten schaffen'},
+      {id:'streak',icon:'&#128293;',label:'Streak',desc:'X Tage in Folge trainieren'},
     ];
     types.forEach(function(t){
-      var card=document.createElement('div'); card.id='type-card-'+t.id;
+      var card=document.createElement('button'); card.id='type-card-'+t.id; card.type='button';
       var sel=challengeData.type===t.id;
-      card.style.cssText='display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1.5px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(255,85,0,0.06)':'var(--bg2)')+';cursor:pointer;margin-bottom:8px;';
-      card.innerHTML='<div style="font-size:24px;">'+t.icon+'</div><div><div style="font-size:13px;font-weight:800;color:var(--text);">'+t.label+'</div><div style="font-size:11px;color:var(--muted);">'+t.desc+'</div></div>';
+      card.style.cssText='display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;padding:14px;border-radius:16px;border:1px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(255,85,0,0.06)':'var(--bg2)')+';cursor:pointer;margin-bottom:8px;';
+      card.classList.add('pressable');
+      card.innerHTML='<div style="font-size:24px;">'+t.icon+'</div><div><div style="font-size:13px;font-weight:700;color:var(--text);">'+t.label+'</div><div style="font-size:11px;color:var(--muted);">'+t.desc+'</div></div>';
       card.onclick=function(){
         challengeData.type=t.id;
         types.forEach(function(tt){var c=document.getElementById('type-card-'+tt.id);if(c){c.style.borderColor=tt.id===t.id?'var(--accent)':'var(--border)';c.style.background=tt.id===t.id?'rgba(255,85,0,0.06)':'var(--bg2)';}});
@@ -215,38 +225,41 @@ function showCommPostModal(){
     var wrap=document.getElementById('type-params-wrap'); if(!wrap) return; wrap.innerHTML='';
     function numI(id,l,ph,val){
       var w=document.createElement('div'); w.style.marginTop='12px';
-      var lb=document.createElement('div'); lb.className='stitle'; lb.style.cssText='margin:0 0 6px;'; lb.textContent=l;
+      var lb=document.createElement('div'); lb.style.cssText='font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;'; lb.textContent=l;
       var i=document.createElement('input'); i.type='number'; i.id=id; i.placeholder=ph; i.value=val||'';
-      i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;box-sizing:border-box;';
+      i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
       w.appendChild(lb); w.appendChild(i); return w;
     }
-    if(type==='weekly') wrap.appendChild(numI('tp-days','TRAININGS PRO WOCHE','z.B. 3',challengeData.typeParams.days));
-    if(type==='timed')  wrap.appendChild(numI('tp-minutes','ZEITLIMIT (MINUTEN)','z.B. 20',challengeData.typeParams.minutes));
-    if(type==='streak') wrap.appendChild(numI('tp-streak','STREAK-TAGE','z.B. 7',challengeData.typeParams.streakDays));
+    if(type==='weekly') wrap.appendChild(numI('tp-days','Trainings pro Woche','z.B. 3',challengeData.typeParams.days));
+    if(type==='timed')  wrap.appendChild(numI('tp-minutes','Zeitlimit (Minuten)','z.B. 20',challengeData.typeParams.minutes));
+    if(type==='streak') wrap.appendChild(numI('tp-streak','Streak-Tage','z.B. 7',challengeData.typeParams.streakDays));
   }
 
   function renderStep3(){
-    hdrTitle.textContent='SCHRITT 3 \u2014 ÜBUNGEN';
+    stepLbl.textContent='Schritt 3 von 4 \u2014 Übungen';
+    nextBtn.textContent='Weiter \u2192';
     content.innerHTML='';
     // Option: no exercises (free text challenge)
     var freeToggle=document.createElement('div');
-    freeToggle.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:10px;margin-bottom:12px;';
+    freeToggle.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:16px;margin-bottom:12px;';
     freeToggle.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--text);">Freie Challenge (ohne Übungen)</div>';
     var ftBtn=document.createElement('button');
-    ftBtn.style.cssText='width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;background:'+(challengeData.freeChallenge?'var(--accent)':'#ccc')+';position:relative;';
-    ftBtn.innerHTML='<div style="position:absolute;top:2px;'+(challengeData.freeChallenge?'right:2px':'left:2px')+';width:18px;height:18px;border-radius:50%;background:#fff;"></div>';
+    ftBtn.style.cssText='width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;background:'+(challengeData.freeChallenge?'var(--accent)':'var(--border2)')+';position:relative;';
+    ftBtn.setAttribute('aria-label','Freie Challenge umschalten');
+    ftBtn.innerHTML='<div style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform var(--dur-med) var(--ease-out);transform:translateX('+(challengeData.freeChallenge?'18px':'0')+');"></div>';
     ftBtn.onclick=function(){challengeData.freeChallenge=!challengeData.freeChallenge;renderStep3();};
     freeToggle.appendChild(ftBtn); content.appendChild(freeToggle);
     if(challengeData.freeChallenge){
       var freeDesc=document.createElement('div');
-      freeDesc.style.cssText='background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--muted);';
-      freeDesc.innerHTML='&#128204; Die Challenge hat keine festen Übungen. Beschreib sie in Schritt 2.';
+      freeDesc.style.cssText='background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--muted);';
+      freeDesc.innerHTML='&#128204; Die Challenge hat keine festen Übungen. Beschreib sie in der Beschreibung (Schritt 1).';
       content.appendChild(freeDesc);
       return;
     }
     var addBtn=document.createElement('button');
-    addBtn.style.cssText='width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px dashed rgba(255,85,0,0.4);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:13px;cursor:pointer;margin-bottom:14px;';
-    addBtn.textContent='+ ÜBUNG HINZUFÜGEN';
+    addBtn.style.cssText='width:100%;background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px dashed rgba(255,85,0,0.4);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:14px;transition:transform var(--dur-fast) var(--ease-out);';
+    addBtn.classList.add('pressable');
+    addBtn.textContent='+ Übung hinzufügen';
     addBtn.onclick=function(){
       challengeData.exercises.push({name:'',sets:3,reps:10,rest:60,notes:'',bandAllowed:false});
       renderStep3();
@@ -263,17 +276,18 @@ function showCommPostModal(){
   }
 
   function renderExCard(ex, idx, exList){
-    var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:14px;margin-bottom:10px;';
+    var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
     var hRow=document.createElement('div'); hRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
-    var ht=document.createElement('div'); ht.className='stitle'; ht.style.cssText='color:var(--accent);margin:0;'; ht.textContent='ÜBUNG '+(idx+1);
-    var delBtn=document.createElement('button'); delBtn.style.cssText='background:rgba(255,50,50,0.1);color:#ff4444;border:1px solid rgba(255,50,50,0.2);border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;'; delBtn.textContent='\u00D7 ENTFERNEN';
+    var ht=document.createElement('div'); ht.style.cssText='font-size:13px;font-weight:700;color:var(--accent-ink);'; ht.textContent='Übung '+(idx+1);
+    var delBtn=document.createElement('button'); delBtn.style.cssText='background:rgba(217,48,54,0.08);color:var(--red);border:1px solid rgba(217,48,54,0.2);border-radius:10px;font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:inherit;transition:transform var(--dur-fast) var(--ease-out);'; delBtn.textContent='\u00D7 Entfernen';
+    delBtn.classList.add('pressable');
     delBtn.onclick=function(){challengeData.exercises.splice(idx,1);renderStep3();};
     hRow.appendChild(ht); hRow.appendChild(delBtn); card.appendChild(hRow);
 
     var nw=document.createElement('div'); nw.style.marginBottom='10px';
-    nw.appendChild(lbl('ÜBUNG'));
+    nw.appendChild(lbl('Übung'));
     var ni=document.createElement('input'); ni.type='text'; ni.value=ex.name||''; ni.placeholder='z.B. Klimmzüge'; ni.setAttribute('list','exdl-'+idx);
-    ni.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-family:inherit;font-size:12px;color:var(--text);outline:none;box-sizing:border-box;';
+    ni.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
     ni.oninput=function(){challengeData.exercises[idx].name=this.value;};
     var dl=document.createElement('datalist'); dl.id='exdl-'+idx;
     ['Klimmzüge','Dips','Liegestütze','Muscle-Up','Plank','L-Sit','Handstand','Front Lever','Dragon Flag','Hollow Body','Push-Up','Trizeps-Dips','Kniebeugen','Burpees','Mountain Climbers'].forEach(function(n){var o=document.createElement('option');o.value=n;dl.appendChild(o);});
@@ -282,54 +296,55 @@ function showCommPostModal(){
     var sr=document.createElement('div'); sr.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;';
     function mi(fld,lb,val,ph){
       var w=document.createElement('div');
-      var l=document.createElement('div'); l.style.cssText='font-size:8px;color:var(--muted);margin-bottom:4px;'; l.textContent=lb;
+      var l=document.createElement('div'); l.style.cssText='font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;'; l.textContent=lb;
       var i=document.createElement('input'); i.type='number'; i.value=val||''; i.placeholder=ph||'';
-      i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px;color:var(--text);outline:none;box-sizing:border-box;';
+      i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
       i.oninput=(function(f){return function(){challengeData.exercises[idx][f]=parseInt(this.value)||0;};})(fld);
       w.appendChild(l); w.appendChild(i); return w;
     }
-    sr.appendChild(mi('sets','SÄTZE',ex.sets,'3')); sr.appendChild(mi('reps','WDHL.',ex.reps,'10')); sr.appendChild(mi('rest','PAUSE SEK',ex.rest,'60'));
+    sr.appendChild(mi('sets','Sätze',ex.sets,'3')); sr.appendChild(mi('reps','Wdh.',ex.reps,'10')); sr.appendChild(mi('rest','Pause (Sek)',ex.rest,'60'));
     card.appendChild(sr);
 
     var now=document.createElement('div'); now.style.marginBottom='10px';
-    now.appendChild(lbl('AUSFÜHRUNG (optional)'));
+    now.appendChild(lbl('Ausführung (optional)'));
     var nta=document.createElement('textarea'); nta.value=ex.notes||''; nta.placeholder='z.B. volle Streckung, kein Schwung...';
-    nta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:55px;box-sizing:border-box;';
+    nta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:55px;box-sizing:border-box;';
     nta.oninput=function(){challengeData.exercises[idx].notes=this.value;};
     now.appendChild(nta); card.appendChild(now);
 
     var br=document.createElement('div'); br.style.cssText='display:flex;align-items:center;justify-content:space-between;';
     var bl=document.createElement('div'); bl.style.cssText='font-size:11px;color:var(--muted);'; bl.textContent='Gummiband erlaubt';
     var bt=document.createElement('button');
-    bt.style.cssText='width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;background:'+(ex.bandAllowed?'var(--accent)':'#ccc')+';position:relative;transition:background 0.2s;';
-    bt.innerHTML='<div style="position:absolute;top:2px;'+(ex.bandAllowed?'right:2px':'left:2px')+';width:18px;height:18px;border-radius:50%;background:#fff;"></div>';
+    bt.style.cssText='width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;background:'+(ex.bandAllowed?'var(--accent)':'var(--border2)')+';position:relative;transition:background var(--dur-med) var(--ease-out);';
+    bt.setAttribute('aria-label','Gummiband erlaubt umschalten');
+    bt.innerHTML='<div style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform var(--dur-med) var(--ease-out);transform:translateX('+(ex.bandAllowed?'18px':'0')+');"></div>';
     bt.onclick=function(){challengeData.exercises[idx].bandAllowed=!challengeData.exercises[idx].bandAllowed;renderStep3();};
     br.appendChild(bl); br.appendChild(bt); card.appendChild(br);
     exList.appendChild(card);
   }
 
   function renderStep4(){
-    hdrTitle.textContent='SCHRITT 4 \u2014 VORSCHAU';
-    nextBtn.textContent=extraCost?'POSTEN (3 \uD83D\uDC8E)':'POSTEN (KOSTENLOS)';
+    stepLbl.textContent='Schritt 4 von 4 \u2014 Vorschau';
+    nextBtn.textContent=extraCost?'Posten (3 \uD83D\uDC8E)':'Posten (kostenlos)';
     var typeIcons={once:'&#127937;',weekly:'&#128197;',timed:'&#9201;',streak:'&#128293;'};
     var typeLabels={once:'Einmalig',weekly:'Wöchentlich',timed:'Zeitlimit',streak:'Streak'};
     var card=document.createElement('div');
-    card.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:18px;margin-bottom:14px;';
+    card.style.cssText='background:var(--bg2);border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:14px;';
     card.innerHTML=
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'+
       '<div style="font-size:28px;">'+typeIcons[challengeData.type]+'</div>'+
-      '<div><div style="font-size:16px;font-weight:800;color:var(--text);">'+challengeData.title+'</div>'+
-      '<div style="font-size:10px;color:var(--muted);">'+typeLabels[challengeData.type]+' \u00B7 '+'\u2605'.repeat(challengeData.difficulty)+'\u2606'.repeat(5-challengeData.difficulty)+'</div></div></div>'+
+      '<div><div style="font-size:17px;font-weight:700;color:var(--text);">'+challengeData.title+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);">'+typeLabels[challengeData.type]+' \u00B7 '+'\u2605'.repeat(challengeData.difficulty)+'\u2606'.repeat(5-challengeData.difficulty)+'</div></div></div>'+
       '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">'+challengeData.desc+'</div>';
     if(challengeData.exercises.length>0){
-      var et=document.createElement('div'); et.className='stitle'; et.style.cssText='color:var(--accent);margin:0 0 8px;'; et.textContent=challengeData.exercises.length+' ÜBUNGEN';
+      var et=document.createElement('div'); et.style.cssText='font-size:13px;font-weight:700;color:var(--accent-ink);margin:0 0 8px;'; et.textContent=challengeData.exercises.length+' Übungen';
       card.appendChild(et);
       challengeData.exercises.forEach(function(ex){
         var r=document.createElement('div'); r.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
-        r.innerHTML='<div style="font-weight:700;color:var(--text);flex:1;">'+ex.name+'</div><div style="color:var(--muted);">'+ex.sets+'\u00D7'+ex.reps+'</div><div style="color:var(--muted);font-size:10px;">'+ex.rest+'s</div>';
-        if(ex.bandAllowed){var b=document.createElement('div');b.style.cssText='font-size:9px;background:rgba(255,85,0,0.1);color:var(--accent);border-radius:4px;padding:2px 6px;';b.textContent='Band OK';r.appendChild(b);}
+        r.innerHTML='<div style="font-weight:700;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+ex.name+'</div><div class="num" style="color:var(--muted);">'+ex.sets+'\u00D7'+ex.reps+'</div><div class="num" style="color:var(--muted);font-size:11px;">'+ex.rest+'s</div>';
+        if(ex.bandAllowed){var b=document.createElement('div');b.style.cssText='font-size:11px;font-weight:700;background:rgba(255,85,0,0.1);color:var(--accent-ink);border-radius:20px;padding:2px 8px;';b.textContent='Band erlaubt';r.appendChild(b);}
         card.appendChild(r);
-        if(ex.notes){var n=document.createElement('div');n.style.cssText='font-size:10px;color:var(--muted);font-style:italic;padding:3px 0;';n.textContent=ex.notes;card.appendChild(n);}
+        if(ex.notes){var n=document.createElement('div');n.style.cssText='font-size:11px;color:var(--muted);font-style:italic;padding:3px 0;';n.textContent=ex.notes;card.appendChild(n);}
       });
     }
     content.appendChild(card);
@@ -337,7 +352,7 @@ function showCommPostModal(){
       var vPrev=document.createElement('div'); vPrev.style.cssText='background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;';
       var vIcon=document.createElement('div'); vIcon.style.cssText='font-size:20px;flex-shrink:0;'; vIcon.textContent='\uD83C\uDFA5';
       var vInfo=document.createElement('div'); vInfo.style.cssText='flex:1;min-width:0;';
-      var vLbl=document.createElement('div'); vLbl.className='stitle'; vLbl.style.cssText='color:var(--accent);margin:0 0 3px;'; vLbl.textContent='ERKLÄR-VIDEO';
+      var vLbl=document.createElement('div'); vLbl.style.cssText='font-size:12px;font-weight:700;color:var(--accent-ink);margin:0 0 3px;'; vLbl.textContent='Erklär-Video';
       var vLink=document.createElement('a'); vLink.href=challengeData.videoUrl; vLink.target='_blank'; vLink.style.cssText='font-size:11px;color:var(--text);word-break:break-all;text-decoration:underline;'; vLink.textContent=challengeData.videoUrl;
       vInfo.appendChild(vLbl); vInfo.appendChild(vLink);
       vPrev.appendChild(vIcon); vPrev.appendChild(vInfo);
@@ -396,12 +411,13 @@ function showCommPostModal(){
     nextBtn.textContent='...'; nextBtn.disabled=true;
     db.collection('communityChallenges').add(postData)
       .then(function(){ov.remove();toast('\uD83C\uDF89 Challenge gepostet!');loadCommFeed();})
-      .catch(function(){toast('Fehler. Bitte nochmal.');nextBtn.textContent='POSTEN';nextBtn.disabled=false;});
+      .catch(function(){toast('Fehler. Bitte nochmal.');nextBtn.textContent='Posten';nextBtn.disabled=false;});
   }
 
   ov.appendChild(box);
   ov.onclick=function(e){if(e.target===ov)ov.remove();};
   document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
   renderStep(1);
 }
 
@@ -418,7 +434,7 @@ function loadCommFeed(){
   feedEl.innerHTML = '<div style="text-align:center;padding:20px 0;font-size:12px;color:var(--muted);">Wird geladen...</div>';
 
   if(!currentUser){
-    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:16px;text-align:center;font-size:12px;color:var(--muted);">Einloggen um Community Challenges zu sehen.</div>';
+    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:16px;text-align:center;font-size:12px;color:var(--muted);">Einloggen, um Community Challenges zu sehen.</div>';
     return;
   }
 
@@ -454,10 +470,11 @@ function renderCommFeed(){
   });
   feedEl.innerHTML = '';
   if(!filtered.length){
-    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:20px;text-align:center;"><div style="font-size:22px;margin-bottom:8px;">\uD83C\uDFC6</div><div style="font-size:12px;color:var(--muted);">'+(q ? 'Keine Treffer.' : (commFilterMode==='mine' ? 'Du hast noch keine Challenge gepostet.' : 'Noch keine Community Challenges. Sei der Erste!'))+'</div></div>';
+    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:20px;text-align:center;"><div style="font-size:22px;margin-bottom:8px;">\uD83C\uDFC6</div><div style="font-size:12px;color:var(--muted);">'+(q ? 'Keine Treffer.' : (commFilterMode==='mine' ? 'Du hast noch keine Challenge gepostet.' : 'Noch keine Community Challenges. Sei der Erste!'))+'</div></div>';
     return;
   }
   filtered.forEach(function(entry){ feedEl.appendChild(buildCommCard(entry.id, entry.data)); });
+  if(window.caliMotion) caliMotion.stagger(feedEl);
 }
 
 var COMM_PHOTOS = ['/challenge-pullup.jpg', '/challenge-dip.jpg', '/challenge-handstand.jpg'];
@@ -469,7 +486,7 @@ function commPhotoFor(docId){
 
 function buildCommCard(docId, data){
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:16px;margin-bottom:10px;overflow:hidden;';
+  card.style.cssText = 'background:var(--bg2);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:16px;margin-bottom:10px;overflow:hidden;';
   card.onclick = function(){ trackChallengeView('comm_'+docId); };
 
   // Header row
@@ -508,7 +525,7 @@ function buildCommCard(docId, data){
 
   // Difficulty stars
   var stars = document.createElement('div');
-  stars.style.cssText = 'font-size:12px;color:var(--accent);flex-shrink:0;';
+  stars.style.cssText = 'font-size:12px;color:var(--accent-ink);flex-shrink:0;';
   stars.textContent = '\u2605'.repeat(data.difficulty || 3) + '\u2606'.repeat(5-(data.difficulty||3));
 
   hdRow.appendChild(avatarEl);
@@ -519,15 +536,26 @@ function buildCommCard(docId, data){
   if(currentUser && data.uid === currentUser.uid){
     var moreBtn = document.createElement('button');
     moreBtn.setAttribute('aria-label', 'Optionen');
-    moreBtn.style.cssText = 'background:none;border:none;color:var(--muted);font-size:16px;font-weight:800;cursor:pointer;padding:0 4px;flex-shrink:0;';
+    moreBtn.style.cssText = 'background:none;border:none;color:var(--muted);font-size:16px;font-weight:800;cursor:pointer;padding:6px 8px;flex-shrink:0;';
     moreBtn.textContent = '\u22ef';
     moreBtn.onclick = function(e){
       e.stopPropagation();
-      if(confirm('Diese Challenge wirklich l\u00f6schen?')){
+      var doDelete = function(){
         db.collection('communityChallenges').doc(docId).delete().then(function(){
           toast('Challenge gel\u00f6scht');
           loadCommFeed();
         }).catch(function(){ toast('Fehler beim L\u00f6schen.'); });
+      };
+      if(typeof confirmSheet === 'function'){
+        confirmSheet({
+          title: 'Challenge l\u00f6schen?',
+          desc: 'Die Challenge verschwindet f\u00fcr alle. Das l\u00e4sst sich nicht r\u00fcckg\u00e4ngig machen.',
+          confirmLabel: 'L\u00f6schen',
+          cancelLabel: 'Abbrechen',
+          onConfirm: doDelete
+        });
+      } else if(confirm('Diese Challenge wirklich l\u00f6schen?')){
+        doDelete();
       }
     };
     hdRow.appendChild(moreBtn);
@@ -550,7 +578,7 @@ function buildCommCard(docId, data){
       tagRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;';
       exNames.forEach(function(name){
         var exTag = document.createElement('div');
-        exTag.style.cssText = 'background:var(--bg3);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--muted);';
+        exTag.style.cssText = 'background:var(--bg3);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--muted);';
         exTag.innerHTML = '&#128170; ' + name;
         tagRow.appendChild(exTag);
       });
@@ -560,16 +588,16 @@ function buildCommCard(docId, data){
 
   // Photo
   var photoEl = document.createElement('div');
-  photoEl.style.cssText = 'height:160px;border-radius:10px;background:#000 url(' + commPhotoFor(docId) + ') center/cover no-repeat;margin-bottom:10px;';
+  photoEl.style.cssText = 'height:160px;border-radius:16px;background:#000 url(' + commPhotoFor(docId) + ') center/cover no-repeat;margin-bottom:10px;';
   card.appendChild(photoEl);
 
   // Video link
   if(data.videoUrl){
     var vRow = document.createElement('a');
     vRow.href = data.videoUrl; vRow.target = '_blank';
-    vRow.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-decoration:none;';
+    vRow.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:8px 12px;margin-bottom:10px;text-decoration:none;';
     var vIco = document.createElement('span'); vIco.style.cssText='font-size:16px;flex-shrink:0;'; vIco.innerHTML='&#127909;';
-    var vTxt = document.createElement('span'); vTxt.style.cssText='font-size:11px;color:var(--accent);font-weight:700;'; vTxt.textContent='ERKLÄR-VIDEO ANSEHEN';
+    var vTxt = document.createElement('span'); vTxt.style.cssText='font-size:12px;color:var(--accent-ink);font-weight:700;'; vTxt.textContent='Erklär-Video ansehen';
     vRow.appendChild(vIco); vRow.appendChild(vTxt);
     card.appendChild(vRow);
   }
@@ -581,8 +609,10 @@ function buildCommCard(docId, data){
   // Like button
   var liked = currentUser && data.likes && data.likes.indexOf(currentUser.uid) > -1;
   var likeBtn = document.createElement('button');
-  likeBtn.style.cssText = 'display:flex;align-items:center;gap:4px;background:' + (liked?'rgba(255,85,0,0.12)':'var(--bg3)') + ';border:1px solid ' + (liked?'rgba(255,85,0,0.35)':'var(--border)') + ';border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;color:' + (liked?'var(--accent)':'var(--muted)') + ';cursor:pointer;';
-  likeBtn.innerHTML = '\uD83D\uDC4D <span>' + ((data.likes||[]).length) + '</span>';
+  likeBtn.style.cssText = 'display:flex;align-items:center;gap:4px;background:' + (liked?'rgba(255,85,0,0.12)':'var(--bg3)') + ';border:1px solid ' + (liked?'rgba(255,85,0,0.35)':'var(--border)') + ';border-radius:10px;padding:8px 12px;min-height:36px;font-family:inherit;font-size:12px;color:' + (liked?'var(--accent-ink)':'var(--muted)') + ';cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  likeBtn.classList.add('pressable');
+  likeBtn.setAttribute('aria-label','Gefällt mir');
+  likeBtn.innerHTML = '\uD83D\uDC4D <span class="num">' + ((data.likes||[]).length) + '</span>';
   likeBtn.onclick = function(){
     if(!currentUser){ toast('Einloggen zum Liken!'); return; }
     var ref = db.collection('communityChallenges').doc(docId);
@@ -598,8 +628,9 @@ function buildCommCard(docId, data){
 
   // Try button
   var tryBtn = document.createElement('button');
-  tryBtn.style.cssText = 'flex:1;background:rgba(255,85,0,0.08);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;padding:7px 12px;cursor:pointer;';
-  tryBtn.textContent = 'AUSPROBIEREN';
+  tryBtn.style.cssText = 'flex:1;background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 12px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  tryBtn.classList.add('pressable');
+  tryBtn.textContent = 'Ausprobieren';
   tryBtn.onclick = function(){
     activeChallenge = {
       id: 'comm_'+docId,
@@ -622,22 +653,27 @@ function buildCommCard(docId, data){
   // Comment toggle button
   var commBtn = document.createElement('button');
   var commCount = (data.comments||[]).length;
-  commBtn.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer;';
-  commBtn.innerHTML = '\uD83D\uDCAC <span>' + commCount + '</span>';
+  commBtn.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-height:36px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  commBtn.classList.add('pressable');
+  commBtn.setAttribute('aria-label','Kommentare anzeigen');
+  commBtn.innerHTML = '\uD83D\uDCAC <span class="num">' + commCount + '</span>';
 
   actRow.appendChild(likeBtn);
   actRow.appendChild(tryBtn);
   actRow.appendChild(commBtn);
   card.appendChild(actRow);
 
-  // Comment section (hidden by default)
+  // Comment section (collapsed by default, .acc-body accordion)
   var commSection = document.createElement('div');
-  commSection.style.cssText = 'display:none;margin-top:12px;';
+  commSection.className = 'acc-body';
+  var commInner = document.createElement('div');
+  commInner.style.cssText = 'padding-top:12px;';
+  commSection.appendChild(commInner);
 
   commBtn.onclick = function(){
-    var isOpen = commSection.style.display !== 'none';
-    commSection.style.display = isOpen ? 'none' : 'block';
-    if(!isOpen) buildCommSection(commSection, docId, data);
+    var isOpen = commSection.classList.contains('open');
+    if(!isOpen) buildCommSection(commInner, docId, data);
+    commSection.classList.toggle('open');
   };
 
   card.appendChild(commSection);
@@ -660,7 +696,7 @@ function buildCommSection(el, docId, data){
       var row = document.createElement('div');
       row.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--border);';
       var cname = document.createElement('div');
-      cname.style.cssText = 'font-size:10px;font-weight:700;color:var(--accent);margin-bottom:2px;';
+      cname.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent-ink);margin-bottom:2px;';
       cname.textContent = c.authorName || 'Athlet';
       var ctxt = document.createElement('div');
       ctxt.style.cssText = 'font-size:12px;color:var(--text);line-height:1.5;';
@@ -679,10 +715,12 @@ function buildCommSection(el, docId, data){
   txta.type = 'text';
   txta.maxLength = 200;
   txta.placeholder = 'Kommentar schreiben...';
-  txta.style.cssText = 'flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;';
+  txta.style.cssText = 'flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;';
   var sendBtn = document.createElement('button');
-  sendBtn.style.cssText = 'background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;padding:9px 14px;cursor:pointer;white-space:nowrap;';
-  sendBtn.textContent = 'OK';
+  sendBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+  sendBtn.classList.add('pressable');
+  sendBtn.setAttribute('aria-label','Kommentar senden');
+  sendBtn.textContent = 'Senden';
   sendBtn.onclick = function(){
     var txt = txta.value.trim();
     if(txt.length < 2){ toast('Kommentar zu kurz!'); return; }
