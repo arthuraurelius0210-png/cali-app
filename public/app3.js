@@ -7,36 +7,40 @@ function openCommunityPage(){
   ov.id = 'comm-page-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
+  // Top-Bar (§5.9): Zurück-Ring · Titel uppercase · die EINE orange Aktion des Screens
   var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  topBar.className = 'topbar';
+  topBar.style.cssText = 'margin:0 16px;flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.className = 'pressable';
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;color:var(--text);flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
-  backBtn.innerHTML = '← Zurück';
+  backBtn.type = 'button';
+  backBtn.className = 'icon-btn sm';
+  backBtn.setAttribute('aria-label', 'Zurück');
+  backBtn.innerHTML = '&#8592;';
   backBtn.onclick = function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); }
     else { ov.remove(); if(typeof buildChCards === 'function') buildChCards(); }
   };
-  var titleWrap = document.createElement('div');
-  titleWrap.style.cssText = 'flex:1;min-width:0;';
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  titleEl.textContent = '🌟 Community Challenge';
-  var subtitleEl = document.createElement('div');
-  subtitleEl.style.cssText = 'font-size:11px;color:var(--muted);margin-top:1px;';
-  subtitleEl.textContent = 'Trainiere. Teile. Wachse.';
-  titleWrap.appendChild(titleEl); titleWrap.appendChild(subtitleEl);
+  titleEl.className = 'topbar-title';
+  titleEl.textContent = 'Community Challenge';
   var postBtn = document.createElement('button');
-  postBtn.className = 'pressable';
-  postBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 12px;min-height:36px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+  postBtn.type = 'button';
+  postBtn.className = 'btn sm';
   postBtn.textContent = '+ Posten';
   postBtn.onclick = function(){ showCommPostModal(); };
-  topBar.appendChild(backBtn); topBar.appendChild(titleWrap); topBar.appendChild(postBtn);
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(postBtn);
   ov.appendChild(topBar);
+  var subtitleEl = document.createElement('div');
+  subtitleEl.className = 'lbl';
+  subtitleEl.style.cssText = 'padding:0 16px;flex-shrink:0;';
+  subtitleEl.textContent = 'Trainiere. Teile. Wachse.';
+  ov.appendChild(subtitleEl);
 
-  // Filter tabs
+  // Filter als Segment-Control (§5.5), aktiver Zustand per Klasse .on
   var filterBar = document.createElement('div');
-  filterBar.style.cssText = 'display:flex;gap:8px;padding:12px 16px 0;flex-shrink:0;overflow-x:auto;';
+  filterBar.className = 'seg-ctl';
+  filterBar.setAttribute('role', 'tablist');
+  filterBar.style.cssText = 'margin:12px 16px 0;flex-shrink:0;';
   var filterTabs = [
     {id:'newest', label:'Neueste'},
     {id:'popular', label:'Beliebt'},
@@ -44,6 +48,8 @@ function openCommunityPage(){
   ];
   filterTabs.forEach(function(t){
     var tabBtn = document.createElement('button');
+    tabBtn.type = 'button';
+    tabBtn.setAttribute('role', 'tab');
     tabBtn.dataset.filterId = t.id;
     tabBtn.textContent = t.label;
     tabBtn.onclick = function(){ commFilterMode = t.id; renderFilterTabs(filterBar); loadCommFeed(); };
@@ -57,28 +63,31 @@ function openCommunityPage(){
   searchRow.style.cssText = 'padding:10px 16px 4px;flex-shrink:0;';
   var searchInp = document.createElement('input');
   searchInp.type = 'text';
+  searchInp.className = 'inp';
   searchInp.placeholder = 'Beiträge durchsuchen…';
-  searchInp.style.cssText = 'width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:16px;color:var(--text);box-sizing:border-box;';
+  searchInp.setAttribute('aria-label', 'Beiträge durchsuchen');
   searchInp.oninput = function(){ commSearchQuery = this.value; renderCommFeed(); };
   searchRow.appendChild(searchInp);
   ov.appendChild(searchRow);
 
   var scroll = document.createElement('div');
   scroll.className = 'sheet-scroll';
-  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px 20px;';
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
   var feedEl = document.createElement('div');
   feedEl.id = 'comm-feed';
   scroll.appendChild(feedEl);
 
-  // Bottom CTA
+  // Bottom CTA — Karte mit Line-Icon-Ring, Ghost-Button (Orange sitzt schon in der Top-Bar)
   var ctaBanner = document.createElement('div');
-  ctaBanner.style.cssText = 'background:rgba(255,85,0,0.06);border-radius:16px;padding:18px;margin-top:8px;display:flex;align-items:center;gap:14px;';
+  ctaBanner.className = 'card';
+  ctaBanner.style.cssText = 'margin-top:8px;display:flex;align-items:center;gap:12px;';
   ctaBanner.innerHTML =
-    '<div style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👥</div>'+
-    '<div style="flex:1;"><div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">Teile deine Challenge</div><div style="font-size:11px;color:var(--muted);line-height:1.4;">Zeige der Community deine Fortschritte, stelle dich neuen Herausforderungen und motiviere andere!</div></div>';
+    iconWrap('people',{size:18,box:44})+
+    '<div style="flex:1;min-width:0;"><div class="row-title">Teile deine Challenge</div><div class="row-sub">Zeige der Community deine Fortschritte, stelle dich neuen Herausforderungen und motiviere andere!</div></div>';
   var ctaBtn = document.createElement('button');
-  ctaBtn.className = 'pressable';
-  ctaBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px 14px;min-height:36px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+  ctaBtn.type = 'button';
+  ctaBtn.className = 'btn-g';
+  ctaBtn.style.cssText = 'flex-shrink:0;white-space:nowrap;';
   ctaBtn.textContent = '+ Neuen Beitrag';
   ctaBtn.onclick = function(){ showCommPostModal(); };
   ctaBanner.appendChild(ctaBtn);
@@ -95,11 +104,12 @@ function openCommunityPage(){
   loadCommFeed();
 }
 
+// Aktives Segment nur per Klasse/aria — das Aussehen kommt aus .seg-ctl (tracker.html)
 function renderFilterTabs(filterBar){
   Array.from(filterBar.children).forEach(function(btn){
     var active = btn.dataset.filterId === commFilterMode;
-    btn.className = 'pressable';
-    btn.style.cssText = 'flex-shrink:0;background:'+(active?'var(--accent-deep)':'var(--bg2)')+';color:'+(active?'#fff':'var(--muted)')+';border:1px solid '+(active?'var(--accent-deep)':'var(--border)')+';border-radius:20px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;white-space:nowrap;';
+    btn.className = active ? 'on' : '';
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
 }
 
@@ -114,32 +124,38 @@ function buildStartChallengeWidget(){
   var done = pct>=100;
 
   var box = document.createElement('div');
-  box.className = 'pressable';
+  box.className = 'pk-card pressable';
   box.setAttribute('role','button');
   box.setAttribute('tabindex','0');
   box.setAttribute('aria-label','Aktive Challenge öffnen');
-  box.style.cssText = 'background:'+(done?'rgba(255,85,0,0.08)':'var(--bg3)')+';border:1px solid '+(done?'rgba(255,85,0,0.3)':'var(--border)')+';border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer;';
+  // Karte (§5.1): fertige Challenge hebt sich nur über die Rahmenfarbe ab
+  box.style.cssText = 'padding:14px;margin-bottom:12px;cursor:pointer;'+(done?'border-color:var(--accent);':'');
   box.onclick = function(){ goPage('ch'); };
   box.onkeydown = function(ev){
     if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); goPage('ch'); }
   };
 
   var row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+  row.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:12px;';
 
-  var icon = document.createElement('span');
-  icon.style.cssText = 'font-size:20px;';
-  icon.textContent = activeChallenge.icon;
+  // Line-Icon-Ring statt Emoji im Icon-Slot (das Emoji bleibt als Daten-Feld erhalten)
+  var icon = document.createElement('div');
+  icon.style.cssText = 'flex-shrink:0;display:flex;';
+  icon.innerHTML = iconWrap('target',{size:18,box:44,color:done?'var(--accent)':'var(--muted)'});
 
   var txt = document.createElement('div');
-  txt.style.cssText = 'flex:1;';
+  txt.style.cssText = 'flex:1;min-width:0;';
+  var t0 = document.createElement('span');
+  t0.className = 'eyebrow';
+  t0.style.cssText = 'margin-bottom:2px;';
+  t0.textContent = 'Aktive Challenge';
   var t1 = document.createElement('div');
-  t1.style.cssText = 'font-family:inherit;font-size:14px;color:var(--text);';
+  t1.className = 'row-title';
   t1.textContent = activeChallenge.title;
   var t2 = document.createElement('div');
-  t2.className = 'num';
-  t2.style.cssText = 'font-family:inherit;font-weight:800;font-size:14px;color:var(--muted);margin-top:2px;';
-  t2.textContent = prog+' / '+target+' ('+pct+'%)';
+  t2.className = 'row-sub num';
+  t2.textContent = prog+' / '+target+' · '+pct+' %';
+  txt.appendChild(t0);
   txt.appendChild(t1);
   txt.appendChild(t2);
 
@@ -151,9 +167,11 @@ function buildStartChallengeWidget(){
 
   var arr;
   if(done && !claimed){
+    // helle Sekundär-Pille — die orange Primäraktion der Startseite sitzt im Hero
     arr = document.createElement('button');
-    arr.className = 'pressable';
-    arr.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:7px 10px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+    arr.type = 'button';
+    arr.className = 'btn sec sm';
+    arr.style.cssText = 'flex-shrink:0;white-space:nowrap;';
     arr.textContent = 'Belohnung abholen';
     arr.onclick = function(ev){
       ev.stopPropagation();
@@ -168,7 +186,7 @@ function buildStartChallengeWidget(){
       if(typeof saveChallenges === 'function') saveChallenges();
       if(typeof showCelebrationOverlay === 'function'){
         showCelebrationOverlay({
-          icon: ch.icon,
+          iconName: 'trophy',
           title: 'Challenge geschafft!',
           big: ch.title,
           sub: ch.desc,
@@ -178,20 +196,26 @@ function buildStartChallengeWidget(){
       if(typeof buildChallengeUI === 'function') buildChallengeUI();
       else buildStartChallengeWidget();
     };
-  } else {
+  } else if(done){
     arr = document.createElement('div');
-    arr.style.cssText = 'color:var(--muted);font-size:14px;';
-    arr.textContent = done ? '✓' : '›';
+    arr.style.cssText = 'width:18px;height:18px;color:var(--accent);flex-shrink:0;';
+    arr.setAttribute('aria-hidden','true');
+    arr.innerHTML = ci('check');
+  } else {
+    arr = document.createElement('span');
+    arr.className = 'row-chev';
+    arr.setAttribute('aria-hidden','true');
   }
 
   row.appendChild(icon);
   row.appendChild(txt);
   row.appendChild(arr);
 
+  // 3px-Linie (§5.4c) — animateBar setzt die Breite
   var bar = document.createElement('div');
-  bar.style.cssText = 'background:var(--bg3);border-radius:20px;height:4px;overflow:hidden;';
+  bar.className = 'linebar';
   var fill = document.createElement('div');
-  fill.style.cssText = 'height:100%;border-radius:20px;background:'+(done?'var(--accent)':'rgba(255,85,0,0.35)')+';width:0;transition:width var(--dur-slow) var(--ease-out);';
+  fill.style.cssText = 'height:100%;background:var(--accent);width:0;transition:width var(--dur-slow) var(--ease-out);';
   bar.appendChild(fill);
 
   box.appendChild(row);
@@ -283,9 +307,10 @@ function buildChallengePresets(){
       var top = document.createElement('div');
       top.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
 
+      // Icon-Slot: Line-Icon statt Emoji (ch.icon bleibt als Daten-Feld erhalten)
       var icon = document.createElement('span');
-      icon.style.cssText = 'font-size:22px;';
-      icon.textContent = ch.icon;
+      icon.className = 'row-icon';
+      icon.innerHTML = (typeof ci === 'function') ? ci('target') : '';
 
       var info = document.createElement('div');
       info.style.cssText = 'flex:1;';

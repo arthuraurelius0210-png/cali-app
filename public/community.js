@@ -3,6 +3,26 @@
 
 var COMM_POST_COST_DIAMONDS = 3; // extra posts beyond 1/day
 
+// Line icons for icon slots (stroke currentColor, 1.5) — no emoji in the Dark-Mono design.
+var COMM_ICONS = {
+  once:     '<path d="M5 21V4M5 4h13l-2.5 4L18 12H5"/>',
+  weekly:   '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  timed:    '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+  streak:   '<path d="M12 3c1 4-4 5-4 9a4 4 0 008 0c0-1.5-1-2-1-3.5 2 1 3 3 3 5.5a6 6 0 01-12 0C6 9 9 7 12 3z"/>',
+  video:    '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+  camera:   '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  file:     '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+  user:     '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/>',
+  like:     '<path d="M7 11v9H4a1 1 0 01-1-1v-7a1 1 0 011-1h3zm0 0l4-8a2 2 0 012 2v4h5a2 2 0 012 2.3l-1.2 6a2 2 0 01-2 1.7H7"/>',
+  comment:  '<path d="M4 5h16v11H9l-5 4V5z"/>',
+  trophy:   '<path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4a3 3 0 003 3M17 5h3a3 3 0 01-3 3"/><path d="M12 13v3M9 20h6"/>',
+  dumbbell: '<path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/>'
+};
+function commIcon(name, size){
+  var s = size || 18;
+  return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;" aria-hidden="true">'+(COMM_ICONS[name]||'')+'</svg>';
+}
+
 // ── POST MODAL ────────────────────────────────────────────
 function showCommPostModal(){
   if(!currentUser){ toast('Bitte erst einloggen!'); return; }
@@ -23,89 +43,95 @@ function showCommPostModal(){
 
   var ov = document.createElement('div');
   ov.id = 'comm-post-overlay';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
 
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;';
+  box.style.cssText = 'background:var(--card);border-top:1px solid var(--line2);border-radius:var(--r-card) var(--r-card) 0 0;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;';
 
   var header = document.createElement('div');
-  header.style.cssText = 'padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  header.style.cssText = 'padding:12px 16px;border-bottom:1px solid var(--line);flex-shrink:0;';
   var handleBar = document.createElement('div');
-  handleBar.style.cssText = 'width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 14px;';
+  handleBar.className = 'sheet-grip';
   var hdrRow = document.createElement('div');
-  hdrRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
+  hdrRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;';
   var hdrTitle = document.createElement('div');
-  hdrTitle.style.cssText = 'font-size:17px;font-weight:700;color:var(--text);';
+  hdrTitle.className = 'ttl';
   hdrTitle.textContent = 'Challenge erstellen';
   var closeX = document.createElement('button');
-  closeX.style.cssText = 'background:var(--bg3);border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;color:var(--muted);';
-  closeX.textContent = '\u00D7';
-  closeX.setAttribute('aria-label', 'Schlie\u00DFen');
+  closeX.type = 'button';
+  closeX.className = 'icon-btn sm pressable';
+  closeX.textContent = '×';
+  closeX.setAttribute('aria-label', 'Schließen');
   closeX.onclick = function(){ ov.remove(); };
   hdrRow.appendChild(hdrTitle); hdrRow.appendChild(closeX);
   var stepLbl = document.createElement('div');
-  stepLbl.style.cssText = 'font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;';
+  stepLbl.className = 'eyebrow';
+  stepLbl.style.cssText = 'margin-bottom:8px;';
   stepLbl.textContent = 'Schritt 1 von 4 — Info';
   var stepBar = document.createElement('div');
   stepBar.style.cssText = 'display:flex;gap:4px;';
   for(var si=1;si<=4;si++){
     var sd=document.createElement('div'); sd.id='step-dot-'+si;
-    sd.style.cssText='flex:1;height:3px;border-radius:3px;background:'+(si===1?'var(--accent)':'var(--bg3)')+';transition:background var(--dur-med) var(--ease-out);';
+    sd.style.cssText='flex:1;height:3px;background:'+(si===1?'var(--accent)':'var(--line2)')+';transition:background var(--dur-med) var(--ease-out);';
     stepBar.appendChild(sd);
   }
   header.appendChild(handleBar); header.appendChild(hdrRow); header.appendChild(stepLbl); header.appendChild(stepBar);
   box.appendChild(header);
 
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow-y:auto;padding:20px;';
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
   content.classList.add('sheet-scroll');
   box.appendChild(content);
 
   var footer = document.createElement('div');
-  footer.style.cssText = 'padding:12px 20px 24px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:10px;';
+  footer.style.cssText = 'padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);flex-shrink:0;display:flex;gap:10px;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'flex:1;background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;display:none;transition:transform var(--dur-fast) var(--ease-out);';
-  backBtn.textContent = '\u2190 Zurück';
+  backBtn.type = 'button';
+  backBtn.className = 'btn-g pressable';
+  backBtn.style.cssText = 'flex:1;min-height:48px;display:none;';
+  backBtn.textContent = '← Zurück';
   var nextBtn = document.createElement('button');
-  nextBtn.style.cssText = 'flex:2;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  nextBtn.textContent = 'Weiter \u2192';
-  backBtn.classList.add('pressable'); nextBtn.classList.add('pressable');
+  nextBtn.type = 'button';
+  nextBtn.className = 'btn pressable';
+  nextBtn.style.cssText = 'flex:2;width:auto;margin:0;';
+  nextBtn.textContent = 'Weiter →';
   footer.appendChild(backBtn); footer.appendChild(nextBtn);
   box.appendChild(footer);
 
   function updateStepDots(step){
     for(var i=1;i<=4;i++){
       var d=document.getElementById('step-dot-'+i);
-      if(d) d.style.background=i<=step?'var(--accent)':'var(--bg3)';
+      if(d) d.style.background=i<=step?'var(--accent)':'var(--line2)';
     }
   }
 
   function renderStep(step){
     content.innerHTML='';
     updateStepDots(step);
-    backBtn.style.display=step>1?'block':'none';
+    backBtn.style.display=step>1?'inline-flex':'none';
     if(step===1) renderStep1();
     else if(step===2) renderStep2();
     else if(step===3) renderStep3();
     else if(step===4) renderStep4();
   }
 
-  function lbl(t){ var d=document.createElement('div'); d.style.cssText='font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;'; d.textContent=t; return d; }
+  function lbl(t){ var d=document.createElement('div'); d.className='lbl'; d.style.cssText='margin:0 0 6px;'; d.textContent=t; return d; }
   function styledInp(id,ph,val){
     var i=document.createElement('input'); i.type='text'; i.id=id; i.placeholder=ph; i.value=val||'';
-    i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
+    i.className='inp';
     return i;
   }
 
   function renderStep1(){
-    stepLbl.textContent='Schritt 1 von 4 \u2014 Info';
-    nextBtn.textContent='Weiter \u2192';
+    stepLbl.textContent='Schritt 1 von 4 — Info';
+    nextBtn.textContent='Weiter →';
     var w1=document.createElement('div'); w1.style.marginBottom='14px';
     w1.appendChild(lbl('Titel')); w1.appendChild(styledInp('ch-title','z.B. 100 Klimmzüge Non-Stop',challengeData.title));
     var w2=document.createElement('div'); w2.style.marginBottom='14px';
     w2.appendChild(lbl('Beschreibung'));
     var ta=document.createElement('textarea'); ta.id='ch-desc'; ta.placeholder='Erkläre die Challenge genau...'; ta.value=challengeData.desc||'';
-    ta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:90px;box-sizing:border-box;';
+    ta.className='inp';
+    ta.style.cssText='resize:none;height:90px;';
     w2.appendChild(ta);
     var w25=document.createElement('div'); w25.style.marginBottom='14px';
     w25.appendChild(lbl('Erklär-Video (optional)'));
@@ -117,9 +143,9 @@ function showCommPostModal(){
 
     // Status display
     var vStatus=document.createElement('div'); vStatus.id='ch-video-status';
-    vStatus.style.cssText='font-size:11px;color:var(--muted);margin-top:6px;min-height:16px;';
+    vStatus.style.cssText='font-size:11px;color:var(--muted);margin-top:8px;min-height:16px;';
     if(challengeData.videoUrl){
-      vStatus.innerHTML='<span style="color:var(--success-ink);">✓ Video hochgeladen</span>';
+      vStatus.innerHTML='<span style="color:var(--success);">✓ Video hochgeladen</span>';
     }
 
     // Buttons row
@@ -127,22 +153,22 @@ function showCommPostModal(){
 
     var vCamBtn=document.createElement('button');
     vCamBtn.type='button';
-    vCamBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform var(--dur-fast) var(--ease-out);';
-    vCamBtn.classList.add('pressable');
-    vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> Video aufnehmen';
+    vCamBtn.className='btn-g pressable';
+    vCamBtn.style.cssText='flex:1;min-height:44px;';
+    vCamBtn.innerHTML=commIcon('camera',16)+'<span>Video aufnehmen</span>';
     vCamBtn.onclick=function(e){ e.preventDefault(); vFileInp.removeAttribute('capture'); vFileInp.setAttribute('capture','environment'); vFileInp.click(); };
 
     var vFileBtn=document.createElement('button');
     vFileBtn.type='button';
-    vFileBtn.style.cssText='flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 8px;font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform var(--dur-fast) var(--ease-out);';
-    vFileBtn.classList.add('pressable');
-    vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> Datei wählen';
+    vFileBtn.className='btn-g pressable';
+    vFileBtn.style.cssText='flex:1;min-height:44px;';
+    vFileBtn.innerHTML=commIcon('file',16)+'<span>Datei wählen</span>';
     vFileBtn.onclick=function(e){ e.preventDefault(); vFileInp.removeAttribute('capture'); vFileInp.click(); };
 
     vFileInp.onchange=function(){
       var file=this.files[0]; if(!file) return;
       if(file.size > 200*1024*1024){ toast('Video zu groß! Max 200MB.'); return; }
-      vStatus.innerHTML='⏳ Wird hochgeladen...';
+      vStatus.innerHTML='Wird hochgeladen...';
       vCamBtn.disabled=true; vFileBtn.disabled=true;
       vCamBtn.style.opacity='0.5'; vFileBtn.style.opacity='0.5';
       var uid=currentUser?currentUser.uid:'anon';
@@ -152,7 +178,7 @@ function showCommPostModal(){
       uploadTask.on('state_changed',
         function(snapshot){
           var pct=Math.round((snapshot.bytesTransferred/snapshot.totalBytes)*100);
-          vStatus.innerHTML='⏳ '+pct+'% hochgeladen...';
+          vStatus.innerHTML='<span class="num">'+pct+'%</span> hochgeladen...';
         },
         function(err){
           vStatus.innerHTML='<span style="color:var(--red);">Fehler: '+err.message+'</span>';
@@ -162,11 +188,11 @@ function showCommPostModal(){
         function(){
           uploadTask.snapshot.ref.getDownloadURL().then(function(url){
             challengeData.videoUrl=url;
-            vStatus.innerHTML='<span style="color:var(--success-ink);">✓ Video hochgeladen!</span>';
+            vStatus.innerHTML='<span style="color:var(--success);">✓ Video hochgeladen!</span>';
             vCamBtn.disabled=false; vFileBtn.disabled=false;
             vCamBtn.style.opacity='1'; vFileBtn.style.opacity='1';
-            vCamBtn.innerHTML='<span style="font-size:16px;">📷</span> Neu aufnehmen';
-            vFileBtn.innerHTML='<span style="font-size:16px;">📁</span> Andere Datei';
+            vCamBtn.innerHTML=commIcon('camera',16)+'<span>Neu aufnehmen</span>';
+            vFileBtn.innerHTML=commIcon('file',16)+'<span>Andere Datei</span>';
           });
         }
       );
@@ -180,13 +206,15 @@ function showCommPostModal(){
     var dr=document.createElement('div'); dr.style.cssText='display:flex;gap:6px;';
     for(var d=1;d<=5;d++){
       (function(dv){
-        var b=document.createElement('button'); b.id='diff-btn-'+dv;
-        b.style.cssText='flex:1;padding:9px 0;border-radius:10px;border:1px solid '+(dv===challengeData.difficulty?'rgba(255,85,0,0.4)':'var(--border)')+';background:'+(dv===challengeData.difficulty?'rgba(255,85,0,0.12)':'var(--bg3)')+';font-family:inherit;font-size:13px;cursor:pointer;color:'+(dv===challengeData.difficulty?'var(--accent-ink)':'var(--muted)')+';transition:transform var(--dur-fast) var(--ease-out);';
-        b.classList.add('pressable');
-        b.textContent='\u2605'.repeat(dv);
+        var b=document.createElement('button'); b.id='diff-btn-'+dv; b.type='button';
+        b.className='chip pressable'+(dv===challengeData.difficulty?' on':'');
+        b.style.cssText='flex:1;min-width:0;padding:8px 0;text-align:center;letter-spacing:0;';
+        b.setAttribute('aria-label','Schwierigkeit '+dv+' von 5');
+        b.setAttribute('aria-pressed', dv===challengeData.difficulty?'true':'false');
+        b.textContent='★'.repeat(dv);
         b.onclick=function(){
           challengeData.difficulty=dv;
-          for(var i=1;i<=5;i++){var bb=document.getElementById('diff-btn-'+i);if(bb){bb.style.background=i===dv?'rgba(255,85,0,0.12)':'var(--bg3)';bb.style.borderColor=i===dv?'rgba(255,85,0,0.4)':'var(--border)';bb.style.color=i===dv?'var(--accent-ink)':'var(--muted)';}}
+          for(var i=1;i<=5;i++){var bb=document.getElementById('diff-btn-'+i);if(bb){bb.classList.toggle('on',i===dv);bb.setAttribute('aria-pressed',i===dv?'true':'false');}}
         };
         dr.appendChild(b);
       })(d);
@@ -196,27 +224,40 @@ function showCommPostModal(){
   }
 
   function renderStep2(){
-    stepLbl.textContent='Schritt 2 von 4 \u2014 Typ';
-    nextBtn.textContent='Weiter \u2192';
+    stepLbl.textContent='Schritt 2 von 4 — Typ';
+    nextBtn.textContent='Weiter →';
     var types=[
-      {id:'once',icon:'&#127937;',label:'Einmalig',desc:'Einmal vollständig schaffen'},
-      {id:'weekly',icon:'&#128197;',label:'Wöchentlich',desc:'X mal pro Woche trainieren'},
-      {id:'timed',icon:'&#9201;',label:'Zeitlimit',desc:'Alles in X Minuten schaffen'},
-      {id:'streak',icon:'&#128293;',label:'Streak',desc:'X Tage in Folge trainieren'},
+      {id:'once',icon:'once',label:'Einmalig',desc:'Einmal vollständig schaffen'},
+      {id:'weekly',icon:'weekly',label:'Wöchentlich',desc:'X mal pro Woche trainieren'},
+      {id:'timed',icon:'timed',label:'Zeitlimit',desc:'Alles in X Minuten schaffen'},
+      {id:'streak',icon:'streak',label:'Streak',desc:'X Tage in Folge trainieren'},
     ];
+    var list=document.createElement('div'); list.className='list'; list.setAttribute('role','radiogroup'); list.setAttribute('aria-label','Challenge-Typ');
     types.forEach(function(t){
       var card=document.createElement('button'); card.id='type-card-'+t.id; card.type='button';
       var sel=challengeData.type===t.id;
-      card.style.cssText='display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;padding:14px;border-radius:16px;border:1px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(255,85,0,0.06)':'var(--bg2)')+';cursor:pointer;margin-bottom:8px;';
-      card.classList.add('pressable');
-      card.innerHTML='<div style="font-size:24px;">'+t.icon+'</div><div><div style="font-size:13px;font-weight:700;color:var(--text);">'+t.label+'</div><div style="font-size:11px;color:var(--muted);">'+t.desc+'</div></div>';
+      card.className='list-row pressable';
+      card.setAttribute('role','radio');
+      card.setAttribute('aria-checked', sel?'true':'false');
+      card.style.background=sel?'var(--card2)':'transparent';
+      card.innerHTML='<span class="row-icon" style="color:'+(sel?'var(--accent)':'var(--muted)')+';">'+commIcon(t.icon)+'</span>'+
+        '<div class="row-main"><div class="row-title">'+t.label+'</div><div class="row-sub">'+t.desc+'</div></div>'+
+        '<span data-radio style="width:8px;height:8px;border-radius:50%;border:1px solid '+(sel?'var(--accent)':'var(--line2)')+';background:'+(sel?'var(--accent)':'transparent')+';flex-shrink:0;"></span>';
       card.onclick=function(){
         challengeData.type=t.id;
-        types.forEach(function(tt){var c=document.getElementById('type-card-'+tt.id);if(c){c.style.borderColor=tt.id===t.id?'var(--accent)':'var(--border)';c.style.background=tt.id===t.id?'rgba(255,85,0,0.06)':'var(--bg2)';}});
+        types.forEach(function(tt){
+          var c=document.getElementById('type-card-'+tt.id); if(!c) return;
+          var on=tt.id===t.id;
+          c.setAttribute('aria-checked', on?'true':'false');
+          c.style.background=on?'var(--card2)':'transparent';
+          var ic=c.querySelector('.row-icon'); if(ic) ic.style.color=on?'var(--accent)':'var(--muted)';
+          var r=c.querySelector('[data-radio]'); if(r){ r.style.borderColor=on?'var(--accent)':'var(--line2)'; r.style.background=on?'var(--accent)':'transparent'; }
+        });
         renderTypeParams(t.id);
       };
-      content.appendChild(card);
+      list.appendChild(card);
     });
+    content.appendChild(list);
     var pw=document.createElement('div'); pw.id='type-params-wrap'; content.appendChild(pw);
     renderTypeParams(challengeData.type);
   }
@@ -225,9 +266,9 @@ function showCommPostModal(){
     var wrap=document.getElementById('type-params-wrap'); if(!wrap) return; wrap.innerHTML='';
     function numI(id,l,ph,val){
       var w=document.createElement('div'); w.style.marginTop='12px';
-      var lb=document.createElement('div'); lb.style.cssText='font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;'; lb.textContent=l;
+      var lb=document.createElement('div'); lb.className='lbl'; lb.style.cssText='margin:0 0 6px;'; lb.textContent=l;
       var i=document.createElement('input'); i.type='number'; i.id=id; i.placeholder=ph; i.value=val||'';
-      i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
+      i.className='inp num';
       w.appendChild(lb); w.appendChild(i); return w;
     }
     if(type==='weekly') wrap.appendChild(numI('tp-days','Trainings pro Woche','z.B. 3',challengeData.typeParams.days));
@@ -236,29 +277,32 @@ function showCommPostModal(){
   }
 
   function renderStep3(){
-    stepLbl.textContent='Schritt 3 von 4 \u2014 Übungen';
-    nextBtn.textContent='Weiter \u2192';
+    stepLbl.textContent='Schritt 3 von 4 — Übungen';
+    nextBtn.textContent='Weiter →';
     content.innerHTML='';
     // Option: no exercises (free text challenge)
     var freeToggle=document.createElement('div');
-    freeToggle.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:16px;margin-bottom:12px;';
-    freeToggle.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--text);">Freie Challenge (ohne Übungen)</div>';
+    freeToggle.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;min-height:52px;background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);margin-bottom:12px;';
+    freeToggle.innerHTML='<div class="row-title" style="white-space:normal;">Freie Challenge (ohne Übungen)</div>';
     var ftBtn=document.createElement('button');
-    ftBtn.style.cssText='width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;background:'+(challengeData.freeChallenge?'var(--accent)':'var(--border2)')+';position:relative;';
+    ftBtn.type='button';
+    ftBtn.className='toggle'+(challengeData.freeChallenge?' on':'');
+    ftBtn.setAttribute('role','switch');
+    ftBtn.setAttribute('aria-checked', challengeData.freeChallenge?'true':'false');
     ftBtn.setAttribute('aria-label','Freie Challenge umschalten');
-    ftBtn.innerHTML='<div style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform var(--dur-med) var(--ease-out);transform:translateX('+(challengeData.freeChallenge?'18px':'0')+');"></div>';
     ftBtn.onclick=function(){challengeData.freeChallenge=!challengeData.freeChallenge;renderStep3();};
     freeToggle.appendChild(ftBtn); content.appendChild(freeToggle);
     if(challengeData.freeChallenge){
       var freeDesc=document.createElement('div');
-      freeDesc.style.cssText='background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--muted);';
-      freeDesc.innerHTML='&#128204; Die Challenge hat keine festen Übungen. Beschreib sie in der Beschreibung (Schritt 1).';
+      freeDesc.style.cssText='background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 14px;margin-bottom:12px;font-size:11px;color:var(--muted);line-height:1.6;';
+      freeDesc.textContent='Die Challenge hat keine festen Übungen. Beschreib sie in der Beschreibung (Schritt 1).';
       content.appendChild(freeDesc);
       return;
     }
     var addBtn=document.createElement('button');
-    addBtn.style.cssText='width:100%;background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px dashed rgba(255,85,0,0.4);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:14px;transition:transform var(--dur-fast) var(--ease-out);';
-    addBtn.classList.add('pressable');
+    addBtn.type='button';
+    addBtn.className='btn-g pressable';
+    addBtn.style.cssText='width:100%;min-height:44px;margin-bottom:14px;';
     addBtn.textContent='+ Übung hinzufügen';
     addBtn.onclick=function(){
       challengeData.exercises.push({name:'',sets:3,reps:10,rest:60,notes:'',bandAllowed:false});
@@ -268,26 +312,28 @@ function showCommPostModal(){
     content._step3Built = true;
     var exList=document.createElement('div'); exList.id='ch-ex-list'; content.appendChild(exList);
     if(challengeData.exercises.length===0){
-      var hint=document.createElement('div'); hint.style.cssText='text-align:center;padding:20px 0;font-size:12px;color:var(--muted);';
-      hint.innerHTML='&#128170; Füge mindestens eine Übung hinzu'; exList.appendChild(hint);
+      var hint=document.createElement('div'); hint.className='empty';
+      hint.textContent='Füge mindestens eine Übung hinzu'; exList.appendChild(hint);
     } else {
       challengeData.exercises.forEach(function(ex,idx){ renderExCard(ex,idx,exList); });
     }
   }
 
   function renderExCard(ex, idx, exList){
-    var card=document.createElement('div'); card.style.cssText='background:var(--bg2);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
-    var hRow=document.createElement('div'); hRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
-    var ht=document.createElement('div'); ht.style.cssText='font-size:13px;font-weight:700;color:var(--accent-ink);'; ht.textContent='Übung '+(idx+1);
-    var delBtn=document.createElement('button'); delBtn.style.cssText='background:rgba(217,48,54,0.08);color:var(--red);border:1px solid rgba(217,48,54,0.2);border-radius:10px;font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:inherit;transition:transform var(--dur-fast) var(--ease-out);'; delBtn.textContent='\u00D7 Entfernen';
-    delBtn.classList.add('pressable');
+    var card=document.createElement('div'); card.className='card'; card.style.cssText='background:var(--card2);';
+    var hRow=document.createElement('div'); hRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;';
+    var ht=document.createElement('div'); ht.style.cssText='display:flex;align-items:center;gap:8px;';
+    var htIdx=document.createElement('span'); htIdx.className='row-index num'; htIdx.textContent=('0'+(idx+1)).slice(-2);
+    var htLbl=document.createElement('span'); htLbl.className='lbl'; htLbl.textContent='Übung';
+    ht.appendChild(htIdx); ht.appendChild(htLbl);
+    var delBtn=document.createElement('button'); delBtn.type='button'; delBtn.className='btn-g danger pressable'; delBtn.style.cssText='min-height:32px;padding:6px 12px;font-size:10px;'; delBtn.textContent='× Entfernen';
     delBtn.onclick=function(){challengeData.exercises.splice(idx,1);renderStep3();};
     hRow.appendChild(ht); hRow.appendChild(delBtn); card.appendChild(hRow);
 
     var nw=document.createElement('div'); nw.style.marginBottom='10px';
     nw.appendChild(lbl('Übung'));
     var ni=document.createElement('input'); ni.type='text'; ni.value=ex.name||''; ni.placeholder='z.B. Klimmzüge'; ni.setAttribute('list','exdl-'+idx);
-    ni.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
+    ni.className='inp';
     ni.oninput=function(){challengeData.exercises[idx].name=this.value;};
     var dl=document.createElement('datalist'); dl.id='exdl-'+idx;
     ['Klimmzüge','Dips','Liegestütze','Muscle-Up','Plank','L-Sit','Handstand','Front Lever','Dragon Flag','Hollow Body','Push-Up','Trizeps-Dips','Kniebeugen','Burpees','Mountain Climbers'].forEach(function(n){var o=document.createElement('option');o.value=n;dl.appendChild(o);});
@@ -296,9 +342,10 @@ function showCommPostModal(){
     var sr=document.createElement('div'); sr.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;';
     function mi(fld,lb,val,ph){
       var w=document.createElement('div');
-      var l=document.createElement('div'); l.style.cssText='font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;'; l.textContent=lb;
+      var l=document.createElement('div'); l.className='lbl'; l.style.cssText='margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'; l.textContent=lb;
       var i=document.createElement('input'); i.type='number'; i.value=val||''; i.placeholder=ph||'';
-      i.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;box-sizing:border-box;';
+      i.className='inp num';
+      i.style.cssText='padding-left:10px;padding-right:10px;';
       i.oninput=(function(f){return function(){challengeData.exercises[idx][f]=parseInt(this.value)||0;};})(fld);
       w.appendChild(l); w.appendChild(i); return w;
     }
@@ -308,58 +355,62 @@ function showCommPostModal(){
     var now=document.createElement('div'); now.style.marginBottom='10px';
     now.appendChild(lbl('Ausführung (optional)'));
     var nta=document.createElement('textarea'); nta.value=ex.notes||''; nta.placeholder='z.B. volle Streckung, kein Schwung...';
-    nta.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;resize:none;height:55px;box-sizing:border-box;';
+    nta.className='inp';
+    nta.style.cssText='resize:none;height:64px;';
     nta.oninput=function(){challengeData.exercises[idx].notes=this.value;};
     now.appendChild(nta); card.appendChild(now);
 
-    var br=document.createElement('div'); br.style.cssText='display:flex;align-items:center;justify-content:space-between;';
-    var bl=document.createElement('div'); bl.style.cssText='font-size:11px;color:var(--muted);'; bl.textContent='Gummiband erlaubt';
+    var br=document.createElement('div'); br.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;';
+    var bl=document.createElement('div'); bl.className='row-sub'; bl.style.cssText='margin:0;'; bl.textContent='Gummiband erlaubt';
     var bt=document.createElement('button');
-    bt.style.cssText='width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;background:'+(ex.bandAllowed?'var(--accent)':'var(--border2)')+';position:relative;transition:background var(--dur-med) var(--ease-out);';
+    bt.type='button';
+    bt.className='toggle'+(ex.bandAllowed?' on':'');
+    bt.setAttribute('role','switch');
+    bt.setAttribute('aria-checked', ex.bandAllowed?'true':'false');
     bt.setAttribute('aria-label','Gummiband erlaubt umschalten');
-    bt.innerHTML='<div style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform var(--dur-med) var(--ease-out);transform:translateX('+(ex.bandAllowed?'18px':'0')+');"></div>';
     bt.onclick=function(){challengeData.exercises[idx].bandAllowed=!challengeData.exercises[idx].bandAllowed;renderStep3();};
     br.appendChild(bl); br.appendChild(bt); card.appendChild(br);
     exList.appendChild(card);
   }
 
   function renderStep4(){
-    stepLbl.textContent='Schritt 4 von 4 \u2014 Vorschau';
-    nextBtn.textContent=extraCost?'Posten (3 \uD83D\uDC8E)':'Posten (kostenlos)';
-    var typeIcons={once:'&#127937;',weekly:'&#128197;',timed:'&#9201;',streak:'&#128293;'};
+    stepLbl.textContent='Schritt 4 von 4 — Vorschau';
+    nextBtn.textContent=extraCost?'Posten (3 Diamanten)':'Posten (kostenlos)';
+    var typeIcons={once:'once',weekly:'weekly',timed:'timed',streak:'streak'};
     var typeLabels={once:'Einmalig',weekly:'Wöchentlich',timed:'Zeitlimit',streak:'Streak'};
     var card=document.createElement('div');
-    card.style.cssText='background:var(--bg2);border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:14px;';
+    card.className='card';
+    card.style.cssText='background:var(--card2);margin-bottom:14px;';
     card.innerHTML=
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'+
-      '<div style="font-size:28px;">'+typeIcons[challengeData.type]+'</div>'+
-      '<div><div style="font-size:17px;font-weight:700;color:var(--text);">'+challengeData.title+'</div>'+
-      '<div style="font-size:11px;color:var(--muted);">'+typeLabels[challengeData.type]+' \u00B7 '+'\u2605'.repeat(challengeData.difficulty)+'\u2606'.repeat(5-challengeData.difficulty)+'</div></div></div>'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'+
+      '<span class="row-icon" style="color:var(--accent);">'+commIcon(typeIcons[challengeData.type]||'once')+'</span>'+
+      '<div style="flex:1;min-width:0;"><div class="ttl">'+challengeData.title+'</div>'+
+      '<div class="row-sub">'+typeLabels[challengeData.type]+' · <span style="color:var(--accent);">'+'★'.repeat(challengeData.difficulty)+'</span>'+'☆'.repeat(5-challengeData.difficulty)+'</div></div></div>'+
       '<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">'+challengeData.desc+'</div>';
     if(challengeData.exercises.length>0){
-      var et=document.createElement('div'); et.style.cssText='font-size:13px;font-weight:700;color:var(--accent-ink);margin:0 0 8px;'; et.textContent=challengeData.exercises.length+' Übungen';
+      var et=document.createElement('div'); et.className='lbl'; et.style.cssText='margin:0 0 4px;'; et.innerHTML='<span class="num">'+challengeData.exercises.length+'</span> Übungen';
       card.appendChild(et);
-      challengeData.exercises.forEach(function(ex){
-        var r=document.createElement('div'); r.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
-        r.innerHTML='<div style="font-weight:700;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+ex.name+'</div><div class="num" style="color:var(--muted);">'+ex.sets+'\u00D7'+ex.reps+'</div><div class="num" style="color:var(--muted);font-size:11px;">'+ex.rest+'s</div>';
-        if(ex.bandAllowed){var b=document.createElement('div');b.style.cssText='font-size:11px;font-weight:700;background:rgba(255,85,0,0.1);color:var(--accent-ink);border-radius:20px;padding:2px 8px;';b.textContent='Band erlaubt';r.appendChild(b);}
+      challengeData.exercises.forEach(function(ex,ei){
+        var r=document.createElement('div'); r.style.cssText='display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 0;border-bottom:1px solid var(--line);';
+        r.innerHTML='<span class="row-index num">'+('0'+(ei+1)).slice(-2)+'</span><div class="row-title" style="flex:1;">'+ex.name+'</div><div class="row-val num">'+ex.sets+'×'+ex.reps+'</div><div class="num" style="color:var(--muted);font-size:11px;">'+ex.rest+'s</div>';
+        if(ex.bandAllowed){var b=document.createElement('div');b.style.cssText='background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;';b.textContent='Band erlaubt';r.appendChild(b);}
         card.appendChild(r);
-        if(ex.notes){var n=document.createElement('div');n.style.cssText='font-size:11px;color:var(--muted);font-style:italic;padding:3px 0;';n.textContent=ex.notes;card.appendChild(n);}
+        if(ex.notes){var n=document.createElement('div');n.style.cssText='font-size:11px;color:var(--muted);padding:4px 0 4px 32px;line-height:1.5;';n.textContent=ex.notes;card.appendChild(n);}
       });
     }
     content.appendChild(card);
     if(challengeData.videoUrl){
-      var vPrev=document.createElement('div'); vPrev.style.cssText='background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;';
-      var vIcon=document.createElement('div'); vIcon.style.cssText='font-size:20px;flex-shrink:0;'; vIcon.textContent='\uD83C\uDFA5';
+      var vPrev=document.createElement('div'); vPrev.style.cssText='background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;';
+      var vIcon=document.createElement('span'); vIcon.className='row-icon'; vIcon.innerHTML=commIcon('video');
       var vInfo=document.createElement('div'); vInfo.style.cssText='flex:1;min-width:0;';
-      var vLbl=document.createElement('div'); vLbl.style.cssText='font-size:12px;font-weight:700;color:var(--accent-ink);margin:0 0 3px;'; vLbl.textContent='Erklär-Video';
+      var vLbl=document.createElement('div'); vLbl.className='lbl'; vLbl.style.cssText='margin:0 0 3px;'; vLbl.textContent='Erklär-Video';
       var vLink=document.createElement('a'); vLink.href=challengeData.videoUrl; vLink.target='_blank'; vLink.style.cssText='font-size:11px;color:var(--text);word-break:break-all;text-decoration:underline;'; vLink.textContent=challengeData.videoUrl;
       vInfo.appendChild(vLbl); vInfo.appendChild(vLink);
       vPrev.appendChild(vIcon); vPrev.appendChild(vInfo);
       content.appendChild(vPrev);
     }
     var cn=document.createElement('div'); cn.style.cssText='font-size:11px;color:var(--muted);text-align:center;';
-    cn.innerHTML=extraCost?'Kostet 3 \uD83D\uDC8E (heute bereits gepostet)':'Heute kostenlos \u2713';
+    cn.textContent=extraCost?'Kostet 3 Diamanten (heute bereits gepostet)':'Heute kostenlos ✓';
     content.appendChild(cn);
   }
 
@@ -396,7 +447,7 @@ function showCommPostModal(){
 
   function postChallenge(){
     if(extraCost){
-      if(currency.diamonds<COMM_POST_COST_DIAMONDS){toast('Nicht genug \uD83D\uDC8E!');return;}
+      if(currency.diamonds<COMM_POST_COST_DIAMONDS){toast('Nicht genug Diamanten!');return;}
       currency.diamonds-=COMM_POST_COST_DIAMONDS; saveCurrency();
     }
     try{localStorage.setItem('cali_comm_lastpost',today);}catch(x){}
@@ -410,7 +461,7 @@ function showCommPostModal(){
     };
     nextBtn.textContent='...'; nextBtn.disabled=true;
     db.collection('communityChallenges').add(postData)
-      .then(function(){ov.remove();toast('\uD83C\uDF89 Challenge gepostet!');loadCommFeed();})
+      .then(function(){ov.remove();toast('Challenge gepostet!');loadCommFeed();})
       .catch(function(){toast('Fehler. Bitte nochmal.');nextBtn.textContent='Posten';nextBtn.disabled=false;});
   }
 
@@ -431,10 +482,10 @@ function loadCommFeed(){
   var feedEl = document.getElementById('comm-feed');
   if(!feedEl) return;
 
-  feedEl.innerHTML = '<div style="text-align:center;padding:20px 0;font-size:12px;color:var(--muted);">Wird geladen...</div>';
+  feedEl.innerHTML = '<div class="empty">Wird geladen...</div>';
 
   if(!currentUser){
-    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:16px;text-align:center;font-size:12px;color:var(--muted);">Einloggen, um Community Challenges zu sehen.</div>';
+    feedEl.innerHTML = '<div class="card" style="text-align:center;font-size:11px;color:var(--muted);">Einloggen, um Community Challenges zu sehen.</div>';
     return;
   }
 
@@ -454,7 +505,7 @@ function loadCommFeed(){
       renderCommFeed();
     })
     .catch(function(e){
-      feedEl.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px 0;">Fehler beim Laden.</div>';
+      feedEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:12px 0;">Fehler beim Laden.</div>';
       console.log('Feed error:', e);
     });
 }
@@ -470,7 +521,7 @@ function renderCommFeed(){
   });
   feedEl.innerHTML = '';
   if(!filtered.length){
-    feedEl.innerHTML = '<div style="background:var(--bg2);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:20px;text-align:center;"><div style="font-size:22px;margin-bottom:8px;">\uD83C\uDFC6</div><div style="font-size:12px;color:var(--muted);">'+(q ? 'Keine Treffer.' : (commFilterMode==='mine' ? 'Du hast noch keine Challenge gepostet.' : 'Noch keine Community Challenges. Sei der Erste!'))+'</div></div>';
+    feedEl.innerHTML = '<div class="card"><div class="empty">'+(q ? 'Keine Treffer.' : (commFilterMode==='mine' ? 'Du hast noch keine Challenge gepostet.' : 'Noch keine Community Challenges. Sei der Erste!'))+'</div></div>';
     return;
   }
   filtered.forEach(function(entry){ feedEl.appendChild(buildCommCard(entry.id, entry.data)); });
@@ -486,16 +537,27 @@ function commPhotoFor(docId){
 
 function buildCommCard(docId, data){
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:16px;margin-bottom:10px;overflow:hidden;';
+  card.className = 'card';
+  card.style.cssText = 'overflow:hidden;';
   card.onclick = function(){ trackChallengeView('comm_'+docId); };
+
+  // Photo (grayscale via .ch-photo in tracker.html) — sits on top of the card
+  var photoEl = document.createElement('div');
+  photoEl.className = 'ch-photo';
+  var photoImg = document.createElement('img');
+  photoImg.src = commPhotoFor(docId);
+  photoImg.alt = '';
+  photoImg.loading = 'lazy';
+  photoEl.appendChild(photoImg);
+  card.appendChild(photoEl);
 
   // Header row
   var hdRow = document.createElement('div');
   hdRow.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;';
 
   var avatarEl = document.createElement('div');
-  avatarEl.style.cssText = 'width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;';
-  avatarEl.innerHTML = '&#128170;';
+  avatarEl.style.cssText = 'width:36px;height:36px;border-radius:50%;background:var(--card2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;overflow:hidden;';
+  avatarEl.innerHTML = commIcon('user',16);
   if(data.uid){
     db.collection('users').doc(data.uid).get().then(function(doc){
       if(!doc.exists) return;
@@ -504,6 +566,7 @@ function buildCommCard(docId, data){
         avatarEl.style.backgroundImage = 'url(' + pd.avatar + ')';
         avatarEl.style.backgroundSize = 'cover';
         avatarEl.style.backgroundPosition = 'center';
+        avatarEl.style.filter = 'grayscale(1) contrast(1.15) brightness(0.85)';
         avatarEl.innerHTML = '';
       }
     }).catch(function(){});
@@ -512,49 +575,52 @@ function buildCommCard(docId, data){
   var left = document.createElement('div');
   left.style.cssText = 'flex:1;min-width:0;';
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:15px;font-weight:800;color:var(--text);line-height:1.3;';
+  titleEl.className = 'ttl';
   titleEl.textContent = data.title;
 
   var meta = document.createElement('div');
-  meta.style.cssText = 'font-size:11px;color:var(--muted);margin-top:3px;';
+  meta.className = 'row-sub';
+  meta.style.cssText = 'margin-top:3px;';
   var dateStr = data.createdAt ? new Date(data.createdAt).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) : '';
-  meta.textContent = (data.authorName || 'Athlet') + ' \u00B7 ' + dateStr;
+  meta.textContent = (data.authorName || 'Athlet') + ' · ' + dateStr;
 
   left.appendChild(titleEl);
   left.appendChild(meta);
 
   // Difficulty stars
   var stars = document.createElement('div');
-  stars.style.cssText = 'font-size:12px;color:var(--accent-ink);flex-shrink:0;';
-  stars.textContent = '\u2605'.repeat(data.difficulty || 3) + '\u2606'.repeat(5-(data.difficulty||3));
+  stars.style.cssText = 'font-size:11px;color:var(--accent);flex-shrink:0;letter-spacing:.05em;padding-top:2px;';
+  stars.textContent = '★'.repeat(data.difficulty || 3) + '☆'.repeat(5-(data.difficulty||3));
 
   hdRow.appendChild(avatarEl);
   hdRow.appendChild(left);
   hdRow.appendChild(stars);
 
-  // Delete menu \u2014 only for the post's own author
+  // Delete menu — only for the post's own author
   if(currentUser && data.uid === currentUser.uid){
     var moreBtn = document.createElement('button');
+    moreBtn.type = 'button';
     moreBtn.setAttribute('aria-label', 'Optionen');
-    moreBtn.style.cssText = 'background:none;border:none;color:var(--muted);font-size:16px;font-weight:800;cursor:pointer;padding:6px 8px;flex-shrink:0;';
-    moreBtn.textContent = '\u22ef';
+    moreBtn.className = 'icon-btn sm pressable';
+    moreBtn.style.cssText = 'border-color:transparent;color:var(--muted);';
+    moreBtn.textContent = '⋯';
     moreBtn.onclick = function(e){
       e.stopPropagation();
       var doDelete = function(){
         db.collection('communityChallenges').doc(docId).delete().then(function(){
-          toast('Challenge gel\u00f6scht');
+          toast('Challenge gelöscht');
           loadCommFeed();
-        }).catch(function(){ toast('Fehler beim L\u00f6schen.'); });
+        }).catch(function(){ toast('Fehler beim Löschen.'); });
       };
       if(typeof confirmSheet === 'function'){
         confirmSheet({
-          title: 'Challenge l\u00f6schen?',
-          desc: 'Die Challenge verschwindet f\u00fcr alle. Das l\u00e4sst sich nicht r\u00fcckg\u00e4ngig machen.',
-          confirmLabel: 'L\u00f6schen',
+          title: 'Challenge löschen?',
+          desc: 'Die Challenge verschwindet für alle. Das lässt sich nicht rückgängig machen.',
+          confirmLabel: 'Löschen',
           cancelLabel: 'Abbrechen',
           onConfirm: doDelete
         });
-      } else if(confirm('Diese Challenge wirklich l\u00f6schen?')){
+      } else if(confirm('Diese Challenge wirklich löschen?')){
         doDelete();
       }
     };
@@ -578,41 +644,39 @@ function buildCommCard(docId, data){
       tagRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;';
       exNames.forEach(function(name){
         var exTag = document.createElement('div');
-        exTag.style.cssText = 'background:var(--bg3);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--muted);';
-        exTag.innerHTML = '&#128170; ' + name;
+        exTag.style.cssText = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px 8px;font-size:10px;color:var(--muted);';
+        exTag.textContent = name;
         tagRow.appendChild(exTag);
       });
       card.appendChild(tagRow);
     }
   }
 
-  // Photo
-  var photoEl = document.createElement('div');
-  photoEl.style.cssText = 'height:160px;border-radius:16px;background:#000 url(' + commPhotoFor(docId) + ') center/cover no-repeat;margin-bottom:10px;';
-  card.appendChild(photoEl);
-
   // Video link
   if(data.videoUrl){
     var vRow = document.createElement('a');
     vRow.href = data.videoUrl; vRow.target = '_blank';
-    vRow.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:8px 12px;margin-bottom:10px;text-decoration:none;';
-    var vIco = document.createElement('span'); vIco.style.cssText='font-size:16px;flex-shrink:0;'; vIco.innerHTML='&#127909;';
-    var vTxt = document.createElement('span'); vTxt.style.cssText='font-size:12px;color:var(--accent-ink);font-weight:700;'; vTxt.textContent='Erklär-Video ansehen';
+    vRow.className = 'btn-g pressable';
+    vRow.style.cssText = 'width:100%;min-height:40px;margin-bottom:10px;text-decoration:none;';
+    var vIco = document.createElement('span'); vIco.style.cssText='display:inline-flex;color:var(--muted);'; vIco.innerHTML=commIcon('video',16);
+    var vTxt = document.createElement('span'); vTxt.textContent='Erklär-Video ansehen';
     vRow.appendChild(vIco); vRow.appendChild(vTxt);
     card.appendChild(vRow);
   }
 
   // Action row: like, try, comment
   var actRow = document.createElement('div');
-  actRow.style.cssText = 'display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);padding-top:10px;margin-top:4px;flex-wrap:wrap;';
+  actRow.style.cssText = 'display:flex;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px;margin-top:4px;flex-wrap:wrap;';
 
   // Like button
   var liked = currentUser && data.likes && data.likes.indexOf(currentUser.uid) > -1;
   var likeBtn = document.createElement('button');
-  likeBtn.style.cssText = 'display:flex;align-items:center;gap:4px;background:' + (liked?'rgba(255,85,0,0.12)':'var(--bg3)') + ';border:1px solid ' + (liked?'rgba(255,85,0,0.35)':'var(--border)') + ';border-radius:10px;padding:8px 12px;min-height:36px;font-family:inherit;font-size:12px;color:' + (liked?'var(--accent-ink)':'var(--muted)') + ';cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  likeBtn.classList.add('pressable');
+  likeBtn.type = 'button';
+  likeBtn.className = 'btn-g pressable';
+  likeBtn.style.cssText = 'padding:0 12px;' + (liked ? 'border-color:var(--accent);color:var(--accent);' : '');
   likeBtn.setAttribute('aria-label','Gefällt mir');
-  likeBtn.innerHTML = '\uD83D\uDC4D <span class="num">' + ((data.likes||[]).length) + '</span>';
+  likeBtn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+  likeBtn.innerHTML = commIcon('like',14) + '<span class="num">' + ((data.likes||[]).length) + '</span>';
   likeBtn.onclick = function(){
     if(!currentUser){ toast('Einloggen zum Liken!'); return; }
     var ref = db.collection('communityChallenges').doc(docId);
@@ -626,17 +690,18 @@ function buildCommCard(docId, data){
     liked = !liked;
   };
 
-  // Try button
+  // Try button (light secondary pill — the feed's single orange CTA is "+ Posten" in the top bar)
   var tryBtn = document.createElement('button');
-  tryBtn.style.cssText = 'flex:1;background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 12px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  tryBtn.classList.add('pressable');
+  tryBtn.type = 'button';
+  tryBtn.className = 'btn sec sm pressable';
+  tryBtn.style.cssText = 'flex:1;';
   tryBtn.textContent = 'Ausprobieren';
   tryBtn.onclick = function(){
     activeChallenge = {
       id: 'comm_'+docId,
       title: data.title,
       desc: data.desc,
-      icon: '\uD83C\uDF1F',
+      icon: '🌟',
       type: 'community',
       params: { target: 1, metric: 'manual' },
       startDate: new Date().toISOString().slice(0,10),
@@ -645,18 +710,20 @@ function buildCommCard(docId, data){
     saveChallenges();
     trackChallengeParticipant('comm_'+docId);
     buildChallengeUI();
-    toast('\uD83D\uDE80 Challenge gestartet!');
+    toast('Challenge gestartet!');
     // Scroll up to active challenge
     document.getElementById('page-ch').scrollTop = 0;
   };
 
   // Comment toggle button
   var commBtn = document.createElement('button');
+  commBtn.type = 'button';
   var commCount = (data.comments||[]).length;
-  commBtn.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-height:36px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  commBtn.classList.add('pressable');
+  commBtn.className = 'btn-g pressable';
+  commBtn.style.cssText = 'padding:0 12px;';
   commBtn.setAttribute('aria-label','Kommentare anzeigen');
-  commBtn.innerHTML = '\uD83D\uDCAC <span class="num">' + commCount + '</span>';
+  commBtn.setAttribute('aria-expanded','false');
+  commBtn.innerHTML = commIcon('comment',14) + '<span class="num">' + commCount + '</span>';
 
   actRow.appendChild(likeBtn);
   actRow.appendChild(tryBtn);
@@ -674,6 +741,7 @@ function buildCommCard(docId, data){
     var isOpen = commSection.classList.contains('open');
     if(!isOpen) buildCommSection(commInner, docId, data);
     commSection.classList.toggle('open');
+    commBtn.setAttribute('aria-expanded', commSection.classList.contains('open') ? 'true' : 'false');
   };
 
   card.appendChild(commSection);
@@ -687,16 +755,17 @@ function buildCommSection(el, docId, data){
   // Existing comments
   if(comments.length === 0){
     var empty2 = document.createElement('div');
-    empty2.style.cssText = 'font-size:11px;color:var(--muted);padding:6px 0 10px;';
+    empty2.className = 'empty';
+    empty2.style.cssText = 'padding:6px 0 10px;';
     empty2.textContent = 'Noch keine Kommentare.';
     el.appendChild(empty2);
   } else {
     for(var i=0;i<comments.length;i++){
       var c = comments[i];
       var row = document.createElement('div');
-      row.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--border);';
+      row.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--line);';
       var cname = document.createElement('div');
-      cname.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent-ink);margin-bottom:2px;';
+      cname.style.cssText = 'font-size:11px;font-weight:600;color:var(--accent);margin-bottom:2px;';
       cname.textContent = c.authorName || 'Athlet';
       var ctxt = document.createElement('div');
       ctxt.style.cssText = 'font-size:12px;color:var(--text);line-height:1.5;';
@@ -710,15 +779,17 @@ function buildCommSection(el, docId, data){
   // New comment input
   if(!currentUser) return;
   var inp2 = document.createElement('div');
-  inp2.style.cssText = 'display:flex;gap:8px;margin-top:10px;';
+  inp2.style.cssText = 'display:flex;gap:8px;margin-top:10px;align-items:center;';
   var txta = document.createElement('input');
   txta.type = 'text';
   txta.maxLength = 200;
   txta.placeholder = 'Kommentar schreiben...';
-  txta.style.cssText = 'flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--text);outline:none;';
+  txta.className = 'inp';
+  txta.style.cssText = 'flex:1;width:auto;';
   var sendBtn = document.createElement('button');
-  sendBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
-  sendBtn.classList.add('pressable');
+  sendBtn.type = 'button';
+  sendBtn.className = 'btn sec sm pressable';
+  sendBtn.style.cssText = 'min-height:44px;white-space:nowrap;';
   sendBtn.setAttribute('aria-label','Kommentar senden');
   sendBtn.textContent = 'Senden';
   sendBtn.onclick = function(){

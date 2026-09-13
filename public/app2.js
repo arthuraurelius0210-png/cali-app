@@ -1,5 +1,35 @@
 
 // ── SHARED SHEET / CELEBRATION HELPERS ────────────────────
+// Dark-Mono-Bausteine (Design-Contract v2). Farben nur über var(--…).
+// Line-Icon aus CALI_ICONS in fester Pixelgröße; der Inline-Style erzwingt
+// currentColor/Stroke 1.5 und schlägt die im Icon-Sheet hinterlegten Farb-Attribute.
+function planLineIcon(name, px){
+  var svg = (typeof ci==='function') ? ci(name) : '';
+  return svg.replace('style="display:block;"', 'style="display:block;width:'+px+'px;height:'+px+'px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;"');
+}
+// 44px-Ring (1px --line2) mit Line-Icon — ersetzt die alten getönten Icon-Kacheln.
+function planIconRing(name, box, px, color){
+  box = box || 44; px = px || 18;
+  return '<span style="width:'+box+'px;height:'+box+'px;border-radius:50%;border:1px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:'+(color||'var(--muted)')+';">'+planLineIcon(name, px)+'</span>';
+}
+// Segmentierter Fortschrittsbalken (4px-Quadrate, 2px Lücke) mit echtem
+// Füll-Element, damit caliMotion.animateBar (setzt style.width) weiter greift.
+function planSegbarHTML(attr){
+  return '<div style="position:relative;height:6px;background:repeating-linear-gradient(90deg,var(--line2) 0 4px,transparent 4px 6px);">'+
+    '<div '+(attr||'')+' style="position:absolute;inset:0;width:0%;max-width:100%;background:repeating-linear-gradient(90deg,var(--accent) 0 4px,transparent 4px 6px);transition:width var(--dur-slow) var(--ease-out);"></div></div>';
+}
+// Backdrop (§5.15) — z-index je Aufrufer anhängen.
+var PLAN_BACKDROP_CSS = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:flex-end;justify-content:center;';
+// Kleiner Tag/Chip in Zeilen (§5.13).
+var PLAN_TAG_CSS = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;';
+// Text-Button ohne Fläche (Abbrechen/Schließen unter einem Sheet-CTA).
+var PLAN_TEXTBTN_CSS = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;padding:12px;cursor:pointer;';
+function planSheetGrip(){
+  var g = document.createElement('div');
+  g.className = 'sheet-grip';
+  return g;
+}
+
 // Gegenstück zu caliMotion.sheetIn: Sheet nach unten ausfahren, Backdrop
 // ausblenden, danach Overlay entfernen. Fällt auf sofortiges remove zurück.
 function sheetOut(ov, box){
@@ -20,28 +50,31 @@ function confirmSheet(opts){
   if(old) old.remove();
   var ov = document.createElement('div');
   ov.id = 'cali-confirm-sheet';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2600;display:flex;align-items:flex-end;justify-content:center;padding:16px;';
+  ov.style.cssText = PLAN_BACKDROP_CSS+'z-index:2600;';
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg2);border-radius:20px;padding:24px 20px 20px;width:100%;max-width:480px;';
+  box.className = 'sheet';
+  box.appendChild(planSheetGrip());
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;';
+  title.className = 'ttl';
+  title.style.cssText = 'margin-bottom:'+(opts.desc?'6px':'18px')+';';
   title.textContent = opts.title || 'Bist du sicher?';
   box.appendChild(title);
   if(opts.desc){
     var sub = document.createElement('div');
-    sub.style.cssText = 'font-size:13px;color:var(--muted);margin-bottom:18px;';
+    sub.style.cssText = 'font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:18px;';
     sub.textContent = opts.desc;
     box.appendChild(sub);
   }
   var okBtn = document.createElement('button');
-  okBtn.className = 'pressable';
-  okBtn.style.cssText = 'width:100%;background:'+(opts.danger===false?'var(--accent-deep)':'var(--red)')+';color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:4px;transition:transform var(--dur-fast) var(--ease-out);';
+  // Destruktiv (Standard) = roter Ghost-Button; danger:false = der eine orangene Primär-CTA
+  okBtn.className = (opts.danger===false ? 'btn' : 'btn-g danger') + ' pressable';
+  okBtn.style.cssText = 'width:100%;min-height:48px;margin:0 0 4px;';
   okBtn.textContent = opts.confirmLabel || 'Bestätigen';
   okBtn.onclick = function(){ sheetOut(ov, box); if(typeof opts.onConfirm==='function') opts.onConfirm(); };
   box.appendChild(okBtn);
   var cancelBtn = document.createElement('button');
-  cancelBtn.className = 'pressable';
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  cancelBtn.className = 'pressable u';
+  cancelBtn.style.cssText = PLAN_TEXTBTN_CSS;
   cancelBtn.textContent = opts.cancelLabel || 'Abbrechen';
   cancelBtn.onclick = function(){ sheetOut(ov, box); };
   box.appendChild(cancelBtn);
@@ -59,14 +92,18 @@ function showCelebrationOverlay(opts){
   var ov = document.createElement('div');
   ov.id = 'cali-celebrate-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2600;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  // Icon-Slot: Line-Icon statt Emoji. Aufrufer aus anderen Dateien übergeben noch
+  // Emoji in opts.icon — die werden ignoriert; ein CALI_ICONS-Name (opts.iconName
+  // oder opts.icon) wird gerendert, sonst der Pokal.
+  var icoName = opts.iconName || ((typeof CALI_ICONS!=='undefined' && CALI_ICONS[opts.icon]) ? opts.icon : 'trophy');
   ov.innerHTML =
-    '<div style="text-align:center;padding:0 24px;">'+
-      (opts.icon?'<div style="font-size:56px;margin-bottom:10px;">'+opts.icon+'</div>':'')+
-      '<div style="font-size:16px;font-weight:800;color:var(--accent);margin-bottom:8px;">'+(opts.title||'')+'</div>'+
-      (opts.big?'<div class="num" style="font-size:44px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:6px;">'+opts.big+'</div>':'')+
-      (opts.sub?'<div style="font-size:13px;color:rgba(255,255,255,0.75);">'+opts.sub+'</div>':'')+
-      (opts.note?'<div style="font-size:15px;font-weight:800;color:#ffd700;margin-top:10px;">'+opts.note+'</div>':'')+
-      '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:16px;">Tippen um fortzufahren</div>'+
+    '<div style="text-align:center;padding:0 24px;max-width:480px;">'+
+      '<div style="display:flex;justify-content:center;margin-bottom:18px;">'+planIconRing(icoName, 64, 26, 'var(--accent)')+'</div>'+
+      '<div class="lbl" style="color:var(--accent);margin-bottom:10px;">'+(opts.title||'')+'</div>'+
+      (opts.big?'<div class="kpi lg num" style="line-height:1.15;margin-bottom:8px;word-break:break-word;">'+opts.big+'</div>':'')+
+      (opts.sub?'<div style="font-size:11px;color:var(--muted);line-height:1.5;">'+opts.sub+'</div>':'')+
+      (opts.note?'<div class="u num" style="font-size:11px;font-weight:600;color:var(--accent);margin-top:12px;">'+opts.note+'</div>':'')+
+      '<div class="lbl" style="color:var(--muted2);margin-top:22px;">Tippen um fortzufahren</div>'+
     '</div>';
   ov.onclick = function(){ ov.remove(); };
   document.body.appendChild(ov);
@@ -133,13 +170,11 @@ function pfSetVal(i,v){if(pfSets[i])pfSets[i].n=v;}
 function buildPfSets(){
   var box=document.getElementById('pf-sbox');
   if(!box)return;
-  // Satznummern als TEXT → Ink-Varianten (Kontrast), wie app1.js buildSets/buildPlanBlocks
-  var ca=['var(--accent-ink)','var(--amber-ink)','var(--teal-ink)','var(--purple-ink)'];
+  // Satznummern zweistellig in --muted2 (.snum) — keine Farbkodierung mehr
   var h='';
   for(var i=0;i<pfSets.length;i++){
-    var co=ca[i<4?i:3];
     h+='<div class="sr">';
-    h+='<div class="snum" style="color:'+co+'">'+(i+1)+'</div>';
+    h+='<div class="snum num">'+('0'+(i+1)).slice(-2)+'</div>';
     h+='<input class="sinp" type="number" placeholder="Ziel Wdh" value="'+(pfSets[i].n||'')+'" oninput="pfSetVal('+i+',this.value)">';
     h+='<div></div>';
     h+='<button class="sdel" aria-label="Satz entfernen" onclick="pfDelSet('+i+')">&#x2715;</button>';
@@ -241,6 +276,10 @@ function buildPlanList(){
   h+='<h2 class="stitle" style="margin:0 0 8px;">Wochenplan</h2>';
   h+='<div id="week-plan-section" style="margin-bottom:20px;"></div>';
 
+  // Chevron rechts im Karten-Kopf: togglePlanExpand dreht ihn (Selektor
+  // '.plan-top div:last-child div:last-child' — deshalb ein <div>, kein .row-chev-Span)
+  var PLAN_CHEV='<div aria-hidden="true" style="color:var(--muted2);font-size:16px;line-height:1;transition:transform var(--dur-fast) var(--ease-out);">&#8250;</div>';
+
   // MY PLANS section — eigene Pläne stehen vor den Vorlagen
   h+='<h2 class="stitle" style="margin:0 0 8px;">Meine Pläne</h2>';
   if(plans.length){
@@ -248,16 +287,17 @@ function buildPlanList(){
       var pl=plans[i];
       h+='<div class="plan-card pressable" style="cursor:pointer;" role="button" tabindex="0" onclick="togglePlanExpand(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();togglePlanExpand(this);}">';
       h+='<div class="plan-top"><div class="plan-name">'+pl.name+'</div>';
-      h+='<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:11px;color:var(--muted);">'+pl.exercises.length+' Übungen</div><div style="font-size:14px;color:var(--muted);">›</div></div></div>';
-      h+='<div class="plan-ex-detail acc-body"><div><div style="height:10px;"></div>';
+      h+='<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><div class="row-sub num" style="margin:0;">'+pl.exercises.length+' Übungen</div>'+PLAN_CHEV+'</div></div>';
+      h+='<div class="plan-ex-detail acc-body"><div><div style="height:6px;"></div>';
       for(var j=0;j<pl.exercises.length;j++){
         var ex=pl.exercises[j];var col=COLS[ex.col]||COLS.gr;
         var st='';for(var k=0;k<ex.sets.length;k++){if(k>0)st+=' · ';st+='S'+(k+1)+': '+ex.sets[k].n+' '+ex.unit;}
-        h+='<div class="plan-exrow"><div class="plan-dot" style="background:'+col+'"></div><div class="plan-exname">'+ex.name+'</div><div class="plan-exsets">'+st+'</div></div>';
+        h+='<div class="plan-exrow"><div class="plan-dot" style="background:'+col+'"></div><div class="plan-exname">'+ex.name+'</div><div class="plan-exsets num">'+st+'</div></div>';
       }
-      h+='<div class="plan-actions" style="margin-top:10px;">';
-      h+='<button class="plan-start-btn" onclick="event.stopPropagation();startPlanById('+pl.id+')">Starten</button>';
-      h+='<button class="plan-del-btn" onclick="event.stopPropagation();deletePlan('+pl.id+')">Löschen</button>';
+      // Sekundär-CTA (hell): der eine orangene Primär-CTA der Pläne-Seite ist "Workout starten" in der Heute-Karte
+      h+='<div class="plan-actions" style="margin-top:12px;">';
+      h+='<button class="btn sec pressable" style="flex:1;margin:0;min-height:40px;font-size:11px;padding:0 14px;" onclick="event.stopPropagation();startPlanById('+pl.id+')">Starten</button>';
+      h+='<button class="plan-del-btn pressable" onclick="event.stopPropagation();deletePlan('+pl.id+')">Löschen</button>';
       h+='</div></div></div></div>';
     }
   } else {
@@ -270,24 +310,24 @@ function buildPlanList(){
     var pl=PRESET_PLANS[pi];
     var alreadyAdded=false;
     for(var ai=0;ai<plans.length;ai++){if(plans[ai].name===pl.name){alreadyAdded=true;break;}}
-    h+='<div class="plan-card pressable" style="border-color:var(--border);opacity:'+(alreadyAdded?'0.5':'1')+';cursor:pointer;" role="button" tabindex="0" onclick="togglePlanExpand(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();togglePlanExpand(this);}">';
+    h+='<div class="plan-card pressable" style="opacity:'+(alreadyAdded?'0.5':'1')+';cursor:pointer;" role="button" tabindex="0" onclick="togglePlanExpand(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();togglePlanExpand(this);}">';
     h+='<div class="plan-top"><div class="plan-name" style="color:var(--muted)">'+pl.name+'</div>';
-    h+='<div style="display:flex;align-items:center;gap:8px;">';
-    h+='<div style="font-size:11px;color:var(--muted);">'+pl.exercises.length+' Übungen</div>';
-    h+='<div style="background:rgba(255,85,0,0.08);color:var(--accent-ink);border-radius:20px;padding:2px 8px;font-family:inherit;font-size:11px;font-weight:700;">Vorlage</div>';
-    h+='<div style="font-size:14px;color:var(--muted);">›</div></div></div>';
+    h+='<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">';
+    h+='<div class="row-sub num" style="margin:0;">'+pl.exercises.length+' Übungen</div>';
+    h+='<div style="'+PLAN_TAG_CSS+'">Vorlage</div>';
+    h+=PLAN_CHEV+'</div></div>';
     // Exercises hidden by default (accordion physics via .acc-body)
-    h+='<div class="plan-ex-detail acc-body"><div><div style="height:10px;"></div>';
+    h+='<div class="plan-ex-detail acc-body"><div><div style="height:6px;"></div>';
     for(var j=0;j<pl.exercises.length;j++){
       var pex=pl.exercises[j];var pcol=COLS[pex.col]||COLS.gr;
       var pst='';for(var k=0;k<pex.sets.length;k++){if(k>0)pst+=' · ';pst+='S'+(k+1)+': '+pex.sets[k].n+' '+pex.unit;}
-      h+='<div class="plan-exrow"><div class="plan-dot" style="background:'+pcol+'"></div><div class="plan-exname">'+pex.name+'</div><div class="plan-exsets">'+pst+'</div></div>';
+      h+='<div class="plan-exrow"><div class="plan-dot" style="background:'+pcol+'"></div><div class="plan-exname">'+pex.name+'</div><div class="plan-exsets num">'+pst+'</div></div>';
     }
-    h+='<div class="plan-actions" style="margin-top:10px;">';
+    h+='<div class="plan-actions" style="margin-top:12px;">';
     if(alreadyAdded){
-      h+='<button class="plan-del-btn" onclick="event.stopPropagation();removePresetFromMyPlans('+pi+')">Entfernen</button>';
+      h+='<button class="plan-del-btn pressable" onclick="event.stopPropagation();removePresetFromMyPlans('+pi+')">Entfernen</button>';
     } else {
-      h+='<button class="plan-start-btn" onclick="event.stopPropagation();addPresetToMyPlans('+pi+')" style="background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);">+ Hinzufügen</button>';
+      h+='<button class="btn-g pressable" style="flex:1;min-height:40px;" onclick="event.stopPropagation();addPresetToMyPlans('+pi+')">+ Hinzufügen</button>';
     }
     h+='</div></div></div></div>';
   }
@@ -346,19 +386,21 @@ function buildStartPlanBtns(){
   if(!el)return;
   el.innerHTML='';
   if(!plans.length){
+    // Leerzustand: .pk-card OHNE role="button" → von der CSS-Nummerierung ausgenommen
     var emptyCard=document.createElement('div');
     emptyCard.className='pk-card';
-    emptyCard.style.cssText='display:flex;align-items:center;gap:16px;padding:20px;';
+    emptyCard.style.cssText='display:flex;align-items:center;gap:14px;padding:14px;';
     emptyCard.innerHTML=
-      iconWrap('calendar',{size:24,box:52,radius:16})+
+      iconWrap('calendar',{size:20,box:44})+
       '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;">Noch keine Pläne</div>'+
-        '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">Erstelle einen Plan oder nutze eine Vorlage.</div>'+
-        '<button class="pressable" onclick="goPage(\'p\')" style="background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 16px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);">Zu den Plänen</button>'+
+        '<div class="row-title">Noch keine Pläne</div>'+
+        '<div class="row-sub" style="margin-bottom:10px;">Erstelle einen Plan oder nutze eine Vorlage.</div>'+
+        '<button class="btn-g pressable" onclick="goPage(\'p\')">Zu den Plänen</button>'+
       '</div>';
     el.appendChild(emptyCard);
     return;
   }
+  // #plan-btns ist .numbered → jede Karte bekommt "01", "02" … per CSS-Counter (kein eigener Index)
   for(var i=0;i<plans.length;i++){
     (function(pl){
       var totalSets=0;
@@ -367,7 +409,7 @@ function buildStartPlanBtns(){
 
       var card=document.createElement('div');
       card.className='pk-card pressable';
-      card.style.cssText='display:flex;align-items:center;gap:14px;padding:16px;cursor:pointer;';
+      card.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:52px;cursor:pointer;';
       card.setAttribute('role','button');
       card.setAttribute('tabindex','0');
       card.setAttribute('aria-label',pl.name+' starten');
@@ -375,16 +417,16 @@ function buildStartPlanBtns(){
       card.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();startPlanById(pl.id);}};
 
       var icon=document.createElement('div');
-      icon.style.cssText='width:44px;height:44px;border-radius:14px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-      icon.innerHTML='<div style="width:20px;height:20px;">'+ci('dumbbell')+'</div>';
+      icon.style.cssText='display:flex;flex-shrink:0;';
+      icon.innerHTML=planIconRing('dumbbell');
 
       var info=document.createElement('div');
-      info.style.cssText='flex:1;min-width:0;';
+      info.className='row-main';
       var nameRow=document.createElement('div');
-      nameRow.style.cssText='font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      nameRow.className='row-title';
       nameRow.textContent=pl.name;
       var metaRow=document.createElement('div');
-      metaRow.style.cssText='font-size:11px;color:var(--muted);margin-top:3px;';
+      metaRow.className='row-sub num';
       metaRow.textContent=pl.exercises.length+' Übungen · '+totalSets+' Sätze';
       info.appendChild(nameRow); info.appendChild(metaRow);
       if(tags.length){
@@ -392,16 +434,16 @@ function buildStartPlanBtns(){
         tagRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;';
         tags.forEach(function(t){
           var chip=document.createElement('div');
-          chip.style.cssText='background:var(--bg3);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--muted);font-weight:600;';
+          chip.style.cssText=PLAN_TAG_CSS;
           chip.textContent=t;
           tagRow.appendChild(chip);
         });
         info.appendChild(tagRow);
       }
 
-      var chevron=document.createElement('div');
-      chevron.style.cssText='color:var(--muted);font-size:18px;flex-shrink:0;';
-      chevron.innerHTML='&#8250;';
+      var chevron=document.createElement('span');
+      chevron.className='row-chev';
+      chevron.setAttribute('aria-hidden','true');
 
       card.appendChild(icon); card.appendChild(info); card.appendChild(chevron);
       el.appendChild(card);
@@ -427,7 +469,8 @@ function cancelWorkout(){
       document.getElementById('active-workout').style.display='none';
       document.getElementById('start-screen').style.display='block';
       document.getElementById('wo-timer').textContent='00:00';
-      document.getElementById('wo-ex-list').innerHTML='<div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>';
+      var woList=(typeof _woExListEl==='function')?_woExListEl():document.getElementById('wo-ex-list');
+      if(woList) woList.innerHTML='<div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>';
       document.getElementById('plan-blocks-wrap').style.display='none';
       if(document.getElementById('plan-add-form'))document.getElementById('plan-add-form').style.display='none';
       if(document.getElementById('plan-add-label'))document.getElementById('plan-add-label').style.display='none';
@@ -482,11 +525,11 @@ function saveMaxEntry(){
     earnDiamond();
     try{ awardXP(50, 'Neuer Rekord: '+parts[0]); }catch(e){}
     showCelebrationOverlay({
-      icon:'🏆',
+      iconName:'trophy',
       title:'Neuer Rekord!',
       big: val+' '+parts[1],
       sub: parts[0]+' · Vorher: '+prevBestRaw+' '+parts[1],
-      note:'+1 💎'
+      note:'+1 Diamant'
     });
   } else {
     toast('Max eingetragen!');
@@ -530,6 +573,8 @@ function buildMaxList(){
   var el=document.getElementById('max-list');
   if(!el)return;
   if(!filtered.length){el.innerHTML='<div class="empty">Noch keine Maxwerte eingetragen.</div>';return;}
+  // Nummerierte Zeilen (zweistelliger Index) innerhalb der #max-list-Karte:
+  // Index · Übung + Datum · Wert 22px + Einheit · Löschen
   var h='';
   for(var i=0;i<filtered.length;i++){
     var e=filtered[i];
@@ -537,12 +582,13 @@ function buildMaxList(){
     var rawVal=String(e.val).trim();
     var countable=!(e.unit==='Min:Sek'&&rawVal.indexOf(':')>-1)&&/^[0-9]+(\.[0-9]+)?$/.test(rawVal);
     var dec=(countable&&rawVal.indexOf('.')>-1)?rawVal.split('.')[1].length:0;
-    h+='<div class="ei"><div class="et">';
-    h+='<div class="ed">'+e.date.slice(5).replace('-','.')+'</div>';
-    h+='<div class="en">'+e.name+'</div>';
-    h+='<div style="font-family:inherit;font-size:22px;font-weight:800;color:var(--accent);">'+(countable?'<span data-maxcu="'+rawVal+'" data-maxdec="'+dec+'" data-maxid="'+e.id+'">'+e.val+'</span>':e.val)+' <span style="font-size:11px;font-weight:600;color:var(--muted)">'+e.unit+'</span></div>';
-    h+='<button class="edel" aria-label="Eintrag löschen" onclick="delMaxEntry('+e.id+')">&#x2715;</button>';
-    h+='</div></div>';
+    var last=(i===filtered.length-1);
+    h+='<div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:'+(i===0?'0':'10px')+' 0 '+(last?'0':'10px')+';'+(last?'':'border-bottom:1px solid var(--line);')+'">';
+    h+='<span class="row-index num">'+('0'+(i+1)).slice(-2)+'</span>';
+    h+='<div class="row-main"><div class="row-title">'+e.name+'</div><div class="ed num" style="margin-top:2px;">'+e.date.slice(5).replace('-','.')+'</div></div>';
+    h+='<div class="num" style="font-size:22px;font-weight:600;color:var(--text);line-height:1;flex-shrink:0;display:flex;align-items:baseline;gap:6px;">'+(countable?'<span data-maxcu="'+rawVal+'" data-maxdec="'+dec+'" data-maxid="'+e.id+'">'+e.val+'</span>':'<span>'+e.val+'</span>')+'<span class="unit">'+e.unit+'</span></div>';
+    h+='<button class="edel pressable" aria-label="Eintrag löschen" style="align-self:center;flex-shrink:0;" onclick="delMaxEntry('+e.id+')">&#x2715;</button>';
+    h+='</div>';
   }
   el.innerHTML=h;
   // Maxwerte hochzählen lassen (Einheiten-Suffix bleibt unberührt im Nachbar-Span)
@@ -592,10 +638,22 @@ function drawMaxChart(){
     lbls.push(data[i].date.slice(5).replace('-','.'));
   }
   if(maxChart2)maxChart2.destroy();
+  // Dark-Mono-Chart (§5.16): Chart.js liest keine CSS-Variablen → --accent per getComputedStyle;
+  // Grid-/Tick-Graus sind die Chart-Only-Werte der Spec (nur hier als Chart.js-Optionen erlaubt).
+  var cs=getComputedStyle(document.documentElement);
+  var ACC=(cs.getPropertyValue('--accent')||'').trim()||'#FF5A1F';
+  var MONO='JetBrains Mono';
+  // Kein maintainAspectRatio:false — das Canvas hat keinen Container mit fester Höhe
+  // (pages.html), die Standard-Aspect-Ratio hält den Chart sichtbar.
   maxChart2=new Chart(cv,{
     type:'line',
-    data:{labels:lbls,datasets:[{data:vals,borderColor:'#ff5500',backgroundColor:'rgba(255,85,0,0.1)',fill:true,tension:0.4,pointBackgroundColor:'#ff5500',pointRadius:6,borderWidth:2}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6E6759',font:{size:10}},grid:{color:'rgba(0,0,0,0.06)'}},y:{ticks:{color:'#6E6759',font:{size:10}},grid:{color:'rgba(0,0,0,0.06)'}}}}
+    data:{labels:lbls,datasets:[{data:vals,borderColor:ACC,pointBackgroundColor:ACC,pointBorderColor:ACC,pointRadius:3,pointHoverRadius:4,borderWidth:1.5,fill:false,tension:0}]},
+    options:{responsive:true,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1B1B1B',borderColor:'#333333',borderWidth:1,titleColor:'#F2F2F2',bodyColor:'#9A9A9A',titleFont:{family:MONO,size:10},bodyFont:{family:MONO,size:11},displayColors:false}},
+      scales:{
+        x:{grid:{color:'#1E1E1E',borderColor:'#262626'},ticks:{color:'#6E6E6E',font:{family:MONO,size:9}}},
+        y:{grid:{color:'#1E1E1E',borderColor:'#262626'},ticks:{color:'#6E6E6E',font:{family:MONO,size:9}},beginAtZero:false}
+      }}
   });
 }
 
@@ -953,7 +1011,7 @@ function skipChallenge(){
   if(currency.diamonds >= 1 || currency.flames >= 50){
     showSkipModal();
   } else {
-    toast('Nicht genug! Du brauchst 1 \uD83D\uDC8E Diamant oder 50 \uD83D\uDD25 Flammen zum Skippen.');
+    toast('Nicht genug: du brauchst 1 Diamant oder 50 Flammen zum Skippen.');
   }
 }
 
@@ -962,42 +1020,52 @@ function showSkipModal(){
   if(ex) ex.remove();
   var modal = document.createElement('div');
   modal.id = 'skip-currency-modal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;padding:16px;';
+  modal.style.cssText = PLAN_BACKDROP_CSS+'z-index:2000;';
 
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg2);border-radius:20px;padding:24px 20px 32px;width:100%;max-width:480px;';
+  box.className = 'sheet';
+  box.appendChild(planSheetGrip());
 
   var title = document.createElement('div');
-  title.style.cssText = 'font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;';
+  title.className = 'ttl';
+  title.style.cssText = 'margin-bottom:6px;';
   title.textContent = 'Challenge skippen?';
 
   var sub = document.createElement('div');
-  sub.style.cssText = 'font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;';
-  sub.textContent = 'Kostet 1 \uD83D\uDC8E Diamant oder 50 \uD83D\uDD25 Flammen. Du hast: '+currency.diamonds+' \uD83D\uDC8E \u00B7 '+currency.flames+' \uD83D\uDD25';
+  sub.style.cssText = 'font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.5;';
+  sub.textContent = 'Kostet 1 Diamant oder 50 Flammen. Du hast: '+currency.diamonds+' Diamanten \u00B7 '+currency.flames+' Flammen';
 
   function doSkip(costLabel){
     activeChallenge=null; saveChallenges(); buildChallengeUI();
     sheetOut(modal, box);
-    toast('Challenge geskippt! '+costLabel);
+    toast('Challenge geskippt: '+costLabel);
   }
 
+  // Zwei gleichwertige Zahlwege: heller Sekundär-CTA (Diamant) + Ghost (Flammen);
+  // nicht bezahlbar → disabled (Opazität .5, kein onclick)
   var canDiamond = currency.diamonds >= 1;
   var btn = document.createElement('button');
-  btn.style.cssText = 'width:100%;background:'+(canDiamond?'rgba(56,189,248,0.1)':'var(--bg3)')+';border:1px solid '+(canDiamond?'#38BDF8':'var(--border)')+';border-radius:16px;padding:16px;cursor:'+(canDiamond?'pointer':'not-allowed')+';opacity:'+(canDiamond?'1':'0.4')+';font-family:inherit;font-size:15px;font-weight:700;color:'+(canDiamond?'var(--blue-ink)':'var(--muted)')+';margin-bottom:10px;transition:transform var(--dur-fast) var(--ease-out);';
-  btn.textContent = '\uD83D\uDC8E 1 Diamant — skippen';
-  // Press-Feedback nur, wenn der Kauf auch m\u00F6glich ist
-  if(canDiamond){ btn.className = 'pressable'; btn.onclick = function(){ currency.diamonds -= 1; saveCurrency(); doSkip('-1 \uD83D\uDC8E'); }; }
+  btn.type = 'button';
+  btn.className = 'btn sec pressable';
+  btn.style.cssText = 'margin:0 0 8px;';
+  btn.textContent = '1 Diamant \u2014 skippen';
+  if(canDiamond){ btn.onclick = function(){ currency.diamonds -= 1; saveCurrency(); doSkip('-1 Diamant'); }; }
+  else { btn.disabled = true; }
 
   // Flammen-Preis: der im Skip-Label versprochene zweite Zahlweg
   var canFlames = currency.flames >= 50;
   var flameBtn = document.createElement('button');
-  flameBtn.style.cssText = 'width:100%;background:'+(canFlames?'rgba(255,85,0,0.08)':'var(--bg3)')+';border:1px solid '+(canFlames?'rgba(255,85,0,0.3)':'var(--border)')+';border-radius:16px;padding:16px;cursor:'+(canFlames?'pointer':'not-allowed')+';opacity:'+(canFlames?'1':'0.4')+';font-family:inherit;font-size:15px;font-weight:700;color:'+(canFlames?'var(--accent-ink)':'var(--muted)')+';margin-bottom:10px;transition:transform var(--dur-fast) var(--ease-out);';
-  flameBtn.textContent = '\uD83D\uDD25 50 Flammen \u2014 skippen';
-  if(canFlames){ flameBtn.className = 'pressable'; flameBtn.onclick = function(){ currency.flames -= 50; saveCurrency(); doSkip('-50 \uD83D\uDD25'); }; }
+  flameBtn.type = 'button';
+  flameBtn.className = 'btn-g pressable';
+  flameBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:4px;'+(canFlames?'':'opacity:.5;cursor:default;');
+  flameBtn.textContent = '50 Flammen \u2014 skippen';
+  if(canFlames){ flameBtn.onclick = function(){ currency.flames -= 50; saveCurrency(); doSkip('-50 Flammen'); }; }
+  else { flameBtn.disabled = true; }
 
   var cancel = document.createElement('button');
-  cancel.className = 'pressable';
-  cancel.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+  cancel.type = 'button';
+  cancel.className = 'pressable u';
+  cancel.style.cssText = PLAN_TEXTBTN_CSS;
   cancel.textContent = 'Abbrechen';
   cancel.onclick = function(){ sheetOut(modal, box); };
 
@@ -1013,7 +1081,8 @@ function showSkipModal(){
 }
 
 function getCurrencyDisplay(){
-  return '\uD83D\uDD25 '+currency.flames + '  \uD83D\uDC8E '+currency.diamonds;
+  // Reiner Text ohne Emoji-Pr\u00E4fix (Badge im Profil, main2ba.js)
+  return currency.flames+' Flammen \u00B7 '+currency.diamonds+' Diamanten';
 }
 
 function buildChallengeUI(){
@@ -1038,25 +1107,24 @@ function buildChCardPersonal(){
   if(!el) return;
   if(!activeChallenge){
     el.innerHTML =
-      '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:5px;">Keine aktiv</div>'+
-      '<div style="font-size:11px;color:var(--muted);line-height:1.5;">Tippe um eine Challenge zu generieren</div>';
+      '<div class="ttl" style="margin-bottom:4px;">Keine aktiv</div>'+
+      '<div class="row-sub">Tippe um eine Challenge zu generieren</div>';
   } else {
     var prog = calcChallengeProgress();
     var target = activeChallenge.params.target || 1;
     var pct = Math.min(100, Math.round((prog/target)*100));
     var done = pct >= 100;
+    // Titel + Ring-Icon (Line-Icon statt gefülltem Pokal), darunter Segmentbalken + echte Zahlen
     el.innerHTML =
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;padding-right:28px;">'+
-        '<div style="font-size:20px;font-weight:800;color:var(--text);line-height:1.3;">'+activeChallenge.title+'</div>'+
-        '<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M8 3h8v5a4 4 0 01-8 0V3z" fill="var(--accent)"/><rect x="11" y="11" width="2" height="4" fill="var(--accent)"/><rect x="8" y="18" width="8" height="2" rx="1" fill="var(--accent)"/><rect x="9" y="15" width="6" height="2" fill="var(--accent)"/></svg></div>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">'+
+        '<div class="ttl" style="min-width:0;">'+activeChallenge.title+'</div>'+
+        planIconRing('trophy', 44, 18, done?'var(--accent)':'var(--muted)')+
       '</div>'+
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
-        '<div style="flex:1;background:var(--bg3);border-radius:20px;height:6px;overflow:hidden;">'+
-          '<div data-chbar style="height:100%;border-radius:20px;background:var(--accent);width:0%;transition:width var(--dur-slow) var(--ease-out);"></div>'+
-        '</div>'+
-        '<div class="num" style="font-size:13px;font-weight:800;color:var(--accent-ink);flex-shrink:0;">'+pct+'%</div>'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'+
+        '<div style="flex:1;">'+planSegbarHTML('data-chbar')+'</div>'+
+        '<div class="num" style="font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;">'+pct+'%</div>'+
       '</div>'+
-      '<div style="font-size:11px;color:var(--muted);">'+prog+' / '+target+' · '+pct+'% abgeschlossen'+(done?' &nbsp;<span style="color:var(--accent-ink);font-weight:700;">Geschafft!</span>':'')+'</div>';
+      '<div class="row-sub num" style="margin:0;">'+prog+' / '+target+' abgeschlossen'+(done?' &nbsp;<span style="color:var(--accent);font-weight:600;">Geschafft!</span>':'')+'</div>';
     var pFill = el.querySelector('[data-chbar]');
     if(pFill){
       if(window.caliMotion) caliMotion.animateBar(pFill, pct);
@@ -1069,15 +1137,15 @@ function buildChCardPreset(){
   var el = document.getElementById('ch-card-preset-inner');
   if(!el) return;
   el.innerHTML =
-    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px;">'+PRESET_CHALLENGES.length+' Challenges</div>'+
+    '<div class="kpi-row" style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px;"><span class="kpi num" style="font-size:22px;">'+PRESET_CHALLENGES.length+'</span><span class="unit">Challenges</span></div>'+
     '<div style="display:flex;flex-direction:column;gap:6px;">'+
       PRESET_CHALLENGES.slice(0,3).map(function(c){
-        return '<div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;">'+
-          '<div style="width:5px;height:5px;border-radius:50%;background:#38BDF8;flex-shrink:0;"></div>'+
-          c.title+
+        return '<div class="row-sub" style="margin:0;display:flex;align-items:center;gap:8px;min-width:0;">'+
+          '<span style="width:6px;height:6px;border-radius:50%;background:var(--line2);flex-shrink:0;"></span>'+
+          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.title+'</span>'+
         '</div>';
       }).join('')+
-      '<div style="font-size:11px;color:var(--muted);padding-left:12px;">+ '+(PRESET_CHALLENGES.length-3)+' weitere</div>'+
+      '<div class="row-sub num" style="margin:0;padding-left:14px;">+ '+(PRESET_CHALLENGES.length-3)+' weitere</div>'+
     '</div>';
 }
 
@@ -1085,11 +1153,12 @@ function buildChCardCommunity(){
   var el = document.getElementById('ch-card-community-inner');
   if(!el) return;
   // Kein hartes '0 Challenges' vor dem Firestore-Ergebnis — Ladezustand bzw. Login-Hinweis
+  // Erstes <div> bleibt der Titel — der Firestore-Callback unten schreibt per querySelector('div') hinein
   el.innerHTML =
-    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">'+(currentUser?'… Challenges':'Community')+'</div>'+
-    '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">'+(currentUser?'Von Athleten erstellt & bewertet':'Einloggen um Challenges zu sehen')+'</div>'+
+    '<div class="num" style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">'+(currentUser?'… Challenges':'Community')+'</div>'+
+    '<div class="row-sub" style="margin:0 0 10px;">'+(currentUser?'Von Athleten erstellt & bewertet':'Einloggen um Challenges zu sehen')+'</div>'+
     '<div id="ch-community-creators" style="display:flex;align-items:center;margin-bottom:10px;min-height:24px;"></div>'+
-    '<button class="pressable" onclick="event.stopPropagation();showCommPostModal();" style="background:none;border:1px solid rgba(78,205,196,0.4);color:var(--teal-ink);border-radius:20px;font-family:inherit;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);">+ Posten</button>';
+    '<button type="button" class="btn-g pressable" onclick="event.stopPropagation();showCommPostModal();" style="min-height:32px;padding:0 12px;font-size:10px;">+ Posten</button>';
   if(currentUser){
     db.collection('communityChallenges').get().then(function(snap){
       if(!el) return;
@@ -1136,7 +1205,7 @@ var trendingCacheTime = 0;
 
 function renderTrendingList(el, docs){
   if(!docs.length){
-    el.innerHTML = '<div style="background:var(--bg2);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:18px;text-align:center;font-size:12px;color:var(--muted);">Noch keine Trends — probiere Challenges aus, um sie hier zu sehen!</div>';
+    el.innerHTML = '<div class="card" style="margin:0;text-align:center;font-size:11px;color:var(--muted);line-height:1.5;">Noch keine Trends — probiere Challenges aus, um sie hier zu sehen!</div>';
     return;
   }
   el.innerHTML = '';
@@ -1148,14 +1217,14 @@ function buildTrendingChallenges(){
   var el = document.getElementById('ch-trending');
   if(!el) return;
   if(!currentUser){
-    el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:12px 0;">Einloggen um Trending Challenges zu sehen.</div>';
+    el.innerHTML = '<div class="row-sub" style="margin:0;padding:12px 0;">Einloggen um Trending Challenges zu sehen.</div>';
     return;
   }
   if(trendingCache && (Date.now() - trendingCacheTime) < 300000){
     renderTrendingList(el, trendingCache);
     return;
   }
-  el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:12px 0;">Wird geladen…</div>';
+  el.innerHTML = '<div class="row-sub" style="margin:0;padding:12px 0;">Wird geladen…</div>';
 
   db.collection('challengeStats').orderBy('views','desc').limit(3).get().then(function(snap){
     if(!el) return;
@@ -1171,18 +1240,15 @@ function buildTrendingChallenges(){
 
 function renderTrendingCard(container, id, stats){
   var meta = null;
-  var iconBg = 'linear-gradient(135deg, var(--accent), #FF6B35)';
   var isCommunity = id.indexOf('comm_') === 0;
   var photoUrl = null;
   if(isCommunity){
-    iconBg = 'linear-gradient(135deg, #4ECDC4, #38BDF8)';
     photoUrl = '/challenge-handstand.jpg';
   } else {
     for(var i=0;i<PRESET_CHALLENGES.length;i++){
       if(PRESET_CHALLENGES[i].id === id){ meta = PRESET_CHALLENGES[i]; break; }
     }
     if(!meta) return; // stats doc without resolvable metadata — skip silently
-    iconBg = 'linear-gradient(135deg, #38BDF8, var(--accent))';
     photoUrl = meta.image || null;
   }
 
@@ -1190,8 +1256,8 @@ function renderTrendingCard(container, id, stats){
   var views = stats.views || 0;
 
   var card = document.createElement('div');
-  card.className = 'pressable';
-  card.style.cssText = 'background:#fff;border-radius:16px;overflow:hidden;width:100%;box-shadow:0 8px 20px rgba(0,0,0,0.05);cursor:pointer;';
+  card.className = 'ch-card pressable';
+  card.style.cssText = 'padding:0;margin:0;width:100%;cursor:pointer;';
   // Trending-Karten waren Sackgassen — jetzt führen sie zur passenden Ansicht
   card.setAttribute('role','button');
   card.setAttribute('tabindex','0');
@@ -1203,22 +1269,33 @@ function renderTrendingCard(container, id, stats){
   card.onclick = openTrending;
   card.onkeydown = function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openTrending(); } };
 
+  // Foto-Kopf (.ch-photo → Grayscale + Verlauf per CSS); ohne Foto ein Ring-Icon auf --card2.
+  // Aufruf-Tag oben links liegt über dem ::after-Verlauf (z-index).
   var header = document.createElement('div');
-  header.style.cssText = photoUrl
-    ? 'height:130px;background:#000 url('+photoUrl+') center/cover no-repeat;position:relative;'
-    : 'background:'+iconBg+';padding:20px;position:relative;';
-  header.innerHTML =
-    '<div style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,0.9);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;color:var(--text);">🔥 '+views+'</div>'+
-    (photoUrl ? '' : '<div style="font-size:40px;text-align:center;">'+(isCommunity ? '🌟' : (meta.icon||'🏆'))+'</div>');
+  if(photoUrl){
+    header.className = 'ch-photo';
+    header.style.cssText = 'height:130px;margin:0;border-radius:0;';
+    header.innerHTML = '<img src="'+photoUrl+'" alt="" loading="lazy">';
+  } else {
+    header.style.cssText = 'background:var(--card2);border-bottom:1px solid var(--line);padding:20px;position:relative;display:flex;justify-content:center;';
+    header.innerHTML = planIconRing(isCommunity ? 'star' : 'trophy', 44, 18, 'var(--muted)');
+  }
+  var viewsTag = document.createElement('div');
+  viewsTag.className = 'num';
+  viewsTag.style.cssText = PLAN_TAG_CSS+'position:absolute;top:10px;left:10px;z-index:1;background:var(--card);display:inline-flex;align-items:center;gap:5px;';
+  viewsTag.innerHTML = '<span style="display:inline-flex;width:11px;height:11px;color:var(--accent);">'+planLineIcon('flame', 11)+'</span>'+views;
+  header.appendChild(viewsTag);
   card.appendChild(header);
 
   var body = document.createElement('div');
-  body.style.cssText = 'padding:14px 16px 16px;';
+  body.style.cssText = 'padding:14px;';
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;';
+  titleEl.className = 'ttl';
+  titleEl.style.cssText = 'margin-bottom:4px;';
   titleEl.textContent = isCommunity ? 'Wird geladen…' : meta.title;
   var descEl = document.createElement('div');
-  descEl.style.cssText = 'font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:10px;';
+  descEl.className = 'row-sub';
+  descEl.style.cssText = 'margin:0 0 10px;';
   descEl.textContent = isCommunity ? '' : (meta.desc||'');
   body.appendChild(titleEl);
   body.appendChild(descEl);
@@ -1227,8 +1304,9 @@ function renderTrendingCard(container, id, stats){
   footer.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
 
   var countEl = document.createElement('div');
-  countEl.style.cssText = 'font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;';
-  countEl.innerHTML = '👥 '+participantUids.length+' Teilnehmer';
+  countEl.className = 'row-sub num';
+  countEl.style.cssText = 'margin:0;display:flex;align-items:center;gap:6px;';
+  countEl.innerHTML = '<span style="display:inline-flex;width:14px;height:14px;color:var(--muted);">'+planLineIcon('people', 14)+'</span>'+participantUids.length+' Teilnehmer';
   footer.appendChild(countEl);
 
   var avatarStack = document.createElement('div');
@@ -1256,23 +1334,25 @@ function renderAvatarStack(el, uids, maxShown, overflowOverride){
   var shown = uids.slice(0,maxShown);
   var overflow = (typeof overflowOverride === 'number') ? overflowOverride : (uids.length - shown.length);
   el.innerHTML = '';
+  // Gestapelte 24px-Avatare: Ring 1px --line2, Trennung zum Nachbarn über --bg-Rand; Fotos grayscale (§6)
   shown.forEach(function(uid, i){
     var av = document.createElement('div');
-    av.style.cssText = 'width:24px;height:24px;border-radius:50%;background:var(--bg3);border:2px solid #fff;margin-left:'+(i>0?'-8px':'0')+';display:flex;align-items:center;justify-content:center;font-size:11px;overflow:hidden;';
-    av.textContent = '💪';
+    av.style.cssText = 'width:24px;height:24px;border-radius:50%;background:var(--card2);border:1px solid var(--line2);outline:2px solid var(--bg);margin-left:'+(i>0?'-8px':'0')+';display:flex;align-items:center;justify-content:center;color:var(--muted);overflow:hidden;flex-shrink:0;';
+    av.innerHTML = '<span style="display:inline-flex;width:12px;height:12px;">'+planLineIcon('people', 12)+'</span>';
     el.appendChild(av);
     db.collection('users').doc(uid).get().then(function(doc){
       if(!doc.exists) return;
       var pd = doc.data().prData;
       if(pd && pd.avatar){
-        av.style.cssText += 'background-image:url('+pd.avatar+');background-size:cover;background-position:center;';
-        av.textContent = '';
+        av.style.cssText += 'background-image:url('+pd.avatar+');background-size:cover;background-position:center;filter:grayscale(1) contrast(1.15) brightness(0.85);';
+        av.innerHTML = '';
       }
     }).catch(function(){});
   });
   if(overflow > 0){
     var more = document.createElement('div');
-    more.style.cssText = 'width:24px;height:24px;border-radius:50%;background:var(--bg3);border:2px solid #fff;margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);';
+    more.className = 'num';
+    more.style.cssText = 'width:24px;height:24px;border-radius:50%;background:var(--card2);border:1px solid var(--line2);outline:2px solid var(--bg);margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--muted);flex-shrink:0;';
     more.textContent = '+'+overflow;
     el.appendChild(more);
   }
@@ -1285,24 +1365,20 @@ function openChDrawer(type){
 
   var ov = document.createElement('div');
   ov.id = 'ch-drawer-overlay';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = PLAN_BACKDROP_CSS+'z-index:2000;';
 
   var drawer = document.createElement('div');
-  // Endlayout ohne Inline-Transform — die Einfahranimation macht caliMotion.sheetIn
-  drawer.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:0 0 40px;border-top:1px solid var(--border);';
-  drawer.classList.add('sheet-scroll');
+  // Endlayout ohne Inline-Transform — die Einfahranimation macht caliMotion.sheetIn.
+  // .sheet (§5.15): --card, 1px --line2 oben, 10px-Radius; hier scrollbar mit 85vh-Deckel.
+  drawer.className = 'sheet sheet-scroll';
+  drawer.style.cssText = 'max-height:85vh;overflow-y:auto;padding:14px 0 calc(36px + env(safe-area-inset-bottom,0px));';
 
   // Handle bar
-  var handle = document.createElement('div');
-  handle.style.cssText = 'display:flex;justify-content:center;padding:14px 0 10px;';
-  var bar = document.createElement('div');
-  bar.style.cssText = 'width:36px;height:4px;background:var(--border);border-radius:4px;';
-  handle.appendChild(bar);
-  drawer.appendChild(handle);
+  drawer.appendChild(planSheetGrip());
 
   // Content area
   var content = document.createElement('div');
-  content.style.cssText = 'padding:0 20px;';
+  content.style.cssText = 'padding:0 16px;';
 
   if(type === 'personal'){
     buildDrawerPersonal(content);
@@ -1329,18 +1405,22 @@ function closeChDrawer(){
 // ── PERSONAL DRAWER ───────────────────────────────────────
 function buildDrawerPersonal(el){
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'font-size:11px;color:var(--accent-ink);font-weight:700;margin-bottom:16px;';
+  hdr.className = 'eyebrow';
+  hdr.style.cssText = 'margin-bottom:14px;';
   hdr.textContent = 'Meine Challenge';
   el.appendChild(hdr);
 
   if(!activeChallenge){
     var hint = document.createElement('div');
-    hint.style.cssText = 'font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;text-align:center;padding:12px 0;';
+    hint.className = 'empty';
+    hint.style.cssText = 'margin-bottom:8px;';
     hint.textContent = 'Noch keine aktive Challenge.';
+    // Der eine orangene Prim\u00E4r-CTA des Sheets
     var genBtn = document.createElement('button');
-    genBtn.className = 'pressable';
-    genBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:16px;cursor:pointer;width:100%;margin-bottom:12px;transition:transform var(--dur-fast) var(--ease-out);';
-    genBtn.textContent = '\uD83C\uDFB2 Challenge generieren';
+    genBtn.type = 'button';
+    genBtn.className = 'btn pressable';
+    genBtn.style.cssText = 'margin:0 0 12px;';
+    genBtn.textContent = 'Challenge generieren';
     genBtn.onclick = function(){ generateChallenge(); closeChDrawer(); setTimeout(function(){ openChDrawer('personal'); }, 350); };
     el.appendChild(hint);
     el.appendChild(genBtn);
@@ -1350,22 +1430,22 @@ function buildDrawerPersonal(el){
     var pct = Math.min(100, Math.round((prog/target)*100));
     var done = pct >= 100;
 
+    // Karte-in-Sheet: --card2, Rahmen --line (fertig: --accent); Emoji-Icon \u2192 Ring mit Line-Icon
     var card = document.createElement('div');
-    card.style.cssText = 'background:var(--bg2);border:1px solid '+(done?'var(--accent)':'var(--border)')+';border-radius:16px;padding:18px;margin-bottom:14px;';
+    card.className = 'card';
+    card.style.cssText = 'background:var(--card2);border-color:'+(done?'var(--accent)':'var(--line)')+';margin-bottom:14px;';
     card.innerHTML =
-      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'+
-        '<div style="font-size:32px;">'+activeChallenge.icon+'</div>'+
-        '<div style="flex:1;">'+
-          '<div style="font-size:17px;font-weight:800;color:var(--text);">'+activeChallenge.title+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;">'+activeChallenge.desc+'</div>'+
+      '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">'+
+        planIconRing(done?'trophy':'target', 44, 18, done?'var(--accent)':'var(--muted)')+
+        '<div style="flex:1;min-width:0;">'+
+          '<div class="ttl">'+activeChallenge.title+'</div>'+
+          '<div class="row-sub" style="margin-top:4px;line-height:1.5;">'+activeChallenge.desc+'</div>'+
         '</div>'+
-        '<div style="font-size:11px;padding:3px 10px;border-radius:20px;background:'+(done?'rgba(255,85,0,0.12)':'var(--bg3)')+';color:'+(done?'var(--accent-ink)':'var(--muted)')+';font-weight:700;">'+(done?'Geschafft!':'Aktiv')+'</div>'+
+        '<div style="'+PLAN_TAG_CSS+(done?'color:var(--accent);border-color:var(--accent);':'')+'flex-shrink:0;">'+(done?'Geschafft':'Aktiv')+'</div>'+
       '</div>'+
-      '<div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:6px;">'+
-        '<div data-chbar style="height:100%;border-radius:20px;background:'+(done?'var(--accent)':'rgba(255,85,0,0.6)')+';width:0%;transition:width var(--dur-slow) var(--ease-out);"></div>'+
-      '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);">'+
-        '<span class="num">'+prog+' / '+target+'</span><span class="num">'+pct+'%</span>'+
+      planSegbarHTML('data-chbar')+
+      '<div class="row-sub num" style="display:flex;justify-content:space-between;margin:8px 0 0;">'+
+        '<span>'+prog+' / '+target+'</span><span>'+pct+'%</span>'+
       '</div>';
     el.appendChild(card);
     var chFill = card.querySelector('[data-chbar]');
@@ -1378,8 +1458,9 @@ function buildDrawerPersonal(el){
       // Feiermoment statt Sackgasse: Challenge abschließen, XP kassieren
       var claimKey = 'cali_ch_claimed_'+activeChallenge.id+'_'+(activeChallenge.startDate||'');
       var claimBtn = document.createElement('button');
-      claimBtn.className = 'pressable';
-      claimBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:16px;cursor:pointer;width:100%;margin-bottom:8px;transition:transform var(--dur-fast) var(--ease-out);';
+      claimBtn.type = 'button';
+      claimBtn.className = 'btn pressable';
+      claimBtn.style.cssText = 'margin:0 0 8px;';
       claimBtn.textContent = 'Challenge abschließen';
       claimBtn.onclick = function(){
         var claimed = false;
@@ -1394,7 +1475,7 @@ function buildDrawerPersonal(el){
         closeChDrawer();
         buildChallengeUI();
         showCelebrationOverlay({
-          icon: ch.icon,
+          iconName: 'trophy',
           title: 'Challenge geschafft!',
           big: ch.title,
           sub: ch.desc,
@@ -1404,16 +1485,18 @@ function buildDrawerPersonal(el){
       el.appendChild(claimBtn);
     } else {
       var newBtn = document.createElement('button');
-      newBtn.className = 'pressable';
-      newBtn.style.cssText = 'background:var(--bg3);color:var(--muted);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;cursor:pointer;width:100%;margin-bottom:8px;transition:transform var(--dur-fast) var(--ease-out);';
+      newBtn.type = 'button';
+      newBtn.className = 'btn-g pressable';
+      newBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:4px;';
       newBtn.textContent = 'Neue Challenge generieren';
       newBtn.onclick = function(){ activeChallenge=null; saveChallenges(); generateChallenge(); closeChDrawer(); setTimeout(function(){ openChDrawer('personal'); }, 350); };
       el.appendChild(newBtn);
 
       var skipBtn = document.createElement('button');
-      skipBtn.className = 'pressable';
-      skipBtn.style.cssText = 'background:none;color:var(--muted);border:none;font-family:inherit;font-size:12px;padding:8px;cursor:pointer;width:100%;transition:transform var(--dur-fast) var(--ease-out);';
-      skipBtn.textContent = 'Challenge skippen (\uD83D\uDD25 50 oder \uD83D\uDC8E 1)';
+      skipBtn.type = 'button';
+      skipBtn.className = 'pressable u';
+      skipBtn.style.cssText = PLAN_TEXTBTN_CSS;
+      skipBtn.textContent = 'Challenge skippen (50 Flammen oder 1 Diamant)';
       skipBtn.onclick = function(){ closeChDrawer(); setTimeout(skipChallenge, 300); };
       el.appendChild(skipBtn);
     }
@@ -1423,27 +1506,29 @@ function buildDrawerPersonal(el){
 // ── PRESET DRAWER ─────────────────────────────────────────
 function buildDrawerPreset(el){
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'font-size:11px;color:var(--blue-ink);font-weight:700;margin-bottom:16px;';
+  hdr.className = 'eyebrow';
+  hdr.style.cssText = 'margin-bottom:14px;';
   hdr.textContent = 'Voreingestellte Challenges';
   el.appendChild(hdr);
 
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
     (function(ch){
+      // Challenge-Karte (§6): Grayscale-Foto oben (vorhandene challenge-*.jpg), Titel uppercase,
+      // Beschreibung + Erklärung mixed case; Emoji-Icon entfällt.
       var card = document.createElement('div');
-      card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:10px;';
+      card.className = 'ch-card';
+      card.style.cssText = 'background:var(--card2);margin-bottom:10px;';
       card.onclick = function(){ trackChallengeView(ch.id); };
       card.innerHTML =
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'+
-          '<span style="font-size:22px;">'+ch.icon+'</span>'+
-          '<div style="flex:1;">'+
-            '<div style="font-size:14px;font-weight:700;color:var(--text);">'+ch.title+'</div>'+
-            '<div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;">'+ch.desc+'</div>'+
-          '</div>'+
-        '</div>'+
-        '<div style="font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px;line-height:1.5;font-style:italic;">'+ch.explanation+'</div>';
+        (ch.image ? '<div class="ch-photo" style="height:100px;"><img src="'+ch.image+'" alt="" loading="lazy"></div>' : '')+
+        '<div class="ttl">'+ch.title+'</div>'+
+        '<div class="row-sub" style="margin-top:4px;line-height:1.5;">'+ch.desc+'</div>'+
+        (ch.explanation ? '<div class="row-sub" style="border-top:1px solid var(--line);padding-top:8px;margin-top:10px;line-height:1.5;">'+ch.explanation+'</div>' : '');
+      // Heller Sekundär-CTA je Karte — Orange bleibt dem einen Primär-CTA vorbehalten
       var btn = document.createElement('button');
-      btn.className = 'pressable';
-      btn.style.cssText = 'background:rgba(56,189,248,0.08);color:var(--blue-ink);border:1px solid rgba(56,189,248,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;cursor:pointer;width:100%;margin-top:10px;transition:transform var(--dur-fast) var(--ease-out);';
+      btn.type = 'button';
+      btn.className = 'btn sec pressable';
+      btn.style.cssText = 'margin:12px 0 0;min-height:40px;font-size:11px;';
       btn.textContent = 'Annehmen';
       btn.onclick = function(){
         activeChallenge = {
@@ -1468,7 +1553,8 @@ function togglePlanExpand(card){
   if(!detail) return;
   var isOpen = detail.classList.contains('open');
   detail.classList.toggle('open', !isOpen);
-  if(arrow) arrow.textContent = isOpen ? '›' : '˅';
+  // Chevron "›" dreht sich nach unten statt Zeichentausch (kein Layout-Sprung)
+  if(arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 
 // ── WOCHENPLAN ────────────────────────────────────────────
@@ -1533,52 +1619,61 @@ function buildTodayHeroCard(container, wp, todayIdx){
   var today = new Date();
   var dateStr = today.getDate()+'. '+MONTH_NAMES[today.getMonth()]+' '+today.getFullYear();
 
+  // Heute-Karte: hervorgehobener Rahmen --line2 + orangener Live-Dot vor dem Eyebrow (Kontrakt).
+  // Eyebrow → Plan-Titel (uppercase) → Sub nur mit echten Werten (§5.10).
   var card = document.createElement('div');
-  card.style.cssText = 'position:relative;overflow:hidden;background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:22px;margin-bottom:20px;border-left:4px solid var(--accent);';
+  card.className = 'card';
+  card.style.cssText = 'border-color:var(--line2);padding:16px;margin-bottom:10px;';
 
-  var deco = document.createElement('div');
-  deco.style.cssText = 'position:absolute;right:-6px;bottom:-6px;width:130px;height:130px;opacity:0.07;pointer-events:none;';
-  deco.innerHTML = ci(hasWorkout ? 'flex' : 'moon');
-  card.appendChild(deco);
+  var head = document.createElement('div');
+  head.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;';
 
   var content = document.createElement('div');
-  content.style.cssText = 'position:relative;';
+  content.style.cssText = 'flex:1;min-width:0;';
 
   var eyebrow = document.createElement('div');
-  eyebrow.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent-ink);margin-bottom:6px;';
-  eyebrow.textContent = 'Heute';
+  eyebrow.className = 'eyebrow';
+  eyebrow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+  eyebrow.innerHTML = '<span class="live-dot"></span><span>Heute · '+WEEK_DAYS_FULL[todayIdx]+', '+dateStr+'</span>';
   content.appendChild(eyebrow);
 
-  var dateRow = document.createElement('div');
-  dateRow.style.cssText = 'font-size:19px;font-weight:700;color:var(--text);margin-bottom:14px;';
-  dateRow.textContent = WEEK_DAYS_FULL[todayIdx]+' • '+dateStr;
-  content.appendChild(dateRow);
+  var titleEl = document.createElement('div');
+  titleEl.className = 'ttl';
+  titleEl.textContent = hasWorkout ? firstPlan.name : 'Ruhetag';
+  content.appendChild(titleEl);
 
-  var statusRow = document.createElement('div');
-  statusRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:12px;';
-  statusRow.innerHTML = '<span style="display:inline-flex;width:22px;height:22px;vertical-align:middle;">'+ci(hasWorkout?'flex':'moon')+'</span>'+
-    '<span style="font-size:16px;font-weight:700;color:var(--text);">'+(hasWorkout?firstPlan.name:'Ruhetag')+'</span>';
-  content.appendChild(statusRow);
+  var sub = document.createElement('div');
+  sub.className = 'row-sub num';
+  sub.style.cssText = 'margin-top:4px;';
+  if(hasWorkout){
+    var totalSets = 0;
+    for(var s=0;s<firstPlan.exercises.length;s++){ totalSets += (firstPlan.exercises[s].sets||[]).length; }
+    sub.textContent = firstPlan.exercises.length+' Übungen · '+totalSets+' Sätze'+(dayPlans.length>1?' · +'+(dayPlans.length-1)+' weitere':'');
+  } else {
+    sub.textContent = 'Nutze heute die Zeit für Regeneration und Mobility.';
+  }
+  content.appendChild(sub);
+  head.appendChild(content);
 
-  var tipRow = document.createElement('div');
-  tipRow.style.cssText = 'font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;max-width:80%;';
-  tipRow.textContent = hasWorkout
-    ? (firstPlan.exercises.length+' Übungen warten auf dich. Bleib fokussiert und achte auf saubere Technik.')
-    : 'Nutze heute die Zeit für Regeneration und Mobility.';
-  content.appendChild(tipRow);
+  var ring = document.createElement('div');
+  ring.style.cssText = 'display:flex;flex-shrink:0;';
+  ring.innerHTML = planIconRing(hasWorkout?'flex':'moon', 44, 18, hasWorkout?'var(--accent)':'var(--muted)');
+  head.appendChild(ring);
+  card.appendChild(head);
 
+  // Der eine orangene Primär-CTA der Pläne-Seite; ohne Workout ein Ghost-Button
   var editBtn = document.createElement('button');
-  editBtn.className = 'pk-btn';
-  editBtn.style.cssText = 'background:'+(hasWorkout?'var(--accent-deep)':'#fff')+';color:'+(hasWorkout?'#fff':'var(--text)')+';border:'+(hasWorkout?'none':'1px solid var(--border)')+';border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:11px 18px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  editBtn.innerHTML = hasWorkout ? '▶ Workout starten' : '✎ Plan bearbeiten';
+  editBtn.type = 'button';
+  editBtn.className = (hasWorkout ? 'btn' : 'btn-g') + ' pressable';
+  editBtn.style.cssText = hasWorkout ? 'margin:0;' : 'width:100%;min-height:44px;';
+  editBtn.textContent = hasWorkout ? '▶ Workout starten' : 'Plan bearbeiten';
   editBtn.onclick = function(){
     // startPlanById wechselt zur Workout-Seite und kann auch 'preset_N' starten
     if(hasWorkout){ startPlanById(firstPlan.id); }
     else { openDayEditor(todayIdx, null); }
   };
-  content.appendChild(editBtn);
+  card.appendChild(editBtn);
 
-  card.appendChild(content);
   container.appendChild(card);
 }
 
@@ -1598,21 +1693,25 @@ function openDayListModal(focusIdx){
   ov.id = 'week-cal-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  // Top bar
+  // Top bar (§5.9): 36px-Zurück-Ring, zentrierter Uppercase-Titel, rechts Ghost "Neuer Plan"
   var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  topBar.className = 'topbar';
+  topBar.style.cssText = 'padding:0 16px;margin:0;flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);flex-shrink:0;';
-  backBtn.innerHTML = '← Zurück';
+  backBtn.type = 'button';
+  backBtn.className = 'icon-btn sm pressable';
+  backBtn.setAttribute('aria-label', 'Zurück');
+  backBtn.innerHTML = '&#8592;';
   backBtn.onclick = function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
   };
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  titleEl.textContent = '📅 Wochenplan';
+  titleEl.className = 'topbar-title';
+  titleEl.textContent = 'Wochenplan';
   var newPlanBtn = document.createElement('button');
-  newPlanBtn.className = 'pressable';
-  newPlanBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
+  newPlanBtn.type = 'button';
+  newPlanBtn.className = 'btn-g pressable';
+  newPlanBtn.style.cssText = 'min-height:32px;padding:0 12px;font-size:10px;flex-shrink:0;white-space:nowrap;';
   newPlanBtn.textContent = '+ Neuer Plan';
   newPlanBtn.onclick = function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
@@ -1623,7 +1722,7 @@ function openDayListModal(focusIdx){
 
   // Scrollable content
   var scroll = document.createElement('div');
-  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px));';
   scroll.classList.add('sheet-scroll');
   ov.appendChild(scroll);
   document.body.appendChild(ov);
@@ -1679,22 +1778,28 @@ function renderDayList(scroll, focusIdx){
 
   var left = document.createElement('div');
 
-  // Stats bar
+  // Wochen-Kennzahlen als Stat-Kacheln (§5.3), dreispaltig — Werte aus dem gespeicherten Wochenplan
   var statsBar = document.createElement('div');
-  statsBar.style.cssText = 'display:flex;gap:8px;background:var(--bg2);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;margin-bottom:12px;flex-wrap:wrap;';
+  statsBar.className = 'stat-grid';
+  statsBar.style.cssText = 'grid-template-columns:repeat(3,1fr);margin-bottom:14px;';
   [
-    {icon:'flex', val:stats.workouts, label:'Workouts'},
-    {icon:'moon', val:stats.restDays, label:'Ruhetage'},
-    {icon:'flame', val:stats.totalEx, label:'Übungen'}
+    {val:stats.workouts, label:'Workouts'},
+    {val:stats.restDays, label:'Ruhetage'},
+    {val:stats.totalEx, label:'Übungen'}
   ].forEach(function(s){
-    var pill = document.createElement('div');
-    pill.style.cssText = 'flex:1;min-width:90px;display:flex;align-items:center;gap:8px;';
-    pill.innerHTML = '<div style="width:20px;height:20px;">'+ci(s.icon)+'</div><div><div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.1;">'+s.val+'</div><div style="font-size:11px;color:var(--muted);">'+s.label+'</div></div>';
-    statsBar.appendChild(pill);
+    var tile = document.createElement('div');
+    tile.className = 'stat-tile';
+    tile.style.cssText = 'padding:12px;gap:6px;';
+    tile.innerHTML = '<span class="lbl">'+s.label+'</span><div class="kpi-row"><span class="kpi num" style="font-size:22px;">'+s.val+'</span></div>';
+    statsBar.appendChild(tile);
   });
   left.appendChild(statsBar);
 
-  // Day list
+  // Tagesliste: eine .list-Karte, je Tag eine Zeile mit zweibuchstabigem Index (Mo, Di, …);
+  // heute = orangener Index + Live-Dot + --card2-Fläche. Chevron dreht beim Aufklappen.
+  var list = document.createElement('div');
+  list.className = 'list';
+
   WEEK_DAYS_FULL.forEach(function(dayName, i){
     var dayPlans = wp[i] || [];
     var isToday = i === todayIdx;
@@ -1703,60 +1808,67 @@ function renderDayList(scroll, focusIdx){
     if(hasWorkout && !firstPlan) hasWorkout = false;
 
     var dayBlock = document.createElement('div');
-    dayBlock.style.cssText = 'margin-bottom:8px;border-radius:16px;overflow:hidden;background:var(--bg2);box-shadow:0 8px 20px rgba(0,0,0,0.05);'+(isToday?'border:1.5px solid var(--accent);':'');
+    dayBlock.style.cssText = (i<6?'border-bottom:1px solid var(--line);':'')+(isToday?'background:var(--card2);':'');
 
     var expanded = i === focusIdx;
 
-    var chevron = document.createElement('div');
-    chevron.style.cssText = 'font-size:13px;color:var(--muted);flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);transform:rotate('+(expanded?'180':'0')+'deg);';
-    chevron.textContent = '⌄';
+    var chevron = document.createElement('span');
+    chevron.className = 'row-chev';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.style.cssText = 'transition:transform var(--dur-fast) var(--ease-out);transform:rotate('+(expanded?'90':'0')+'deg);';
 
     var dayHdr = document.createElement('div');
-    dayHdr.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;';
+    dayHdr.className = 'list-row pressable';
+    dayHdr.style.cssText = 'border-bottom:none;';
+    dayHdr.setAttribute('role', 'button');
+    dayHdr.setAttribute('tabindex', '0');
+    dayHdr.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     dayHdr.innerHTML =
-      iconWrap(hasWorkout?'flex':'moon',{size:16,box:34,radius:10,bg:hasWorkout?'rgba(255,85,0,0.12)':'rgba(150,150,150,0.15)'})+
-      '<div style="flex-shrink:0;width:44px;">'+
-        '<div style="font-size:11px;font-weight:800;color:'+(isToday?'var(--accent-ink)':'var(--muted)')+';">'+WEEK_DAYS[i]+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);">'+formatDayDate(weekDates[i])+'</div>'+
-      '</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="display:flex;align-items:center;gap:6px;">'+
-          '<div style="font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(hasWorkout?firstPlan.name:'Ruhetag')+'</div>'+
-          (isToday?'<div style="font-size:11px;background:var(--accent-deep);color:#fff;padding:2px 7px;border-radius:20px;font-weight:700;flex-shrink:0;">Heute</div>':'')+
+      '<span class="row-index" style="color:'+(isToday?'var(--accent)':'var(--muted2)')+';">'+WEEK_DAYS[i]+'</span>'+
+      planIconRing(hasWorkout?'flex':'moon', 36, 16, hasWorkout?'var(--text)':'var(--muted)')+
+      '<div class="row-main">'+
+        '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'+
+          (isToday?'<span class="live-dot"></span>':'')+
+          '<div class="row-title">'+(hasWorkout?firstPlan.name:'Ruhetag')+'</div>'+
         '</div>'+
-        '<div style="font-size:11px;color:var(--muted);">'+(hasWorkout?(firstPlan.exercises.length+' Übungen'+(dayPlans.length>1?' • +'+(dayPlans.length-1)+' weitere':'')):'Aktive Erholung')+'</div>'+
+        '<div class="row-sub num">'+formatDayDate(weekDates[i])+' · '+(hasWorkout?(firstPlan.exercises.length+' Übungen'+(dayPlans.length>1?' · +'+(dayPlans.length-1)+' weitere':'')):'Aktive Erholung')+'</div>'+
       '</div>';
     dayHdr.appendChild(chevron);
     dayBlock.appendChild(dayHdr);
 
     var detailWrap = document.createElement('div');
-    detailWrap.style.cssText = 'display:'+(expanded?'block':'none')+';padding:0 12px 12px;';
+    detailWrap.style.cssText = 'display:'+(expanded?'block':'none')+';padding:0 14px 14px;';
 
     function renderDetail(){
       detailWrap.innerHTML = '';
       if(hasWorkout){
-        var exScroll = document.createElement('div');
-        exScroll.style.cssText = 'display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;';
-        firstPlan.exercises.slice(0,3).forEach(function(ex){
-          var chip = document.createElement('div');
-          chip.style.cssText = 'flex-shrink:0;width:118px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;';
+        // Erste drei Übungen als nummerierte Zeilen (Kategorie-Dot, echte Satz-/Zielwerte), Rest als "+n weitere"
+        var exList = document.createElement('div');
+        exList.style.cssText = 'margin-bottom:12px;';
+        firstPlan.exercises.slice(0,3).forEach(function(ex, k){
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);';
           var col = (typeof COLS!=='undefined' && COLS[ex.col]) || 'var(--accent)';
-          chip.innerHTML = '<div style="width:22px;height:22px;border-radius:7px;background:'+col+';margin-bottom:6px;"></div>'+
-            '<div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:2px;">'+ex.name+'</div>'+
-            '<div style="font-size:11px;color:var(--muted);">'+ex.sets.length+' Sätze'+(ex.sets[0]?' • '+ex.sets[0].n+' '+ex.unit:'')+'</div>';
-          exScroll.appendChild(chip);
+          row.innerHTML = '<span class="row-index num">'+('0'+(k+1)).slice(-2)+'</span>'+
+            '<span class="plan-dot" style="background:'+col+';"></span>'+
+            '<div class="row-main"><div class="row-title">'+ex.name+'</div></div>'+
+            '<span class="row-sub num" style="margin:0;flex-shrink:0;">'+ex.sets.length+' Sätze'+(ex.sets[0]?' · '+ex.sets[0].n+' '+ex.unit:'')+'</span>';
+          exList.appendChild(row);
         });
         if(firstPlan.exercises.length > 3){
-          var moreChip = document.createElement('div');
-          moreChip.style.cssText = 'flex-shrink:0;width:90px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent-ink);font-weight:700;text-align:center;';
-          moreChip.textContent = '+'+(firstPlan.exercises.length-3)+' weitere ›';
-          exScroll.appendChild(moreChip);
+          var moreRow = document.createElement('div');
+          moreRow.className = 'row-sub num';
+          moreRow.style.cssText = 'margin:0;padding:8px 0 0 32px;border-top:1px solid var(--line);color:var(--muted2);';
+          moreRow.textContent = '+'+(firstPlan.exercises.length-3)+' weitere';
+          exList.appendChild(moreRow);
         }
-        detailWrap.appendChild(exScroll);
+        detailWrap.appendChild(exList);
 
+        // Heller Sekundär-CTA — mehrere Tage können gleichzeitig offen sein, Orange bleibt der Heute-Karte
         var startBtn = document.createElement('button');
-        startBtn.className = 'pressable';
-        startBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;cursor:pointer;margin-bottom:8px;transition:transform var(--dur-fast) var(--ease-out);';
+        startBtn.type = 'button';
+        startBtn.className = 'btn sec pressable';
+        startBtn.style.cssText = 'margin:0 0 8px;min-height:44px;font-size:11px;';
         startBtn.textContent = '▶ Workout starten';
         startBtn.onclick = function(e){
           e.stopPropagation();
@@ -1769,33 +1881,38 @@ function renderDayList(scroll, focusIdx){
         detailWrap.appendChild(startBtn);
       } else {
         var tipBox = document.createElement('div');
-        tipBox.style.cssText = 'background:var(--bg3);border-radius:16px;padding:12px;margin-bottom:8px;';
-        tipBox.innerHTML = '<div style="font-size:11px;font-weight:800;color:var(--accent-ink);margin-bottom:4px;">☀️ Tipp für heute</div>'+
+        tipBox.style.cssText = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:14px;margin-bottom:8px;';
+        tipBox.innerHTML = '<span class="eyebrow">Tipp für heute</span>'+
           '<div style="font-size:12px;color:var(--text);line-height:1.5;">Nutze den Tag für Mobilität, Stretching oder einen Spaziergang.</div>';
         detailWrap.appendChild(tipBox);
       }
 
       var editBtn = document.createElement('button');
-      editBtn.className = 'pressable';
-      editBtn.style.cssText = 'width:100%;background:none;border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px;cursor:pointer;';
-      editBtn.textContent = hasWorkout ? '✎ Plan bearbeiten' : '+ Plan hinzufügen';
+      editBtn.type = 'button';
+      editBtn.className = 'btn-g pressable';
+      editBtn.style.cssText = 'width:100%;min-height:40px;';
+      editBtn.textContent = hasWorkout ? 'Plan bearbeiten' : '+ Plan hinzufügen';
       editBtn.onclick = function(e){ e.stopPropagation(); openDayEditor(i, scroll); };
       detailWrap.appendChild(editBtn);
     }
     renderDetail();
     dayBlock.appendChild(detailWrap);
 
-    dayHdr.onclick = function(){
+    var toggleDay = function(){
       expanded = !expanded;
       detailWrap.style.display = expanded ? 'block' : 'none';
-      chevron.style.transform = 'rotate('+(expanded?'180':'0')+'deg)';
+      chevron.style.transform = 'rotate('+(expanded?'90':'0')+'deg)';
+      dayHdr.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     };
+    dayHdr.onclick = toggleDay;
+    dayHdr.onkeydown = function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleDay(); } };
 
-    left.appendChild(dayBlock);
+    list.appendChild(dayBlock);
   });
 
+  left.appendChild(list);
   scroll.appendChild(left);
-  if(window.caliMotion) caliMotion.stagger(left);
+  if(window.caliMotion) caliMotion.stagger(list);
 }
 
 var weekCalExpandedDay = null; // 0-6 oder null — welcher Wochentag ist inline aufgeklappt
@@ -1809,52 +1926,61 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   var prevMonthDays = new Date(year, month, 0).getDate();
 
   var card = document.createElement('div');
-  card.style.cssText = 'background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:20px;margin-bottom:20px;';
+  card.className = 'card';
+  card.style.cssText = 'margin-bottom:10px;';
 
+  // Kopf: Eyebrow mit Kalender-Line-Icon, rechts Text-Link "Ganze Woche →" in --accent
   var sectionTitleRow = document.createElement('div');
-  sectionTitleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
+  sectionTitleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;';
   var sectionTitle = document.createElement('div');
-  sectionTitle.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;';
-  sectionTitle.innerHTML = '📅 Wochenplan';
+  sectionTitle.className = 'eyebrow';
+  sectionTitle.style.cssText = 'margin:0;display:flex;align-items:center;gap:8px;';
+  sectionTitle.innerHTML = '<span style="display:inline-flex;width:14px;height:14px;color:var(--muted);">'+planLineIcon('calendar', 14)+'</span><span>Wochenplan</span>';
   sectionTitleRow.appendChild(sectionTitle);
   var fullWeekBtn = document.createElement('button');
-  fullWeekBtn.className = 'pressable';
-  fullWeekBtn.style.cssText = 'background:none;border:none;color:var(--accent-ink);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
-  fullWeekBtn.innerHTML = 'Ganze Woche →';
+  fullWeekBtn.type = 'button';
+  fullWeekBtn.className = 'lbl pressable';
+  fullWeekBtn.style.cssText = 'background:none;border:none;padding:0;cursor:pointer;font-family:inherit;color:var(--accent);white-space:nowrap;';
+  fullWeekBtn.innerHTML = 'Ganze Woche &#8594;';
   fullWeekBtn.onclick = function(){ openDayListModal((new Date().getDay()+6)%7); };
   sectionTitleRow.appendChild(fullWeekBtn);
   card.appendChild(sectionTitleRow);
 
+  // Monatsnavigation: 36px-Ring-Buttons (§5.7) um den Uppercase-Monatstitel
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;';
   var prevBtn = document.createElement('button');
-  prevBtn.style.cssText = 'background:var(--bg3);border:none;border-radius:10px;font-size:16px;color:var(--text);cursor:pointer;width:36px;height:36px;';
-  prevBtn.textContent = '←';
+  prevBtn.type = 'button';
+  prevBtn.className = 'icon-btn sm pressable';
+  prevBtn.innerHTML = '&#8592;';
   prevBtn.setAttribute('aria-label', 'Vorheriger Monat');
   prevBtn.onclick = function(){ weekCalMonthOffset--; rerenderFn(); };
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:16px;font-weight:700;color:var(--text);';
+  titleEl.className = 'ttl num';
+  titleEl.style.cssText = 'text-align:center;';
   titleEl.textContent = MONTH_NAMES[month]+' '+year;
   var nextBtn = document.createElement('button');
-  nextBtn.style.cssText = 'background:var(--bg3);border:none;border-radius:10px;font-size:16px;color:var(--text);cursor:pointer;width:36px;height:36px;';
-  nextBtn.textContent = '→';
+  nextBtn.type = 'button';
+  nextBtn.className = 'icon-btn sm pressable';
+  nextBtn.innerHTML = '&#8594;';
   nextBtn.setAttribute('aria-label', 'Nächster Monat');
   nextBtn.onclick = function(){ weekCalMonthOffset++; rerenderFn(); };
   hdr.appendChild(prevBtn); hdr.appendChild(titleEl); hdr.appendChild(nextBtn);
   card.appendChild(hdr);
 
   var weekHdrRow = document.createElement('div');
-  weekHdrRow.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px;';
+  weekHdrRow.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:8px;';
   WEEK_DAYS.forEach(function(d){
     var c = document.createElement('div');
-    c.style.cssText = 'text-align:center;font-size:11px;font-weight:700;color:var(--muted);';
+    c.className = 'lbl';
+    c.style.cssText = 'text-align:center;color:var(--muted2);';
     c.textContent = d;
     weekHdrRow.appendChild(c);
   });
   card.appendChild(weekHdrRow);
 
   var grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px;';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;';
 
   var totalCells = startOffset + daysInMonth;
   var trailingCells = (7 - (totalCells % 7)) % 7;
@@ -1874,26 +2000,27 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
     var isSkillDay = hasW && dayPlans.some(function(pid){ var p=getPlanById(pid); return p && /skill/i.test(p.name); });
 
     var cell = document.createElement('div');
-    cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:6px 0;border-radius:12px;'+(inMonth?'cursor:pointer;':'');
+    cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:6px 0;border-radius:var(--r-sm);'+(inMonth?'cursor:pointer;':'');
     if(inMonth){
       dayCells.push({el:cell, dow:dowIdx});
       cell.onclick = function(dIdx){ return function(){ toggleCalDay(dIdx); }; }(dowIdx);
     }
 
+    // Tageszahl tabular; heute = orangener Kreis mit weißer Zahl; Fremdmonat in --muted2
     var numEl = document.createElement('div');
-    numEl.style.cssText = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:'+(isRealToday?'700':'600')+';'+
-      (isRealToday ? 'background:var(--accent-deep);color:#fff;' : 'color:'+(inMonth?'var(--text)':'var(--muted)')+';opacity:'+(inMonth?'1':'0.4')+';');
+    numEl.className = 'num';
+    numEl.style.cssText = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:'+(isRealToday?'600':'500')+';'+
+      (isRealToday ? 'background:var(--accent);color:#fff;' : 'color:'+(inMonth?'var(--text)':'var(--muted2)')+';');
     numEl.textContent = dateNum;
     cell.appendChild(numEl);
 
+    // Marker: 6px-Dot (--accent Workout / --line2 Ruhetag), Skill-Tag als Stern-Line-Icon
     var marker = document.createElement('div');
-    marker.style.cssText = 'margin-top:4px;opacity:'+(inMonth?(hasW?'1':'0.5'):'0.25')+';';
+    marker.style.cssText = 'margin-top:4px;height:10px;display:flex;align-items:center;justify-content:center;opacity:'+(inMonth?'1':'0.4')+';';
     if(isSkillDay){
-      marker.style.fontSize = '10px';
-      marker.style.color = 'var(--accent-ink)';
-      marker.textContent = '★';
+      marker.innerHTML = '<span style="display:inline-flex;width:10px;height:10px;color:var(--accent);">'+planLineIcon('star', 10)+'</span>';
     } else {
-      marker.style.cssText += 'width:5px;height:5px;border-radius:50%;background:'+(hasW?'var(--accent)':'var(--muted)')+';';
+      marker.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:'+(hasW?'var(--accent)':'var(--line2)')+';"></span>';
     }
     cell.appendChild(marker);
 
@@ -1902,11 +2029,14 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
   card.appendChild(grid);
 
   var legend = document.createElement('div');
-  legend.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border);';
-  [{icon:'●',c:'var(--accent)',l:'Workout'},{icon:'★',c:'var(--accent-ink)',l:'Skill'},{icon:'●',c:'var(--muted)',l:'Ruhetag'}].forEach(function(li){
+  legend.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line);';
+  [{kind:'dot',c:'var(--accent)',l:'Workout'},{kind:'star',c:'var(--accent)',l:'Skill'},{kind:'dot',c:'var(--line2)',l:'Ruhetag'}].forEach(function(li){
     var item = document.createElement('div');
-    item.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);';
-    item.innerHTML = '<span style="color:'+li.c+';font-size:10px;">'+li.icon+'</span>'+li.l;
+    item.className = 'lbl';
+    item.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    item.innerHTML = (li.kind==='star'
+      ? '<span style="display:inline-flex;width:10px;height:10px;color:'+li.c+';">'+planLineIcon('star', 10)+'</span>'
+      : '<span style="width:6px;height:6px;border-radius:50%;background:'+li.c+';flex-shrink:0;"></span>')+'<span>'+li.l+'</span>';
     legend.appendChild(item);
   });
   card.appendChild(legend);
@@ -1924,7 +2054,7 @@ function buildMonthCalendarCard(container, wp, rerenderFn){
 
   function syncCalDayHighlight(){
     for(var q=0;q<dayCells.length;q++){
-      dayCells[q].el.style.background = (weekCalExpandedDay===dayCells[q].dow) ? 'rgba(255,85,0,0.08)' : '';
+      dayCells[q].el.style.background = (weekCalExpandedDay===dayCells[q].dow) ? 'var(--card2)' : '';
     }
   }
 
@@ -1966,34 +2096,39 @@ function buildInlineDayDetail(container, dayIdx, wp){
   var firstPlan = hasWorkout ? getPlanById(dayPlans[0]) : null;
   if(hasWorkout && !firstPlan) hasWorkout = false;
 
+  // Karte-in-Karte (--card2, 1px --line): Ring-Icon + Eyebrow (Wochentag) + Titel (Plan / Ruhetag)
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg3);border-radius:16px;padding:16px;';
+  box.style.cssText = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:14px;';
 
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:12px;';
-  hdr.innerHTML = '<span style="display:inline-flex;width:18px;height:18px;vertical-align:middle;">'+ci(hasWorkout?'flex':'moon')+'</span>'+
-    '<span style="font-size:14px;font-weight:700;color:var(--text);">'+WEEK_DAYS_FULL[dayIdx]+'</span>'+
-    '<span style="font-size:13px;color:var(--muted);">— '+(hasWorkout?firstPlan.name:'Ruhetag')+'</span>';
+  hdr.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:12px;';
+  hdr.innerHTML = planIconRing(hasWorkout?'flex':'moon', 36, 16, hasWorkout?'var(--accent)':'var(--muted)')+
+    '<div style="flex:1;min-width:0;"><span class="eyebrow" style="margin-bottom:2px;">'+WEEK_DAYS_FULL[dayIdx]+'</span>'+
+    '<div class="ttl">'+(hasWorkout?firstPlan.name:'Ruhetag')+'</div></div>';
   box.appendChild(hdr);
 
   if(hasWorkout){
     var meta = document.createElement('div');
-    meta.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:12px;';
-    meta.textContent = firstPlan.exercises.length+' Übungen'+(dayPlans.length>1?' • +'+(dayPlans.length-1)+' weitere':'');
+    meta.className = 'row-sub num';
+    meta.style.cssText = 'margin:0 0 12px;';
+    meta.textContent = firstPlan.exercises.length+' Übungen'+(dayPlans.length>1?' · +'+(dayPlans.length-1)+' weitere':'');
     box.appendChild(meta);
 
+    // Heller Sekundär-CTA — der orangene Primär-CTA der Seite sitzt in der Heute-Karte
     var startBtn = document.createElement('button');
-    startBtn.className = 'pressable';
-    startBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;cursor:pointer;margin-bottom:8px;transition:transform var(--dur-fast) var(--ease-out);';
-    startBtn.innerHTML = '▶ Workout starten';
+    startBtn.type = 'button';
+    startBtn.className = 'btn sec pressable';
+    startBtn.style.cssText = 'margin:0 0 8px;min-height:44px;font-size:11px;';
+    startBtn.textContent = '▶ Workout starten';
     startBtn.onclick = function(){ startPlanById(firstPlan.id); };
     box.appendChild(startBtn);
   }
 
   var editBtn = document.createElement('button');
-  editBtn.className = 'pressable';
-  editBtn.style.cssText = 'width:100%;background:#fff;border:none;border-radius:10px;color:var(--muted);font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,0.05);';
-  editBtn.innerHTML = hasWorkout ? '✎ Plan bearbeiten' : '+ Plan hinzufügen';
+  editBtn.type = 'button';
+  editBtn.className = 'btn-g pressable';
+  editBtn.style.cssText = 'width:100%;min-height:40px;';
+  editBtn.textContent = hasWorkout ? 'Plan bearbeiten' : '+ Plan hinzufügen';
   editBtn.onclick = function(){ openDayEditor(dayIdx, null); };
   box.appendChild(editBtn);
 
@@ -2005,40 +2140,42 @@ function buildWeekSummaryCard(container, stats){
   var done = computeWeekWorkoutsDone();
   var pct = Math.min(100, Math.round((done/goal)*100));
 
+  // "Diese Woche": Eyebrow → Kennzahl x/y + Einheit (§5.12) → Segmentbalken → drei Stat-Kacheln
   var card = document.createElement('div');
-  card.style.cssText = 'background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:20px;margin-bottom:20px;';
+  card.className = 'card';
+  card.style.cssText = 'margin-bottom:10px;';
 
-  var title = document.createElement('div');
-  title.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;';
-  title.innerHTML = '📊 Diese Woche';
+  var title = document.createElement('span');
+  title.className = 'eyebrow';
+  title.textContent = 'Diese Woche';
   card.appendChild(title);
 
   var progLbl = document.createElement('div');
-  progLbl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;';
-  progLbl.innerHTML = '<span>Fortschritt</span><span class="num" style="font-weight:700;color:var(--text);">'+done+' / '+goal+' Workouts &middot; '+pct+'%</span>';
+  progLbl.style.cssText = 'display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;';
+  progLbl.innerHTML = '<div class="kpi-row" style="display:flex;align-items:baseline;gap:6px;"><span class="kpi num">'+done+'<span style="color:var(--muted2);">/'+goal+'</span></span><span class="unit">Workouts</span></div>'+
+    '<span class="num" style="font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;">'+pct+'%</span>';
   card.appendChild(progLbl);
 
   var track = document.createElement('div');
-  track.style.cssText = 'height:8px;background:var(--bg3);border-radius:8px;overflow:hidden;margin-bottom:18px;';
-  var bar = document.createElement('div');
-  bar.style.cssText = 'height:100%;width:0%;background:var(--accent);border-radius:8px;transition:width var(--dur-slow) var(--ease-out);';
-  track.appendChild(bar);
+  track.style.cssText = 'margin-bottom:14px;';
+  track.innerHTML = planSegbarHTML('data-weekbar');
   card.appendChild(track);
+  var bar = track.querySelector('[data-weekbar]');
   if(window.caliMotion) caliMotion.animateBar(bar, pct);
   else bar.style.width = pct+'%';
 
   var tileRow = document.createElement('div');
-  tileRow.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;';
+  tileRow.className = 'stat-grid';
+  tileRow.style.cssText = 'grid-template-columns:repeat(3,1fr);margin:0;';
   [
-    {icon:'flex', val:stats.workouts, label:'Workout'+(stats.workouts===1?'':'s')},
-    {icon:'moon', val:stats.restDays, label:'Ruhetage'},
-    {icon:'flame', val:stats.totalEx, label:'Übungen'}
+    {val:stats.workouts, label:'Workout'+(stats.workouts===1?'':'s')},
+    {val:stats.restDays, label:'Ruhetage'},
+    {val:stats.totalEx, label:'Übungen'}
   ].forEach(function(s){
     var tile = document.createElement('div');
-    tile.style.cssText = 'background:var(--bg3);border-radius:16px;padding:14px 8px;text-align:center;';
-    tile.innerHTML = '<div style="width:36px;height:36px;border-radius:12px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;"><div style="width:16px;height:16px;">'+ci(s.icon)+'</div></div>'+
-      '<div style="font-size:18px;font-weight:700;color:var(--text);">'+s.val+'</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+s.label+'</div>';
+    tile.className = 'stat-tile';
+    tile.style.cssText = 'background:var(--card2);padding:12px;gap:6px;';
+    tile.innerHTML = '<span class="lbl">'+s.label+'</span><div class="kpi-row"><span class="kpi num" style="font-size:22px;">'+s.val+'</span></div>';
     tileRow.appendChild(tile);
   });
   card.appendChild(tileRow);
@@ -2053,24 +2190,27 @@ function buildWeekTipCard(container){
     var dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
     weekTipIdx = dayOfYear % WEEK_TIPS.length;
   }
+  // Tipp-Karte: bordered Card mit Ring-Icon, Eyebrow und mixed-case Tipptext
   var card = document.createElement('div');
-  card.style.cssText = 'display:flex;align-items:center;gap:14px;background:rgba(255,85,0,0.07);border-radius:20px;padding:16px 18px;margin-bottom:20px;';
+  card.className = 'card';
+  card.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:10px;';
 
   var tipIconWrap = document.createElement('div');
-  tipIconWrap.style.cssText = 'width:22px;height:22px;flex-shrink:0;';
-  tipIconWrap.innerHTML = ci('lightbulb');
+  tipIconWrap.style.cssText = 'display:flex;flex-shrink:0;';
+  tipIconWrap.innerHTML = planIconRing('lightbulb', 44, 18, 'var(--accent)');
   card.appendChild(tipIconWrap);
 
   var textWrap = document.createElement('div');
   textWrap.style.cssText = 'flex:1;min-width:0;';
-  textWrap.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--accent-ink);margin-bottom:2px;">Tipp der Woche</div>'+
-    '<div style="font-size:13px;color:var(--text);line-height:1.5;">'+WEEK_TIPS[weekTipIdx]+'</div>';
+  textWrap.innerHTML = '<span class="eyebrow" style="margin-bottom:4px;">Tipp der Woche</span>'+
+    '<div style="font-size:12px;color:var(--text);line-height:1.5;">'+WEEK_TIPS[weekTipIdx]+'</div>';
   card.appendChild(textWrap);
 
   var moreBtn = document.createElement('button');
-  moreBtn.className = 'pressable';
-  moreBtn.style.cssText = 'background:none;border:none;color:var(--accent-ink);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
-  moreBtn.innerHTML = 'Mehr Tipps →';
+  moreBtn.type = 'button';
+  moreBtn.className = 'lbl pressable';
+  moreBtn.style.cssText = 'background:none;border:none;padding:0;cursor:pointer;font-family:inherit;color:var(--accent);white-space:nowrap;flex-shrink:0;';
+  moreBtn.innerHTML = 'Mehr Tipps &#8594;';
   moreBtn.onclick = function(){ weekTipIdx = (weekTipIdx+1) % WEEK_TIPS.length; buildWeekPlan(); };
   card.appendChild(moreBtn);
 
@@ -2089,33 +2229,41 @@ function openDayEditor(dayIdx, calScroll){
   var dayPlans = wp[dayIdx] || [];
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = PLAN_BACKDROP_CSS+'z-index:2000;';
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;max-height:80vh;overflow-y:auto;';
-  box.classList.add('sheet-scroll');
+  box.className = 'sheet sheet-scroll';
+  box.style.cssText = 'max-height:80vh;overflow-y:auto;';
 
   function renderBox(){
-    box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
-      '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">📅 '+WEEK_DAYS_FULL[dayIdx]+'</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Pläne für diesen Tag</div>';
+    box.innerHTML = '<div class="sheet-grip"></div>'+
+      '<div class="ttl" style="margin-bottom:4px;">'+WEEK_DAYS_FULL[dayIdx]+'</div>'+
+      '<div class="row-sub" style="margin:0 0 14px;">Pläne für diesen Tag</div>';
 
-    // Assigned plans
+    // Assigned plans — nummerierte Zeilen in einer .list-Karte (--card2 im Sheet)
     if(dayPlans.length === 0){
       var emptyEl = document.createElement('div');
-      emptyEl.style.cssText = 'text-align:center;padding:16px;color:var(--muted);font-size:12px;margin-bottom:12px;';
-      emptyEl.innerHTML = '😴 Ruhetag — kein Plan zugewiesen';
+      emptyEl.className = 'empty';
+      emptyEl.style.cssText = 'margin-bottom:8px;';
+      emptyEl.textContent = 'Ruhetag — kein Plan zugewiesen';
       box.appendChild(emptyEl);
     } else {
+      var listEl = document.createElement('div');
+      listEl.className = 'list';
+      listEl.style.cssText = 'background:var(--card2);margin-bottom:12px;';
+      var shown = 0;
       dayPlans.forEach(function(planId, i){
         var plan = getPlanById(planId);
         if(!plan) return;
+        shown++;
         var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:10px;margin-bottom:8px;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
-        row.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+plan.name+'</div>';
+        row.className = 'list-row';
+        row.style.cssText = 'cursor:default;';
+        row.innerHTML = '<span class="row-index num">'+('0'+shown).slice(-2)+'</span><div class="row-main"><div class="row-title">'+plan.name+'</div></div>';
         var delBtn = document.createElement('button');
-        delBtn.className = 'pressable';
-        delBtn.style.cssText = 'background:rgba(217,48,54,0.08);color:var(--red);border:1px solid rgba(217,48,54,0.2);border-radius:10px;font-size:11px;font-weight:700;padding:6px 10px;cursor:pointer;font-family:inherit;transition:transform var(--dur-fast) var(--ease-out);';
-        delBtn.textContent = '× Entfernen';
+        delBtn.type = 'button';
+        delBtn.className = 'btn-g danger pressable';
+        delBtn.style.cssText = 'min-height:32px;padding:0 12px;font-size:10px;flex-shrink:0;';
+        delBtn.textContent = 'Entfernen';
         delBtn.onclick = function(){
           dayPlans.splice(i,1);
           wp[dayIdx] = dayPlans;
@@ -2125,18 +2273,21 @@ function openDayEditor(dayIdx, calScroll){
           if(calScroll) renderDayList(calScroll, dayIdx);
         };
         row.appendChild(delBtn);
-        box.appendChild(row);
+        listEl.appendChild(row);
       });
+      box.appendChild(listEl);
     }
 
     // Add plan dropdown
     var addLabel = document.createElement('div');
-    addLabel.style.cssText = 'font-size:11px;color:var(--muted);font-weight:700;margin-bottom:8px;margin-top:4px;';
+    addLabel.className = 'lbl';
+    addLabel.style.cssText = 'margin-bottom:6px;';
     addLabel.textContent = 'Plan hinzufügen';
     box.appendChild(addLabel);
 
     var sel = document.createElement('select');
-    sel.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+    sel.className = 'inp';
+    sel.style.cssText = 'margin-bottom:10px;';
     var defOpt = document.createElement('option'); defOpt.value=''; defOpt.textContent='— Plan auswählen —'; sel.appendChild(defOpt);
 
     // My plans
@@ -2151,9 +2302,11 @@ function openDayEditor(dayIdx, calScroll){
     });
     box.appendChild(sel);
 
+    // Der eine orangene Primär-CTA des Sheets
     var addBtn = document.createElement('button');
-    addBtn.className = 'pressable';
-    addBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:12px;transition:transform var(--dur-fast) var(--ease-out);';
+    addBtn.type = 'button';
+    addBtn.className = 'btn pressable';
+    addBtn.style.cssText = 'margin:0 0 4px;';
     addBtn.textContent = '+ Hinzufügen';
     addBtn.onclick = function(){
       if(!sel.value) return;
@@ -2171,8 +2324,9 @@ function openDayEditor(dayIdx, calScroll){
     box.appendChild(addBtn);
 
     var closeBtn = document.createElement('button');
-    closeBtn.className = 'pressable';
-    closeBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:700;padding:8px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
+    closeBtn.type = 'button';
+    closeBtn.className = 'pressable u';
+    closeBtn.style.cssText = PLAN_TEXTBTN_CSS;
     closeBtn.textContent = 'Schließen';
     closeBtn.onclick = function(){ sheetOut(ov, box); };
     box.appendChild(closeBtn);

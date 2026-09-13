@@ -2,6 +2,48 @@
 // BATTLE.JS — Park Battle System
 // ══════════════════════════════════════════════════════════
 
+// Line icons for icon slots (stroke currentColor, 1.5) — no emoji in the Dark-Mono design.
+var BATTLE_ICONS = {
+  swords: '<path d="M4 4l11 11M20 4L9 15M4 4h3M4 4v3M20 4h-3M20 4v3M15 15l3 3-1.5 1.5-3-3M9 15l-3 3 1.5 1.5 3-3"/>',
+  crown:  '<path d="M4 18h16M4 18L3 8l5 4 4-7 4 7 5-4-1 10"/>',
+  trophy: '<path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4a3 3 0 003 3M17 5h3a3 3 0 01-3 3"/><path d="M12 13v3M9 20h6"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  user:   '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/>'
+};
+function battleIcon(name, size){
+  var s = size || 18;
+  return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;" aria-hidden="true">'+(BATTLE_ICONS[name]||'')+'</svg>';
+}
+// 56px bordered ring around a line icon (empty states, victory overlay)
+function battleRing(name, color){
+  return '<div style="width:56px;height:56px;border-radius:50%;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:'+(color||'var(--muted)')+';">'+battleIcon(name,24)+'</div>';
+}
+// Fullscreen overlay top bar: ← back (36px ring) + uppercase title + 36px spacer
+function battleTopBar(ov, titleHtml){
+  var topBar = document.createElement('div');
+  topBar.className = 'topbar';
+  topBar.style.cssText = 'padding:0 16px;margin:0;flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.type = 'button';
+  backBtn.className = 'icon-btn sm pressable';
+  backBtn.innerHTML = '&#8592;';
+  backBtn.setAttribute('aria-label','Zurück');
+  backBtn.onclick = function(){
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+  };
+  var ttl = document.createElement('div');
+  ttl.className = 'topbar-title';
+  ttl.innerHTML = titleHtml;
+  var slot = document.createElement('div');
+  slot.className = 'topbar-slot';
+  topBar.appendChild(backBtn); topBar.appendChild(ttl); topBar.appendChild(slot);
+  return {bar: topBar, back: backBtn, title: ttl, slot: slot};
+}
+// "vs NAME" — the name keeps its mixed case inside the uppercase top bar
+function battleVsTitle(name){
+  return 'vs <span style="text-transform:none;letter-spacing:0;color:var(--accent);">'+name+'</span>';
+}
+
 var BATTLE_EXERCISES = [];
 function getBattleExercises(){
   if(BATTLE_EXERCISES.length > 0) return BATTLE_EXERCISES;
@@ -31,46 +73,42 @@ function openBattleOverview(){
   ov.id = 'battle-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  // Top bar
-  var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.classList.add('pressable');
-  backBtn.onclick = function(){
-    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-  };
-  var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;font-size:17px;font-weight:700;color:var(--text);';
-  titleEl.innerHTML = '&#9876;&#65039; Battles';
+  // Top bar: ← | BATTLES | + Herausfordern (ghost — the orange CTA belongs to the accept buttons)
+  var tb = battleTopBar(ov, 'Battles');
   var newBtn = document.createElement('button');
-  newBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  newBtn.classList.add('pressable');
+  newBtn.type = 'button';
+  newBtn.className = 'btn-g pressable';
+  newBtn.style.cssText = 'min-height:36px;padding:0 12px;white-space:nowrap;';
   newBtn.textContent = '+ Herausfordern';
   newBtn.onclick = function(){ openChallengeSomeone(ov); };
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(newBtn);
-  ov.appendChild(topBar);
+  tb.bar.replaceChild(newBtn, tb.slot);
+  ov.appendChild(tb.bar);
 
-  // Tabs
+  // Tabs → segment control
+  var segWrap = document.createElement('div');
+  segWrap.style.cssText = 'padding:12px 16px 0;flex-shrink:0;';
   var tabBar = document.createElement('div');
-  tabBar.style.cssText = 'display:flex;border-bottom:1px solid var(--border);flex-shrink:0;';
+  tabBar.className = 'seg-ctl';
+  tabBar.setAttribute('role','tablist');
   var tabs = ['Offen','Meine Battles','Park Kings'];
   var bodies = [];
   tabs.forEach(function(t, ti){
-    var tb = document.createElement('button');
-    tb.style.cssText = 'flex:1;padding:12px 4px;min-height:44px;font-family:inherit;font-weight:700;font-size:13px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent-ink)':'var(--muted)')+';transition:transform var(--dur-fast) var(--ease-out);';
-    tb.textContent = t;
-    tb.classList.add('pressable');
+    var tb2 = document.createElement('button');
+    tb2.type = 'button';
+    tb2.className = ti===0 ? 'on' : '';
+    tb2.setAttribute('role','tab');
+    tb2.setAttribute('aria-selected', ti===0 ? 'true' : 'false');
+    tb2.textContent = t;
     var body = document.createElement('div');
-    body.style.cssText = 'display:'+(ti===0?'flex':'none')+';flex-direction:column;padding:20px 20px 40px;gap:10px;overflow-y:auto;flex:1;';
+    body.style.cssText = 'display:'+(ti===0?'flex':'none')+';flex-direction:column;padding:4px 16px 40px;gap:10px;overflow-y:auto;flex:1;';
     body.classList.add('sheet-scroll');
+    body.setAttribute('role','tabpanel');
     bodies.push(body);
-    tb.onclick = (function(tIdx){
+    tb2.onclick = (function(tIdx){
       return function(){
         tabBar.querySelectorAll('button').forEach(function(b,bi){
-          b.style.borderBottomColor = bi===tIdx?'var(--accent)':'transparent';
-          b.style.color = bi===tIdx?'var(--accent-ink)':'var(--muted)';
+          b.classList.toggle('on', bi===tIdx);
+          b.setAttribute('aria-selected', bi===tIdx ? 'true' : 'false');
         });
         bodies.forEach(function(b,bi){ b.style.display=bi===tIdx?'flex':'none'; });
         if(tIdx===0 && !bodies[0]._loaded){ loadOpenBattles(bodies[0]); bodies[0]._loaded=true; }
@@ -78,9 +116,11 @@ function openBattleOverview(){
         if(tIdx===2 && !bodies[2]._loaded){ loadParkKings(bodies[2]); bodies[2]._loaded=true; }
       };
     })(ti);
-    tabBar.appendChild(tb);
+    tabBar.appendChild(tb2);
   });
-  ov.appendChild(tabBar);
+  segWrap.appendChild(tabBar);
+  ov.appendChild(segWrap);
+  bodies[0].id = 'battle-open-list';
 
   var contentWrap = document.createElement('div');
   contentWrap.style.cssText = 'flex:1;overflow:hidden;display:flex;flex-direction:column;';
@@ -95,10 +135,14 @@ function openBattleOverview(){
   bodies[0]._loaded = true;
 }
 
+function battleErrorHtml(msg){
+  return '<div style="font-size:11px;color:var(--muted);padding:12px 0;">Fehler: '+msg+'</div>';
+}
+
 // ── OFFENE BATTLES (Herausforderungen die ich bekommen habe) ──
 function loadOpenBattles(el){
-  el.innerHTML = '<div style="color:var(--muted);font-size:12px;">Wird geladen...</div>';
-  if(!firebase.auth().currentUser){ el.innerHTML='<div style="color:var(--muted);">Einloggen erforderlich.</div>'; return; }
+  el.innerHTML = '<div class="empty">Wird geladen...</div>';
+  if(!firebase.auth().currentUser){ el.innerHTML='<div class="empty">Einloggen erforderlich.</div>'; return; }
   var uid = firebase.auth().currentUser.uid;
 
   db.collection('battles')
@@ -110,7 +154,7 @@ function loadOpenBattles(el){
     .then(function(snap){
       el.innerHTML = '';
       if(snap.empty){
-        el.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:36px;margin-bottom:10px;">&#9876;&#65039;</div><div style="font-size:13px;color:var(--muted);">Keine offenen Herausforderungen.</div></div>';
+        el.innerHTML = '<div style="text-align:center;padding:40px 0;">'+battleRing('swords')+'<div class="empty" style="padding:0;">Keine offenen Herausforderungen.</div></div>';
         return;
       }
       snap.forEach(function(doc){
@@ -119,13 +163,13 @@ function loadOpenBattles(el){
         el.appendChild(card);
       });
       if(window.caliMotion) caliMotion.stagger(el);
-    }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+    }).catch(function(e){ el.innerHTML=battleErrorHtml(e.message); });
 }
 
 // ── MEINE BATTLES ─────────────────────────────────────────
 function loadMyBattles(el){
-  el.innerHTML = '<div style="color:var(--muted);font-size:12px;">Wird geladen...</div>';
-  if(!firebase.auth().currentUser){ el.innerHTML='<div style="color:var(--muted);">Einloggen erforderlich.</div>'; return; }
+  el.innerHTML = '<div class="empty">Wird geladen...</div>';
+  if(!firebase.auth().currentUser){ el.innerHTML='<div class="empty">Einloggen erforderlich.</div>'; return; }
   var uid = firebase.auth().currentUser.uid;
 
   // Alle Battles wo ich beteiligt bin
@@ -143,7 +187,7 @@ function loadMyBattles(el){
           battles.sort(function(a,b){ return (b.data.createdAt||0)-(a.data.createdAt||0); });
           el.innerHTML = '';
           if(battles.length===0){
-            el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">Noch keine Battles.</div>'; return;
+            el.innerHTML='<div style="text-align:center;padding:40px 0;">'+battleRing('swords')+'<div class="empty" style="padding:0;">Noch keine Battles.</div></div>'; return;
           }
           battles.forEach(function(b){
             var card = buildBattleCard(b.id, b.data, b.data.status, uid);
@@ -152,7 +196,7 @@ function loadMyBattles(el){
           if(window.caliMotion) caliMotion.stagger(el);
           maybeAwardBattleWins(battles, uid);
         });
-    }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+    }).catch(function(e){ el.innerHTML=battleErrorHtml(e.message); });
 }
 
 // ── BATTLE-SIEG XP (idempotent, läuft nur auf dem Gerät des Gewinners) ──
@@ -181,7 +225,7 @@ function maybeAwardBattleWins(battles, uid){
         db.collection('xp').doc(oppId).get().then(function(xdoc2){
           var oppLv = xdoc2.exists ? (xdoc2.data().level||1) : 1;
           var xpWon = calcBattleXP(myLv, oppLv, true);
-          awardXP(xpWon, '⚔️ Battle gewonnen (Level '+oppLv+' Gegner)');
+          awardXP(xpWon, 'Battle gewonnen (Level '+oppLv+' Gegner)');
           showBattleVictory(oppName, xpWon);
         }).catch(function(){});
       }).catch(function(){});
@@ -194,25 +238,26 @@ function showBattleVictory(oppName, xpWon){
   var old = document.getElementById('battle-victory-ov'); if(old) old.remove();
   var ov = document.createElement('div');
   ov.id = 'battle-victory-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;';
   var card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg2);border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.10);padding:32px 24px;max-width:320px;width:100%;text-align:center;';
+  card.style.cssText = 'background:var(--card);border:1px solid var(--line2);border-radius:var(--r-card);padding:28px 20px 20px;max-width:320px;width:100%;text-align:center;';
   var trophy = document.createElement('div');
-  trophy.style.cssText = 'font-size:44px;margin-bottom:12px;';
-  trophy.textContent = '🏆';
+  trophy.innerHTML = battleRing('trophy','var(--accent)');
   var hd = document.createElement('div');
-  hd.style.cssText = 'font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;';
+  hd.className = 'ttl';
+  hd.style.cssText = 'margin-bottom:6px;';
   hd.textContent = 'Battle gewonnen!';
   var sub = document.createElement('div');
-  sub.style.cssText = 'font-size:13px;color:var(--muted);margin-bottom:16px;';
+  sub.style.cssText = 'font-size:11px;color:var(--muted);margin-bottom:18px;';
   sub.textContent = 'Gegen ' + oppName;
   var xpEl = document.createElement('div');
-  xpEl.className = 'num';
-  xpEl.style.cssText = 'font-size:28px;font-weight:800;color:var(--accent-ink);margin-bottom:20px;';
+  xpEl.className = 'dotnum num';
+  xpEl.style.cssText = 'font-size:48px;color:var(--accent);margin-bottom:6px;';
   xpEl.textContent = '+' + xpWon + ' XP';
   var okBtn = document.createElement('button');
-  okBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:14px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  okBtn.classList.add('pressable');
+  okBtn.type = 'button';
+  okBtn.className = 'btn pressable';
+  okBtn.style.cssText = 'margin-top:16px;';
   okBtn.textContent = 'Stark!';
   okBtn.onclick = function(){ ov.remove(); };
   card.appendChild(trophy); card.appendChild(hd); card.appendChild(sub); card.appendChild(xpEl); card.appendChild(okBtn);
@@ -231,22 +276,23 @@ function buildBattleCard(battleId, d, status, myUid){
   var card = document.createElement('div');
   var isChallenger = d.challengerId === myUid;
   var opponentName = isChallenger ? (d.challengedName||'Gegner') : (d.challengerName||'Herausforderer');
-  // Ink-Varianten (Text auf hellem Tint — AA-Kontrast): amber/blue/success/red
-  var statusColors = {pending:'#B45309', active:'#0369A1', completed:'#0F7A3F', declined:'#D93036'};
+  // Status-Farben aus den Tokens (kategorische Farben sind auf dunklem Grund entsättigt)
+  var statusColors = {pending:'var(--amber)', active:'var(--blue)', completed:'var(--success)', declined:'var(--red)'};
   var statusLabels = {pending:'Offen', active:'Läuft', completed:'Beendet', declined:'Abgelehnt'};
-  var statusColor = statusColors[status]||'#6E6759';
+  var statusColor = statusColors[status]||'var(--muted)';
 
-  card.style.cssText = 'background:var(--bg2);border-radius:20px;padding:14px;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
+  card.className = 'card';
+  card.style.cssText = 'margin-bottom:0;';
   card.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">'+
-      '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">'+
-        '<div style="font-size:28px;flex-shrink:0;">&#9876;&#65039;</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;">'+
+      '<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">'+
+        '<span class="row-icon">'+battleIcon('swords')+'</span>'+
         '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+opponentName+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.parkName||'Unbekannter Park')+'</div>'+
+          '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+opponentName+'</div>'+
+          '<div class="row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.parkName||'Unbekannter Park')+'</div>'+
         '</div>'+
       '</div>'+
-      '<div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;flex-shrink:0;background:'+statusColor+'22;color:'+statusColor+';">'+statusLabels[status]+'</div>'+
+      '<div style="background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 8px;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;color:'+statusColor+';">'+statusLabels[status]+'</div>'+
     '</div>';
 
   // Actions
@@ -256,29 +302,33 @@ function buildBattleCard(battleId, d, status, myUid){
   if(status === 'pending' && !isChallenger){
     // Herausgeforderter kann annehmen oder ablehnen
     var acceptBtn = document.createElement('button');
-    acceptBtn.style.cssText = 'flex:1;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;min-height:44px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-    acceptBtn.classList.add('pressable');
-    acceptBtn.textContent = '⚔️ Annehmen';
+    acceptBtn.type = 'button';
+    acceptBtn.className = 'btn pressable';
+    acceptBtn.style.cssText = 'flex:1;margin:0;min-height:44px;';
+    acceptBtn.textContent = 'Annehmen';
     acceptBtn.onclick = function(){ acceptBattle(battleId, d); };
 
     var declineBtn = document.createElement('button');
-    declineBtn.style.cssText = 'flex:1;background:none;border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;min-height:44px;cursor:pointer;color:var(--muted);transition:transform var(--dur-fast) var(--ease-out);';
-    declineBtn.classList.add('pressable');
+    declineBtn.type = 'button';
+    declineBtn.className = 'btn-g pressable';
+    declineBtn.style.cssText = 'flex:1;min-height:44px;';
     declineBtn.textContent = 'Ablehnen';
     declineBtn.onclick = function(){ declineBattle(battleId); card.remove(); };
     actions.appendChild(acceptBtn); actions.appendChild(declineBtn);
   } else if(status === 'active'){
     var goBtn = document.createElement('button');
-    goBtn.style.cssText = 'flex:1;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;min-height:44px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-    goBtn.classList.add('pressable');
+    goBtn.type = 'button';
+    goBtn.className = 'btn sec pressable';
+    goBtn.style.cssText = 'flex:1;margin:0;min-height:44px;';
     goBtn.textContent = '▶ Battle fortsetzen';
     goBtn.onclick = function(){ openActiveBattle(battleId, d, myUid); };
     actions.appendChild(goBtn);
   } else if(status === 'completed'){
-    var winner = d.winnerId === myUid ? '&#127942; Du hast gewonnen!' : '&#128577; '+opponentName+' hat gewonnen';
+    var won = d.winnerId === myUid;
+    var winner = won ? 'Du hast gewonnen!' : opponentName+' hat gewonnen';
     var resultEl = document.createElement('div');
-    resultEl.style.cssText = 'font-size:13px;font-weight:700;color:'+(d.winnerId===myUid?'var(--accent-ink)':'var(--muted)')+';padding:8px 0;';
-    resultEl.innerHTML = winner;
+    resultEl.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:'+(won?'var(--accent)':'var(--muted)')+';padding:4px 0;';
+    resultEl.innerHTML = (won ? '<span class="live-dot"></span>' : '') + '<span>'+winner+'</span>';
     actions.appendChild(resultEl);
   }
 
@@ -292,28 +342,30 @@ function openChallengeSomeone(parentOv){
   if(!userLat || !userLng){ if(typeof toast==='function') toast('Bitte zuerst Standort aktivieren!'); else alert('Bitte zuerst Standort aktivieren!'); return; }
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
+  box.className = 'sheet';
+  box.style.cssText = 'max-height:90vh;overflow-y:auto;';
   box.classList.add('sheet-scroll');
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
-    '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;">Jemanden herausfordern</div>'+
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Gib den Namen oder die E-Mail deines Gegners ein</div>';
+  box.innerHTML = '<div class="sheet-grip"></div>'+
+    '<div class="ttl" style="margin-bottom:4px;">Jemanden herausfordern</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Gib den Namen oder die E-Mail deines Gegners ein</div>';
 
   // Search input
   var searchWrap = document.createElement('div');
-  searchWrap.style.cssText = 'margin-bottom:16px;';
+  searchWrap.style.cssText = 'margin-bottom:12px;';
   var searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.placeholder = 'Name suchen...';
-  searchInput.style.cssText = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:#fff;color:var(--text);box-sizing:border-box;';
+  searchInput.className = 'inp';
+  searchInput.setAttribute('aria-label','Gegner suchen');
   var resultsList = document.createElement('div');
-  resultsList.style.cssText = 'margin-top:8px;';
+  resultsList.style.cssText = 'margin-top:10px;';
 
   searchInput.oninput = function(){
     var q = this.value.trim().toLowerCase();
     if(q.length < 2){ resultsList.innerHTML=''; return; }
-    resultsList.innerHTML = '<div style="color:var(--muted);font-size:12px;">&#9203; Suche...</div>';
+    resultsList.innerHTML = '<div class="empty" style="padding:8px 0;">Suche...</div>';
     db.collection('users').limit(100).get().then(function(snap){
       resultsList.innerHTML = '';
       var matches = [];
@@ -324,19 +376,24 @@ function openChallengeSomeone(parentOv){
           matches.push({uid:doc.id, name:d.prData&&d.prData.name||'Anonym'});
         }
       });
-      if(matches.length===0){ resultsList.innerHTML='<div style="color:var(--muted);font-size:12px;">Niemanden gefunden.</div>'; return; }
-      matches.slice(0,5).forEach(function(u){
+      if(matches.length===0){ resultsList.innerHTML='<div class="empty" style="padding:8px 0;">Niemanden gefunden.</div>'; return; }
+      var list = document.createElement('div');
+      list.className = 'list';
+      list.style.cssText = 'margin-bottom:0;';
+      matches.slice(0,5).forEach(function(u, ui){
         var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:16px;background:var(--bg2);margin-bottom:6px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
-        row.innerHTML = '<div style="font-weight:700;color:var(--text);">'+u.name+'</div>';
+        row.className = 'list-row';
+        row.style.cssText = 'cursor:default;';
+        row.innerHTML = '<span class="row-index num">'+('0'+(ui+1)).slice(-2)+'</span><span class="row-icon">'+battleIcon('user')+'</span><div class="row-main"><div class="row-title">'+u.name+'</div></div>';
         var selectBtn = document.createElement('button');
-        selectBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-        selectBtn.classList.add('pressable');
+        selectBtn.type = 'button';
+        selectBtn.className = 'btn sec sm pressable';
         selectBtn.textContent = 'Auswählen';
         selectBtn.onclick = function(){ ov.remove(); openChallengeSetup(u, parentOv); };
         row.appendChild(selectBtn);
-        resultsList.appendChild(row);
+        list.appendChild(row);
       });
+      resultsList.appendChild(list);
     });
   };
 
@@ -345,9 +402,10 @@ function openChallengeSomeone(parentOv){
   box.appendChild(searchWrap);
 
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;';
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn-g pressable';
+  cancelBtn.style.cssText = 'width:100%;min-height:44px;';
   cancelBtn.textContent = 'Abbrechen';
-  cancelBtn.classList.add('pressable');
   cancelBtn.onclick = function(){ ov.remove(); };
   box.appendChild(cancelBtn);
 
@@ -355,6 +413,18 @@ function openChallengeSomeone(parentOv){
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
   if(window.caliMotion) caliMotion.sheetIn(box, ov);
+}
+
+// Exercise picker tile (setup + accept): bordered card tile, selected = accent line + soft tint
+var BATTLE_TILE_CSS = 'padding:10px 12px;min-height:52px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--card);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;color:var(--text);text-align:left;line-height:1.3;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease,border-color var(--dur-fast) ease,background-color var(--dur-fast) ease;';
+function battleTileHtml(ex){
+  return ex.name+'<div class="unit" style="margin-top:3px;">'+ex.unit+'</div>';
+}
+function battleTileSelect(btn, on){
+  btn.style.borderColor = on ? 'var(--accent)' : 'var(--line)';
+  btn.style.background = on ? 'var(--accent-soft)' : 'var(--card)';
+  btn.style.color = 'var(--text)';
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
 }
 
 // ── CHALLENGE SETUP (Übungen wählen) ─────────────────────
@@ -365,31 +435,17 @@ function openChallengeSetup(opponent, parentOv){
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.classList.add('pressable');
-  backBtn.onclick = function(){
-    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-  };
-  topBar.innerHTML = '';
-  topBar.appendChild(backBtn);
-  var ttl = document.createElement('div');
-  ttl.style.cssText = 'flex:1;font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  ttl.innerHTML = '&#9876;&#65039; vs <span style="color:var(--accent-ink);">'+opponent.name+'</span>';
-  topBar.appendChild(ttl);
-  ov.appendChild(topBar);
+  var tb = battleTopBar(ov, battleVsTitle(opponent.name));
+  ov.appendChild(tb.bar);
 
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow-y:auto;padding:20px 20px 40px;';
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:16px 16px 40px;';
   content.classList.add('sheet-scroll');
 
   // Info
   var info = document.createElement('div');
-  info.style.cssText = 'background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.6;';
-  info.innerHTML = '&#128204; <strong style="color:var(--text);">Spielregeln:</strong><br>Du wählst 2 Übungen, '+opponent.name+' wählt 2 Übungen.<br>Reihenfolge: Du→Gegner→Gegner→Du.<br>Beide müssen im Park sein (GPS).';
+  info.style.cssText = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 14px;margin-bottom:16px;font-size:11px;color:var(--muted);line-height:1.7;';
+  info.innerHTML = '<span class="eyebrow" style="margin-bottom:4px;color:var(--text);">Spielregeln</span>Du wählst 2 Übungen, '+opponent.name+' wählt 2 Übungen.<br>Reihenfolge: Du → Gegner → Gegner → Du.<br>Beide müssen im Park sein (GPS).';
   content.appendChild(info);
 
   var myChoices = [];
@@ -402,7 +458,8 @@ function openChallengeSetup(opponent, parentOv){
   content.appendChild(label);
 
   var selCount = document.createElement('div');
-  selCount.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:10px;';
+  selCount.className = 'lbl num';
+  selCount.style.cssText = 'margin-bottom:10px;';
   selCount.textContent = '0 / 2 gewählt';
 
   var exGrid = document.createElement('div');
@@ -410,22 +467,20 @@ function openChallengeSetup(opponent, parentOv){
 
   exercises.forEach(function(ex){
     var btn = document.createElement('button');
+    btn.type = 'button';
     btn.dataset.exId = ex.id;
-    btn.style.cssText = 'padding:10px;min-height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;color:var(--text);text-align:left;line-height:1.3;transition:transform var(--dur-fast) var(--ease-out);';
-    btn.innerHTML = ex.name+'<div style="font-size:11px;color:var(--muted);">'+ex.unit+'</div>';
+    btn.style.cssText = BATTLE_TILE_CSS;
+    btn.innerHTML = battleTileHtml(ex);
     btn.classList.add('pressable');
+    btn.setAttribute('aria-pressed','false');
     btn.onclick = function(){
       var idx = myChoices.findIndex(function(e){ return e.id===ex.id; });
       if(idx !== -1){
         myChoices.splice(idx,1);
-        btn.style.borderColor = 'var(--border)';
-        btn.style.background = 'none';
-        btn.style.color = 'var(--text)';
+        battleTileSelect(btn, false);
       } else if(myChoices.length < 2){
         myChoices.push(ex);
-        btn.style.borderColor = 'var(--accent)';
-        btn.style.background = 'rgba(255,85,0,0.1)';
-        btn.style.color = 'var(--accent-ink)';
+        battleTileSelect(btn, true);
       }
       selCount.textContent = myChoices.length+' / 2 gewählt';
       sendBtn.disabled = myChoices.length !== 2;
@@ -438,14 +493,16 @@ function openChallengeSetup(opponent, parentOv){
   content.appendChild(exGrid);
 
   var sendBtn = document.createElement('button');
-  sendBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:16px;cursor:pointer;opacity:0.4;transition:transform var(--dur-fast) var(--ease-out);';
-  sendBtn.classList.add('pressable');
+  sendBtn.type = 'button';
+  sendBtn.className = 'btn pressable';
+  sendBtn.style.cssText = 'opacity:0.4;';
   sendBtn.textContent = 'Herausforderung senden';
   sendBtn.disabled = true;
   sendBtn.onclick = function(){
     if(myChoices.length !== 2) return;
     sendChallenge(myUser, myName, opponent, myChoices, ov);
   };
+  ov._sendBtn = sendBtn;
   content.appendChild(sendBtn);
   ov.appendChild(content);
   document.body.appendChild(ov);
@@ -456,7 +513,7 @@ function openChallengeSetup(opponent, parentOv){
 
 // ── CHALLENGE SENDEN ─────────────────────────────────────
 function sendChallenge(myUser, myName, opponent, myExercises, ov){
-  var btn = ov.querySelector('button:last-child');
+  var btn = ov._sendBtn || ov.querySelector('button:last-child');
   if(btn){ btn.textContent='Wird gesendet...'; btn.disabled=true; }
 
   // Finde nächsten Park
@@ -495,7 +552,7 @@ function sendChallenge(myUser, myName, opponent, myExercises, ov){
       });
     }
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-    if(typeof toast === 'function') toast('⚔️ Herausforderung gesendet!');
+    if(typeof toast === 'function') toast('Herausforderung gesendet!');
     else alert('Herausforderung gesendet!');
   }).catch(function(e){ if(typeof toast==='function') toast('Fehler: '+e.message); else alert('Fehler: '+e.message); });
 }
@@ -509,32 +566,19 @@ function acceptBattle(battleId, d){
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.classList.add('pressable');
-  backBtn.onclick = function(){
-    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-  };
-  topBar.appendChild(backBtn);
-  var ttl = document.createElement('div');
-  ttl.style.cssText = 'flex:1;font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  ttl.innerHTML = '&#9876;&#65039; vs <span style="color:var(--accent-ink);">'+d.challengerName+'</span>';
-  topBar.appendChild(ttl);
-  ov.appendChild(topBar);
+  var tb = battleTopBar(ov, battleVsTitle(d.challengerName));
+  ov.appendChild(tb.bar);
 
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow-y:auto;padding:20px 20px 40px;';
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:16px 16px 40px;';
   content.classList.add('sheet-scroll');
 
   // Gegner-Übungen anzeigen
   var info = document.createElement('div');
-  info.style.cssText = 'background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:14px;margin-bottom:20px;';
+  info.style.cssText = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 14px;margin-bottom:16px;';
   var chosenEx = (d.challengerExercises||[]).map(function(e){ return e.name; }).join(', ');
   info.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+d.challengerName+' hat gewählt:</div>'+
-    '<div style="font-size:14px;font-weight:700;color:var(--text);">'+chosenEx+'</div>';
+    '<div style="font-size:13px;font-weight:600;color:var(--text);">'+chosenEx+'</div>';
   content.appendChild(info);
 
   var myChoices = [];
@@ -548,7 +592,8 @@ function acceptBattle(battleId, d){
   content.appendChild(label);
 
   var selCount = document.createElement('div');
-  selCount.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:10px;';
+  selCount.className = 'lbl num';
+  selCount.style.cssText = 'margin-bottom:10px;';
   selCount.textContent = '0 / 2 gewählt';
 
   var exGrid = document.createElement('div');
@@ -556,18 +601,20 @@ function acceptBattle(battleId, d){
 
   exercises.forEach(function(ex){
     var btn = document.createElement('button');
+    btn.type = 'button';
     btn.dataset.exId = ex.id;
-    btn.style.cssText = 'padding:10px;min-height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;color:var(--text);text-align:left;line-height:1.3;transition:transform var(--dur-fast) var(--ease-out);';
-    btn.innerHTML = ex.name+'<div style="font-size:11px;color:var(--muted);">'+ex.unit+'</div>';
+    btn.style.cssText = BATTLE_TILE_CSS;
+    btn.innerHTML = battleTileHtml(ex);
     btn.classList.add('pressable');
+    btn.setAttribute('aria-pressed','false');
     btn.onclick = function(){
       var idx = myChoices.findIndex(function(e){ return e.id===ex.id; });
       if(idx !== -1){
         myChoices.splice(idx,1);
-        btn.style.borderColor='var(--border)'; btn.style.background='none'; btn.style.color='var(--text)';
+        battleTileSelect(btn, false);
       } else if(myChoices.length < 2){
         myChoices.push(ex);
-        btn.style.borderColor='var(--accent)'; btn.style.background='rgba(255,85,0,0.1)'; btn.style.color='var(--accent-ink)';
+        battleTileSelect(btn, true);
       }
       selCount.textContent = myChoices.length+' / 2 gewählt';
       confirmBtn.disabled = myChoices.length !== 2;
@@ -580,8 +627,9 @@ function acceptBattle(battleId, d){
   content.appendChild(exGrid);
 
   var confirmBtn = document.createElement('button');
-  confirmBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:16px;cursor:pointer;opacity:0.4;transition:transform var(--dur-fast) var(--ease-out);';
-  confirmBtn.classList.add('pressable');
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'btn pressable';
+  confirmBtn.style.cssText = 'opacity:0.4;';
   confirmBtn.textContent = 'Annehmen & starten';
   confirmBtn.disabled = true;
   confirmBtn.onclick = function(){
@@ -601,9 +649,9 @@ function acceptBattle(battleId, d){
       acceptedAt: Date.now(),
     }).then(function(){
       if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-      if(typeof toast==='function') toast('⚔️ Battle gestartet!');
-      // Reload open battles
-      var openEl = document.querySelector('#battle-ov [style*="flex-direction:column"]');
+      if(typeof toast==='function') toast('Battle gestartet!');
+      // Reload open battles (the "Offen" panel carries its own id; the old style-selector stays as fallback)
+      var openEl = document.getElementById('battle-open-list') || document.querySelector('#battle-ov [style*="flex-direction:column"]');
       if(openEl) loadOpenBattles(openEl);
     });
   };
@@ -627,25 +675,12 @@ function openActiveBattle(battleId, d, myUid){
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.classList.add('pressable');
-  backBtn.onclick = function(){
-    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-  };
-  topBar.appendChild(backBtn);
   var opponentName = d.challengerId===myUid ? d.challengedName : d.challengerName;
-  var ttl = document.createElement('div');
-  ttl.style.cssText = 'flex:1;font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  ttl.innerHTML = '&#9876;&#65039; vs '+opponentName;
-  topBar.appendChild(ttl);
-  ov.appendChild(topBar);
+  var tb = battleTopBar(ov, battleVsTitle(opponentName));
+  ov.appendChild(tb.bar);
 
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow-y:auto;padding:20px 20px 40px;';
+  content.style.cssText = 'flex:1;overflow-y:auto;padding:16px 16px 40px;';
   content.classList.add('sheet-scroll');
 
   var round = d.round || 0;
@@ -654,7 +689,7 @@ function openActiveBattle(battleId, d, myUid){
 
   if(!currentRound){
     // Battle beendet
-    content.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">&#127942;</div><div style="font-size:17px;font-weight:700;color:var(--text);">Battle beendet!</div></div>';
+    content.innerHTML = '<div style="text-align:center;padding:40px 0;">'+battleRing('trophy','var(--accent)')+'<div class="ttl">Battle beendet!</div></div>';
     ov.appendChild(content);
     document.body.appendChild(ov);
     // Hardware-Zurück schließt das Overlay statt der App
@@ -666,26 +701,26 @@ function openActiveBattle(battleId, d, myUid){
   var isMyTurn = (currentRound.turn==='challenger' && d.challengerId===myUid) ||
                  (currentRound.turn==='challenged' && d.challengedId===myUid);
 
-  // Scoreboard
+  // Scoreboard — the two Doto scores form the screen's one big live display
   var scoreEl = document.createElement('div');
-  scoreEl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg2);border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:16px;margin-bottom:16px;';
+  scoreEl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 14px;margin-bottom:10px;';
   var myScore = 0, oppScore = 0;
   (d.rounds||[]).forEach(function(r){
     if(r.winner === myUid) myScore++;
     else if(r.winner && r.winner !== myUid) oppScore++;
   });
   scoreEl.innerHTML =
-    '<div style="text-align:center;"><div id="battle-score-me" class="num" style="font-weight:800;font-size:32px;color:var(--accent);line-height:1;">'+myScore+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Du</div></div>'+
-    '<div class="num" style="font-weight:700;font-size:13px;color:var(--muted);flex-shrink:0;">Runde '+(round+1)+' / '+roundOrder.length+'</div>'+
-    '<div style="text-align:center;min-width:0;"><div id="battle-score-opp" class="num" style="font-weight:800;font-size:32px;color:var(--text);line-height:1;">'+oppScore+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+opponentName+'</div></div>';
+    '<div style="text-align:center;flex:1;min-width:0;"><div id="battle-score-me" class="dotnum num" style="font-size:40px;color:var(--accent);">'+myScore+'</div><div class="unit" style="margin-top:6px;display:block;">Du</div></div>'+
+    '<div class="lbl num" style="flex-shrink:0;text-align:center;">Runde '+(round+1)+' / '+roundOrder.length+'</div>'+
+    '<div style="text-align:center;flex:1;min-width:0;"><div id="battle-score-opp" class="dotnum num" style="font-size:40px;color:var(--text);">'+oppScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+opponentName+'</div></div>';
   content.appendChild(scoreEl);
 
   // Aktuelle Übung
   var exCard = document.createElement('div');
-  exCard.style.cssText = 'background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.3);border-radius:16px;padding:16px;margin-bottom:16px;text-align:center;';
-  exCard.innerHTML = '<h2 class="stitle" style="margin:0 0 6px;">Aktuelle Übung</h2>'+
-    '<div style="font-size:22px;font-weight:800;color:var(--text);">'+(currentRound.exercise&&currentRound.exercise.name||'')+'</div>'+
-    '<div style="font-size:12px;color:var(--muted);">'+(currentRound.exercise&&currentRound.exercise.unit||'')+'</div>';
+  exCard.style.cssText = 'background:var(--card);border:1px solid var(--line2);border-radius:var(--r-card);padding:16px 14px;margin-bottom:10px;text-align:center;';
+  exCard.innerHTML = '<h2 class="eyebrow" style="margin:0 0 8px;">Aktuelle Übung</h2>'+
+    '<div class="ttl">'+(currentRound.exercise&&currentRound.exercise.name||'')+'</div>'+
+    '<div class="unit" style="display:block;margin-top:4px;">'+(currentRound.exercise&&currentRound.exercise.unit||'')+'</div>';
   content.appendChild(exCard);
 
   if(isMyTurn){
@@ -701,10 +736,9 @@ function openActiveBattle(battleId, d, myUid){
   } else {
     // Warten auf Gegner
     var waitEl = document.createElement('div');
-    waitEl.style.cssText = 'text-align:center;padding:30px;';
-    waitEl.innerHTML = '<div style="font-size:36px;margin-bottom:12px;">&#9203;</div>'+
-      '<div style="font-size:14px;font-weight:700;color:var(--text);">Warte auf '+opponentName+'...</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:8px;">'+opponentName+' macht gerade die Übung</div>';
+    waitEl.style.cssText = 'text-align:center;padding:30px 0;';
+    waitEl.innerHTML = '<div style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text);"><span class="rec-dot"></span>Warte auf '+opponentName+'...</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:8px;">'+opponentName+' macht gerade die Übung</div>';
     content.appendChild(waitEl);
   }
 
@@ -735,8 +769,9 @@ function buildSubmitUI(content, battleId, d, roundIdx, myUid, currentRound, ov){
   var valInput = document.createElement('input');
   valInput.type = 'number'; valInput.min = '1';
   valInput.placeholder = 'Wiederholungen / Sekunden';
-  valInput.className = 'num';
-  valInput.style.cssText = 'width:100%;padding:14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:18px;font-weight:800;text-align:center;background:var(--bg3);color:var(--text);margin-bottom:12px;box-sizing:border-box;';
+  valInput.className = 'inp num';
+  valInput.style.cssText = 'text-align:center;font-size:22px;font-weight:600;margin-bottom:12px;';
+  valInput.setAttribute('aria-label','Ergebnis');
   submitSection.appendChild(valInput);
 
   // Video aufnehmen
@@ -747,7 +782,7 @@ function buildSubmitUI(content, battleId, d, roundIdx, myUid, currentRound, ov){
   var isRecording = false;
 
   var camWrap = document.createElement('div');
-  camWrap.style.cssText = 'border-radius:16px;overflow:hidden;background:#000;margin-bottom:10px;min-height:160px;display:flex;align-items:center;justify-content:center;';
+  camWrap.style.cssText = 'border-radius:var(--r-card);border:1px solid var(--line);overflow:hidden;background:var(--bg);margin-bottom:10px;min-height:160px;display:flex;align-items:center;justify-content:center;';
   var preview = document.createElement('video');
   preview.style.cssText = 'width:100%;max-height:240px;display:none;';
   preview.autoplay = true; preview.muted = true; preview.playsinline = true;
@@ -755,26 +790,28 @@ function buildSubmitUI(content, battleId, d, roundIdx, myUid, currentRound, ov){
   resultVid.style.cssText = 'width:100%;max-height:240px;display:none;';
   resultVid.controls = true; resultVid.playsinline = true;
   var camPlaceholder = document.createElement('div');
-  camPlaceholder.style.cssText = 'color:#fff;font-size:12px;text-align:center;padding:16px;';
-  camPlaceholder.innerHTML = '&#128247;<br>Video aufnehmen (Pflicht)';
+  camPlaceholder.style.cssText = 'color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.14em;text-align:center;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;';
+  camPlaceholder.innerHTML = battleIcon('camera',22)+'<span>Video aufnehmen (Pflicht)</span>';
   camWrap.appendChild(preview); camWrap.appendChild(resultVid); camWrap.appendChild(camPlaceholder);
   submitSection.appendChild(camWrap);
 
   var camRow = document.createElement('div');
   camRow.style.cssText = 'display:flex;gap:8px;margin-bottom:14px;';
   var startCamBtn = document.createElement('button');
-  startCamBtn.style.cssText = 'flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;color:var(--text);transition:transform var(--dur-fast) var(--ease-out);';
-  startCamBtn.textContent = '📷 Kamera';
-  startCamBtn.classList.add('pressable');
+  startCamBtn.type = 'button';
+  startCamBtn.className = 'btn-g pressable';
+  startCamBtn.style.cssText = 'flex:1;min-height:44px;';
+  startCamBtn.textContent = 'Kamera';
   var recBtn = document.createElement('button');
-  recBtn.style.cssText = 'flex:1;background:var(--red);border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;color:#fff;display:none;transition:transform var(--dur-fast) var(--ease-out);';
-  recBtn.textContent = '⏺ Aufnehmen';
-  recBtn.classList.add('pressable');
+  recBtn.type = 'button';
+  recBtn.className = 'btn-g danger pressable';
+  recBtn.style.cssText = 'flex:1;min-height:44px;display:none;';
+  recBtn.innerHTML = '<span class="live-dot" style="background:var(--red);"></span>Aufnehmen';
 
   startCamBtn.onclick = function(){
     navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(s){
       stream=s; preview.srcObject=s; preview.style.display='block'; camPlaceholder.style.display='none';
-      startCamBtn.style.display='none'; recBtn.style.display='block';
+      startCamBtn.style.display='none'; recBtn.style.display='inline-flex';
     }).catch(function(e){ if(typeof toast==='function') toast('Kamera: '+e.message); else alert('Kamera: '+e.message); });
   };
 
@@ -788,12 +825,13 @@ function buildSubmitUI(content, battleId, d, roundIdx, myUid, currentRound, ov){
         videoBlob=new Blob(recordedChunks,{type:'video/webm'});
         var url=URL.createObjectURL(videoBlob);
         resultVid.src=url; resultVid.style.display='block'; preview.style.display='none';
-        recBtn.textContent='🔄 Neu aufnehmen';
+        recBtn.textContent='Neu aufnehmen';
+        recBtn.style.background='transparent'; recBtn.style.color='var(--red)';
         submitBtn.disabled=false; submitBtn.style.opacity='1';
         if(stream) stream.getTracks().forEach(function(t){t.stop();});
       };
       mediaRecorder.start(); isRecording=true;
-      recBtn.textContent='⏹ Stoppen'; recBtn.style.background='var(--red)';
+      recBtn.textContent='■ Stoppen'; recBtn.style.background='var(--red)'; recBtn.style.color='var(--text)';
     } else {
       mediaRecorder.stop(); isRecording=false;
     }
@@ -803,8 +841,9 @@ function buildSubmitUI(content, battleId, d, roundIdx, myUid, currentRound, ov){
   submitSection.appendChild(camRow);
 
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:16px;cursor:pointer;opacity:0.4;transition:transform var(--dur-fast) var(--ease-out);';
-  submitBtn.classList.add('pressable');
+  submitBtn.type = 'button';
+  submitBtn.className = 'btn pressable';
+  submitBtn.style.cssText = 'opacity:0.4;';
   submitBtn.textContent = 'Ergebnis einreichen';
   submitBtn.disabled = true;
   submitBtn.onclick = function(){
@@ -833,7 +872,7 @@ function buildSubmitUI(content, battleId, d, roundIdx, myUid, currentRound, ov){
       });
     }).then(function(){
       if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-      if(typeof toast==='function') toast('⚔️ Ergebnis eingereicht!');
+      if(typeof toast==='function') toast('Ergebnis eingereicht!');
     }).catch(function(e){ if(typeof toast==='function') toast('Fehler: '+e.message); else alert('Fehler: '+e.message); submitBtn.disabled=false; submitBtn.textContent='Ergebnis einreichen'; });
   };
   submitSection.appendChild(submitBtn);
@@ -851,10 +890,11 @@ function buildConfirmUI(content, battleId, d, roundIdx, myUid, opponentName, rou
   confirmSection.appendChild(label);
 
   var resultCard = document.createElement('div');
-  resultCard.style.cssText = 'background:var(--bg2);border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:16px;margin-bottom:14px;text-align:center;';
-  resultCard.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">'+opponentName+' behauptet:</div>'+
-    '<div class="num" style="font-weight:800;font-size:32px;color:var(--accent);line-height:1;">'+roundData.value+'</div>'+
-    '<div style="font-size:12px;color:var(--muted);">'+(d.roundOrder&&d.roundOrder[roundIdx]&&d.roundOrder[roundIdx].exercise&&d.roundOrder[roundIdx].exercise.unit||'Wdh')+'</div>';
+  resultCard.className = 'card';
+  resultCard.style.cssText = 'padding:16px 14px;text-align:center;';
+  resultCard.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">'+opponentName+' behauptet:</div>'+
+    '<div class="kpi lg num" style="color:var(--accent);">'+roundData.value+'</div>'+
+    '<div class="unit" style="display:block;margin-top:6px;">'+(d.roundOrder&&d.roundOrder[roundIdx]&&d.roundOrder[roundIdx].exercise&&d.roundOrder[roundIdx].exercise.unit||'Wdh')+'</div>';
   confirmSection.appendChild(resultCard);
   if(window.caliMotion){
     var claimEl = resultCard.querySelector('.num');
@@ -863,9 +903,10 @@ function buildConfirmUI(content, battleId, d, roundIdx, myUid, opponentName, rou
 
   if(roundData.videoUrl){
     var vidBtn = document.createElement('button');
-    vidBtn.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;min-height:44px;cursor:pointer;color:var(--text);transition:transform var(--dur-fast) var(--ease-out);margin-bottom:12px;';
-    vidBtn.classList.add('pressable');
-    vidBtn.innerHTML = '&#9654;&#65039; Video ansehen';
+    vidBtn.type = 'button';
+    vidBtn.className = 'btn-g pressable';
+    vidBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:12px;';
+    vidBtn.textContent = '▶ Video ansehen';
     vidBtn.onclick = function(){ playVideo(roundData.videoUrl); };
     confirmSection.appendChild(vidBtn);
   }
@@ -874,17 +915,19 @@ function buildConfirmUI(content, battleId, d, roundIdx, myUid, opponentName, rou
   btnRow.style.cssText = 'display:flex;gap:8px;';
 
   var confirmBtn = document.createElement('button');
-  confirmBtn.style.cssText = 'flex:1;background:var(--success-ink);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;min-height:44px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  confirmBtn.classList.add('pressable');
-  confirmBtn.innerHTML = '&#10003; Bestätigen';
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'btn pressable';
+  confirmBtn.style.cssText = 'flex:1;margin:0;min-height:44px;';
+  confirmBtn.textContent = '✓ Bestätigen';
   confirmBtn.onclick = function(){
     confirmRoundResult(battleId, d, roundIdx, myUid, true, roundData.value, ov);
   };
 
   var disputeBtn = document.createElement('button');
-  disputeBtn.style.cssText = 'flex:1;background:var(--red);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:13px;min-height:44px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-  disputeBtn.classList.add('pressable');
-  disputeBtn.innerHTML = '&#10007; Anfechten';
+  disputeBtn.type = 'button';
+  disputeBtn.className = 'btn-g danger pressable';
+  disputeBtn.style.cssText = 'flex:1;min-height:44px;';
+  disputeBtn.textContent = '✗ Anfechten';
   disputeBtn.onclick = function(){
     var doDispute = function(){ confirmRoundResult(battleId, d, roundIdx, myUid, false, roundData.value, ov); };
     if(typeof confirmSheet === 'function'){
@@ -953,7 +996,7 @@ function confirmRoundResult(battleId, d, roundIdx, myUid, confirmed, value, ov){
       updates.status = 'tiebreaker';
       updates.tiebreakerExercise = tiebreakerEx;
       updates.round = nextRound;
-      if(typeof toast==='function') toast('🎲 Gleichstand! Tiebreaker-Übung: '+tiebreakerEx.name);
+      if(typeof toast==='function') toast('Gleichstand! Tiebreaker-Übung: '+tiebreakerEx.name);
     } else {
       updates.status = 'completed';
       updates.winnerId = winnerId;
@@ -970,7 +1013,7 @@ function confirmRoundResult(battleId, d, roundIdx, myUid, confirmed, value, ov){
 
   db.collection('battles').doc(battleId).update(updates).then(function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-    if(typeof toast==='function') toast(confirmed?'✓ Bestätigt!':'⚠️ Angefochten — Admin prüft');
+    if(typeof toast==='function') toast(confirmed?'Bestätigt!':'Angefochten. Ein Admin prüft.');
   }).catch(function(e){ if(typeof toast==='function') toast('Fehler: '+e.message); else alert('Fehler: '+e.message); });
 }
 
@@ -996,34 +1039,43 @@ function updateParkKingAfterBattle(battleData, winnerId){
 
 // ── PARK KINGS LISTE ──────────────────────────────────────
 function loadParkKings(el){
-  el.innerHTML = '<div style="color:var(--muted);font-size:12px;">Wird geladen...</div>';
+  el.innerHTML = '<div class="empty">Wird geladen...</div>';
   db.collection('parkKings').limit(50).get().then(function(snap){
     el.innerHTML = '';
     if(snap.empty){
-      el.innerHTML='<div style="text-align:center;padding:40px;"><div style="font-size:36px;margin-bottom:10px;">&#128081;</div><div style="font-size:13px;color:var(--muted);">Noch keine Park Kings.<br>Trainiere in einem Park um King zu werden!</div></div>';
+      el.innerHTML='<div style="text-align:center;padding:40px 0;">'+battleRing('crown')+'<div class="empty" style="padding:0;">Noch keine Park Kings.<br>Trainiere in einem Park um King zu werden!</div></div>';
       return;
     }
     var label = document.createElement('h2');
     label.className = 'stitle';
-    label.style.cssText = 'margin:0 0 12px;';
+    label.style.cssText = 'margin:0;';
     label.textContent = 'Park Kings';
     el.appendChild(label);
+    // Ranked list: explicit two-digit index per row
+    var list = document.createElement('div');
+    list.className = 'list';
+    list.style.cssText = 'margin-bottom:0;flex-shrink:0;';
+    var rank = 0;
     snap.forEach(function(doc){
       var d = doc.data();
+      rank++;
       var isMe = firebase.auth().currentUser && d.uid===firebase.auth().currentUser.uid;
-      var card = document.createElement('div');
-      card.style.cssText = 'background:'+(isMe?'rgba(255,85,0,0.08)':'var(--bg2)')+';border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,0.05);'+(isMe?'border:1px solid var(--accent);':'')+'display:flex;align-items:center;gap:12px;';
-      card.innerHTML =
-        '<div style="font-size:28px;flex-shrink:0;">&#128081;</div>'+
-        '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'Anonym')+(isMe?' <span style="font-size:11px;font-weight:700;color:var(--accent-ink);background:rgba(255,85,0,0.12);border-radius:20px;padding:1px 8px;">Du</span>':'')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.parkName||doc.id)+'</div>'+
+      var row = document.createElement('div');
+      row.className = 'list-row';
+      row.style.cssText = 'cursor:default;'+(isMe?'background:var(--accent-soft);':'');
+      row.innerHTML =
+        '<span class="row-index num">'+('0'+rank).slice(-2)+'</span>'+
+        '<span class="row-icon" style="'+(isMe?'color:var(--accent);border-color:var(--accent);':'')+'">'+battleIcon('crown')+'</span>'+
+        '<div class="row-main">'+
+          '<div class="row-title">'+(d.name||'Anonym')+(isMe?' <span style="background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:1px 6px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);vertical-align:middle;">Du</span>':'')+'</div>'+
+          '<div class="row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.parkName||doc.id)+'</div>'+
         '</div>'+
-        '<div style="text-align:right;flex-shrink:0;"><div class="num" style="font-weight:800;font-size:22px;color:var(--accent-ink);">'+(d.defenses||0)+'</div><div style="font-size:11px;color:var(--muted);">Siege</div></div>';
-      el.appendChild(card);
+        '<div style="text-align:right;flex-shrink:0;"><div class="row-val num" style="font-size:15px;">'+(d.defenses||0)+'</div><div class="unit">Siege</div></div>';
+      list.appendChild(row);
     });
-    if(window.caliMotion) caliMotion.stagger(el);
-  }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+    el.appendChild(list);
+    if(window.caliMotion) caliMotion.stagger(list);
+  }).catch(function(e){ el.innerHTML=battleErrorHtml(e.message); });
 }
 
 // ── AUTO-KING BEIM ERSTEN PARK-BESUCH ────────────────────
@@ -1037,7 +1089,7 @@ function checkAndSetParkKing(parkId, parkName){
         uid: uid, name: myName, parkName: parkName,
         since: Date.now(), defenses: 0,
       });
-      if(typeof toast==='function') toast('👑 Du bist jetzt King von '+parkName+'!');
+      if(typeof toast==='function') toast('Du bist jetzt King von '+parkName+'!');
     }
   });
 }

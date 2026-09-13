@@ -1,38 +1,50 @@
-// ── CUSTOM ICON SET (matches the CALI icon-sheet: line-art, orange accents) ──
+// ── CUSTOM ICON SET (Dark Mono: reine Line-Icons, stroke 1.5, currentColor) ──
+// Die Farbe kommt vom umgebenden Element (Standard --muted, betont --accent/--text) —
+// deshalb kein fill und keine Farb-Variablen mehr in den SVGs selbst.
+var _CI_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
 var CALI_ICONS = {
-  flame: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2c1 4-4 5-4 9a4 4 0 008 0c0-1.5-1-2-1-3.5 2 1 3 3 3 5.5a6 6 0 01-12 0C6 8 9 6 12 2z"/></svg>',
-  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4a3 3 0 003 3M17 5h3a3 3 0 01-3 3"/><path d="M12 13v3M9 20h6M9.5 20c0-2 1-2.5 2.5-3s2.5-1 2.5-3"/></svg>',
-  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
-  trend: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
-  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
-  star: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6z"/></svg>',
-  target: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="var(--accent)"/></svg>',
-  pin: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2a7 7 0 00-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5" fill="#fff"/></svg>',
-  handshake: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-3 4 2 3-2 3 2 4-2 2 3-3 5-3-1-3 2-3-2-3 1-4-5z"/></svg>',
-  search: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-5-5"/></svg>',
-  bookmark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>',
-  play: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M8 5v14l11-7z"/></svg>',
-  lightbulb: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.5.4.8 1 .8 1.6V16h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0012 3z"/></svg>',
-  dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/></svg>',
-  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 000-3l2-1.5-2-3.5-2.4 1a7.6 7.6 0 00-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 00-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 000 3l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 002.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 002.6-1.5l2.4 1 2-3.5z"/></svg>',
-  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 0112 0c0 4 1.5 5 1.5 5h-15S6 14 6 10z"/><path d="M10 19a2 2 0 004 0"/></svg>',
-  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L20 6"/></svg>',
-  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg>',
-  flex: '<svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M4 14c0-2 1-3 2-3 0-2 1-3 2.5-3 .3-1.5 1.5-3 3.5-3 3 0 4.5 2 4.5 5 1.5 0 2.5 1.5 2.5 3 1 .3 1.5 1.3 1.5 2.5C20.5 18 18 20 15 20H8c-2.5 0-4-2-4-4v-2z"/></svg>',
-  people: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c.2-2.5 1.8-4 4-4"/></svg>'
+  flame: '<svg '+_CI_ATTRS+'><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 002.5 2.5z"/></svg>',
+  trophy: '<svg '+_CI_ATTRS+'><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4a3 3 0 003 3M17 5h3a3 3 0 01-3 3"/><path d="M12 13v3M9 20h6M9.5 20c0-2 1-2.5 2.5-3s2.5-1 2.5-3"/></svg>',
+  chart: '<svg '+_CI_ATTRS+'><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
+  trend: '<svg '+_CI_ATTRS+'><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+  calendar: '<svg '+_CI_ATTRS+'><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  star: '<svg '+_CI_ATTRS+'><path d="M12 3l2.7 5.8 6.3.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20l1.4-6.3L3 9.4l6.3-.6z"/></svg>',
+  target: '<svg '+_CI_ATTRS+'><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>',
+  pin: '<svg '+_CI_ATTRS+'><path d="M12 21s7-7.6 7-12a7 7 0 10-14 0c0 4.4 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  handshake: '<svg '+_CI_ATTRS+'><path d="M2 12l4-3 4 2 3-2 3 2 4-2 2 3-3 5-3-1-3 2-3-2-3 1-4-5z"/></svg>',
+  search: '<svg '+_CI_ATTRS+'><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-5-5"/></svg>',
+  bookmark: '<svg '+_CI_ATTRS+'><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>',
+  play: '<svg '+_CI_ATTRS+'><path d="M8 5.5v13l10-6.5z"/></svg>',
+  lightbulb: '<svg '+_CI_ATTRS+'><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.5.4.8 1 .8 1.6V16h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0012 3z"/></svg>',
+  dumbbell: '<svg '+_CI_ATTRS+'><path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/></svg>',
+  gear: '<svg '+_CI_ATTRS+'><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 000-3l2-1.5-2-3.5-2.4 1a7.6 7.6 0 00-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 00-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 000 3l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 002.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 002.6-1.5l2.4 1 2-3.5z"/></svg>',
+  bell: '<svg '+_CI_ATTRS+'><path d="M6 10a6 6 0 0112 0c0 4 1.5 5 1.5 5h-15S6 14 6 10z"/><path d="M10 19a2 2 0 004 0"/></svg>',
+  pencil: '<svg '+_CI_ATTRS+'><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg>',
+  check: '<svg '+_CI_ATTRS+'><path d="M5 13l5 5L20 6"/></svg>',
+  moon: '<svg '+_CI_ATTRS+'><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg>',
+  flex: '<svg '+_CI_ATTRS+'><path d="M4 14c0-2 1-3 2-3 0-2 1-3 2.5-3 .3-1.5 1.5-3 3.5-3 3 0 4.5 2 4.5 5 1.5 0 2.5 1.5 2.5 3 1 .3 1.5 1.3 1.5 2.5C20.5 18 18 20 15 20H8c-2.5 0-4-2-4-4v-2z"/></svg>',
+  people: '<svg '+_CI_ATTRS+'><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c.2-2.5 1.8-4 4-4"/></svg>',
+  clock: '<svg '+_CI_ATTRS+'><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
 };
-function ci(name){
+// ci(name[, color]) — Icon-SVG, füllt seinen Container; color (optional, z.B. 'var(--accent)')
+// setzt die Strichfarbe, sonst erbt sie vom Elternelement.
+function ci(name, color){
   var svg = CALI_ICONS[name] || '';
-  return svg.replace('<svg ', '<svg width="100%" height="100%" style="display:block;" ');
+  var st = 'display:block;' + (color ? 'color:'+color+';' : '');
+  return svg.replace('<svg ', '<svg width="100%" height="100%" style="'+st+'" ');
 }
+// iconWrap(name, {size:18, box:44, color:'var(--muted)'}) — 44px-Ring (1px --line2, rund)
+// mit Line-Icon in --muted. Legacy-Optionen bg/radius werden weiter angenommen; ohne sie
+// entsteht der Kontrakt-Ring (§5.7). border:false → Icon ohne Ring.
 function iconWrap(name, opts){
   opts = opts || {};
-  var size = opts.size || 20;
+  var size = opts.size || 18;
   var box = opts.box || 44;
-  var bg = opts.bg || 'rgba(255,85,0,0.1)';
-  var radius = opts.radius != null ? opts.radius : Math.round(box*0.32);
-  return '<div style="width:'+box+'px;height:'+box+'px;border-radius:'+radius+'px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+  var bg = opts.bg || 'transparent';
+  var radius = opts.radius != null ? opts.radius+'px' : '50%';
+  var color = opts.color || 'var(--muted)';
+  var border = opts.border === false ? 'none' : '1px solid var(--line2)';
+  return '<div style="width:'+box+'px;height:'+box+'px;border-radius:'+radius+';background:'+bg+';border:'+border+';color:'+color+';box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
     '<div style="width:'+size+'px;height:'+size+'px;">'+ci(name)+'</div></div>';
 }
 
@@ -131,7 +143,8 @@ var EX_DB = [
         ];
 
 var EX_CATS = ['Alle','Pull','Push','Core','Legs','Skills',];
-var EX_CAT_COLORS = {Pull:'var(--accent)',Push:'#FF6B35',Core:'#A78BFA',Legs:'#4ECDC4',Skills:'#F59E0B',Alle:'#888'};
+// Kategoriefarben nur über Tokens (Dark Mono): 6px-Dots, keine Flächen
+var EX_CAT_COLORS = {Pull:'var(--accent)',Push:'var(--amber)',Core:'var(--purple)',Legs:'var(--teal)',Skills:'var(--success)',Alle:'var(--muted)'};
 var activeExCat = 'Alle';
 
 var PRESET_PLANS = [
@@ -167,7 +180,8 @@ var PRESET_PLANS = [
 
 var activePfCat = 'Alle';
 
-var COLS = {gr:'var(--accent)',or:'#FF6B35',te:'#4ECDC4',pu:'#A78BFA',am:'#F59E0B',bl:'#38BDF8'};
+// Schlüssel (gr/or/te/pu/am/bl) sind gespeicherte Daten — nur die Werte sind Tokens
+var COLS = {gr:'var(--accent)',or:'var(--amber)',te:'var(--teal)',pu:'var(--purple)',am:'var(--success)',bl:'var(--blue)'};
 var CC = {'Klimmzuge':'gr','Dips':'or','Liegestutze':'te','Plank':'pu','Australian Rows':'gr','Pike Push-ups':'or','Muscle-Ups':'am','L-Sit Hold':'pu','Tuck Front Lever':'pu'};
 
 function ld(){
@@ -230,9 +244,10 @@ function goPage(p, dir){
       try{ activeTab.scrollIntoView({inline:'center', block:'nearest'}); }catch(e){}
     }
     if(p!==_lastGoPage && activeTab.animate && !(window.caliMotion && caliMotion.reduced())){
+      // trockener Pop ohne Overshoot (Dark Mono: kein Spring)
       activeTab.animate(
-        [{transform:'scale(0.9)'},{transform:'scale(1)'}],
-        {duration:250, easing:'cubic-bezier(0.34,1.56,0.64,1)'}
+        [{transform:'scale(0.92)'},{transform:'scale(1)'}],
+        {duration:200, easing:'cubic-bezier(0.22,1,0.36,1)'}
       );
     }
   }
@@ -268,7 +283,7 @@ function goPage(p, dir){
     if(dirPg && dirPg.animate){
       dirPg.animate(
         [{opacity:0,transform:'translateY(-10px)'},{opacity:1,transform:'translateY(0)'}],
-        {duration:250, easing:'cubic-bezier(0.22,1,0.36,1)'}
+        {duration:200, easing:'cubic-bezier(0.22,1,0.36,1)'}
       );
     }
   }
@@ -435,7 +450,7 @@ function startWorkout(planId){
 
   var emomWrap=document.getElementById('wo-emom-btn-wrap');if(emomWrap)emomWrap.style.display='block';  document.getElementById('active-workout').style.display = 'block';
   document.getElementById('wo-date').textContent = woDate;
-  document.getElementById('wo-ex-list').innerHTML = '<div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>';
+  _woExListEl().innerHTML = '<div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>';
   document.getElementById('sbox').innerHTML = '';
   document.getElementById('plan-blocks-wrap').style.display='none';
   if(document.getElementById('plan-add-form'))document.getElementById('plan-add-form').style.display='block';
@@ -561,7 +576,7 @@ function finalizeEndWorkout(autoCommitted){
     try{
       var xpKey = 'cali_woxp_' + woDate;
       if(!localStorage.getItem(xpKey)){
-        awardXP(10, '💪 Workout abgeschlossen');
+        awardXP(10, 'Workout abgeschlossen');
         localStorage.setItem(xpKey, '1');
       }
     }catch(e){}
@@ -577,7 +592,7 @@ function finalizeEndWorkout(autoCommitted){
   document.getElementById('active-workout').style.display = 'none';
   document.getElementById('start-screen').style.display = 'block';
   document.getElementById('wo-timer').textContent = '00:00';
-  document.getElementById('wo-ex-list').innerHTML = '<div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>';
+  _woExListEl().innerHTML = '<div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>';
   document.getElementById('sbox').innerHTML = '';
   document.getElementById('inp-note').value = '';
   document.getElementById('b-cust').value = '';
@@ -612,6 +627,13 @@ function countWeekGoalMarkers(){
 }
 
 // ── WORKOUT-ABSCHLUSS-MOMENT ──────────────────────────────
+// "12min 05sek" (Format aus finalizeEndWorkout) → "12:05"; null, wenn das Format nicht passt
+function _woDurClock(durStr){
+  var m = /^(\d+)min\s*(\d+)sek$/.exec(String(durStr||'').trim());
+  if(!m) return null;
+  var mm = parseInt(m[1],10), ss = parseInt(m[2],10);
+  return (mm<10?'0'+mm:''+mm)+':'+(ss<10?'0'+ss:''+ss);
+}
 function showWorkoutDone(durStr, exCount, setCount, flames, autoCommitted){
   var skipCelebrate = _woSkipCelebrate;
   _woSkipCelebrate = false;
@@ -620,31 +642,40 @@ function showWorkoutDone(durStr, exCount, setCount, flames, autoCommitted){
 
   var ov = document.createElement('div');
   ov.id = 'wo-done-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2500;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2500;display:flex;align-items:center;justify-content:center;padding:20px;';
 
   var card = document.createElement('div');
-  card.style.cssText = 'background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:24px;width:100%;max-width:340px;text-align:center;';
+  card.style.cssText = 'background:var(--card);border:1px solid var(--line2);border-radius:var(--r-card);box-shadow:none;padding:20px 16px;width:100%;max-width:340px;text-align:center;';
 
   function statRow(label, valHtml){
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">'+
-      '<div style="font-size:13px;color:var(--muted);">'+label+'</div>'+
-      '<div class="num" style="font-size:15px;font-weight:700;color:var(--text);">'+valHtml+'</div>'+
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:6px 0;border-bottom:1px solid var(--line);">'+
+      '<span class="lbl">'+label+'</span>'+
+      '<span class="row-val num">'+valHtml+'</span>'+
     '</div>';
   }
 
-  var h = '<div style="display:flex;justify-content:center;margin-bottom:12px;">'+iconWrap('trophy',{size:26,box:56,radius:18})+'</div>';
-  h += '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:4px;">Workout geschafft!</div>';
-  h += '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Stark! Dein Training ist gespeichert.</div>';
-  h += statRow('Dauer', durStr);
+  // Die eine große Display-Zahl der Karte: die Dauer als mm:ss in Punktmatrix
+  var clock = _woDurClock(durStr);
+
+  var h = '<div style="display:flex;justify-content:center;margin-bottom:12px;">'+iconWrap('trophy',{size:18,box:44,color:'var(--accent)'})+'</div>';
+  h += '<div class="ttl">Workout geschafft</div>';
+  h += '<div class="row-sub" style="margin-top:4px;">Stark! Dein Training ist gespeichert.</div>';
+  if(clock){
+    h += '<div class="dotnum num" style="font-size:64px;color:var(--accent);margin:18px 0 6px;">'+clock+'</div>';
+    h += '<div class="unit" style="margin-bottom:10px;">Dauer</div>';
+  } else {
+    h += '<div style="height:12px;"></div>';
+    h += statRow('Dauer', durStr);
+  }
   h += statRow('Übungen', '<span id="wo-done-ex">'+exCount+'</span>');
   h += statRow('Sätze', '<span id="wo-done-sets">'+setCount+'</span>');
   if(flames > 0){
-    h += statRow('Flames verdient', '<span id="wo-done-flames">'+flames+'</span> 🔥');
+    h += statRow('Flames verdient', '<span id="wo-done-flames">'+flames+'</span>');
   }
   if(autoCommitted > 0){
-    h += '<div style="font-size:12px;color:var(--muted);margin-top:10px;">'+autoCommitted+' offene Plan-Übung'+(autoCommitted>1?'en':'')+' automatisch übernommen.</div>';
+    h += '<div class="row-sub" style="margin-top:10px;">'+autoCommitted+' offene Plan-Übung'+(autoCommitted>1?'en':'')+' automatisch übernommen.</div>';
   }
-  h += '<button id="wo-done-btn" class="pressable" style="width:100%;margin-top:18px;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:14px;cursor:pointer;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out);">Weiter</button>';
+  h += '<button id="wo-done-btn" type="button" class="btn" style="margin-top:18px;">Weiter</button>';
   card.innerHTML = h;
   ov.appendChild(card);
   document.body.appendChild(ov);
@@ -671,9 +702,10 @@ function showWorkoutDone(durStr, exCount, setCount, flames, autoCommitted){
     if(!skipCelebrate) caliMotion.celebrate('burst');
     if(!caliMotion.reduced()){
       if(card.animate){
+        // kurze, trockene Scale-Entrance ohne Overshoot
         card.animate(
-          [{transform:'scale(0.94)'},{transform:'scale(1)'}],
-          {duration:250, easing:'cubic-bezier(0.34,1.56,0.64,1)'}
+          [{transform:'scale(0.96)',opacity:0},{transform:'scale(1)',opacity:1}],
+          {duration:200, easing:'cubic-bezier(0.22,1,0.36,1)'}
         );
       }
       var exEl = document.getElementById('wo-done-ex');
@@ -725,8 +757,15 @@ function animateLastWoExItem(){
   }
 }
 
-function buildWoExList(){
+// Container der Session-Übungen als bordered .list-Karte (§5.2). Die Indizes
+// "01, 02 …" kommen per CSS-Counter aus .numbered (tracker.html) — hier kein eigener Index.
+function _woExListEl(){
   var el = document.getElementById('wo-ex-list');
+  if(el && el.classList && !el.classList.contains('list')) el.classList.add('list');
+  return el;
+}
+function buildWoExList(){
+  var el = _woExListEl();
   if(!woExercises.length){
     el.innerHTML='<div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>';
     return;
@@ -741,10 +780,11 @@ function buildWoExList(){
       setsTxt+='S'+(k+1)+': '+ex.sets[k].n;
       if(ex.sets[k].b&&ex.band)setsTxt+=' (+'+ex.sets[k].b+' Band)';
     }
-    h+='<div class="wo-ex-item">';
-    h+='<div class="wo-ex-dot" style="background:'+col+'"></div>';
-    h+='<div class="wo-ex-col"><div class="wo-ex-name">'+ex.name+'</div><div class="wo-ex-sets">'+setsTxt+'</div></div>';
-    h+='<button aria-label="Übung entfernen" onclick="removeWoEx('+i+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:10px;margin:-6px -6px -6px 0;flex-shrink:0;align-self:center;">&#x2715;</button>';
+    // Nummerierte Listenzeile: [01] · Kategorie-Dot · Name + Sätze · ✕ (statt Chevron — die Zeile führt nirgendwohin)
+    h+='<div class="list-row wo-ex-item" style="cursor:default;padding:10px 14px;align-items:center;">';
+    h+='<div class="wo-ex-dot" style="background:'+col+';margin-top:0;"></div>';
+    h+='<div class="wo-ex-col"><div class="wo-ex-name">'+ex.name+'</div><div class="wo-ex-sets num">'+setsTxt+'</div></div>';
+    h+='<button type="button" class="pressable" aria-label="Übung entfernen" onclick="removeWoEx('+i+')" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-family:inherit;font-size:14px;min-width:36px;min-height:36px;padding:6px;margin:0 -6px 0 0;flex-shrink:0;">&#x2715;</button>';
     h+='</div>';
   }
   el.innerHTML=h;
@@ -787,9 +827,9 @@ function toggleBelt(){
   var row = document.getElementById('belt-kg-row');
   if(btn){
     btn.textContent = beltEnabled ? 'Gürtel: an' : 'Gürtel: aus';
-    btn.style.borderColor = beltEnabled ? 'var(--blue-ink)' : 'var(--border)';
-    btn.style.color = beltEnabled ? '#fff' : 'var(--muted)';
-    btn.style.background = beltEnabled ? 'var(--blue-ink)' : 'var(--bg3)';
+    btn.setAttribute('aria-pressed', beltEnabled ? 'true' : 'false');
+    // Optik kommt allein aus .belt-toggle / .belt-toggle.on (tracker.html)
+    if(beltEnabled) btn.classList.add('on'); else btn.classList.remove('on');
   }
   if(row) row.style.display = beltEnabled ? 'block' : 'none';
   bsets();
@@ -812,6 +852,48 @@ function sv(i,f,v){
   if(sets[i])sets[i][f]=v;
 }
 
+// Kompaktes Satz-Eingabefeld (Wdh / Band / kg) für die Zeilen der abgeschlossenen Sätze.
+// Schreibt über sv(i,f,v) in dasselbe sets[]-Modell wie bisher.
+function _woSetInput(i, field, val, accent){
+  var inp = document.createElement('input');
+  inp.type = 'number';
+  inp.className = 'num';
+  inp.placeholder = '0';
+  inp.value = (val === undefined || val === null) ? '' : val;
+  inp.style.cssText = 'background:var(--card2);border:1px solid '+(accent||'var(--line)')+';color:var(--text);border-radius:var(--r-input);padding:8px;font-family:inherit;font-size:16px;font-weight:500;outline:none;width:100%;min-height:40px;text-align:center;-webkit-appearance:none;appearance:none;';
+  inp.setAttribute('data-i', String(i));
+  inp.setAttribute('data-f', field);
+  inp.setAttribute('aria-label', field==='b' ? 'Bandstärke Satz '+(i+1) : field==='kg' ? 'Gürtelgewicht Satz '+(i+1) : 'Wert Satz '+(i+1));
+  inp.oninput = inp.onchange = function(){ sv(parseInt(this.getAttribute('data-i'),10), this.getAttribute('data-f'), this.value); };
+  return inp;
+}
+// Beschriftetes Feld (Label + Input) für Band/kg in der Karte des aktuellen Satzes
+function _woSetField(i, field, val, label, accent){
+  var wrap = document.createElement('div');
+  var lbl = document.createElement('div');
+  lbl.className = 'lbl';
+  lbl.style.cssText = 'margin-bottom:6px;color:'+accent+';';
+  lbl.textContent = label;
+  wrap.appendChild(lbl);
+  wrap.appendChild(_woSetInput(i, field, val, accent));
+  return wrap;
+}
+// ±delta auf den Wert des aktuellen Satzes (Stepper-Buttons der Satz-Karte).
+// Leere oder nicht-numerische Werte starten bei 0; nie unter 0.
+function woStepSet(i, delta){
+  if(!sets[i]) return;
+  var cur = parseFloat(String(sets[i].n).replace(',','.'));
+  if(isNaN(cur)) cur = 0;
+  var v = Math.max(0, Math.round((cur + delta)*100)/100);
+  sets[i].n = String(v);
+  var inp = document.getElementById('wo-set-cur');
+  if(inp) inp.value = sets[i].n; else bsets();
+}
+
+// Satz-Eingabe: abgeschlossene Sätze als kompakte, weiter editierbare Zeilen
+// (Index · Wert · Band · kg · ✕), darunter der AKTUELLE Satz als Karte
+// "Satz n / m" mit −/+-Stepper und "✓ Satz beenden" (= addSet, wie "+ Satz").
+// Das Datenmodell sets[{n,b,kg}] und die Setter sv/ds/addSet bleiben unverändert.
 function bsets(){
   var box = document.getElementById('sbox');
   if(!box) return;
@@ -824,63 +906,118 @@ function bsets(){
   if(showBand) cols += ' 1fr';
   if(showKg) cols += ' 1fr';
   cols += ' 40px';
+  var last = sets.length-1;
   var hdr = document.getElementById('set-header');
-  if(hdr) hdr.style.gridTemplateColumns = cols;
+  // Die Kopfzeile gehört zu den kompakten Zeilen — ohne abgeschlossene Sätze ausblenden
+  if(hdr){
+    hdr.style.gridTemplateColumns = cols;
+    hdr.style.display = last > 0 ? 'grid' : 'none';
+  }
   var lb = document.getElementById('lbl-b');
   if(lb) lb.style.display = showBand ? 'block' : 'none';
-  // Satznummern als TEXT → Ink-Varianten (Kontrast), helle Originale bleiben Füllfarben
-  var colors = ['var(--accent-ink)','var(--amber-ink)','var(--teal-ink)','var(--purple-ink)'];
-  for(var i=0;i<sets.length;i++){
+  var unit = (selWoEx && selWoEx.unit) ? selWoEx.unit : 'Wdh';
+  var stepable = unit !== 'Min:Sek'; // "1:30" lässt sich nicht hochzählen
+
+  for(var i=0;i<last;i++){
     var row = document.createElement('div');
-    row.style.cssText = 'display:grid;grid-template-columns:'+cols+';gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);';
+    row.style.cssText = 'display:grid;grid-template-columns:'+cols+';gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);';
     var num = document.createElement('div');
-    num.className = 'num';
-    num.style.cssText = 'font-family:inherit;font-size:16px;text-align:center;color:'+colors[i<4?i:3]+';';
-    num.textContent = String(i+1);
-    var inp = document.createElement('input');
-    inp.type = 'number';
-    inp.placeholder = '0';
-    inp.value = sets[i].n || '';
-    inp.style.cssText = 'background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 8px;font-size:16px;font-family:inherit;outline:none;width:100%;text-align:center;';
-    inp.setAttribute('data-i', String(i));
-    inp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].n=this.value;};
-    inp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].n=this.value;};
-    var del = document.createElement('button');
-    del.innerHTML = '&#x2715;';
-    del.setAttribute('aria-label', 'Satz entfernen');
-    del.style.cssText = 'background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;text-align:center;padding:12px 10px;margin:-8px -2px;';
-    del.setAttribute('data-i', String(i));
-    del.onclick = function(){
-      var idx2=parseInt(this.getAttribute('data-i'),10);
-      if(sets.length>1){sets.splice(idx2,1);bsets();}
-    };
+    num.className = 'snum num';
+    num.textContent = ('0'+(i+1)).slice(-2);
     row.appendChild(num);
-    row.appendChild(inp);
-    if(showBand){
-      var binp = document.createElement('input');
-      binp.type = 'number';
-      binp.placeholder = '0';
-      binp.value = sets[i].b || '';
-      binp.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid #F59E0B;color:var(--amber-ink);border-radius:10px;padding:9px 8px;font-size:16px;font-family:inherit;outline:none;width:100%;text-align:center;';
-      binp.setAttribute('data-i', String(i));
-      binp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].b=this.value;};
-      binp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].b=this.value;};
-      row.appendChild(binp);
-    }
-    if(showKg){
-      var kinp = document.createElement('input');
-      kinp.type = 'number';
-      kinp.placeholder = '0';
-      kinp.value = sets[i].kg || beltKgVal || '';
-      kinp.style.cssText = 'background:rgba(56,189,248,0.08);border:1px solid #38BDF8;color:var(--blue-ink);border-radius:10px;padding:9px 8px;font-size:16px;font-family:inherit;outline:none;width:100%;text-align:center;';
-      kinp.setAttribute('data-i', String(i));
-      kinp.onchange = function(){sets[parseInt(this.getAttribute('data-i'),10)].kg=this.value;};
-      kinp.oninput = function(){sets[parseInt(this.getAttribute('data-i'),10)].kg=this.value;};
-      row.appendChild(kinp);
-    }
+    row.appendChild(_woSetInput(i, 'n', sets[i].n, ''));
+    if(showBand) row.appendChild(_woSetInput(i, 'b', sets[i].b, 'var(--amber)'));
+    if(showKg) row.appendChild(_woSetInput(i, 'kg', sets[i].kg || beltKgVal, 'var(--blue)'));
+    var del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'pressable';
+    del.innerHTML = '&#x2715;';
+    del.setAttribute('aria-label', 'Satz '+(i+1)+' entfernen');
+    del.style.cssText = 'background:none;border:none;color:var(--muted2);cursor:pointer;font-family:inherit;font-size:14px;text-align:center;min-height:40px;padding:0;';
+    del.setAttribute('data-i', String(i));
+    del.onclick = function(){ ds(parseInt(this.getAttribute('data-i'),10)); };
     row.appendChild(del);
     box.appendChild(row);
   }
+
+  // Karte des aktuellen Satzes
+  var card = document.createElement('div');
+  card.style.cssText = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:14px;margin-top:'+(last>0?'12px':'0')+';text-align:center;';
+
+  var head = document.createElement('div');
+  head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;';
+  var spacer = document.createElement('span');
+  spacer.style.cssText = 'width:36px;flex-shrink:0;';
+  var title = document.createElement('span');
+  title.className = 'lbl';
+  title.innerHTML = 'Satz <span class="num">'+(last+1)+'</span> / <span class="num">'+sets.length+'</span>';
+  var delCur = document.createElement('button');
+  delCur.type = 'button';
+  delCur.className = 'icon-btn sm';
+  delCur.innerHTML = '&#x2715;';
+  delCur.setAttribute('aria-label', 'Satz '+(last+1)+' entfernen');
+  delCur.style.visibility = last > 0 ? 'visible' : 'hidden'; // ds() lässt den letzten Satz stehen
+  delCur.onclick = function(){ ds(sets.length-1); };
+  head.appendChild(spacer); head.appendChild(title); head.appendChild(delCur);
+  card.appendChild(head);
+
+  var stp = document.createElement('div');
+  stp.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px;';
+  if(stepable){
+    var minus = document.createElement('button');
+    minus.type = 'button';
+    minus.className = 'icon-btn num';
+    minus.textContent = '−';
+    minus.setAttribute('aria-label', 'Eins weniger');
+    minus.onclick = function(){ woStepSet(sets.length-1, -1); };
+    stp.appendChild(minus);
+  }
+  var cur = document.createElement('input');
+  cur.type = stepable ? 'number' : 'text';
+  cur.id = 'wo-set-cur';
+  cur.className = 'num';
+  cur.placeholder = '0';
+  cur.value = sets[last].n || '';
+  cur.setAttribute('aria-label', unit+' Satz '+(last+1));
+  cur.style.cssText = 'flex:1;min-width:0;max-width:160px;background:transparent;border:none;border-bottom:1px solid var(--line2);border-radius:0;color:var(--text);font-family:inherit;font-size:38px;font-weight:600;line-height:1.1;text-align:center;padding:4px 0;outline:none;-webkit-appearance:none;appearance:none;-moz-appearance:textfield;';
+  cur.setAttribute('data-i', String(last));
+  cur.oninput = cur.onchange = function(){ sv(parseInt(this.getAttribute('data-i'),10), 'n', this.value); };
+  stp.appendChild(cur);
+  if(stepable){
+    var plus = document.createElement('button');
+    plus.type = 'button';
+    plus.className = 'icon-btn num';
+    plus.textContent = '+';
+    plus.setAttribute('aria-label', 'Eins mehr');
+    plus.onclick = function(){ woStepSet(sets.length-1, 1); };
+    stp.appendChild(plus);
+  }
+  card.appendChild(stp);
+
+  var unitEl = document.createElement('div');
+  unitEl.className = 'unit';
+  unitEl.style.cssText = 'margin-top:8px;';
+  unitEl.textContent = unit;
+  card.appendChild(unitEl);
+
+  if(showBand || showKg){
+    var extra = document.createElement('div');
+    extra.style.cssText = 'display:grid;grid-template-columns:'+((showBand&&showKg)?'1fr 1fr':'1fr')+';gap:8px;margin-top:14px;text-align:left;';
+    if(showBand) extra.appendChild(_woSetField(last, 'b', sets[last].b, 'Mit Band', 'var(--amber)'));
+    if(showKg) extra.appendChild(_woSetField(last, 'kg', sets[last].kg || beltKgVal, 'Gürtel kg', 'var(--blue)'));
+    card.appendChild(extra);
+  }
+
+  // Sekundär-CTA (hell): schließt den Satz ab und öffnet den nächsten — identisch zu "+ Satz"
+  var fin = document.createElement('button');
+  fin.type = 'button';
+  fin.className = 'btn sec';
+  fin.style.cssText = 'margin-top:14px;';
+  fin.textContent = '✓ Satz beenden';
+  fin.onclick = function(){ addSet(); };
+  card.appendChild(fin);
+
+  box.appendChild(card);
 }
 
 // ── TOAST ─────────────────────────────────────────────────
@@ -918,85 +1055,111 @@ function bb(){
   if(!el)return;
   var nm=BEST_TRACKED_NAMES;
   var h='';
+  var idx=0;
   for(var i=0;i<nm.length;i++){
     var n=nm[i];var f=[];
     for(var j=0;j<ents.length;j++){if(ents[j].name===n)f.push(ents[j]);}
     if(!f.length)continue;
     f.sort(function(a,b){return a.date<b.date?1:-1;});
-    var e=f[0];var cl=CC[n]||'gr';
-    var st='';
+    var e=f[0];
+    var st='';var best=0;
     for(var k=0;k<e.sets.length;k++){
       if(k>0)st+=' &middot; ';
       st+='S'+(k+1)+': '+e.sets[k].n;
-      if(e.sets[k].b&&e.band)st+=' <span style="color:var(--amber-ink)">('+e.sets[k].b+' Band)</span>';
+      if(e.sets[k].b&&e.band)st+=' <span style="color:var(--amber)">(+'+e.sets[k].b+' Band)</span>';
+      var v=parseFloat(e.sets[k].n);
+      if(!isNaN(v)&&v>best)best=v;
     }
-    h+='<div class="bb '+cl+'"><div class="bbn">'+n+'</div>';
-    h+='<div style="font-size:11px;color:var(--muted);margin-top:3px">'+e.date+(e.band?' &bull; '+e.band:'')+'</div>';
-    h+='<div style="font-size:12px;color:var(--muted);margin-top:5px">'+st+'</div></div>';
+    idx++;
+    // Nummerierte Listenzeile (§5.2): Index · Name + Datum/Sätze · bester Einzelsatz
+    h+='<div class="list-row" style="cursor:default;">';
+    h+='<span class="row-index num">'+('0'+idx).slice(-2)+'</span>';
+    h+='<div class="row-main"><div class="row-title">'+n+'</div>';
+    h+='<div class="row-sub num">'+e.date+(e.band?' &middot; '+e.band:'')+' &middot; '+st+'</div></div>';
+    if(best>0)h+='<span class="row-val num">'+best+(e.unit?' <span class="unit">'+e.unit+'</span>':'')+'</span>';
+    h+='</div>';
   }
   if(h){
-    el.className='';
-    el.style.cssText='';
+    el.className='list';
+    el.style.cssText='display:block;padding:0;';
     el.innerHTML=h;
     if(window.caliMotion)caliMotion.stagger(el);
   } else {
     el.className='pk-card';
-    el.style.cssText='display:flex;align-items:center;gap:16px;padding:20px;';
+    el.style.cssText='display:flex;align-items:center;gap:14px;padding:14px;';
     el.innerHTML=
-      iconWrap('trophy',{size:24,box:52,radius:16})+
+      iconWrap('trophy',{size:18,box:44})+
       '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;">Noch keine Rekorde</div>'+
-        '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">Schließe dein erstes Workout ab, um persönliche Bestleistungen zu speichern.</div>'+
-        '<button class="pressable" onclick="startWorkout(null)" style="background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;">Workout starten</button>'+
+        '<div class="row-title">Noch keine Rekorde</div>'+
+        '<div class="row-sub" style="margin-bottom:10px;">Schließe dein erstes Workout ab, um persönliche Bestleistungen zu speichern.</div>'+
+        '<button type="button" class="btn-g" onclick="startWorkout(null)">Workout starten</button>'+
       '</div>';
   }
 }
 
-// ── START-SEITE DASHBOARD (Wochenfortschritt) ──────────────
+// ── START-SEITE: Mini-Balken + Level-Kachel ────────────────
+// Mini-Balken der laufenden Woche (Mo–So) aus ECHTEN Einträgen: Höhe = geloggte
+// Sätze pro Tag relativ zum Wochenmaximum, Tage mit Training in --accent.
+// Wochenstart wie getWeeklyProgress (main2ab.js), damit beide Zahlen zusammenpassen.
+// Wird von der Hero-Kachel DIESE WOCHE (buildStreakWidget, main2ba.js) gerendert.
+function weekSetBars(){
+  var today=new Date();var dow=today.getDay();
+  var ws=new Date(today);ws.setDate(today.getDate()-(dow===0?6:dow-1));
+  var days=[];var counts=[];var max=0;
+  for(var d=0;d<7;d++){
+    var dt=new Date(ws);dt.setDate(ws.getDate()+d);
+    days.push(dt.toISOString().slice(0,10));counts.push(0);
+  }
+  for(var i=0;i<ents.length;i++){
+    var ix=days.indexOf(ents[i].date);
+    if(ix>-1)counts[ix]+=(ents[i].sets&&ents[i].sets.length)||1;
+  }
+  for(var m=0;m<7;m++){if(counts[m]>max)max=counts[m];}
+  var h='<div class="minibars" aria-hidden="true">';
+  for(var b=0;b<7;b++){
+    var on=counts[b]>0;
+    var pct=on?Math.max(30,Math.round(counts[b]/max*100)):20;
+    h+='<i'+(on?' class="on"':'')+' style="--h:'+pct+'%"></i>';
+  }
+  return h+'</div>';
+}
+
 function buildStartDashboard(){
   var el=document.getElementById('start-dashboard');
   if(!el)return;
 
-  var weekDone=(typeof getWeeklyProgress==='function')?getWeeklyProgress():0;
-  var weekGoal=(typeof streakData!=='undefined'&&streakData.weeklyGoal)?streakData.weeklyGoal:3;
-  var weekPct=weekGoal>0?Math.min(100,Math.round((weekDone/weekGoal)*100)):0;
-  var streak=(typeof streakData!=='undefined')?(streakData.currentStreak||0):0;
-  var bestsCount=countPersonalBests();
-  // Erreichte, aber noch nicht abgeholte Meilenstein-Belohnungen (Helfer in main2ba.js)
-  var unclaimedMs=(typeof getUnclaimedMilestoneCount==='function')?getUnclaimedMilestoneCount():0;
-
-  var tiles=[
-    {icon:'flame', val:'<span class="num" data-cu="'+weekDone+'">'+weekDone+'</span> / <span class="num">'+weekGoal+'</span>', label:'Workouts diese Woche', bar:weekPct},
-    {icon:'trend', val:'<span class="num" data-cu="'+streak+'">'+streak+'</span> Tage', label:'Aktueller Streak', hint:streak===0?'Bleib dran und baue Kontinuität auf.':'', msHint:unclaimedMs>0?'Belohnung im Profil abholen':''},
-    {icon:'trophy', val:'<span class="num" data-cu="'+bestsCount+'">'+bestsCount+'</span>', label:'Persönliche Bestleistungen', hint:bestsCount===0?'Schließe Workouts ab, um Bestleistungen zu erzielen.':''}
-  ];
-
-  // Level-Kachel, sobald der XP-Cache existiert (wird von xp.js gepflegt)
+  // STREAK und DIESE WOCHE (inkl. Mini-Balken + Meilenstein-Hinweis) wohnen
+  // ausschließlich in der Hero-Doppelkachel (buildStreakWidget, main2ba.js);
+  // die Bestleistungen haben ihre eigene Sektion weiter unten. Hier bleibt nur
+  // die Level-Kachel, sobald der XP-Cache existiert (wird von xp.js gepflegt).
+  var tiles=[];
   var xpCache=null;
   try{ xpCache=localStorage.getItem('cali_xp_cache'); }catch(e){}
   if(xpCache!==null && typeof getLevelFromXP==='function'){
     var lv=getLevelFromXP(parseInt(xpCache,10)||0);
     tiles.push({
-      icon:'star',
-      val:'Level <span class="num" data-cu="'+lv.level+'">'+lv.level+'</span>',
-      label: lv.xpToNext>0 ? ('Noch '+lv.xpToNext+' XP bis Level '+(lv.level+1)) : 'Max. Level erreicht',
-      bar: lv.progress
+      lbl:'Level',
+      kpi:'<span class="kpi num" data-cu="'+lv.level+'">'+lv.level+'</span>',
+      unit:'',
+      sub: lv.xpToNext>0 ? ('Noch '+lv.xpToNext+' XP bis Level '+(lv.level+1)) : 'Max. Level erreicht',
+      pct: lv.progress
     });
   }
+  if(!tiles.length){ el.innerHTML=''; el.style.display='none'; return; }
+  el.style.display='';
 
   var grid=document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:repeat('+(tiles.length===4?'2':'3')+',1fr);gap:10px;';
-  tiles.forEach(function(t){
+  grid.className='stat-grid';
+  tiles.forEach(function(t,ti){
     var tile=document.createElement('div');
-    tile.className='pk-card';
-    tile.style.cssText='padding:14px;';
-    tile.innerHTML=
-      '<div style="margin-bottom:10px;">'+iconWrap(t.icon,{size:16,box:34,radius:11})+'</div>'+
-      '<div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.2;">'+t.val+'</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+t.label+'</div>'+
-      (typeof t.bar==='number'?'<div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px;"><div class="prog-fill" data-bar="'+t.bar+'" style="border-radius:4px;width:'+t.bar+'%;"></div></div>':'')+
-      (t.hint?'<div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;">'+t.hint+'</div>':'')+
-      (t.msHint?'<div style="font-size:11px;color:var(--accent-ink);font-weight:600;margin-top:6px;line-height:1.4;">'+t.msHint+'</div>':'');
+    tile.className='stat-tile';
+    // Ungerade Anzahl: die letzte Kachel läuft über beide Spalten
+    if(tiles.length%2===1 && ti===tiles.length-1) tile.style.gridColumn='1 / -1';
+    var inner='<span class="lbl">'+t.lbl+'</span>';
+    inner+='<div class="kpi-row">'+t.kpi+(t.unit?'<span class="unit">'+t.unit+'</span>':'')+'</div>';
+    if(t.sub) inner+='<div class="row-sub num">'+t.sub+'</div>';
+    if(typeof t.pct==='number') inner+='<div class="segbar" data-pct="'+t.pct+'"></div>';
+    tile.innerHTML=inner;
     grid.appendChild(tile);
   });
   el.innerHTML='';
@@ -1004,16 +1167,27 @@ function buildStartDashboard(){
   // Kacheln gestaffelt einblenden (wie Profil-, Badge- und Park-Grids)
   if(window.caliMotion) caliMotion.stagger(grid);
 
-  // Zahlen hochzählen + Fortschrittsbalken einlaufen lassen
+  // Zahlen hochzählen
   if(window.caliMotion){
     var cus=grid.querySelectorAll('[data-cu]');
     for(var ci2=0;ci2<cus.length;ci2++){
       caliMotion.countUp(cus[ci2], parseInt(cus[ci2].getAttribute('data-cu'),10)||0, {duration:600});
     }
-    var bars=grid.querySelectorAll('[data-bar]');
-    for(var bi2=0;bi2<bars.length;bi2++){
-      caliMotion.animateBar(bars[bi2], parseFloat(bars[bi2].getAttribute('data-bar'))||0);
-    }
+  }
+  // Segmentbalken füllen sich nach dem Einfügen (CSS-Transition auf --pct);
+  // bei reduced motion springt der Wert direkt
+  var sbs=grid.querySelectorAll('.segbar[data-pct]');
+  for(var si2=0;si2<sbs.length;si2++){
+    (function(sb){
+      var v=parseFloat(sb.getAttribute('data-pct'))||0;
+      if(window.caliMotion && !caliMotion.reduced()){
+        requestAnimationFrame(function(){requestAnimationFrame(function(){
+          if(sb.isConnected) sb.style.setProperty('--pct', String(v));
+        });});
+      } else {
+        sb.style.setProperty('--pct', String(v));
+      }
+    })(sbs[si2]);
   }
 }
 
@@ -1051,7 +1225,7 @@ function buildHistory(){
         if(ex.sets[k].b&&ex.band)st+=' (+'+ex.sets[k].b+')';
       }
       h+='<div class="wh-ex"><div class="wh-dot" style="background:'+col+'"></div>';
-      h+='<div><div class="wh-exname">'+ex.name+(ex.band?' <span style="font-size:11px;color:var(--amber-ink)">'+ex.band+'</span>':'')+'</div>';
+      h+='<div><div class="wh-exname">'+ex.name+(ex.band?' <span style="font-size:11px;color:var(--amber)">'+ex.band+'</span>':'')+'</div>';
       h+='<div class="wh-sets">'+st+'</div></div></div>';
     }
     h+='</div></div>';
@@ -1069,7 +1243,6 @@ function drawChart(){
   var ce=document.getElementById('ce');
   if(!data.length){cv.style.display='none';ce.style.display='block';if(mc){mc.destroy();mc=null;}return;}
   cv.style.display='block';ce.style.display='none';
-  var col=COLS[CC[ex]]||COLS.gr;
   var vals=[];var lbls=[];var chartData=[];
 
   // Group by woId (one point per workout session)
@@ -1106,9 +1279,21 @@ function drawChart(){
   }
   data=chartData;
   if(mc)mc.destroy();
-  // Chart.js kann keine CSS-Variablen lesen — Token-WERTE hier hart kodiert:
-  // '#18140F' = var(--text), '#EDEAE1' = var(--bg3), '#6E6759' = var(--muted)
-  mc=new Chart(cv,{type:'line',data:{labels:lbls,datasets:[{data:vals,borderColor:col,backgroundColor:col+'20',fill:true,tension:0.4,pointBackgroundColor:col,pointRadius:5,borderWidth:2}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#18140F',borderColor:col,borderWidth:1,titleColor:col,bodyColor:'#EDEAE1',callbacks:{label:function(ctx){var d=data[ctx.dataIndex];return ' Ø '+ctx.parsed.y+' ('+d.sets+' Sätze, '+d.entries+' Einträge)';}}}},scales:{x:{ticks:{color:'#6E6759',font:{size:10}},grid:{color:'rgba(0,0,0,0.06)'}},y:{ticks:{color:'#6E6759',font:{size:10}},grid:{color:'rgba(0,0,0,0.06)'},title:{display:true,text:'Ø pro Workout',color:'#6E6759',font:{size:10},padding:4}}}}});
+  // Chart.js kann keine CSS-Variablen lesen: Akzent zur Laufzeit aus dem Token,
+  // Grid/Ticks sind die Chart-Werte aus der Spec (§5.16) — nur hier, nie im DOM.
+  var cs=getComputedStyle(document.documentElement);
+  var ACC=(cs.getPropertyValue('--accent')||'').trim()||'#FF5A1F';
+  var MONO={family:'JetBrains Mono',size:9};
+  mc=new Chart(cv,{type:'line',
+    data:{labels:lbls,datasets:[{data:vals,borderColor:ACC,pointBackgroundColor:ACC,pointBorderColor:ACC,pointRadius:3,pointHoverRadius:4,borderWidth:1.5,fill:false,tension:0}]},
+    options:{responsive:true,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#1B1B1B',borderColor:'#333333',borderWidth:1,titleColor:'#F2F2F2',bodyColor:'#9A9A9A',titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:11},displayColors:false,
+          callbacks:{label:function(ctx){var d=data[ctx.dataIndex];return ' Ø '+ctx.parsed.y+' ('+d.sets+' Sätze, '+d.entries+' Einträge)';}}}},
+      scales:{
+        x:{grid:{color:'#1E1E1E',borderColor:'#262626'},ticks:{color:'#6E6E6E',font:MONO}},
+        y:{grid:{color:'#1E1E1E',borderColor:'#262626'},ticks:{color:'#6E6E6E',font:MONO},beginAtZero:false,
+           title:{display:true,text:'Ø pro Workout',color:'#6E6E6E',font:MONO,padding:4}}}}});
 }
 
 // ── HR ────────────────────────────────────────────────────
@@ -1239,8 +1424,8 @@ function buildPlanBlocks(){
   var el   = document.getElementById('plan-blocks-list');
   if(!planBlocks.length){wrap.style.display='none';return;}
   wrap.style.display='block';
-  // Satznummern als TEXT → Ink-Varianten (Kontrast)
-  var ca=['var(--accent-ink)','var(--amber-ink)','var(--teal-ink)','var(--purple-ink)'];
+  // Der Block-Index ("01", "02" …) kommt per CSS-Counter aus #plan-blocks-list.numbered
+  // auf den .peb-header — hier keinen eigenen Index rendern.
   var h='';
   for(var i=0;i<planBlocks.length;i++){
     var b=planBlocks[i];
@@ -1252,15 +1437,14 @@ function buildPlanBlocks(){
     h+='<div class="peb-dot" style="background:'+col+'"></div>';
     h+='<div class="peb-name">'+b.name+'</div>';
     h+='<div class="peb-status '+(isDone?'done':'open')+'">'+(isDone?'Erledigt':b.sets.length+' Sätze')+'</div>';
-    h+='<div class="peb-arrow'+(isOpen?' open':'')+'">&#9654;</div>';
+    h+='<div class="peb-arrow'+(isOpen?' open':'')+'" aria-hidden="true">&#8250;</div>';
     h+='</div>';
     // Der Körper wird IMMER gerendert — allein .acc-body.open steuert auf/zu,
     // damit auch das Zuklappen animiert (statt den Inhalt hart zu löschen).
     h+='<div class="acc-body"><div class="peb-body open">';
     for(var k=0;k<b.sets.length;k++){
-      var sc=ca[k<4?k:3];
       h+='<div class="peb-setrow">';
-      h+='<div class="peb-snum num" style="color:'+sc+'">'+(k+1)+'</div>';
+      h+='<div class="peb-snum num">'+('0'+(k+1)).slice(-2)+'</div>';
       h+='<input class="peb-inp" type="number" placeholder="Ziel: '+b.sets[k].target+' '+b.unit+'" value="'+(b.sets[k].actual||'')+'" oninput="pbSetVal('+i+','+k+',this.value)">';
       h+='</div>';
     }

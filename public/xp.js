@@ -28,6 +28,14 @@ var MONTHLY_RANK_BONUS = [
   {from:76, to:100, xp:300},
 ];
 
+// Zweistelliger Rang ("01") — ab 100 dreistellig
+function xpPadRank(n){ return n<10 ? '0'+n : String(n); }
+
+// XP-Stand lokal cachen — das Start-Dashboard (app1.js) zeigt daraus die Level-Kachel
+function xpCacheTotal(totalXP){
+  try{ localStorage.setItem('cali_xp_cache', String(parseInt(totalXP,10)||0)); }catch(e){}
+}
+
 // ── XP BERECHNUNG (ELO-basiert für Battles) ───────────────
 function calcBattleXP(myLevel, opponentLevel, won){
   if(!won) return 0;
@@ -105,6 +113,7 @@ function awardXP(amount, reason){
     }
 
     return db.collection('xp').doc(uid).set(updates, {merge:true}).then(function(){
+      xpCacheTotal(newXP);
       // XP Log
       db.collection('xpLog').add({
         uid: uid,
@@ -116,8 +125,8 @@ function awardXP(amount, reason){
 
       // Level-Up Toast
       if(newLevel.level > oldLevel.level){
-        var msg = '🎉 Level up! Level '+newLevel.level;
-        if(diamondBonus > 0) msg += ' +'+diamondBonus+' 💎';
+        var msg = 'Level up! Level '+newLevel.level;
+        if(diamondBonus > 0) msg += ' · +'+diamondBonus+' Diamanten';
         if(typeof toast==='function') toast(msg);
         showLevelUpAnimation(oldLevel.level, newLevel.level, diamondBonus);
         // Sync diamonds to main currency (spendable wallet: Streak-Eis, Challenge-Skip …)
@@ -141,31 +150,32 @@ function showXPFloat(amount, reason){
   }
   var el = document.createElement('div');
   el.setAttribute('aria-hidden','true');
-  el.style.cssText = 'position:fixed;bottom:150px;left:50%;transform:translate(-50%,0);background:var(--accent-deep);color:#fff;font-family:inherit;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;padding:8px 16px;border-radius:20px;box-shadow:0 12px 30px rgba(255,85,0,0.3);z-index:3000;pointer-events:none;white-space:nowrap;';
+  el.className = 'num u';
+  el.style.cssText = 'position:fixed;bottom:150px;left:50%;transform:translate(-50%,0);background:var(--accent);color:#fff;font-family:inherit;font-weight:600;font-size:12px;padding:8px 14px;border-radius:var(--r-pill);box-shadow:none;z-index:3000;pointer-events:none;white-space:nowrap;';
   el.textContent = '+'+amount+' XP';
   document.body.appendChild(el);
   try{
     el.animate([
-      {transform:'translate(-50%,16px) scale(0.9)',opacity:0},
+      {transform:'translate(-50%,16px) scale(0.98)',opacity:0},
       {transform:'translate(-50%,0) scale(1)',opacity:1,offset:0.15},
       {transform:'translate(-50%,-8px)',opacity:1,offset:0.75},
-      {transform:'translate(-50%,-48px) scale(0.95)',opacity:0}
+      {transform:'translate(-50%,-48px) scale(0.98)',opacity:0}
     ],{duration:1400,easing:'cubic-bezier(0.22,1,0.36,1)',fill:'forwards'});
   }catch(e){}
   setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1500);
 }
 
 // ── LEVEL-UP ANIMATION ────────────────────────────────────
+// Dunkles Overlay, Levelzahl in Punktmatrix (Doto), Burst in Orange/Weiß (Farben setzt tracker.html)
 function showLevelUpAnimation(oldLevel, newLevel, diamonds){
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:center;justify-content:center;cursor:pointer;';
   ov.innerHTML =
     '<div style="text-align:center;">'+
-      '<div data-lvlup="emoji" style="font-size:60px;margin-bottom:8px;">🎉</div>'+
-      '<div style="font-family:inherit;font-weight:800;font-size:16px;color:var(--accent);margin-bottom:8px;">Level up!</div>'+
-      '<div data-lvlup="num" class="num" style="font-family:inherit;font-weight:800;font-size:72px;color:#fff;margin-bottom:4px;line-height:1;">'+newLevel+'</div>'+
-      (diamonds>0?'<div data-lvlup="dia" style="font-family:inherit;font-weight:800;font-size:22px;color:#ffd700;margin-bottom:16px;">+'+diamonds+' 💎</div>':'')+
-      '<div style="font-size:13px;color:rgba(255,255,255,0.75);">Tippen um fortzufahren</div>'+
+      '<div data-lvlup="emoji" class="lbl" style="color:var(--accent);margin-bottom:14px;display:inline-flex;align-items:center;gap:8px;"><span class="live-dot"></span>Level up</div>'+
+      '<div data-lvlup="num" class="dotnum num" style="font-size:72px;color:var(--text);margin-bottom:10px;">'+newLevel+'</div>'+
+      (diamonds>0?'<div data-lvlup="dia" style="display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:20px;"><span class="kpi num" style="font-size:22px;color:var(--accent);">+'+diamonds+'</span><span class="unit">Diamanten</span></div>':'')+
+      '<div class="lbl" style="color:var(--muted2);">Tippen um fortzufahren</div>'+
     '</div>';
   ov.onclick = function(){ ov.remove(); };
   document.body.appendChild(ov);
@@ -173,15 +183,15 @@ function showLevelUpAnimation(oldLevel, newLevel, diamonds){
     caliMotion.sheetIn(null, ov); // Backdrop-Fade
     caliMotion.celebrate('burst');
     if(!caliMotion.reduced()){
-      // 3-Beat-Reveal: Emoji → Levelzahl → Diamanten
+      // 3-Beat-Reveal: Label → Levelzahl → Diamanten (trocken, kein Overshoot)
       var beats = [['emoji',0],['num',150],['dia',350]];
       for(var i=0;i<beats.length;i++){
         var be = ov.querySelector('[data-lvlup="'+beats[i][0]+'"]');
         if(be && typeof be.animate==='function'){
           try{
             be.animate(
-              [{transform:'scale(0.6)',opacity:0},{transform:'scale(1.08)',opacity:1,offset:0.7},{transform:'scale(1)',opacity:1}],
-              {duration:500,delay:beats[i][1],easing:'cubic-bezier(0.34,1.56,0.64,1)',fill:'backwards'}
+              [{transform:'translateY(8px)',opacity:0},{transform:'translateY(0)',opacity:1}],
+              {duration:320,delay:beats[i][1],easing:'cubic-bezier(0.22,1,0.36,1)',fill:'backwards'}
             );
           }catch(e){}
         }
@@ -194,44 +204,43 @@ function showLevelUpAnimation(oldLevel, newLevel, diamonds){
 }
 
 // ── XP WIDGET IM PROFIL ───────────────────────────────────
+// LEVEL-Zeile: Label, Zahl 28px, rechts 3px-Balken + "<xp> / <next> XP"
 function buildXPWidget(el){
   if(!el) return;
   if(!db || !firebase.auth().currentUser){
-    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px;">Einloggen für XP.</div>';
+    el.innerHTML = '<div class="empty">Einloggen für XP.</div>';
     return;
   }
   var uid = firebase.auth().currentUser.uid;
-  el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px;">⏳ Lade...</div>';
+  el.innerHTML = '<div class="empty">Lade…</div>';
 
   db.collection('xp').doc(uid).get().then(function(doc){
     var data = doc.exists ? doc.data() : {totalXP:0, level:1};
     var lv = getLevelFromXP(data.totalXP||0);
     var monthKey = new Date().toISOString().slice(0,7);
     var monthlyXP = (data.monthlyXP||{})[monthKey] || 0;
+    xpCacheTotal(data.totalXP||0);
 
     el.innerHTML = '';
 
     var card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:16px;';
+    card.className = 'card';
+    card.style.cssText = 'margin-bottom:0;';
 
     // Level Badge + Name
     var levelLabel = lv.level<=5?'Starter':lv.level<=10?'Beginner':lv.level<=20?'Fortgeschritten':lv.level<=30?'Pro':lv.level<=40?'Elite':'Legend';
     card.innerHTML =
-      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">'+
-        '<div class="num" style="width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:20px;color:#fff;flex-shrink:0;">'+lv.level+'</div>'+
-        '<div style="flex:1;">'+
-          '<div style="font-size:16px;font-weight:800;color:var(--text);">Level '+lv.level+' — '+levelLabel+'</div>'+
-          '<div class="num" style="font-size:11px;color:var(--muted);">'+lv.xp.toLocaleString()+' XP gesamt · '+monthlyXP.toLocaleString()+' XP diesen Monat</div>'+
+      '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;">'+
+        '<div style="flex-shrink:0;">'+
+          '<span class="eyebrow">Level</span>'+
+          '<div style="display:flex;align-items:baseline;gap:6px;"><span class="kpi num" data-xplvl>'+lv.level+'</span><span class="unit">'+levelLabel+'</span></div>'+
+        '</div>'+
+        '<div style="flex:1;min-width:0;padding-bottom:4px;">'+
+          '<div class="linebar"><i data-xpfill style="width:0%;"></i></div>'+
+          '<div class="lbl num" style="margin-top:6px;text-align:right;white-space:nowrap;">'+(lv.level<50 ? lv.xp.toLocaleString()+' / '+lv.xpForNext.toLocaleString()+' XP' : 'Max. Level')+'</div>'+
         '</div>'+
       '</div>'+
-      // Progress bar
-      '<div class="num" style="font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;">'+
-        '<span>Level '+lv.level+'</span>'+
-        (lv.level<50?'<span>'+lv.xpToNext.toLocaleString()+' XP bis Level '+(lv.level+1)+'</span>':'<span>Max. Level</span>')+
-      '</div>'+
-      '<div style="background:var(--bg3);border-radius:20px;height:10px;overflow:hidden;">'+
-        '<div data-xpfill style="height:100%;width:0%;background:var(--accent);border-radius:20px;transition:width var(--dur-slow) var(--ease-out);"></div>'+
-      '</div>';
+      '<div class="row-sub num" style="margin-top:10px;">'+lv.xp.toLocaleString()+' XP gesamt · '+monthlyXP.toLocaleString()+' XP diesen Monat'+(lv.level<50?' · noch '+lv.xpToNext.toLocaleString()+' XP bis Level '+(lv.level+1):'')+'</div>';
 
     el.appendChild(card);
 
@@ -241,27 +250,30 @@ function buildXPWidget(el){
       if(window.caliMotion) caliMotion.animateBar(xpFill, lv.progress);
       else xpFill.style.width = lv.progress+'%';
     }
+    var lvlEl = card.querySelector('[data-xplvl]');
+    if(lvlEl && window.caliMotion) caliMotion.countUp(lvlEl, lv.level, {duration:600});
 
-    // XP verdienen Button
+    // XP-Verlauf Button (Ghost)
     var histBtn = document.createElement('button');
-    histBtn.className = 'pressable';
-    histBtn.style.cssText = 'width:100%;background:none;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px;cursor:pointer;color:var(--muted);margin-top:8px;';
-    histBtn.textContent = '📊 XP Verlauf';
+    histBtn.type = 'button';
+    histBtn.className = 'btn-g pressable';
+    histBtn.style.cssText = 'width:100%;min-height:44px;margin-top:8px;';
+    histBtn.textContent = 'XP Verlauf';
     histBtn.onclick = function(){ openXPHistory(uid); };
     el.appendChild(histBtn);
-  }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+  }).catch(function(e){ el.innerHTML='<div class="row-sub" style="color:var(--red);">Fehler: '+e.message+'</div>'; });
 }
 
 // ── XP VERLAUF ────────────────────────────────────────────
 function openXPHistory(uid){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.className = 'backdrop';
   var box = document.createElement('div');
-  box.className = 'sheet-scroll';
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;max-height:80vh;overflow-y:auto;';
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
-    '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:14px;">📊 XP-Verlauf</div>'+
-    '<div id="xp-hist-list" style="color:var(--muted);font-size:12px;">Lädt...</div>';
+  box.className = 'sheet sheet-scroll';
+  box.style.cssText = 'max-height:80vh;overflow-y:auto;';
+  box.innerHTML = '<div class="sheet-grip"></div>'+
+    '<div class="ttl" style="margin-bottom:14px;">XP-Verlauf</div>'+
+    '<div id="xp-hist-list"><div class="empty">Lädt…</div></div>';
 
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
@@ -273,19 +285,31 @@ function openXPHistory(uid){
       var el = document.getElementById('xp-hist-list');
       if(!el) return;
       el.innerHTML = '';
-      if(snap.empty){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);">Noch keine XP verdient.</div>'; return; }
+      if(snap.empty){ el.innerHTML='<div class="empty">Noch keine XP verdient.</div>'; return; }
+      var list = document.createElement('div');
+      list.className = 'list';
       snap.forEach(function(doc){
         var d = doc.data();
         var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);';
-        row.innerHTML =
-          '<div>'+
-            '<div style="font-size:12px;font-weight:700;color:var(--text);">'+d.reason+'</div>'+
-            '<div style="font-size:11px;color:var(--muted);">'+new Date(d.date).toLocaleDateString('de-DE')+'</div>'+
-          '</div>'+
-          '<div class="num" style="font-family:inherit;font-weight:800;font-size:19px;color:var(--accent);">+'+d.amount+' XP</div>';
-        el.appendChild(row);
+        row.className = 'list-row';
+        row.style.cssText = 'cursor:default;';
+        var main = document.createElement('div');
+        main.className = 'row-main';
+        var reason = document.createElement('div');
+        reason.className = 'row-title';
+        reason.textContent = String(d.reason||'');
+        var date = document.createElement('div');
+        date.className = 'row-sub num';
+        date.textContent = new Date(d.date).toLocaleDateString('de-DE');
+        main.appendChild(reason); main.appendChild(date);
+        var right = document.createElement('div');
+        right.style.cssText = 'display:flex;align-items:baseline;gap:4px;flex-shrink:0;';
+        right.innerHTML = '<span class="row-val num" style="color:var(--accent);">+'+(parseInt(d.amount,10)||0)+'</span><span class="unit">XP</span>';
+        row.appendChild(main); row.appendChild(right);
+        list.appendChild(row);
       });
+      el.appendChild(list);
+      if(window.caliMotion) caliMotion.stagger(list);
     });
 }
 
@@ -294,27 +318,38 @@ function openMonthlyLeaderboard(){
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
+  // Top-Bar: Zurück-Pfeil, zentrierter Titel, Platzhalter rechts
   var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  topBar.className = 'topbar';
+  topBar.style.cssText = 'margin:0 16px;flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.className = 'pressable';
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '← Zurück';
+  backBtn.type = 'button';
+  backBtn.className = 'icon-btn sm pressable';
+  backBtn.setAttribute('aria-label','Zurück');
+  backBtn.innerHTML = '&#8592;';
   backBtn.onclick = function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
   };
   var now2 = new Date();
   var monthName = now2.toLocaleString('de-DE',{month:'long',year:'numeric'});
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;';
-  titleEl.innerHTML = '<div style="font-size:15px;font-weight:800;color:var(--text);">🏆 Monatsrangliste</div><div style="font-size:11px;color:var(--muted);">'+monthName+'</div>';
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl);
+  titleEl.className = 'topbar-title';
+  titleEl.textContent = 'Monatsrangliste';
+  var slot = document.createElement('div');
+  slot.className = 'topbar-slot';
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(slot);
   ov.appendChild(topBar);
+
+  var monthEl = document.createElement('div');
+  monthEl.className = 'lbl';
+  monthEl.style.cssText = 'padding:0 16px 10px;flex-shrink:0;';
+  monthEl.textContent = monthName;
+  ov.appendChild(monthEl);
 
   var listEl = document.createElement('div');
   listEl.className = 'sheet-scroll';
-  listEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
-  listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">⏳ Lade...</div>';
+  listEl.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px calc(var(--nav-h) + 24px + env(safe-area-inset-bottom,0px));';
+  listEl.innerHTML = '<div class="empty">Lade…</div>';
   ov.appendChild(listEl);
   document.body.appendChild(ov);
   // Hardware-Zurück schließt das Overlay statt der App
@@ -335,50 +370,63 @@ function openMonthlyLeaderboard(){
 
     listEl.innerHTML = '';
 
-    // XP Bonus Info
+    // XP-Bonus-Info (Werte aus MONTHLY_RANK_BONUS)
     var infoEl = document.createElement('div');
-    infoEl.style.cssText = 'background:rgba(255,85,0,0.08);border:1px solid rgba(255,85,0,0.2);border-radius:16px;padding:12px;margin-bottom:16px;font-size:11px;color:var(--muted);line-height:1.6;';
-    infoEl.innerHTML = '🏆 Am Monatsende erhalten die Top 100 XP-Boni!<br>Platz 1: +2000 XP · Platz 2: +1500 XP · Platz 3: +1200 XP ...';
+    infoEl.className = 'card';
+    infoEl.innerHTML = '<span class="eyebrow">Monatsboni</span>'+
+      '<div class="row-sub num">Am Monatsende erhalten die Top 100 XP-Boni. Platz 1: +'+MONTHLY_RANK_BONUS[0].xp+' XP · Platz 2: +'+MONTHLY_RANK_BONUS[1].xp+' XP · Platz 3: +'+MONTHLY_RANK_BONUS[2].xp+' XP …</div>';
     listEl.appendChild(infoEl);
 
     if(entries.length===0){
-      listEl.innerHTML += '<div style="text-align:center;padding:40px;color:var(--muted);">Noch keine Einträge diesen Monat.</div>';
+      listEl.innerHTML += '<div class="empty">Noch keine Einträge diesen Monat.</div>';
       return;
     }
 
+    var list = document.createElement('div');
+    list.className = 'list';
+    var meTagHtml = '<span style="background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-left:6px;vertical-align:middle;">Du</span>';
+
     entries.slice(0,100).forEach(function(e, i){
       var rank = i+1;
-      var medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
       var isMe = e.uid===myUid;
       var bonus = MONTHLY_RANK_BONUS.find(function(b){ return rank>=b.from&&rank<=b.to; });
       var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;margin-bottom:8px;background:'+(isMe?'rgba(255,85,0,0.08)':'var(--bg2)')+';border:1px solid '+(isMe?'var(--accent)':'transparent')+';box-shadow:0 8px 20px rgba(0,0,0,0.05);content-visibility:auto;contain-intrinsic-size:auto 64px;';
+      row.className = 'list-row';
+      row.style.cssText = 'cursor:default;content-visibility:auto;contain-intrinsic-size:auto 64px;'+(isMe?'background:var(--accent-soft);':'');
 
-      // Load name from users collection
+      // Rang als zweistelliger Index (Top 3 in Orange), Level im 32px-Ring, Name, Monats-XP
       row.innerHTML =
-        '<div style="width:28px;text-align:center;flex-shrink:0;">'+(medal?'<span style="font-size:20px;">'+medal+'</span>':'<span class="num" style="font-size:12px;font-weight:700;color:var(--muted);">#'+rank+'</span>')+'</div>'+
-        '<div class="num" style="width:32px;height:32px;border-radius:50%;background:var(--accent-deep);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;">'+e.level+'</div>'+
-        '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(isMe?'Du':'Spieler')+(isMe?' <span style="font-size:11px;font-weight:700;color:var(--accent-ink);border:1px solid var(--accent);border-radius:20px;padding:0 6px;">Du</span>':'')+' </div>'+
-          (bonus?'<div class="num" style="font-size:11px;color:var(--accent-ink);">+'+bonus.xp+' XP Bonus</div>':'')+
+        '<span class="row-index num"'+(rank<=3?' style="color:var(--accent);"':'')+'>'+xpPadRank(rank)+'</span>'+
+        '<span class="num" aria-label="Level '+e.level+'" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text);flex-shrink:0;box-sizing:border-box;">'+e.level+'</span>'+
+        '<div class="row-main">'+
+          '<div class="row-title"></div>'+
+          (bonus?'<div class="row-sub num" style="color:var(--accent);">+'+bonus.xp+' XP Bonus</div>':'')+
         '</div>'+
-        '<div style="text-align:right;flex-shrink:0;">'+
-          '<div class="num" style="font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);">'+e.monthlyXP.toLocaleString()+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);">XP</div>'+
+        '<div style="display:flex;align-items:baseline;gap:4px;flex-shrink:0;">'+
+          '<span class="row-val num" style="font-size:16px;">'+e.monthlyXP.toLocaleString()+'</span>'+
+          '<span class="unit">XP</span>'+
         '</div>';
+
+      var nameEl = row.querySelector('.row-title');
+      var setName = function(n){
+        if(!nameEl) return;
+        nameEl.textContent = n;
+        if(isMe) nameEl.insertAdjacentHTML('beforeend', meTagHtml);
+      };
+      setName(isMe?'Du':'Spieler');
 
       // Load real name async
       db.collection('users').doc(e.uid).get().then(function(userDoc){
         if(userDoc.exists && userDoc.data().prData && userDoc.data().prData.name){
-          var nameEl = row.querySelector('div[style*="font-size:13px"]');
-          if(nameEl) nameEl.innerHTML = userDoc.data().prData.name+(isMe?' <span style="font-size:11px;font-weight:700;color:var(--accent-ink);border:1px solid var(--accent);border-radius:20px;padding:0 6px;">Du</span>':'');
+          setName(userDoc.data().prData.name);
         }
       });
 
-      listEl.appendChild(row);
+      list.appendChild(row);
     });
-    if(window.caliMotion) caliMotion.stagger(listEl);
-  }).catch(function(e){ listEl.innerHTML='<div style="color:var(--muted);">Fehler: '+e.message+'</div>'; });
+    listEl.appendChild(list);
+    if(window.caliMotion) caliMotion.stagger(list);
+  }).catch(function(e){ listEl.innerHTML='<div class="row-sub" style="color:var(--red);">Fehler: '+e.message+'</div>'; });
 }
 
 // ── ADMIN: MONATSBONI VERGEBEN ────────────────────────────
@@ -410,7 +458,7 @@ function awardMonthlyBonuses(monthKey){
         awarded++;
       }
     });
-    toast('✅ '+awarded+' Spieler haben Monatsboni erhalten!');
+    toast(awarded+' Spieler haben Monatsboni erhalten!');
   });
 }
 
@@ -426,7 +474,7 @@ function checkDailyKingXP(){
     if(snap.empty) return;
     var count = snap.size;
     var xpAmount = count * 20; // 20 XP per park you're king of
-    awardXP(xpAmount, '👑 Park King ('+count+' Park'+(count>1?'s':'')+')');
+    awardXP(xpAmount, 'Park King ('+count+' Park'+(count>1?'s':'')+')');
     localStorage.setItem(key, '1');
   });
 }
@@ -444,30 +492,28 @@ function updateXPRing(){
   db.collection('xp').doc(uid).get().then(function(doc){
     var data = doc.exists ? doc.data() : {totalXP:0, level:1};
     var lv = getLevelFromXP(data.totalXP||0);
+    xpCacheTotal(data.totalXP||0);
 
-    // Update ring
+    // Update ring (Fortschritt in Orange — eine Akzentfarbe, wie im Design-Kontrakt)
     var ring = document.getElementById('xp-ring-progress');
     var badge = document.getElementById('xp-level-badge');
     if(ring){
       var circumference = 251.2; // 2 * PI * 40
       var offset = circumference - (lv.progress / 100 * circumference);
       ring.style.strokeDashoffset = offset;
-      // Color by level (Füllung → helle Original-Tokens)
-      var color = lv.level<=10?'var(--blue)':lv.level<=20?'var(--success)':lv.level<=35?'var(--amber)':'var(--accent)';
-      ring.style.stroke = color;
+      ring.style.stroke = 'var(--accent)';
     }
     if(badge){
       var wasHidden = badge.style.display !== 'block';
       badge.textContent = 'Lvl '+lv.level;
       badge.style.display = 'block';
-      // Weißer Text auf dem Badge → dunkle Ink-Töne (Kontrast)
-      badge.style.background = lv.level<=10?'var(--blue-ink)':lv.level<=20?'var(--success-ink)':lv.level<=35?'var(--amber-ink)':'var(--accent-deep)';
-      // Spring-Pop beim Einblenden — translateX(-50%) MUSS in den Keyframes bleiben (zentriert via transform)
+      badge.style.background = 'var(--accent)';
+      // Einblend-Pop ohne Overshoot — translateX(-50%) MUSS in den Keyframes bleiben (zentriert via transform)
       if(wasHidden && badge.animate && !(window.caliMotion && caliMotion.reduced())){
         try{
           badge.animate(
-            [{transform:'translateX(-50%) scale(0)'},{transform:'translateX(-50%) scale(1)'}],
-            {duration:300, easing:'cubic-bezier(0.34,1.56,0.64,1)'}
+            [{transform:'translateX(-50%) scale(0.9)',opacity:0},{transform:'translateX(-50%) scale(1)',opacity:1}],
+            {duration:200, easing:'cubic-bezier(0.22,1,0.36,1)'}
           );
         }catch(e){}
       }

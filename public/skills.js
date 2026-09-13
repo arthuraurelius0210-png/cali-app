@@ -99,19 +99,21 @@ var SKILLS = [
 var skillProgress = {};
 var skOpenState = {};
 
-// Dunkle "Ink"-Varianten der Skill-Farben für TEXT auf hellen Flächen (Kontrast-Kontrakt).
-// Helle Originale bleiben für Füllungen/Balken/Kreise erhalten.
+// Dark Mono: die kategorialen Skill-Farben laufen komplett über Tokens (entsättigt,
+// lesbar auf Schwarz). Die Hex-Werte in SKILLS bleiben nur als Schlüssel — ins DOM
+// geht ausschließlich skillInk(color), für Text, Ringe UND Balkenfüllung.
 var SKILL_INK_MAP = {
-  '#ff5500':'var(--accent-ink)',
-  '#FF6B35':'var(--accent-ink)',
-  '#38BDF8':'var(--blue-ink)',
-  '#A78BFA':'var(--purple-ink)',
-  '#F59E0B':'var(--amber-ink)',
-  '#4ECDC4':'var(--teal-ink)',
+  '#ff5500':'var(--accent)',
+  '#FF6B35':'var(--accent)',
+  '#38BDF8':'var(--blue)',
+  '#A78BFA':'var(--purple)',
+  '#F59E0B':'var(--amber)',
+  '#4ECDC4':'var(--teal)',
   '#FF4444':'var(--red)',
-  '#C8F04A':'var(--success-ink)'
+  '#C8F04A':'var(--success)'
 };
 function skillInk(c){ return SKILL_INK_MAP[c] || 'var(--text)'; }
+function skIdx(n){ return n < 10 ? '0'+n : String(n); }
 
 function loadSkillProgress(){
   try{var d=localStorage.getItem('cali_skills');if(d)skillProgress=JSON.parse(d);}catch(x){}
@@ -178,13 +180,16 @@ function buildSkillUI(){
     var pct=Math.round((doneCount/skill.steps.length)*100);
     var allDone=doneCount===skill.steps.length;
 
+    var col=skillInk(skill.color);
     var card=document.createElement('div');
-    card.style.cssText='background:var(--bg2);border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);margin-bottom:12px;overflow:hidden;';
+    card.className='card';
+    // Gemeistert: Akzent-Outline statt Farbfläche
+    card.style.cssText='padding:0;overflow:hidden;margin-bottom:10px;'+(allDone?'border-color:var(--accent);':'');
 
     // Header
     var header=document.createElement('div');
     header.className='pressable';
-    header.style.cssText='padding:16px 16px 12px;cursor:pointer;';
+    header.style.cssText='padding:14px;cursor:pointer;';
     header.setAttribute('role','button');
     header.tabIndex=0;
     header.setAttribute('aria-expanded',skOpenState[skill.id]?'true':'false');
@@ -193,24 +198,34 @@ function buildSkillUI(){
     header.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();if(this.onclick)this.onclick(ev);}};
 
     var htop=document.createElement('div');
-    htop.style.cssText='display:flex;align-items:center;gap:12px;margin-bottom:10px;';
+    htop.style.cssText='display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;';
 
-    var ic=document.createElement('div');ic.style.cssText='font-size:28px;line-height:1;';ic.textContent=skill.icon;ic.setAttribute('aria-hidden','true');
+    // Zweistelliger Index statt Emoji-Icon
+    var ic=document.createElement('span');ic.className='row-index num';ic.style.cssText='padding-top:3px;';ic.textContent=skIdx(si+1);ic.setAttribute('aria-hidden','true');
 
-    var tw=document.createElement('div');tw.style.cssText='flex:1;';
-    var tn=document.createElement('div');tn.style.cssText='font-size:17px;font-weight:700;color:var(--text);';tn.textContent=skill.name;
-    var td=document.createElement('div');td.style.cssText='font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;';td.textContent=skill.desc;
+    var tw=document.createElement('div');tw.style.cssText='flex:1;min-width:0;';
+    var tn=document.createElement('div');tn.style.cssText='font-size:15px;font-weight:600;color:var(--text);line-height:1.3;';tn.textContent=skill.name;
+    var td=document.createElement('div');td.className='row-sub';td.textContent=skill.desc;
     tw.appendChild(tn);tw.appendChild(td);
 
     var pe=document.createElement('div');
-    pe.className='num';
-    pe.style.cssText='font-weight:800;font-size:17px;color:'+(allDone?skillInk(skill.color):'var(--muted)')+';white-space:nowrap;text-align:right;';
-    pe.textContent=allDone?'✓ Gemeistert':doneCount+' / '+skill.steps.length;
+    if(allDone){
+      // Gemeistert-Badge: Akzent-Outline + Häkchen (Line-Icon)
+      pe.className='u';
+      pe.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);color:var(--accent);border-radius:var(--r-sm);padding:3px 8px;font-size:9px;font-weight:600;white-space:nowrap;flex-shrink:0;line-height:1.4;';
+      pe.innerHTML=((typeof ci==='function')?'<span style="width:12px;height:12px;display:inline-block;flex-shrink:0;">'+ci('check')+'</span>':'')+'Gemeistert';
+    } else {
+      pe.className='row-val';
+      pe.style.cssText='color:var(--muted);white-space:nowrap;padding-top:2px;';
+      pe.textContent=doneCount+' / '+skill.steps.length;
+    }
 
     htop.appendChild(ic);htop.appendChild(tw);htop.appendChild(pe);
 
-    var pw=document.createElement('div');pw.style.cssText='background:var(--bg3);border-radius:20px;height:5px;overflow:hidden;';
-    var pf=document.createElement('div');pf.style.cssText='height:100%;border-radius:20px;background:'+skill.color+';width:0%;transition:width var(--dur-slow) var(--ease-out);';
+    // Segmentierter Balken (§5.4a): Track = .segbar, Füllung als Kind, damit
+    // caliMotion.animateBar weiterhin die Breite animiert.
+    var pw=document.createElement('div');pw.className='segbar';pw.setAttribute('aria-hidden','true');
+    var pf=document.createElement('div');pf.style.cssText='position:absolute;inset:0;width:0%;max-width:100%;background:repeating-linear-gradient(90deg,'+col+' 0 4px,transparent 4px 6px);transition:width var(--dur-slow) var(--ease-out);';
     pw.appendChild(pf);
     if(window.caliMotion){ caliMotion.animateBar(pf,pct); } else { pf.style.width=pct+'%'; }
 
@@ -223,7 +238,7 @@ function buildSkillUI(){
     accWrap.dataset.skillAcc=skill.id;
     var accClip=document.createElement('div');
     var sw=document.createElement('div');
-    sw.style.cssText='border-top:1px solid var(--border);';
+    sw.style.cssText='border-top:1px solid var(--line);';
 
     for(var k=0;k<skill.steps.length;k++){
       var step=skill.steps[k];
@@ -231,32 +246,36 @@ function buildSkillUI(){
       var isNext=!done&&(k===0||!!skillProgress[skill.steps[k-1].id]);
 
       var sr=document.createElement('div');
-      sr.className='pressable';
-      sr.style.cssText='display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;';
-      if(isNext)sr.style.background='rgba('+hexToRgbInline(skill.color)+',0.05)';
+      sr.className='list-row pressable';
+      sr.style.cssText='align-items:flex-start;padding:12px 14px;'+(isNext?'background:var(--card2);':'');
       sr.setAttribute('role','button');
       sr.tabIndex=0;
+      sr.setAttribute('aria-pressed',done?'true':'false');
       sr.onclick=(function(sid){return function(){toggleSkillStep(sid);};})(step.id);
       sr.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();if(this.onclick)this.onclick(ev);}};
 
+      // Schritt-Ring: 28px, 1px Linie; erledigt = Skill-Farbe + Häkchen, nächster = Skill-Farbe + Index
       var circle=document.createElement('div');
       circle.className='num';
-      circle.style.cssText='width:26px;height:26px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;';
-      if(done){circle.style.background=skill.color;circle.style.color='#fff';circle.textContent='✓';}
-      else if(isNext){circle.style.cssText+=';background:none;border:2px solid '+skill.color+';color:'+skillInk(skill.color);}
-      else{circle.style.background='var(--bg3)';circle.style.border='1px solid var(--border2)';circle.style.color='var(--muted)';}
-      if(!done)circle.textContent=String(k+1);
+      circle.style.cssText='width:28px;height:28px;border-radius:50%;flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:11px;border:1px solid var(--line2);color:var(--muted2);';
+      if(done){
+        circle.style.borderColor=col;circle.style.color=col;
+        circle.innerHTML=(typeof ci==='function')?'<span style="width:14px;height:14px;display:block;">'+ci('check')+'</span>':'&#10003;';
+      }
+      else if(isNext){circle.style.borderColor=col;circle.style.color=col;}
+      if(!done)circle.textContent=skIdx(k+1);
 
-      var si2=document.createElement('div');si2.style.cssText='flex:1;';
+      var si2=document.createElement('div');si2.className='row-main';
       var sn=document.createElement('div');
-      sn.style.cssText='font-size:15px;font-weight:'+(done||isNext?'700':'500')+';color:'+(done?'var(--muted)':'var(--text)')+';'+(done?'text-decoration:line-through;':'');
+      sn.style.cssText='font-size:13px;font-weight:500;color:'+(done?'var(--muted)':'var(--text)')+';line-height:1.35;'+(done?'text-decoration:line-through;':'');
       sn.textContent=step.name;
-      var sd2=document.createElement('div');sd2.style.cssText='font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;';sd2.textContent=step.desc;
+      var sd2=document.createElement('div');sd2.className='row-sub';sd2.textContent=step.desc;
       si2.appendChild(sn);si2.appendChild(sd2);
 
       if(isNext){
         var nb=document.createElement('span');
-        nb.style.cssText='display:inline-block;background:'+skillInk(skill.color)+';color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:5px;';
+        nb.className='u';
+        nb.style.cssText='display:inline-block;margin-top:6px;border:1px solid '+col+';color:'+col+';border-radius:var(--r-sm);padding:1px 6px;font-size:9px;font-weight:600;line-height:1.5;';
         nb.textContent='Nächster Schritt';
         si2.appendChild(nb);
       }
@@ -264,7 +283,6 @@ function buildSkillUI(){
       sr.appendChild(circle);sr.appendChild(si2);
       sw.appendChild(sr);
     }
-    if(sw.lastChild)sw.lastChild.style.borderBottom='none';
     accClip.appendChild(sw);
     accWrap.appendChild(accClip);
     card.appendChild(accWrap);

@@ -1,4 +1,4 @@
-// v2.0 - admin fix 2026-07-10
+// v2.1 - dark mono restyle 2026-09-07
 
 var parksMap = null;
 var parksMarkers = [];
@@ -9,6 +9,34 @@ var currentRadius = 2000;
 var parksData = [];
 var parksMapInitPending = false;
 
+// ── DARK MAP (CSS-Filter auf der Tile-Pane, einmalig per Klasse am Container) ──
+// Tokens statt Hex: alles über var(--…), damit das Theme tauschbar bleibt.
+var PARKS_DARK_MAP_CSS =
+  '.parks-dark .leaflet-tile-pane{filter:grayscale(1) invert(0.92) hue-rotate(180deg) brightness(0.9) contrast(0.9);}' +
+  '.parks-dark .leaflet-bar{border:1px solid var(--line2);border-radius:var(--r-sm);box-shadow:none;overflow:hidden;}' +
+  '.parks-dark .leaflet-bar a{background:var(--card);color:var(--text);border-bottom:1px solid var(--line);font-family:inherit;font-weight:500;}' +
+  '.parks-dark .leaflet-bar a:last-child{border-bottom:none;}' +
+  '.parks-dark .leaflet-bar a:hover,.parks-dark .leaflet-bar a:focus{background:var(--card2);color:var(--text);}' +
+  '.parks-dark .leaflet-bar a.leaflet-disabled{background:var(--card);color:var(--muted2);}' +
+  '.parks-dark .leaflet-control-attribution{background:var(--card);color:var(--muted2);font-family:inherit;font-size:9px;letter-spacing:.04em;}' +
+  '.parks-dark .leaflet-control-attribution a{color:var(--muted);}' +
+  '.parks-dark .leaflet-popup-content-wrapper{background:var(--card);color:var(--text);border:1px solid var(--line2);border-radius:var(--r-card);box-shadow:none;font-family:inherit;}' +
+  '.parks-dark .leaflet-popup-content{margin:12px 14px;font-size:11px;line-height:1.5;}' +
+  '.parks-dark .leaflet-popup-tip{background:var(--card);box-shadow:none;}' +
+  '.parks-dark .leaflet-popup-close-button{color:var(--muted) !important;font-family:inherit;}' +
+  '.parks-dark .leaflet-popup-close-button:hover{color:var(--text) !important;}';
+
+function applyParksDarkMap(cont){
+  if(!cont || cont.classList.contains('parks-dark')) return;
+  cont.classList.add('parks-dark');
+  if(!document.getElementById('parks-dark-map-css')){
+    var st = document.createElement('style');
+    st.id = 'parks-dark-map-css';
+    st.textContent = PARKS_DARK_MAP_CSS;
+    document.head.appendChild(st);
+  }
+}
+
 function initParksPage(){
   if(!parksMap){
     if(parksMapInitPending) return;
@@ -18,6 +46,7 @@ function initParksPage(){
       if(typeof L === 'undefined'){ parksMapInitPending = false; setTimeout(initParksPage, 300); return; }
       var cont = document.getElementById('parks-map');
       if(!cont || cont._leaflet_id){ parksMapInitPending = false; return; }
+      applyParksDarkMap(cont);
       parksMap = L.map('parks-map', {zoomControl:true, preferCanvas:true}).setView([52.52, 13.40], 11);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
@@ -31,7 +60,7 @@ function initParksPage(){
       parksMapInitPending = false;
       // Force redraw
       setTimeout(function(){ parksMap.invalidateSize(); }, 300);
-      document.getElementById('parks-status').textContent = 'Tippe auf "Standort" um Parks in deiner N\u00e4he zu finden.';
+      document.getElementById('parks-status').textContent = 'Tippe auf "Standort" um Parks in deiner Nähe zu finden.';
     }, 200);
   } else {
     parksMap.invalidateSize();
@@ -40,26 +69,32 @@ function initParksPage(){
 
 function setRadius(r){
   currentRadius = r;
-  // Update button styles
+  // Segment-Control (.seg-ctl in pages.html): aktiv = Klasse .on + aria-selected; Farben kommen aus dem CSS.
   [2000,5000,10000,20000].forEach(function(v){
     var btn = document.getElementById('rbtn-'+v/1000);
     if(btn){
-      if(v===r){
-        btn.style.background='var(--accent-deep)'; btn.style.color='#fff'; btn.style.fontWeight='700';
-        btn.style.boxShadow='0 12px 30px rgba(255,85,0,0.22)';
-      } else {
-        btn.style.background='#fff'; btn.style.color='var(--muted)'; btn.style.fontWeight='600';
-        btn.style.boxShadow='0 8px 20px rgba(0,0,0,0.05)';
-      }
+      var on = v===r;
+      btn.classList.toggle('on', on);
+      btn.setAttribute('aria-selected', on?'true':'false');
     }
   });
   if(userLat) loadParks();
 }
 
+// Text im Standort-Button tauschen, ohne das Line-Icon (SVG aus pages.html) zu verlieren.
+function setLocateBtnLabel(txt){
+  var btn = document.getElementById('parks-locate-btn');
+  if(!btn) return;
+  var svg = btn.querySelector('svg');
+  btn.textContent = '';
+  if(svg) btn.appendChild(svg);
+  btn.appendChild(document.createTextNode(txt));
+}
+
 function locateAndLoad(){
   var statusEl = document.getElementById('parks-status');
   statusEl.textContent = 'Standort wird ermittelt...';
-  document.getElementById('parks-locate-btn').textContent = '…';
+  setLocateBtnLabel('…');
 
   if(!navigator.geolocation){
     statusEl.textContent = 'Geolocation wird nicht unterstützt.';
@@ -69,15 +104,33 @@ function locateAndLoad(){
     function(pos){
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
-      document.getElementById('parks-locate-btn').textContent = '\u2713 Standort';
+      setLocateBtnLabel('✓ Standort');
       loadParks();
     },
     function(err){
       statusEl.textContent = 'Standort konnte nicht ermittelt werden. Bitte Berechtigung erlauben.';
-      document.getElementById('parks-locate-btn').textContent = '\u25B7 Standort';
+      setLocateBtnLabel('▷ Standort');
     },
     {enableHighAccuracy:true, timeout:10000}
   );
+}
+
+// Marker-HTML: schwarzer Kreis mit 1px --line2, nächster Park = --accent. Kein Schatten, kein Emoji.
+function parkMarkerHtml(nearest){
+  var ring = nearest ? 'var(--accent)' : 'var(--line2)';
+  var dot  = nearest ? 'var(--accent)' : 'var(--muted)';
+  return '<div style="width:18px;height:18px;border-radius:50%;background:var(--bg);border:1px solid '+ring+';display:flex;align-items:center;justify-content:center;box-sizing:border-box;">'+
+    '<div style="width:6px;height:6px;border-radius:50%;background:'+dot+';"></div></div>';
+}
+
+function parkPopupHtml(name, dist, idx){
+  var dp = formatDistParts(dist);
+  return '<div style="min-width:180px;">'+
+    '<div class="row-title" style="white-space:normal;">'+name+'</div>'+
+    '<div style="display:flex;align-items:baseline;gap:4px;margin:2px 0 10px;"><span class="row-val num">'+dp.val+'</span><span class="unit">'+dp.unit+'</span><span class="row-sub" style="margin:0 0 0 4px;">entfernt</span></div>'+
+    '<button type="button" class="btn sec" style="margin:0 0 6px;min-height:40px;font-size:10px;" onclick="openParkDetail('+idx+')">Park ansehen</button>'+
+    '<button type="button" class="btn-g" style="width:100%;" onclick="openParkNav('+idx+')">Navigation</button>'+
+    '</div>';
 }
 
 function loadParks(){
@@ -92,13 +145,13 @@ function loadParks(){
   // Center map on user
   parksMap.setView([userLat, userLng], currentRadius <= 2000 ? 14 : currentRadius <= 5000 ? 13 : currentRadius <= 10000 ? 12 : 11);
 
-  // User marker
+  // User marker: heller Punkt mit dunklem Ring
   var userIcon = L.divIcon({
-    html: '<div style="background:var(--accent);width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-    className: '', iconAnchor:[7,7]
+    html: '<div style="width:12px;height:12px;border-radius:50%;background:var(--text);border:2px solid var(--bg);box-sizing:border-box;"></div>',
+    className: '', iconAnchor:[6,6]
   });
   var userMarker = L.marker([userLat, userLng], {icon:userIcon}).addTo(parksMap);
-  userMarker.bindPopup('<strong>Du bist hier</strong>').openPopup();
+  userMarker.bindPopup('<span class="lbl">Du bist hier</span>').openPopup();
   parksMarkers.push(userMarker);
 
   // Overpass - mehrere Proxies versuchen
@@ -110,8 +163,8 @@ function loadParks(){
     parksData = data.elements || [];
     if(parksData.length === 0){ statusEl.textContent = 'Keine Parks gefunden. Versuch einen größeren Radius.'; return; }
     statusEl.textContent = parksData.length + ' Parks gefunden im Umkreis von '+(currentRadius/1000)+' km';
-    var parkIcon = L.divIcon({html:'<div style="background:var(--accent,#ff5500);color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;border:3px solid #fff;box-shadow:0 8px 20px rgba(255,85,0,0.35);">&#128170;</div>',className:'',iconAnchor:[19,19]});
-    var parkIconDim = L.divIcon({html:'<div style="background:#18140F;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,0.22);">&#128170;</div>',className:'',iconAnchor:[16,16]});
+    var parkIcon = L.divIcon({html: parkMarkerHtml(true), className:'', iconAnchor:[9,9]});
+    var parkIconDim = L.divIcon({html: parkMarkerHtml(false), className:'', iconAnchor:[9,9]});
     parksData.forEach(function(p){ var lat=p.lat||(p.center&&p.center.lat); var lng=p.lon||(p.center&&p.center.lon); if(!lat||!lng) return; p._lat=lat; p._lng=lng; p._dist=calcDist(userLat,userLng,lat,lng); });
     parksData=parksData.filter(function(p){return p._lat;});
     var unique=[];
@@ -125,17 +178,17 @@ function loadParks(){
       var name=park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
       var marker=L.marker([park._lat,park._lng],{icon: idx===0 ? parkIcon : parkIconDim});
       if(clusterGroup){ clusterGroup.addLayer(marker); } else { marker.addTo(parksMap); }
-      marker.bindPopup('<div style="font-family:system-ui;min-width:190px;padding:4px 0;"><div style="font-size:14px;font-weight:800;margin-bottom:2px;">'+name+'</div><div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+formatDist(park._dist)+' entfernt</div><button onclick="openParkDetail('+idx+')" style="background:var(--accent-deep);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;">&#128170; Park ansehen</button><button onclick="openParkNav('+idx+')" style="background:none;border:1px solid var(--border2);border-radius:10px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;width:100%;color:var(--muted);">&#128205; Navigation</button></div>');
+      marker.bindPopup(parkPopupHtml(name, park._dist, idx));
       parksMarkers.push(marker);
     });
     buildParksList();
-    document.getElementById('parks-locate-btn').textContent='✓ Standort';
+    setLocateBtnLabel('✓ Standort');
   }
 
   function tryProxy(idx){
     if(idx>=proxies.length){
       statusEl.textContent='Fehler beim Laden. Bitte nochmal versuchen.';
-      document.getElementById('parks-locate-btn').textContent='▷ Standort';
+      setLocateBtnLabel('▷ Standort');
       return;
     }
     statusEl.textContent='Parks werden geladen...';
@@ -200,6 +253,9 @@ function parkRealTags(park){
   return tags.slice(0,3);
 }
 
+// Kleiner Outline-Tag (uppercase per CSS, Quelltext bleibt Mixed Case)
+var PARK_TAG_CSS = 'background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;';
+
 var parksListExpanded = false;
 
 function buildParksList(){
@@ -219,7 +275,9 @@ function renderParksListHeader(){
   headerEl.appendChild(title);
   if(parksData.length > 5){
     var link = document.createElement('button');
-    link.style.cssText = 'background:none;border:none;color:var(--accent-ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0;';
+    link.type = 'button';
+    link.className = 'u pressable';
+    link.style.cssText = 'background:none;border:none;color:var(--muted);font-family:inherit;font-size:10px;font-weight:500;cursor:pointer;padding:6px 0;';
     link.innerHTML = parksListExpanded ? 'Weniger' : 'Alle anzeigen &#8250;';
     link.onclick = function(){ parksListExpanded = !parksListExpanded; renderParksListHeader(); renderParksListItems(); };
     headerEl.appendChild(link);
@@ -231,6 +289,11 @@ function renderParksListItems(){
   if(!listEl) return;
   listEl.innerHTML = '';
   var items = parksListExpanded ? parksData : parksData.slice(0,5);
+  if(!items.length) return;
+
+  // Bordered Liste mit zweistelligem Rang (Liste ist nach Distanz sortiert)
+  var list = document.createElement('div');
+  list.className = 'list';
 
   items.forEach(function(park, idx){
     var name = park.tags && (park.tags.name || park.tags['name:de']) ? (park.tags.name || park.tags['name:de']) : 'Calisthenics Park';
@@ -239,10 +302,11 @@ function renderParksListItems(){
     var accessLabel = parkAccessLabel(park);
     var tags = parkRealTags(park);
     var saved = isParkSaved(parkId);
+    var dp = formatDistParts(park._dist);
 
     var card = document.createElement('div');
-    card.className = 'pk-card pressable';
-    card.style.cssText = 'padding:20px 22px;margin-bottom:12px;cursor:pointer;content-visibility:auto;contain-intrinsic-size:auto 150px;';
+    card.className = 'list-row pressable';
+    card.style.cssText = 'align-items:center;content-visibility:auto;contain-intrinsic-size:auto 56px;';
     card.setAttribute('role','button');
     card.setAttribute('tabindex','0');
     card.setAttribute('aria-label', name + ' öffnen');
@@ -254,70 +318,85 @@ function renderParksListItems(){
       if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openParkDetail(idx); }
     };
 
-    var topRow = document.createElement('div');
-    topRow.style.cssText = 'display:flex;align-items:flex-start;gap:14px;';
-
-    var icon = document.createElement('div');
-    icon.style.cssText = 'width:56px;height:56px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;';
-    icon.innerHTML = '<div style="width:26px;height:26px;">'+ci('flex')+'</div>';
+    var rankEl = document.createElement('span');
+    rankEl.className = 'row-index num';
+    rankEl.textContent = ('0'+(idx+1)).slice(-2);
 
     var info = document.createElement('div');
-    info.style.cssText = 'flex:1;min-width:0;padding-top:2px;';
+    info.className = 'row-main';
     var nameRow = document.createElement('div');
-    nameRow.style.cssText = 'font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-    nameRow.textContent = name;
-    var locRow = document.createElement('div');
-    locRow.style.cssText = 'font-size:12px;font-weight:400;color:var(--muted);margin-top:5px;';
-    locRow.innerHTML = '&#128205; ' + (locLabel ? locLabel+' &middot; ' : '') + formatDist(park._dist);
-    info.appendChild(nameRow); info.appendChild(locRow);
-    if(accessLabel){
-      var accessRow = document.createElement('div');
-      accessRow.style.cssText = 'font-size:12px;font-weight:400;color:var(--muted);margin-top:4px;';
-      accessRow.textContent = accessLabel;
-      info.appendChild(accessRow);
+    nameRow.className = 'row-title';
+    nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    if(idx===0){
+      // Nächster Park: orangener Dot vor dem Namen
+      var near = document.createElement('span');
+      near.className = 'live-dot';
+      near.setAttribute('title','Nächster Park');
+      nameRow.appendChild(near);
+    }
+    var nameTxt = document.createElement('span');
+    nameTxt.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;';
+    nameTxt.textContent = name;
+    nameRow.appendChild(nameTxt);
+    info.appendChild(nameRow);
+    var subParts = [];
+    if(locLabel) subParts.push(locLabel);
+    if(accessLabel) subParts.push(accessLabel);
+    if(subParts.length){
+      var locRow = document.createElement('div');
+      locRow.className = 'row-sub';
+      locRow.textContent = subParts.join(' · ');
+      info.appendChild(locRow);
+    }
+    if(tags.length){
+      var tagRow = document.createElement('div');
+      tagRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;';
+      tags.forEach(function(t){
+        var chip = document.createElement('span');
+        chip.style.cssText = PARK_TAG_CSS;
+        chip.textContent = t;
+        tagRow.appendChild(chip);
+      });
+      info.appendChild(tagRow);
     }
 
+    // Distanz als Mono-Wert + Einheit
+    var distEl = document.createElement('div');
+    distEl.style.cssText = 'display:flex;align-items:baseline;gap:4px;flex-shrink:0;';
+    distEl.innerHTML = '<span class="row-val num">'+dp.val+'</span><span class="unit">'+dp.unit+'</span>';
+
     var bookmarkBtn = document.createElement('button');
+    bookmarkBtn.type = 'button';
+    bookmarkBtn.className = 'icon-btn sm';
     bookmarkBtn.setAttribute('aria-label', saved ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen');
-    bookmarkBtn.style.cssText = 'background:none;border:none;color:'+(saved?'var(--accent)':'var(--muted)')+';font-size:23px;cursor:pointer;flex-shrink:0;padding:6px;margin:-4px;line-height:1;';
-    bookmarkBtn.innerHTML = '<div style="width:20px;height:20px;">'+ci('bookmark')+'</div>';
+    bookmarkBtn.setAttribute('aria-pressed', saved ? 'true' : 'false');
+    bookmarkBtn.style.color = saved ? 'var(--accent)' : 'var(--muted)';
+    if(saved) bookmarkBtn.style.borderColor = 'var(--accent)';
+    bookmarkBtn.innerHTML = typeof ci === 'function' ? ci('bookmark') : '&#9633;';
+    var bmSvg = bookmarkBtn.querySelector('svg');
+    if(bmSvg) bmSvg.style.fill = saved ? 'currentColor' : 'none';
     bookmarkBtn.onclick = function(e){
       e.stopPropagation();
       var nowSaved = toggleParkSaved(parkId);
       bookmarkBtn.style.color = nowSaved ? 'var(--accent)' : 'var(--muted)';
+      bookmarkBtn.style.borderColor = nowSaved ? 'var(--accent)' : '';
       bookmarkBtn.setAttribute('aria-label', nowSaved ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen');
+      bookmarkBtn.setAttribute('aria-pressed', nowSaved ? 'true' : 'false');
+      if(bmSvg) bmSvg.style.fill = nowSaved ? 'currentColor' : 'none';
       if(bookmarkBtn.animate && !(window.caliMotion && caliMotion.reduced())){
-        bookmarkBtn.animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:250,easing:'cubic-bezier(0.34,1.56,0.64,1)'});
+        bookmarkBtn.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:200,easing:'cubic-bezier(0.22,1,0.36,1)'});
       }
     };
 
-    topRow.appendChild(icon); topRow.appendChild(info); topRow.appendChild(bookmarkBtn);
-    card.appendChild(topRow);
+    var chev = document.createElement('span');
+    chev.className = 'row-chev';
 
-    if(tags.length){
-      var tagRow = document.createElement('div');
-      tagRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;';
-      tags.forEach(function(t){
-        var chip = document.createElement('div');
-        chip.style.cssText = 'background:var(--bg3);border-radius:20px;padding:7px 14px;font-size:11px;color:var(--muted);font-weight:500;';
-        chip.textContent = t;
-        tagRow.appendChild(chip);
-      });
-      card.appendChild(tagRow);
-    }
-
-    var detailRow = document.createElement('div');
-    detailRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:14px;';
-    var detailLink = document.createElement('button');
-    detailLink.style.cssText = 'background:none;border:none;color:var(--accent-ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0;';
-    detailLink.innerHTML = 'Details &#8250;';
-    detailLink.onclick = function(){ openParkDetail(idx); };
-    detailRow.appendChild(detailLink);
-    card.appendChild(detailRow);
-
-    listEl.appendChild(card);
+    card.appendChild(rankEl); card.appendChild(info); card.appendChild(distEl); card.appendChild(bookmarkBtn); card.appendChild(chev);
+    list.appendChild(card);
   });
-  if(window.caliMotion) caliMotion.stagger(listEl);
+
+  listEl.appendChild(list);
+  if(window.caliMotion) caliMotion.stagger(list);
 }
 
 function calcDist(lat1, lon1, lat2, lon2){
@@ -333,6 +412,12 @@ function formatDist(m){
   return (m/1000).toFixed(1)+' km';
 }
 
+// Wert und Einheit getrennt (Mono-Wert + .unit-Label)
+function formatDistParts(m){
+  if(m < 1000) return {val: String(Math.round(m)), unit: 'm'};
+  return {val: (m/1000).toFixed(1), unit: 'km'};
+}
+
 // ── PROFIL ÖFFENTLICH/PRIVAT ──────────────────────────────
 function buildPrivacyToggle(){
   var el = document.getElementById('pr-privacy-toggle');
@@ -341,28 +426,31 @@ function buildPrivacyToggle(){
   var isPublic = prData && prData.isPublic !== false; // default public
 
   var wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:10px;';
+  wrap.className = 'list';
+  wrap.style.cssText = 'margin-bottom:10px;';
+  var row = document.createElement('div');
+  row.className = 'list-row';
+  row.style.cssText = 'cursor:default;';
   var txtWrap = document.createElement('div');
+  txtWrap.className = 'row-main';
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:13px;font-weight:700;color:var(--text);';
+  titleEl.className = 'row-title';
   var subEl = document.createElement('div');
-  subEl.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+  subEl.className = 'row-sub';
   function renderLabels(){
-    titleEl.innerHTML = 'Profil ' + (isPublic?'&#127758; Öffentlich':'&#128274; Privat');
-    subEl.textContent = isPublic?'Andere können dich in Bestenlisten sehen':'Dein Name bleibt anonym';
+    titleEl.textContent = isPublic ? 'Profil öffentlich' : 'Profil privat';
+    subEl.textContent = isPublic ? 'Andere können dich in Bestenlisten sehen' : 'Dein Name bleibt anonym';
   }
   renderLabels();
   txtWrap.appendChild(titleEl); txtWrap.appendChild(subEl);
-  wrap.appendChild(txtWrap);
+  row.appendChild(txtWrap);
 
   var toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'toggle' + (isPublic ? ' on' : '');
   toggle.setAttribute('role','switch');
   toggle.setAttribute('aria-checked', isPublic?'true':'false');
   toggle.setAttribute('aria-label','Profil öffentlich anzeigen');
-  toggle.style.cssText = 'width:48px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:'+(isPublic?'var(--accent)':'var(--border2)')+';transition:background var(--dur-med) var(--ease-out);flex-shrink:0;';
-  var knob = document.createElement('div');
-  knob.style.cssText = 'position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform var(--dur-med) var(--ease-out);transform:translateX('+(isPublic?'22px':'0')+');';
-  toggle.appendChild(knob);
   toggle.onclick = function(){
     isPublic = !isPublic;
     if(typeof prData === 'undefined' || !prData) window.prData = {};
@@ -370,13 +458,13 @@ function buildPrivacyToggle(){
     try{ localStorage.setItem('cali_profile', JSON.stringify(prData)); }catch(x){}
     if(typeof spr === 'function') spr();
     if(typeof fbSave === 'function') fbSave();
-    toggle.style.background = isPublic?'var(--accent)':'var(--border2)';
-    knob.style.transform = 'translateX('+(isPublic?'22px':'0')+')';
+    toggle.classList.toggle('on', isPublic);
     toggle.setAttribute('aria-checked', isPublic?'true':'false');
     renderLabels();
-    if(typeof toast === 'function') toast(isPublic ? '🌍 Profil öffentlich' : '🔒 Profil privat');
+    if(typeof toast === 'function') toast(isPublic ? 'Profil öffentlich' : 'Profil privat');
   };
-  wrap.appendChild(toggle);
+  row.appendChild(toggle);
+  wrap.appendChild(row);
   el.appendChild(wrap);
 }
 
@@ -399,23 +487,37 @@ function checkAndShowAdminBtn(){
   }
 }
 
+// Gemeinsamer Karten-Inhalt für Bestenlisten-Einträge im Admin-Panel
+function adminEntryHtml(d, showNoVideo){
+  var dateStr = '';
+  try{ dateStr = new Date(d.createdAt||d.date).toLocaleDateString('de-DE'); }catch(x){}
+  return '<div class="row-title" style="white-space:normal;margin-bottom:2px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
+    '<div class="row-sub">'+(d.parkName||'Kein Park')+' &middot; <span class="num">'+(d.value||d.reps||0)+'</span> '+(d.unit||'Wdh')+'</div>'+
+    '<div class="lbl" style="margin:4px 0 10px;">'+dateStr+'</div>'+
+    (d.videoUrl
+      ? '<a href="'+d.videoUrl+'" target="_blank" rel="noopener" class="u" style="display:inline-block;font-size:10px;font-weight:600;color:var(--accent);margin-bottom:10px;">Video ansehen &#8250;</a>'
+      : (showNoVideo ? '<div class="lbl" style="color:var(--red);margin-bottom:10px;">Kein Video</div>' : ''));
+}
+
 function openAdminPanel(){
   var ex = document.getElementById('admin-panel-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'admin-panel-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.className = 'backdrop';
 
   var box = document.createElement('div');
-  box.className = 'sheet-scroll';
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
+  box.className = 'sheet sheet-scroll';
+  box.style.cssText = 'max-height:88vh;overflow-y:auto;';
 
   box.innerHTML =
-    '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:12px;">&#128274; Admin-Panel</div>';
+    '<div class="sheet-grip"></div>'+
+    '<div class="ttl" style="margin-bottom:12px;">Admin-Panel</div>';
 
-  // Tabs
+  // Tabs als Segment-Control
   var tabWrap = document.createElement('div');
-  tabWrap.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;';
-  var tabs2 = [{label:'&#8987; Ausstehend',id:'pending'},{label:'&#10003; Genehmigt',id:'approved'},{label:'&#10007; Abgelehnt',id:'rejected'},{label:'&#128170; Parks',id:'parks'}];
+  tabWrap.className = 'seg-ctl';
+  tabWrap.setAttribute('role','tablist');
+  var tabs2 = [{label:'Ausstehend',id:'pending'},{label:'Genehmigt',id:'approved'},{label:'Abgelehnt',id:'rejected'},{label:'Parks',id:'parks'}];
   var activeAdminTab = 'pending';
   var listEl = document.createElement('div');
   var approvedEl = document.createElement('div'); approvedEl.style.display='none';
@@ -424,16 +526,17 @@ function openAdminPanel(){
 
   tabs2.forEach(function(t){
     var btn = document.createElement('button');
-    btn.style.cssText = 'flex:1;padding:8px;border-radius:10px;border:1px solid '+(t.id===activeAdminTab?'var(--accent)':'var(--border)')+';background:'+(t.id===activeAdminTab?'rgba(255,85,0,0.1)':'none')+';color:'+(t.id===activeAdminTab?'var(--accent-ink)':'var(--muted)')+';font-family:inherit;font-size:11px;font-weight:700;min-height:36px;cursor:pointer;';
-    btn.classList.add('pressable');
-    btn.innerHTML = t.label;
+    btn.type = 'button';
+    btn.setAttribute('role','tab');
+    btn.className = t.id===activeAdminTab ? 'on' : '';
+    btn.setAttribute('aria-selected', t.id===activeAdminTab ? 'true' : 'false');
+    btn.textContent = t.label;
     btn.onclick = function(){
       activeAdminTab = t.id;
       tabWrap.querySelectorAll('button').forEach(function(b,bi){
         var a = tabs2[bi].id===activeAdminTab;
-        b.style.borderColor=a?'var(--accent)':'var(--border)';
-        b.style.background=a?'rgba(255,85,0,0.1)':'none';
-        b.style.color=a?'var(--accent-ink)':'var(--muted)';
+        b.classList.toggle('on', a);
+        b.setAttribute('aria-selected', a ? 'true' : 'false');
       });
       listEl.style.display = t.id==='pending'?'block':'none';
       approvedEl.style.display = t.id==='approved'?'block':'none';
@@ -446,7 +549,7 @@ function openAdminPanel(){
     tabWrap.appendChild(btn);
   });
   box.appendChild(tabWrap);
-  listEl.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
+  listEl.innerHTML = '<div class="empty">Lädt…</div>';
   box.appendChild(listEl); box.appendChild(approvedEl); box.appendChild(rejectedEl); box.appendChild(suggestEl);
 
   // Load pending entries
@@ -454,36 +557,34 @@ function openAdminPanel(){
     .then(function(snap){
       listEl.innerHTML = '';
       if(snap.empty){
-        listEl.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--muted);">&#10003; Keine ausstehenden Einträge!</div>';
+        listEl.innerHTML = '<div class="empty">Keine ausstehenden Einträge</div>';
         return;
       }
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
-        card.innerHTML =
-          '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
-          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'<div style="font-size:11px;color:var(--red);margin-bottom:10px;">Kein Video!</div>');
+        card.className = 'card';
+        card.innerHTML = adminEntryHtml(d, true);
 
         var btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:8px;';
 
         var approveBtn = document.createElement('button');
-        approveBtn.style.cssText = 'flex:1;background:rgba(34,197,94,0.1);color:var(--success-ink);border:1px solid rgba(34,197,94,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
-        approveBtn.classList.add('pressable');
+        approveBtn.type = 'button';
+        approveBtn.className = 'btn sec sm';
+        approveBtn.style.cssText = 'flex:1;margin:0;min-height:40px;';
         approveBtn.textContent = '✓ Genehmigen';
         approveBtn.onclick = function(){
           doc.ref.update({status:'approved'}).then(function(){
             card.remove();
-            toast('✓ Genehmigt!');
+            toast('Genehmigt.');
           });
         };
 
         var rejectBtn = document.createElement('button');
-        rejectBtn.style.cssText = 'flex:1;background:rgba(217,48,54,0.08);color:var(--red);border:1px solid rgba(217,48,54,0.25);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
-        rejectBtn.classList.add('pressable');
+        rejectBtn.type = 'button';
+        rejectBtn.className = 'btn-g danger';
+        rejectBtn.style.cssText = 'flex:1;min-height:40px;';
         rejectBtn.textContent = '✗ Ablehnen';
         rejectBtn.onclick = function(){
           doc.ref.update({status:'rejected'}).then(function(){
@@ -499,11 +600,13 @@ function openAdminPanel(){
       });
       if(window.caliMotion) caliMotion.stagger(listEl);
     })
-    .catch(function(){ listEl.innerHTML = '<div style="font-size:12px;color:var(--muted);">Fehler beim Laden.</div>'; });
+    .catch(function(){ listEl.innerHTML = '<div class="empty">Fehler beim Laden</div>'; });
 
   var closeBtn = document.createElement('button');
-  closeBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:12px;cursor:pointer;';
-  closeBtn.textContent = 'Schlie\u00dfen';
+  closeBtn.type = 'button';
+  closeBtn.className = 'btn-g';
+  closeBtn.style.cssText = 'width:100%;min-height:44px;margin-top:6px;';
+  closeBtn.textContent = 'Schließen';
   closeBtn.onclick = function(){ ov.remove(); };
   box.appendChild(closeBtn);
 
@@ -519,50 +622,58 @@ function openParkNav(idx){
   var ex = document.getElementById('park-modal-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'park-modal-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.className = 'backdrop';
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
+  box.className = 'sheet';
   var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
   var addr = '';
   if(park.tags){
     if(park.tags['addr:street']) addr = park.tags['addr:street']+(park.tags['addr:housenumber']?' '+park.tags['addr:housenumber']:'');
     if(park.tags['addr:city']) addr += (addr?', ':'')+park.tags['addr:city'];
   }
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
-    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">'+name+'</div>'+
-    (addr?'<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">'+addr+'</div>':'')+
-    '<div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:12px;">Navigation öffnen mit</div>';
+  box.innerHTML = '<div class="sheet-grip"></div>'+
+    '<div class="ttl" style="margin-bottom:4px;">'+name+'</div>'+
+    (addr?'<div class="row-sub" style="margin-bottom:14px;">'+addr+'</div>':'')+
+    '<div class="lbl" style="margin-bottom:10px;">Navigation öffnen mit</div>';
+
+  // Optionen als bordered Liste
+  var list = document.createElement('div');
+  list.className = 'list';
+
+  function navRow(idxNum, label){
+    var r = document.createElement('button');
+    r.type = 'button';
+    r.className = 'list-row pressable';
+    r.innerHTML = '<span class="row-index num">'+('0'+idxNum).slice(-2)+'</span><div class="row-main"><div class="row-title">'+label+'</div></div><span class="row-chev"></span>';
+    return r;
+  }
 
   // Google Maps
-  var gBtn = document.createElement('button');
-  gBtn.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
-  gBtn.classList.add('pressable');
-  gBtn.innerHTML = '<span style="width:18px;height:18px;display:inline-block;flex-shrink:0;">'+(typeof ci==='function'?ci('pin'):'&#128205;')+'</span> Google Maps';
+  var gBtn = navRow(1, 'Google Maps');
   gBtn.onclick = function(){ window.open('https://www.google.com/maps/dir/?api=1&destination='+park._lat+','+park._lng+'&travelmode=walking','_blank'); ov.remove(); };
 
   // Apple Maps
-  var aBtn = document.createElement('button');
-  aBtn.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
-  aBtn.classList.add('pressable');
-  aBtn.innerHTML = '<span style="font-size:20px;">&#63743;</span> Apple Maps';
+  var aBtn = navRow(2, 'Apple Maps');
   aBtn.onclick = function(){ window.location.href='maps://maps.apple.com/?daddr='+park._lat+','+park._lng+'&dirflg=w'; ov.remove(); };
 
   // Adresse kopieren
-  var copyBtn = document.createElement('button');
-  copyBtn.style.cssText = 'width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text);';
-  copyBtn.classList.add('pressable');
-  copyBtn.innerHTML = '<span style="font-size:18px;">&#128203;</span> Adresse kopieren';
+  var copyBtn = navRow(3, 'Adresse kopieren');
   copyBtn.onclick = function(){
     var txt = (addr || (park._lat+', '+park._lng));
-    navigator.clipboard ? navigator.clipboard.writeText(txt).then(function(){ copyBtn.innerHTML='<span style="font-size:18px;">&#10003;</span> Kopiert!'; setTimeout(function(){ ov.remove(); },800); }) : (function(){ var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();copyBtn.innerHTML='<span>&#10003;</span> Kopiert!';setTimeout(function(){ov.remove();},800); })();
+    var done = function(){ var t = copyBtn.querySelector('.row-title'); if(t) t.textContent = 'Kopiert'; setTimeout(function(){ ov.remove(); },800); };
+    navigator.clipboard ? navigator.clipboard.writeText(txt).then(done) : (function(){ var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();done(); })();
   };
 
+  list.appendChild(gBtn); list.appendChild(aBtn); list.appendChild(copyBtn);
+
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn-g';
+  cancelBtn.style.cssText = 'width:100%;min-height:44px;margin-top:6px;';
   cancelBtn.textContent = 'Schließen';
   cancelBtn.onclick = function(){ ov.remove(); };
 
-  box.appendChild(gBtn); box.appendChild(aBtn); box.appendChild(copyBtn); box.appendChild(cancelBtn);
+  box.appendChild(list); box.appendChild(cancelBtn);
   ov.appendChild(box);
   ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
   document.body.appendChild(ov);
@@ -575,45 +686,60 @@ function openParkDetail(idx){
   if(!park) return;
   var name = park.tags&&(park.tags.name||park.tags['name:de'])?(park.tags.name||park.tags['name:de']):'Calisthenics Park';
   var parkId = 'park_'+(park.id||Math.round(park._lat*1000)+'_'+Math.round(park._lng*1000));
+  var dp = formatDistParts(park._dist);
 
   var ex = document.getElementById('park-detail-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'park-detail-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  // Top bar — gleicher Look wie Rekorde
+  // Top bar: ← | Titel | Nav
   var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  topBar.className = 'topbar';
+  topBar.style.cssText = 'margin:0;padding:0 16px;flex-shrink:0;';
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;color:var(--text);font-family:inherit;transition:transform var(--dur-fast) var(--ease-out);';
-  backBtn.classList.add('pressable');
-  backBtn.innerHTML = '&#8592; Zurück';
+  backBtn.type = 'button';
+  backBtn.className = 'icon-btn sm';
+  backBtn.setAttribute('aria-label','Zurück');
+  backBtn.innerHTML = '&#8592;';
   backBtn.onclick = function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
   };
   var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;min-width:0;';
-  titleEl.innerHTML = '<div style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&#128170; '+name+'</div>'+
-    '<div style="font-size:11px;color:var(--accent-ink);font-weight:600;">&#128205; '+formatDist(park._dist)+' entfernt</div>';
-  var recBtn2 = document.createElement('button');
-  recBtn2.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;min-height:36px;cursor:pointer;flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
-  recBtn2.classList.add('pressable');
-  recBtn2.innerHTML = '&#127942; Rekord';
-  recBtn2.onclick = function(){ openParkRecordSubmit(idx); };
+  titleEl.className = 'topbar-title';
+  titleEl.textContent = name;
   var navBtn = document.createElement('button');
-  navBtn.style.cssText = 'background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;min-height:36px;cursor:pointer;flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
-  navBtn.classList.add('pressable');
-  navBtn.innerHTML = '&#128205; Nav';
+  navBtn.type = 'button';
+  navBtn.className = 'btn-g';
+  navBtn.style.cssText = 'flex-shrink:0;';
+  navBtn.textContent = 'Nav';
+  navBtn.setAttribute('aria-label','Navigation zum Park');
   navBtn.onclick = function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
     openParkNav(idx);
   };
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(recBtn2); topBar.appendChild(navBtn);
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(navBtn);
   ov.appendChild(topBar);
 
-  // Tabs horizontal — gleiches Muster wie die Battles-Übersicht
+  // Kontextzeile: Distanz (Mono-Wert + Einheit) + Rekord-CTA (die eine orange Aktion dieses Screens)
+  var ctxRow = document.createElement('div');
+  ctxRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);flex-shrink:0;';
+  var distEl = document.createElement('div');
+  distEl.style.cssText = 'display:flex;align-items:baseline;gap:4px;min-width:0;';
+  distEl.innerHTML = '<span class="live-dot" style="align-self:center;margin-right:4px;"></span><span class="row-val num">'+dp.val+'</span><span class="unit">'+dp.unit+'</span><span class="lbl" style="margin-left:4px;">entfernt</span>';
+  var recBtn2 = document.createElement('button');
+  recBtn2.type = 'button';
+  recBtn2.className = 'btn sm';
+  recBtn2.textContent = 'Rekord';
+  recBtn2.onclick = function(){ openParkRecordSubmit(idx); };
+  ctxRow.appendChild(distEl); ctxRow.appendChild(recBtn2);
+  ov.appendChild(ctxRow);
+
+  // Tabs als Segment-Control
   var tabBar = document.createElement('div');
-  tabBar.style.cssText = 'display:flex;border-bottom:1px solid var(--border);flex-shrink:0;';
+  tabBar.className = 'seg-ctl';
+  tabBar.setAttribute('role','tablist');
+  tabBar.style.cssText = 'margin:12px 16px 0;flex-shrink:0;';
   var tabDefs = [
     {label:'Bestenliste', id:'lb'},
     {label:'Meine Stats', id:'stats'},
@@ -622,8 +748,10 @@ function openParkDetail(idx){
   var bodies = [];
   tabDefs.forEach(function(t, ti){
     var btn = document.createElement('button');
-    btn.style.cssText = 'flex:1;padding:12px 4px;min-height:44px;font-family:inherit;font-weight:700;font-size:13px;border:none;cursor:pointer;border-bottom:2px solid '+(ti===0?'var(--accent)':'transparent')+';background:none;color:'+(ti===0?'var(--accent-ink)':'var(--muted)')+';white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
-    btn.classList.add('pressable');
+    btn.type = 'button';
+    btn.setAttribute('role','tab');
+    btn.className = ti===0 ? 'on' : '';
+    btn.setAttribute('aria-selected', ti===0 ? 'true' : 'false');
     btn.textContent = t.label;
     var body = document.createElement('div');
     body.className = 'sheet-scroll';
@@ -632,8 +760,8 @@ function openParkDetail(idx){
     btn.onclick = (function(tIdx){
       return function(){
         tabBar.querySelectorAll('button').forEach(function(b,bi){
-          b.style.borderBottomColor = bi===tIdx?'var(--accent)':'transparent';
-          b.style.color = bi===tIdx?'var(--accent-ink)':'var(--muted)';
+          b.classList.toggle('on', bi===tIdx);
+          b.setAttribute('aria-selected', bi===tIdx ? 'true' : 'false');
         });
         bodies.forEach(function(b,bi){ b.style.display=bi===tIdx?'block':'none'; });
         if(tIdx===0 && !bodies[0]._loaded){ buildParkDetailLeaderboard(bodies[0], parkId, name); bodies[0]._loaded=true; }
@@ -658,17 +786,27 @@ function openParkDetail(idx){
   bodies[0]._loaded = true;
 }
 
+// Chip-Reihe (Filter): aktiv = .on, Umschalten per classList
+function setChipActive(container, isActiveFn){
+  container.querySelectorAll('button').forEach(function(b){
+    var a = isActiveFn(b);
+    b.classList.toggle('on', a);
+    b.setAttribute('aria-pressed', a ? 'true' : 'false');
+  });
+}
+
 function buildParkDetailLeaderboard(el, parkId, parkName){
   el.innerHTML = '';
   if(typeof db === 'undefined' || !db){
-    el.innerHTML = '<div style="padding:20px;color:var(--muted);">Einloggen um Bestenliste zu sehen.</div>'; return;
+    el.innerHTML = '<div style="padding:20px 0;font-size:11px;color:var(--muted);">Einloggen um Bestenliste zu sehen.</div>'; return;
   }
 
-  // Eintrag einreichen Button
+  // Eintrag einreichen (helle Sekundär-CTA; die orange Primär-Aktion ist "Rekord" oben)
   var subBtn = document.createElement('button');
-  subBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;margin-bottom:14px;transition:transform var(--dur-fast) var(--ease-out);';
-  subBtn.classList.add('pressable');
-  subBtn.innerHTML = '+ Eintrag einreichen';
+  subBtn.type = 'button';
+  subBtn.className = 'btn sec';
+  subBtn.style.cssText = 'margin:0 0 14px;min-height:44px;';
+  subBtn.textContent = '+ Eintrag einreichen';
   subBtn.onclick = function(){ openRecordSubmit(parkId, parkName); };
   el.appendChild(subBtn);
 
@@ -679,16 +817,13 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
   exLabel.textContent = 'Übung';
   el.appendChild(exLabel);
 
-  var exWrap = document.createElement('div');
-  exWrap.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;';
-
   var PARK_CATS = [
-    {id:'all',label:'Alle',icon:'&#127942;'},
-    {id:'Pull',label:'Pull',icon:'&#11014;'},
-    {id:'Push',label:'Push',icon:'&#128170;'},
-    {id:'Core',label:'Core',icon:'&#128293;'},
-    {id:'Legs',label:'Legs',icon:'&#129466;'},
-    {id:'Skills',label:'Skills',icon:'&#11088;'},  ];
+    {id:'all',label:'Alle'},
+    {id:'Pull',label:'Pull'},
+    {id:'Push',label:'Push'},
+    {id:'Core',label:'Core'},
+    {id:'Legs',label:'Legs'},
+    {id:'Skills',label:'Skills'},  ];
   var activeCat = 'all';
 
   // Kategorie-Filter
@@ -696,19 +831,16 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
   catWrap.style.cssText = 'display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none;';
   PARK_CATS.forEach(function(cat){
     var btn = document.createElement('button');
+    btn.type = 'button';
     btn.dataset.catId = cat.id;
     var isActive = cat.id === activeCat;
-    btn.style.cssText = 'flex-shrink:0;padding:9px 14px;min-height:36px;border-radius:20px;border:1px solid '+(isActive?'var(--accent-deep)':'var(--border)')+';background:'+(isActive?'var(--accent-deep)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
-    btn.classList.add('pressable');
-    btn.innerHTML = cat.icon+' '+cat.label;
+    btn.className = 'chip' + (isActive ? ' on' : '');
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    btn.style.cssText = 'flex-shrink:0;';
+    btn.textContent = cat.label;
     btn.onclick = function(){
       activeCat = cat.id;
-      catWrap.querySelectorAll('button').forEach(function(b){
-        var a = b.dataset.catId === activeCat;
-        b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
-        b.style.background = a?'var(--accent-deep)':'none';
-        b.style.color = a?'#fff':'var(--muted)';
-      });
+      setChipActive(catWrap, function(b){ return b.dataset.catId === activeCat; });
       rebuildExWrap();
     };
     catWrap.appendChild(btn);
@@ -752,19 +884,17 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
     exWrap2.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;';
     exercises.forEach(function(ex){
       var btn = document.createElement('button');
+      btn.type = 'button';
       btn.dataset.exId = ex.id;
       var isActive = selEx && ex.id === selEx.id;
-      btn.style.cssText = 'flex-shrink:0;padding:9px 14px;min-height:36px;border-radius:20px;border:1px solid '+(isActive?'var(--accent-deep)':'var(--border)')+';background:'+(isActive?'var(--accent-deep)':'none')+';color:'+(isActive?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out);';
-      btn.classList.add('pressable');
+      // Übungsnamen sind Content: Chip-Uppercase hier ausschalten
+      btn.className = 'chip' + (isActive ? ' on' : '');
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      btn.style.cssText = 'flex-shrink:0;text-transform:none;letter-spacing:0;font-size:11px;';
       btn.textContent = ex.name;
       btn.onclick = function(){
         selEx = ex;
-        exWrap2.querySelectorAll('button').forEach(function(b){
-          var a = b.dataset.exId === selEx.id;
-          b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
-          b.style.background = a?'var(--accent-deep)':'none';
-          b.style.color = a?'#fff':'var(--muted)';
-        });
+        setChipActive(exWrap2, function(b){ return b.dataset.exId === selEx.id; });
         loadParkLb(listEl2, parkId, selEx);
       };
       exWrap2.appendChild(btn);
@@ -777,91 +907,102 @@ function buildParkDetailLeaderboard(el, parkId, parkName){
 }
 
 function loadParkLb(el, parkId, ex){
-  el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px;">&#9203; Lade...</div>';
+  el.innerHTML = '<div class="empty">Lädt…</div>';
   db.collection('parkLeaderboard').doc(parkId).collection('entries')
     .where('exercise','==',ex.id)
     .orderBy('value','desc').limit(20)
     .get().then(function(snap){
       el.innerHTML = '';
       if(snap.empty){
-        el.innerHTML = '<div style="text-align:center;padding:30px 10px;"><div style="font-size:30px;margin-bottom:8px;">&#127942;</div><div style="font-size:12px;color:var(--muted);">Noch keine Einträge für '+ex.name+'.<br>Sei der Erste!</div></div>';
+        el.innerHTML = '<div style="text-align:center;padding:24px 10px;font-size:11px;color:var(--muted);line-height:1.6;">Noch keine Einträge für '+ex.name+'.<br>Sei der Erste!</div>';
         return;
       }
       var uid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
+      var list = document.createElement('div');
+      list.className = 'list';
       snap.docs.forEach(function(doc, i){
         var d = doc.data();
         var rank = i+1;
-        var medal = rank===1?'&#129351;':rank===2?'&#129352;':rank===3?'&#129353;':'';
         var isMe = uid && d.uid === uid;
         var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);background:'+(isMe?'rgba(255,85,0,0.05)':'none')+';content-visibility:auto;contain-intrinsic-size:auto 64px;';
-        var rankEl = document.createElement('div');
-        rankEl.style.cssText = 'width:28px;text-align:center;flex-shrink:0;';
-        rankEl.innerHTML = medal?'<span style="font-size:18px;">'+medal+'</span>':'<span class="num" style="font-family:inherit;font-weight:800;font-size:15px;color:var(--muted);">#'+rank+'</span>';
+        row.className = 'list-row';
+        row.style.cssText = 'cursor:default;'+(isMe?'background:var(--accent-soft);':'')+'content-visibility:auto;contain-intrinsic-size:auto 56px;';
+        var rankEl = document.createElement('span');
+        rankEl.className = 'row-index num';
+        if(rank===1) rankEl.style.color = 'var(--accent)';
+        rankEl.textContent = ('0'+rank).slice(-2);
         var infoEl = document.createElement('div');
-        infoEl.style.cssText = 'flex:1;min-width:0;';
-        infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.name||'Anonym')+(isMe?' <span style="font-size:10px;color:var(--accent-ink);border:1px solid var(--accent-ink);border-radius:6px;padding:1px 5px;">Du</span>':'')+' </div>';
+        infoEl.className = 'row-main';
+        infoEl.innerHTML = '<div class="row-title">'+(d.name||'Anonym')+(isMe?' <span style="'+PARK_TAG_CSS+'margin-left:6px;color:var(--accent);border-color:var(--accent);">Du</span>':'')+'</div>';
         var valEl = document.createElement('div');
-        valEl.style.cssText = 'text-align:right;flex-shrink:0;';
-        valEl.innerHTML = '<div class="num" style="font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+ex.unit+'</div>';
+        valEl.style.cssText = 'display:flex;align-items:baseline;gap:4px;flex-shrink:0;';
+        valEl.innerHTML = '<span class="kpi num" style="font-size:22px;color:'+(rank===1?'var(--accent)':'var(--text)')+';">'+d.value+'</span><span class="unit">'+ex.unit+'</span>';
         row.appendChild(rankEl); row.appendChild(infoEl); row.appendChild(valEl);
         if(d.videoUrl){
           var vBtn = document.createElement('button');
-          vBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:14px;cursor:pointer;flex-shrink:0;';
-          vBtn.classList.add('pressable');
+          vBtn.type = 'button';
+          vBtn.className = 'icon-btn sm';
           vBtn.innerHTML = '&#9654;';
           vBtn.setAttribute('aria-label', 'Video abspielen');
           vBtn.onclick = function(){ playVideo(d.videoUrl); };
           row.appendChild(vBtn);
         }
-        el.appendChild(row);
+        list.appendChild(row);
       });
+      el.appendChild(list);
+      if(window.caliMotion) caliMotion.stagger(list);
     }).catch(function(e){
-      el.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>';
+      el.innerHTML = '<div style="padding:12px 0;color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>';
     });
 }
 
 function buildParkDetailStats(el, parkId){
-  el.innerHTML = '<h2 class="stitle" style="margin:0 0 16px;">Meine Stats</h2>';
+  el.innerHTML = '<h2 class="stitle" style="margin:0 0 12px;">Meine Stats</h2>';
   if(typeof db === 'undefined' || !db || !firebase.auth().currentUser){
-    el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Einloggen um deine Stats zu sehen.</div>'; return;
+    el.innerHTML += '<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px 0;">Einloggen um deine Stats zu sehen.</div>'; return;
   }
   var uid = firebase.auth().currentUser.uid;
   db.collection('parkStats').doc(parkId).collection('users').doc(uid).get().then(function(doc){
-    if(!doc.exists){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Workouts in diesem Park.<br>Trainiere hier und deine Stats erscheinen!</div>'; return; }
+    if(!doc.exists){ el.innerHTML += '<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px 0;line-height:1.6;">Noch keine Workouts in diesem Park.<br>Trainiere hier und deine Stats erscheinen!</div>'; return; }
     var d = doc.data();
     var stats = [
       {label:'Workouts', value: d.workoutCount||0, unit:''},
       {label:'Gesamte Wdh', value: d.totalReps||0, unit:'Wdh'},
       {label:'Letztes Training', value: d.lastWorkout?d.lastWorkout.slice(0,10):'—', unit:''},
     ];
-    stats.forEach(function(s){
+    var list = document.createElement('div');
+    list.className = 'list';
+    stats.forEach(function(s, i){
       var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);';
-      row.innerHTML = '<div style="font-size:13px;color:var(--muted);">'+s.label+'</div>'+
-        '<div class="num" style="font-family:inherit;font-weight:800;font-size:22px;color:var(--text);">'+s.value+' <span style="font-family:var(--body);font-size:11px;color:var(--muted);">'+s.unit+'</span></div>';
-      el.appendChild(row);
+      row.className = 'list-row';
+      row.style.cssText = 'cursor:default;';
+      row.innerHTML = '<span class="row-index num">'+('0'+(i+1)).slice(-2)+'</span>'+
+        '<div class="row-main"><div class="lbl">'+s.label+'</div></div>'+
+        '<div style="display:flex;align-items:baseline;gap:4px;flex-shrink:0;"><span class="kpi num" style="font-size:22px;">'+s.value+'</span>'+(s.unit?'<span class="unit">'+s.unit+'</span>':'')+'</div>';
+      list.appendChild(row);
     });
-  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler.</div>'; });
+    el.appendChild(list);
+  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);font-size:11px;">Fehler.</div>'; });
 }
 
 function buildParkDetailCommunity(el, parkId, parkName){
-  el.innerHTML = '<h2 class="stitle" style="margin:0 0 16px;">Community-Workouts</h2>';
-  if(typeof db === 'undefined' || !db){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;">Einloggen um Community zu sehen.</div>'; return; }
+  el.innerHTML = '<h2 class="stitle" style="margin:0 0 12px;">Community-Workouts</h2>';
+  if(typeof db === 'undefined' || !db){ el.innerHTML += '<div style="color:var(--muted);font-size:11px;">Einloggen um Community zu sehen.</div>'; return; }
   db.collection('parkWorkouts').doc(parkId).collection('posts').orderBy('date','desc').limit(20).get().then(function(snap){
-    if(snap.empty){ el.innerHTML += '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Community-Workouts hier.<br>Sei der Erste!</div>'; return; }
+    if(snap.empty){ el.innerHTML += '<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px 0;line-height:1.6;">Noch keine Community-Workouts hier.<br>Sei der Erste!</div>'; return; }
     snap.forEach(function(doc){
       var d = doc.data();
       var card = document.createElement('div');
-      card.style.cssText = 'background:var(--bg2);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
-      card.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'+
-        '<div style="font-size:13px;font-weight:700;color:var(--text);">'+(d.userName||'Anonym')+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);">'+(d.date?d.date.slice(0,10):'')+'</div>'+
+      card.className = 'card';
+      card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px;">'+
+        '<div class="row-title">'+(d.userName||'Anonym')+'</div>'+
+        '<div class="lbl" style="color:var(--muted2);flex-shrink:0;">'+(d.date?d.date.slice(0,10):'')+'</div>'+
         '</div>'+
-        '<div style="font-size:12px;color:var(--muted);">'+(d.summary||'')+'</div>';
+        '<div class="row-sub" style="margin:0;">'+(d.summary||'')+'</div>';
       el.appendChild(card);
     });
-  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);">Fehler beim Laden.</div>'; });
+    if(window.caliMotion) caliMotion.stagger(el);
+  }).catch(function(){ el.innerHTML += '<div style="color:var(--muted);font-size:11px;">Fehler beim Laden.</div>'; });
 }
 
 // ── PARK REKORD MIT GPS-PRÜFUNG ────────────────────────────
@@ -888,16 +1029,18 @@ function openParkRecordSubmit(idx){
 
 function showParkRecordGPSError(parkName, msg){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px;padding:24px;max-width:340px;width:100%;text-align:center;';
+  box.className = 'card';
+  box.style.cssText = 'max-width:340px;width:100%;text-align:center;padding:20px 16px;margin:0;';
   box.innerHTML =
-    '<div style="font-size:40px;margin-bottom:12px;">📍</div>'+
-    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">'+parkName+'</div>'+
-    '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;white-space:pre-line;">'+msg+'</div>';
+    '<div class="lbl" style="margin-bottom:10px;">Standort-Prüfung</div>'+
+    '<div class="ttl" style="margin-bottom:8px;">'+parkName+'</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6;white-space:pre-line;">'+msg+'</div>';
   var closeBtn = document.createElement('button');
-  closeBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:14px;cursor:pointer;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out);';
-  closeBtn.classList.add('pressable');
+  closeBtn.type = 'button';
+  closeBtn.className = 'btn';
+  closeBtn.style.cssText = 'margin:0;';
   closeBtn.textContent = 'OK, verstanden';
   closeBtn.onclick = function(){ ov.remove(); };
   box.appendChild(closeBtn);
@@ -913,30 +1056,38 @@ function openSuggestPark(){
   var ex = document.getElementById('suggest-park-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'suggest-park-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.className = 'backdrop';
   var box = document.createElement('div');
-  box.className = 'sheet-scroll';
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
-    '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; Park vorschlagen</div>'+
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Admin prüft deinen Vorschlag bevor er erscheint.</div>';
+  box.className = 'sheet sheet-scroll';
+  box.style.cssText = 'max-height:90vh;overflow-y:auto;';
+  box.innerHTML = '<div class="sheet-grip"></div>'+
+    '<div class="ttl" style="margin-bottom:4px;">Park vorschlagen</div>'+
+    '<div class="row-sub" style="margin-bottom:16px;">Admin prüft deinen Vorschlag bevor er erscheint.</div>';
 
   // Name
+  var nameLbl = document.createElement('div');
+  nameLbl.className = 'lbl';
+  nameLbl.style.cssText = 'margin-bottom:6px;';
+  nameLbl.textContent = 'Park-Name';
+  box.appendChild(nameLbl);
   var nameInput = document.createElement('input');
   nameInput.type = 'text'; nameInput.placeholder = 'Park-Name';
-  nameInput.style.cssText = 'width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  nameInput.className = 'inp';
+  nameInput.style.cssText = 'margin-bottom:10px;box-sizing:border-box;';
   box.appendChild(nameInput);
 
   // Beschreibung
   var descInput = document.createElement('textarea');
   descInput.placeholder = 'Beschreibung (Adresse, Ausstattung...)';
-  descInput.style.cssText = 'width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);margin-bottom:10px;box-sizing:border-box;height:80px;resize:none;';
+  descInput.className = 'inp';
+  descInput.style.cssText = 'margin-bottom:10px;box-sizing:border-box;height:80px;resize:none;';
   box.appendChild(descInput);
 
   // GPS Status
   var gpsEl = document.createElement('div');
-  gpsEl.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;margin-bottom:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;';
-  gpsEl.innerHTML = '<span style="font-size:18px;">&#128205;</span><span id="suggest-gps-status">GPS wird ermittelt...</span>';
+  gpsEl.className = 'card';
+  gpsEl.style.cssText = 'padding:12px 14px;margin-bottom:10px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:10px;';
+  gpsEl.innerHTML = '<span class="live-dot"></span><span id="suggest-gps-status">GPS wird ermittelt...</span>';
   box.appendChild(gpsEl);
   // Direkte Referenz statt getElementById: das Sheet hängt hier noch nicht im DOM.
   var gpsStatusEl = gpsEl.querySelector('#suggest-gps-status');
@@ -957,21 +1108,29 @@ function openSuggestPark(){
   }
 
   // Manuelle Koordinaten
+  var coordLbl = document.createElement('div');
+  coordLbl.className = 'lbl';
+  coordLbl.style.cssText = 'margin-bottom:6px;';
+  coordLbl.textContent = 'Koordinaten (optional)';
+  box.appendChild(coordLbl);
   var manualWrap = document.createElement('div');
   manualWrap.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
   var latInput = document.createElement('input');
   latInput.type = 'number'; latInput.placeholder = 'Latitude (z.B. 52.5200)'; latInput.step = '0.0001';
-  latInput.style.cssText = 'flex:1;padding:11px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
+  latInput.className = 'inp num';
+  latInput.style.cssText = 'flex:1;min-width:0;';
   var lngInput = document.createElement('input');
   lngInput.type = 'number'; lngInput.placeholder = 'Longitude (z.B. 13.4050)'; lngInput.step = '0.0001';
-  lngInput.style.cssText = 'flex:1;padding:11px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);';
+  lngInput.className = 'inp num';
+  lngInput.style.cssText = 'flex:1;min-width:0;';
   manualWrap.appendChild(latInput); manualWrap.appendChild(lngInput);
   box.appendChild(manualWrap);
 
   // Submit
   var submitBtn = document.createElement('button');
-  submitBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:8px;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out);';
-  submitBtn.classList.add('pressable');
+  submitBtn.type = 'button';
+  submitBtn.className = 'btn';
+  submitBtn.style.cssText = 'margin:0 0 8px;';
   submitBtn.textContent = 'Vorschlag senden';
   submitBtn.onclick = function(){
     var name = nameInput.value.trim();
@@ -991,14 +1150,16 @@ function openSuggestPark(){
       createdAt: Date.now(),
     }).then(function(){
       ov.remove();
-      if(typeof toast==='function') toast('💪 Vorschlag gesendet! Admin prüft ihn.');
+      if(typeof toast==='function') toast('Vorschlag gesendet. Admin prüft ihn.');
       else alert('Vorschlag gesendet!');
     }).catch(function(e){ if(typeof toast==='function') toast('Fehler: '+e.message); else alert('Fehler: '+e.message); submitBtn.disabled=false; submitBtn.textContent='Vorschlag senden'; });
   };
   box.appendChild(submitBtn);
 
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn-g';
+  cancelBtn.style.cssText = 'width:100%;min-height:44px;';
   cancelBtn.textContent = 'Abbrechen';
   cancelBtn.onclick = function(){ ov.remove(); };
   box.appendChild(cancelBtn);
@@ -1011,27 +1172,24 @@ function openSuggestPark(){
 
 // ── ADMIN: GENEHMIGTE EINTRÄGE (mit Rückgängig) ───────────
 function loadApprovedEntries(el){
-  el.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
+  el.innerHTML = '<div class="empty">Lädt…</div>';
   db.collection('globalLeaderboard').where('status','==','approved').get()
     .then(function(snap){
       el.innerHTML = '';
       if(snap.empty){
-        el.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--muted);">Keine genehmigten Einträge.</div>';
+        el.innerHTML = '<div class="empty">Keine genehmigten Einträge</div>';
         return;
       }
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
-        card.innerHTML =
-          '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
-          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'');
+        card.className = 'card';
+        card.innerHTML = adminEntryHtml(d, false);
 
         var undoBtn = document.createElement('button');
-        undoBtn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-        undoBtn.classList.add('pressable');
+        undoBtn.type = 'button';
+        undoBtn.className = 'btn-g';
+        undoBtn.style.cssText = 'width:100%;min-height:40px;';
         undoBtn.innerHTML = '&#8617; Rückgängig';
         undoBtn.onclick = function(){
           doc.ref.update({status:'pending'}).then(function(){
@@ -1045,32 +1203,29 @@ function loadApprovedEntries(el){
       });
       if(window.caliMotion) caliMotion.stagger(el);
     })
-    .catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+    .catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>'; });
 }
 
 // ── ADMIN: ABGELEHNTE EINTRÄGE (mit Rückgängig) ───────────
 function loadRejectedEntries(el){
-  el.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
+  el.innerHTML = '<div class="empty">Lädt…</div>';
   db.collection('globalLeaderboard').where('status','==','rejected').get()
     .then(function(snap){
       el.innerHTML = '';
       if(snap.empty){
-        el.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--muted);">Keine abgelehnten Einträge.</div>';
+        el.innerHTML = '<div class="empty">Keine abgelehnten Einträge</div>';
         return;
       }
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
-        card.innerHTML =
-          '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(d.name||d.userName||'Anonym')+' — '+(d.exerciseName||d.exercise||'')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+(d.parkName||'Kein Park')+' &middot; '+(d.value||d.reps||0)+' '+(d.unit||'Wdh')+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+new Date(d.createdAt||d.date).toLocaleDateString('de-DE')+'</div>'+
-          (d.videoUrl?'<a href="'+d.videoUrl+'" target="_blank" style="display:inline-block;font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#127909; Video ansehen</a><br>':'');
+        card.className = 'card';
+        card.innerHTML = adminEntryHtml(d, false);
 
         var undoBtn = document.createElement('button');
-        undoBtn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);';
-        undoBtn.classList.add('pressable');
+        undoBtn.type = 'button';
+        undoBtn.className = 'btn-g';
+        undoBtn.style.cssText = 'width:100%;min-height:40px;';
         undoBtn.innerHTML = '&#8617; Rückgängig';
         undoBtn.onclick = function(){
           doc.ref.update({status:'pending'}).then(function(){
@@ -1084,36 +1239,37 @@ function loadRejectedEntries(el){
       });
       if(window.caliMotion) caliMotion.stagger(el);
     })
-    .catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+    .catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>'; });
 }
 
 // ── ADMIN: PARK VORSCHLÄGE PRÜFEN ─────────────────────────
 function loadParkSuggestions(el){
-  el.innerHTML = '<div style="text-align:center;padding:16px;font-size:12px;color:var(--muted);">Lädt...</div>';
+  el.innerHTML = '<div class="empty">Lädt…</div>';
   db.collection('parkSuggestions').where('status','==','pending').orderBy('createdAt','desc').get()
     .then(function(snap){
       el.innerHTML = '';
       if(snap.empty){
-        el.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--muted);">&#10003; Keine ausstehenden Vorschläge!</div>';
+        el.innerHTML = '<div class="empty">Keine ausstehenden Vorschläge</div>';
         return;
       }
       snap.forEach(function(doc){
         var d = doc.data();
         var card = document.createElement('div');
-        card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px;margin-bottom:10px;';
+        card.className = 'card';
         card.innerHTML =
-          '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;">&#128170; '+d.name+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Von: '+(d.submitterName||'Anonym')+'</div>'+
-          (d.description?'<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">'+d.description+'</div>':'')+
-          '<div style="font-size:11px;color:var(--accent-ink);margin-bottom:10px;">&#128205; '+d.lat.toFixed(5)+', '+d.lng.toFixed(5)+
-          ' <a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" style="color:var(--accent-ink);">(Maps öffnen)</a></div>';
+          '<div class="row-title" style="white-space:normal;margin-bottom:2px;">'+d.name+'</div>'+
+          '<div class="row-sub">Von: '+(d.submitterName||'Anonym')+'</div>'+
+          (d.description?'<div class="row-sub">'+d.description+'</div>':'')+
+          '<div class="num" style="font-size:11px;color:var(--muted);margin:6px 0 10px;">'+d.lat.toFixed(5)+', '+d.lng.toFixed(5)+
+          ' <a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" rel="noopener" class="u" style="font-size:10px;font-weight:600;color:var(--accent);margin-left:6px;">Maps öffnen &#8250;</a></div>';
 
         var btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:8px;';
 
         var approveBtn = document.createElement('button');
-        approveBtn.style.cssText = 'flex:1;background:rgba(34,197,94,0.1);color:var(--success-ink);border:1px solid rgba(34,197,94,0.3);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
-        approveBtn.classList.add('pressable');
+        approveBtn.type = 'button';
+        approveBtn.className = 'btn sec sm';
+        approveBtn.style.cssText = 'flex:1;margin:0;min-height:40px;';
         approveBtn.innerHTML = '&#10003; Genehmigen';
         approveBtn.onclick = function(){
           // Park zu Overpass-ähnlicher Struktur hinzufügen (als custom park)
@@ -1125,13 +1281,14 @@ function loadParkSuggestions(el){
             return doc.ref.update({status:'approved'});
           }).then(function(){
             card.remove();
-            toast('✓ Park genehmigt und hinzugefügt!');
+            toast('Park genehmigt und hinzugefügt.');
           });
         };
 
         var rejectBtn = document.createElement('button');
-        rejectBtn.style.cssText = 'flex:1;background:rgba(217,48,54,0.08);color:var(--red);border:1px solid rgba(217,48,54,0.25);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;min-height:36px;cursor:pointer;';
-        rejectBtn.classList.add('pressable');
+        rejectBtn.type = 'button';
+        rejectBtn.className = 'btn-g danger';
+        rejectBtn.style.cssText = 'flex:1;min-height:40px;';
         rejectBtn.innerHTML = '&#10007; Ablehnen';
         rejectBtn.onclick = function(){
           doc.ref.update({status:'rejected'}).then(function(){ card.remove(); toast('Abgelehnt.'); });
@@ -1142,7 +1299,7 @@ function loadParkSuggestions(el){
         el.appendChild(card);
       });
       if(window.caliMotion) caliMotion.stagger(el);
-    }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">Fehler: '+e.message+'</div>'; });
+    }).catch(function(e){ el.innerHTML='<div style="color:var(--muted);font-size:11px;">Fehler: '+e.message+'</div>'; });
 }
 
 // ── ADMIN: MONATSBONI BUTTON ──────────────────────────────
@@ -1150,9 +1307,10 @@ function addMonthlyBonusAdminBtn(box){
   var now = new Date();
   var prevMonth = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
   var btn = document.createElement('button');
-  btn.style.cssText = 'width:100%;background:rgba(255,85,0,0.1);border:1px solid var(--accent);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:36px;cursor:pointer;color:var(--accent-ink);margin-bottom:14px;transition:transform var(--dur-fast) var(--ease-out);';
-  btn.classList.add('pressable');
-  btn.innerHTML = '🏆 Monatsboni vergeben ('+prevMonth+')';
+  btn.type = 'button';
+  btn.className = 'btn-g';
+  btn.style.cssText = 'width:100%;min-height:44px;margin-bottom:14px;';
+  btn.textContent = 'Monatsboni vergeben ('+prevMonth+')';
   btn.onclick = function(){
     var doAward = function(){ awardMonthlyBonuses(prevMonth); };
     if(typeof confirmSheet === 'function'){

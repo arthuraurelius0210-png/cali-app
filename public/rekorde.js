@@ -3,12 +3,12 @@
 // ══════════════════════════════════════════════════════════
 
 var REK_CATS = [
-  {id:'all',       label:'Alle',      icon:'&#127942;'},
-  {id:'Pull',      label:'Pull',      icon:'&#11014;'},
-  {id:'Push',      label:'Push',      icon:'&#128170;'},
-  {id:'Core',      label:'Core',      icon:'&#128293;'},
-  {id:'Legs',      label:'Legs',      icon:'&#129466;'},
-  {id:'Skills',    label:'Skills',    icon:'&#11088;'},];
+  {id:'all',       label:'Alle',      icon:'trophy'},
+  {id:'Pull',      label:'Pull',      icon:'trend'},
+  {id:'Push',      label:'Push',      icon:'flex'},
+  {id:'Core',      label:'Core',      icon:'flame'},
+  {id:'Legs',      label:'Legs',      icon:'dumbbell'},
+  {id:'Skills',    label:'Skills',    icon:'star'},];
 
 var REK_REGIONS = [
   {label:'Bezirk',      km:10},
@@ -22,19 +22,62 @@ var rekState = { cat:'all', exId:null, exName:'', exUnit:'Wdh', regionKm:99999 }
 var rekMapObj = null;
 var rekCircleObj = null;
 
+// Zweistelliger Index ("01") — ab 100 dreistellig, damit nichts abgeschnitten wird
+function rekIdx(n){ return n < 10 ? '0'+n : String(n); }
+
+// Chip-Optik kommt aus .chip/.chip.on (tracker.html); hier nur Layout-Rest.
 function rekChipStyle(active){
-  return 'flex-shrink:0;padding:9px 14px;min-height:36px;border-radius:20px;border:1px solid '+(active?'var(--accent-deep)':'var(--border)')+';background:'+(active?'var(--accent-deep)':'none')+';color:'+(active?'#fff':'var(--muted)')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;';
+  return 'flex-shrink:0;';
+}
+function rekChipSet(btn, active){
+  btn.className = 'chip pressable'+(active?' on':'');
+  btn.style.cssText = rekChipStyle(active);
+  btn.setAttribute('aria-pressed', active?'true':'false');
 }
 
-// Einheitliche Listen-Row-Karte (Zeilen-Tier: Radius 16, Schatten statt Border)
+// Bordered Listen-Container (§5.2) — Zeilen kommen aus rekRowCard()
+function rekList(){
+  var l = document.createElement('div');
+  l.className = 'list';
+  return l;
+}
+
+// Einheitliche Listen-Zeile (52px, 1px --line Trenner, Chevron rechts)
 function rekRowCard(){
   var d = document.createElement('div');
-  d.className = 'pressable';
+  d.className = 'list-row pressable';
   d.setAttribute('role','button');
   d.tabIndex = 0;
-  d.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;border:none;border-radius:16px;margin-bottom:8px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,0.05);cursor:pointer;';
   d.onkeydown = function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); if(d.onclick) d.onclick(ev); } };
   return d;
+}
+
+// Leerzustand: kurze Zeile uppercase (.empty) + optionaler Hinweis in Mixed Case
+function rekEmpty(title, hint){
+  return '<div style="text-align:center;padding:24px 10px;"><div class="empty" style="padding:0'+(hint?' 0 6px':'')+';">'+title+'</div>'+
+    (hint?'<div style="font-size:11px;color:var(--muted);line-height:1.5;">'+hint+'</div>':'')+'</div>';
+}
+
+// Top-Bar für Vollbild-Overlays (§5.9): Zurück-Kreis, Titel, rechter Slot
+function rekTopbar(titleText, onBack){
+  var topBar = document.createElement('div');
+  topBar.className = 'topbar';
+  topBar.style.cssText = 'flex-shrink:0;margin:0;padding:0 16px;';
+  var backBtn = document.createElement('button');
+  backBtn.type = 'button';
+  backBtn.className = 'icon-btn sm pressable';
+  backBtn.setAttribute('aria-label','Zurück');
+  backBtn.innerHTML = '&#8592;';
+  backBtn.onclick = onBack;
+  var titleEl = document.createElement('div');
+  titleEl.className = 'topbar-title';
+  titleEl.textContent = titleText;
+  var slot = document.createElement('div');
+  slot.className = 'topbar-slot';
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(slot);
+  topBar._title = titleEl;
+  topBar._slot = slot;
+  return topBar;
 }
 
 function buildRekordeUI(){
@@ -42,45 +85,59 @@ function buildRekordeUI(){
   if(!root) return;
   root.innerHTML = '';
 
-  // ── HEADER ──────────────────────────────────────────────
+  // ── HEADER (Top-Bar-Titel + Aktionszeile) ────────────────
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'margin:0 0 16px;';
+  hdr.style.cssText = 'margin:0 0 14px;';
+  var top = document.createElement('div');
+  top.className = 'topbar';
+  var slotL = document.createElement('div');
+  slotL.className = 'topbar-slot';
   var pageTitle = document.createElement('h2');
-  pageTitle.className = 'page-title';
+  pageTitle.className = 'topbar-title';
   pageTitle.style.cssText = 'margin:0;';
   pageTitle.textContent = 'Rekorde';
-  hdr.appendChild(pageTitle);
+  var slotR = document.createElement('div');
+  slotR.className = 'topbar-slot';
+  top.appendChild(slotL); top.appendChild(pageTitle); top.appendChild(slotR);
+  hdr.appendChild(top);
   var btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;';
+  btnRow.style.cssText = 'display:flex;gap:8px;';
   var parkBtn = document.createElement('button');
-  parkBtn.className = 'btn-g';
+  parkBtn.type = 'button';
+  parkBtn.className = 'btn-g pressable';
+  parkBtn.style.cssText = 'flex:1;padding:9px 8px;';
   parkBtn.textContent = 'Parks';
   parkBtn.onclick = function(){ openMyParksOverview(); };
   var suggestExBtn2 = document.createElement('button');
-  suggestExBtn2.className = 'btn-g';
+  suggestExBtn2.type = 'button';
+  suggestExBtn2.className = 'btn-g pressable';
+  suggestExBtn2.style.cssText = 'flex:1;padding:9px 8px;';
   suggestExBtn2.textContent = '+ Übung';
   suggestExBtn2.onclick = function(){ openSuggestExercise(); };
   var subBtn = document.createElement('button');
-  subBtn.className = 'pressable';
-  subBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 16px;min-height:36px;cursor:pointer;box-shadow:0 12px 30px rgba(255,85,0,0.22);';
+  subBtn.type = 'button';
+  subBtn.className = 'btn sm pressable';
+  subBtn.style.cssText = 'flex:1;padding:0 8px;';
   subBtn.textContent = '+ Eintrag';
   subBtn.onclick = function(){ openRecordSubmit(null,null); };
   btnRow.appendChild(parkBtn); btnRow.appendChild(suggestExBtn2); btnRow.appendChild(subBtn);
   hdr.appendChild(btnRow);
   root.appendChild(hdr);
 
-  // ── FILTER (Accordion — eingeklappt zeigt nur eine Zusammenfassung) ──
+  // ── FILTER (Accordion — eingeklappt nur eine Ghost-Pill mit Zusammenfassung) ──
   var filterWrap = document.createElement('div');
-  filterWrap.style.cssText = 'margin:0 0 16px;border:none;border-radius:20px;overflow:hidden;background:var(--bg2);box-shadow:0 12px 30px rgba(0,0,0,0.06);';
+  filterWrap.style.cssText = 'margin:0 0 16px;';
 
   var summaryBtn = document.createElement('button');
-  summaryBtn.style.cssText = 'width:100%;display:flex;align-items:center;gap:8px;padding:14px 16px;min-height:44px;background:none;border:none;cursor:pointer;text-align:left;';
+  summaryBtn.type = 'button';
+  summaryBtn.className = 'btn-g pressable';
+  summaryBtn.style.cssText = 'width:100%;min-height:44px;justify-content:space-between;text-align:left;padding:9px 14px;';
   summaryBtn.setAttribute('aria-expanded','false');
-  var summaryText = document.createElement('div');
-  summaryText.style.cssText = 'flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  var summaryChevron = document.createElement('div');
-  summaryChevron.style.cssText = 'font-size:11px;color:var(--muted);transition:transform var(--dur-med) var(--ease-out);flex-shrink:0;';
-  summaryChevron.innerHTML = '&#9660;';
+  var summaryText = document.createElement('span');
+  summaryText.style.cssText = 'flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+  var summaryChevron = document.createElement('span');
+  summaryChevron.className = 'row-chev';
+  summaryChevron.style.cssText = 'display:inline-block;transform:rotate(90deg);transition:transform var(--dur-med) var(--ease-out);flex-shrink:0;';
   summaryChevron.setAttribute('aria-hidden','true');
   summaryBtn.appendChild(summaryText); summaryBtn.appendChild(summaryChevron);
 
@@ -89,7 +146,8 @@ function buildRekordeUI(){
   accWrap.className = 'acc-body';
   var accClip = document.createElement('div');
   var filterPanel = document.createElement('div');
-  filterPanel.style.cssText = 'padding:2px 16px 16px;border-top:1px solid var(--border);';
+  filterPanel.className = 'card';
+  filterPanel.style.cssText = 'margin:8px 0 0;';
   accClip.appendChild(filterPanel);
   accWrap.appendChild(accClip);
 
@@ -98,33 +156,38 @@ function buildRekordeUI(){
     panelOpen = !panelOpen;
     accWrap.classList.toggle('open', panelOpen);
     summaryBtn.setAttribute('aria-expanded', panelOpen ? 'true' : 'false');
-    summaryChevron.style.transform = panelOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+    summaryChevron.style.transform = panelOpen ? 'rotate(-90deg)' : 'rotate(90deg)';
   };
 
   function updateSummary(){
     var catObj = REK_CATS.find(function(c){ return c.id===rekState.cat; });
     var regObj = REK_REGIONS.find(function(r){ return r.km===rekState.regionKm; }) || REK_REGIONS[REK_REGIONS.length-1];
-    summaryText.innerHTML = (catObj?catObj.icon+' '+catObj.label:'Alle')+' &middot; '+(rekState.exName||'Übung wählen')+' &middot; '+regObj.label;
+    // Kategorie + Region erben das Uppercase der Pill; der Übungsname bleibt Mixed Case (Content)
+    summaryText.innerHTML = '<span>'+(catObj?catObj.label:'Alle')+'</span>'+
+      '<span style="color:var(--muted2);margin:0 6px;">&middot;</span>'+
+      '<span style="text-transform:none;letter-spacing:0;color:var(--muted);font-weight:500;">'+(rekState.exName||'Übung wählen')+'</span>'+
+      '<span style="color:var(--muted2);margin:0 6px;">&middot;</span>'+
+      '<span>'+regObj.label+'</span>';
   }
 
   // Kategorie-Chips
   var catLabel = document.createElement('h2');
-  catLabel.className = 'stitle';
-  catLabel.style.cssText = 'margin:14px 0 8px;';
+  catLabel.className = 'lbl';
+  catLabel.style.cssText = 'margin:0 0 8px;';
   catLabel.textContent = 'Kategorie';
   var catRow = document.createElement('div');
-  catRow.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;';
+  catRow.style.cssText = 'display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px;';
   REK_CATS.forEach(function(cat){
     var btn = document.createElement('button');
-    btn.className = 'pressable';
+    btn.type = 'button';
     btn.dataset.catId = cat.id;
-    btn.style.cssText = rekChipStyle(cat.id===rekState.cat);
-    btn.innerHTML = cat.icon+' '+cat.label;
+    rekChipSet(btn, cat.id===rekState.cat);
+    btn.textContent = cat.label;
     btn.onclick = function(){
       rekState.cat = cat.id;
       rekState.exId = null;
       catRow.querySelectorAll('button').forEach(function(b){
-        b.style.cssText = rekChipStyle(b.dataset.catId===rekState.cat);
+        rekChipSet(b, b.dataset.catId===rekState.cat);
       });
       rebuildExList();
     };
@@ -133,38 +196,44 @@ function buildRekordeUI(){
 
   // Übungs-Liste
   var exLabel = document.createElement('h2');
-  exLabel.className = 'stitle';
+  exLabel.className = 'lbl';
   exLabel.style.cssText = 'margin:0 0 8px;';
   exLabel.textContent = 'Übung';
   var exListWrap = document.createElement('div');
-  exListWrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;background:var(--bg2);max-height:220px;overflow-y:auto;margin-bottom:16px;';
-  exListWrap.classList.add('sheet-scroll');
+  exListWrap.className = 'list sheet-scroll';
+  exListWrap.style.cssText = 'max-height:220px;overflow-y:auto;margin-bottom:14px;';
+
+  function rekExRowSet(btn, active){
+    btn.style.background = active ? 'var(--accent-soft)' : '';
+    var t = btn.querySelector('.row-title'); if(t) t.style.color = active ? 'var(--accent)' : '';
+    var ix = btn.querySelector('.row-index'); if(ix) ix.style.color = active ? 'var(--accent)' : '';
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  }
 
   function rebuildExList(){
     exListWrap.innerHTML = '';
     var allEx = getRekExercises();
-    allEx.forEach(function(ex){
+    allEx.forEach(function(ex, i){
       var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'list-row pressable';
       btn.dataset.exId = ex.id;
-      var isActive = ex.id === rekState.exId;
-      btn.style.cssText = 'width:100%;padding:10px 12px;border:none;border-bottom:1px solid var(--border);background:'+(isActive?'rgba(255,85,0,0.08)':'none')+';color:'+(isActive?'var(--accent-ink)':'var(--text)')+';font-family:inherit;font-size:13px;font-weight:'+(isActive?'700':'400')+';cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;';
-      btn.innerHTML = '<span>'+ex.name+'</span><span style="font-size:11px;color:var(--muted);">'+ex.unit+'</span>';
+      btn.innerHTML = '<span class="row-index num">'+rekIdx(i+1)+'</span>'+
+        '<div class="row-main"><div class="row-title">'+ex.name+'</div></div>'+
+        '<span class="unit">'+ex.unit+'</span>';
+      rekExRowSet(btn, ex.id === rekState.exId);
       btn.onclick = function(){
         rekState.exId = ex.id;
         rekState.exName = ex.name;
         rekState.exUnit = ex.unit;
         exListWrap.querySelectorAll('button').forEach(function(b){
-          var a = b.dataset.exId === rekState.exId;
-          b.style.background = a?'rgba(255,85,0,0.08)':'none';
-          b.style.color = a?'var(--accent-ink)':'var(--text)';
-          b.style.fontWeight = a?'700':'400';
+          rekExRowSet(b, b.dataset.exId === rekState.exId);
         });
         updateSummary();
         loadRekList(listEl);
       };
       exListWrap.appendChild(btn);
     });
-    if(exListWrap.lastChild) exListWrap.lastChild.style.borderBottom = 'none';
 
     // Auto-select erste Übung wenn keine gewählt ist
     if(!rekState.exId && allEx.length > 0){
@@ -172,11 +241,7 @@ function buildRekordeUI(){
       rekState.exName = allEx[0].name;
       rekState.exUnit = allEx[0].unit;
       var firstBtn = exListWrap.querySelector('button');
-      if(firstBtn){
-        firstBtn.style.background = 'rgba(255,85,0,0.08)';
-        firstBtn.style.color = 'var(--accent-ink)';
-        firstBtn.style.fontWeight = '700';
-      }
+      if(firstBtn) rekExRowSet(firstBtn, true);
     }
     updateSummary();
     loadRekList(listEl);
@@ -184,21 +249,21 @@ function buildRekordeUI(){
 
   // Region-Chips
   var regLabel = document.createElement('h2');
-  regLabel.className = 'stitle';
+  regLabel.className = 'lbl';
   regLabel.style.cssText = 'margin:0 0 8px;';
   regLabel.textContent = 'Region';
   var regRow = document.createElement('div');
-  regRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;';
+  regRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;';
   REK_REGIONS.forEach(function(opt){
     var btn = document.createElement('button');
-    btn.className = 'pressable';
+    btn.type = 'button';
     btn.dataset.km = opt.km;
-    btn.style.cssText = rekChipStyle(opt.km===rekState.regionKm);
+    rekChipSet(btn, opt.km===rekState.regionKm);
     btn.textContent = opt.label;
     btn.onclick = function(){
       rekState.regionKm = opt.km;
       regRow.querySelectorAll('button').forEach(function(b){
-        b.style.cssText = rekChipStyle(parseInt(b.dataset.km,10)===rekState.regionKm);
+        rekChipSet(b, parseInt(b.dataset.km,10)===rekState.regionKm);
       });
       updateSummary();
       loadRekList(listEl);
@@ -207,8 +272,9 @@ function buildRekordeUI(){
   });
 
   var doneBtn = document.createElement('button');
-  doneBtn.className = 'pressable';
-  doneBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;';
+  doneBtn.type = 'button';
+  doneBtn.className = 'btn-g pressable';
+  doneBtn.style.cssText = 'width:100%;min-height:44px;';
   doneBtn.textContent = 'Fertig';
   doneBtn.onclick = function(){ summaryBtn.click(); };
 
@@ -259,9 +325,9 @@ function getRekExercises(catOverride){
 }
 
 function loadRekList(el){
-  if(!rekState.exId){el.innerHTML='<div style="padding:20px;color:var(--muted);font-size:13px;">Übung wählen</div>';return;}
-  el.innerHTML='<div style="padding:16px;color:var(--muted);font-size:13px;">&#9203; Lade...</div>';
-  if(typeof db==='undefined'||!db){el.innerHTML='<div style="padding:20px;color:var(--muted);">Einloggen um Rekorde zu sehen.</div>';return;}
+  if(!rekState.exId){el.innerHTML='<div class="empty">Übung wählen</div>';return;}
+  el.innerHTML='<div class="empty">Lade…</div>';
+  if(typeof db==='undefined'||!db){el.innerHTML='<div class="empty">Einloggen um Rekorde zu sehen.</div>';return;}
   var hasLoc=(typeof userLat!=='undefined')&&!!userLat&&(typeof userLng!=='undefined')&&!!userLng;
   db.collection('globalLeaderboard')
     .where('exercise','==',rekState.exId)
@@ -274,13 +340,15 @@ function loadRekList(el){
       // Regionaler Filter ohne Standort: ehrlich hinweisen statt still weltweit zu zeigen
       if(rekState.regionKm<99999&&!hasLoc){
         var notice=document.createElement('div');
-        notice.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;margin-bottom:12px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,0.05);';
+        notice.className='card';
+        notice.style.cssText='display:flex;align-items:center;gap:12px;margin-bottom:12px;';
         var noticeTxt=document.createElement('div');
-        noticeTxt.style.cssText='flex:1;min-width:0;font-size:13px;color:var(--muted);line-height:1.5;';
+        noticeTxt.style.cssText='flex:1;min-width:0;font-size:11px;color:var(--muted);line-height:1.5;';
         noticeTxt.textContent='Standort nötig für regionale Filter — es werden weltweite Einträge gezeigt.';
         var locBtn=document.createElement('button');
-        locBtn.className='pressable';
-        locBtn.style.cssText='flex-shrink:0;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;min-height:36px;cursor:pointer;';
+        locBtn.type='button';
+        locBtn.className='btn-g pressable';
+        locBtn.style.cssText='flex-shrink:0;';
         locBtn.textContent='Standort aktivieren';
         locBtn.onclick=function(){
           if(!navigator.geolocation){noticeTxt.textContent='Geolocation wird nicht unterstützt.';return;}
@@ -297,13 +365,14 @@ function loadRekList(el){
         el.appendChild(notice);
       }
       var titleRow=document.createElement('div');
-      titleRow.style.cssText='display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);';
-      titleRow.innerHTML='<div style="font-size:15px;font-weight:700;color:var(--text);">'+rekState.exName+'</div><div style="font-size:11px;color:var(--muted);">'+rekState.exUnit+'</div>';
+      titleRow.style.cssText='display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px;';
+      titleRow.innerHTML='<div style="min-width:0;"><span class="eyebrow">Bestenliste</span><div style="font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+rekState.exName+'</div></div>'+
+        '<span class="unit" style="flex-shrink:0;padding-bottom:2px;">'+rekState.exUnit+'</span>';
       el.appendChild(titleRow);
       if(snap.empty){
         var emptyEl=document.createElement('div');
-        emptyEl.style.cssText='text-align:center;padding:30px 10px;';
-        emptyEl.innerHTML='<div style="font-size:28px;margin-bottom:8px;">&#127942;</div><div style="font-size:13px;color:var(--muted);">Noch keine Einträge.<br>Sei der Erste!</div>';
+        emptyEl.className='list';
+        emptyEl.innerHTML='<div class="empty" style="padding:28px 10px;">Noch keine Einträge.<br>Sei der Erste!</div>';
         el.appendChild(emptyEl);
         return;
       }
@@ -317,31 +386,33 @@ function loadRekList(el){
       }
       if(entries.length===0){
         var emptyReg=document.createElement('div');
-        emptyReg.style.cssText='text-align:center;padding:20px 10px;color:var(--muted);font-size:13px;';
-        emptyReg.textContent='Keine Einträge in dieser Region.';
+        emptyReg.className='list';
+        emptyReg.innerHTML='<div class="empty" style="padding:24px 10px;">Keine Einträge in dieser Region.</div>';
         el.appendChild(emptyReg);
         return;
       }
       var uid=firebase.auth().currentUser?firebase.auth().currentUser.uid:null;
+      var listWrap=rekList();
       var frag=document.createDocumentFragment();
       entries.forEach(function(d,i){
         var rank=i+1;
-        var medal=rank===1?'&#129351;':rank===2?'&#129352;':rank===3?'&#129353;':'';
         var isMe=uid&&d.uid===uid;
         var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;margin-bottom:8px;background:'+(isMe?'rgba(255,85,0,0.08)':'#fff')+';box-shadow:0 8px 20px rgba(0,0,0,0.05);content-visibility:auto;contain-intrinsic-size:auto 64px;';
-        var rankEl=document.createElement('div');
-        rankEl.style.cssText='width:28px;text-align:center;flex-shrink:0;';
-        rankEl.innerHTML=medal?'<span style="font-size:18px;">'+medal+'</span>':'<span class="num" style="font-weight:800;font-size:15px;color:var(--muted);">#'+rank+'</span>';
+        row.className='list-row';
+        row.style.cssText='cursor:default;content-visibility:auto;contain-intrinsic-size:auto 52px;'+(isMe?'background:var(--accent-soft);':'');
+        var rankEl=document.createElement('span');
+        rankEl.className='row-index num';
+        if(rank<=3) rankEl.style.color='var(--accent)';
+        rankEl.textContent=rekIdx(rank);
         var infoEl=document.createElement('div');
-        infoEl.style.cssText='flex:1;min-width:0;';
-        var parkTxt = d.parkName ? '&#128170; '+d.parkName : (d.location ? '&#128205; '+d.location : '&#128205; Unbekannter Standort');
+        infoEl.className='row-main';
+        var parkTxt = d.parkName ? d.parkName : (d.location ? d.location : 'Unbekannter Standort');
         if(rekState.regionKm<99999&&hasLoc&&(!d.lat||!d.lng)) parkTxt += ' &middot; ohne Standort';
-        infoEl.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'Anonym')+(isMe?' <span style="font-size:11px;font-weight:700;color:var(--accent-ink);background:rgba(255,85,0,0.12);border-radius:20px;padding:1px 8px;">Du</span>':'')+' </div>'+
-          '<div style="font-size:11px;color:var(--muted);">'+parkTxt+'</div>';
+        infoEl.innerHTML='<div class="row-title">'+(d.name||'Anonym')+(isMe?' <span class="u" style="display:inline-block;vertical-align:middle;margin-left:6px;border:1px solid var(--accent);color:var(--accent);border-radius:var(--r-sm);padding:1px 6px;font-size:9px;font-weight:600;line-height:1.4;">Du</span>':'')+'</div>'+
+          '<div class="row-sub">'+parkTxt+'</div>';
         var valEl=document.createElement('div');
         valEl.style.cssText='text-align:right;flex-shrink:0;';
-        valEl.innerHTML='<div class="num" style="font-weight:800;font-size:22px;color:var(--accent);line-height:1;">'+d.value+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+rekState.exUnit+'</div>';
+        valEl.innerHTML='<div class="num" style="font-size:15px;font-weight:600;color:var(--text);line-height:1;">'+d.value+'</div><div class="unit" style="display:block;margin-top:3px;">'+rekState.exUnit+'</div>';
         var vNum=Number(d.value);
         if(window.caliMotion&&i<8&&isFinite(vNum)&&vNum===Math.round(vNum)){
           caliMotion.countUp(valEl.firstChild,vNum,{duration:600});
@@ -349,20 +420,21 @@ function loadRekList(el){
         row.appendChild(rankEl);row.appendChild(infoEl);row.appendChild(valEl);
         if(d.videoUrl){
           var vBtn=document.createElement('button');
-          vBtn.style.cssText='background:none;border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-height:36px;min-width:36px;font-size:14px;cursor:pointer;flex-shrink:0;transition:transform var(--dur-fast) var(--ease-out);';
-          vBtn.classList.add('pressable');
-          vBtn.innerHTML='&#9654;';
+          vBtn.type='button';
+          vBtn.className='icon-btn sm pressable';
+          vBtn.innerHTML=(typeof ci==='function')?ci('play'):'&#9654;';
           vBtn.setAttribute('aria-label','Video abspielen');
           vBtn.onclick=function(){playVideo(d.videoUrl);};
           row.appendChild(vBtn);
         }
         frag.appendChild(row);
       });
-      el.appendChild(frag);
-      if(window.caliMotion) caliMotion.stagger(el);
+      listWrap.appendChild(frag);
+      el.appendChild(listWrap);
+      if(window.caliMotion) caliMotion.stagger(listWrap);
     })
     .catch(function(e){
-      el.innerHTML='<div style="padding:16px;color:var(--muted);font-size:13px;">Fehler: '+e.message+'</div>';
+      el.innerHTML='<div style="padding:16px;color:var(--red);font-size:11px;">Fehler: '+e.message+'</div>';
     });
 }
 
@@ -370,15 +442,16 @@ function loadRekList(el){
 function buildRekParksSection(root){
   var sec = document.createElement('div');
   sec.id = 'rek-parks-section';
-  sec.style.cssText = 'border-top:2px solid var(--accent);margin-top:0;';
+  sec.style.cssText = 'border-top:1px solid var(--line);margin-top:0;';
 
   // Header
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;';
-  hdr.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--accent-ink);">&#128170; Meine Parks</div>';
+  hdr.style.cssText = 'padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+  hdr.innerHTML = '<h2 class="lbl" style="margin:0;">Meine Parks</h2>';
 
   var allBtn = document.createElement('button');
-  allBtn.style.cssText = 'background:none;border:1.5px solid var(--accent);color:var(--accent-ink);border-radius:10px;font-family:inherit;font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;';
+  allBtn.type = 'button';
+  allBtn.className = 'btn-g pressable';
   allBtn.textContent = 'Alle Parks';
   allBtn.onclick = function(){ openAllMyParks(); };
   hdr.appendChild(allBtn);
@@ -386,7 +459,7 @@ function buildRekParksSection(root){
 
   var listEl = document.createElement('div');
   listEl.style.cssText = 'padding:0 16px 16px;';
-  listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;">&#9203; Lade deine Parks...</div>';
+  listEl.innerHTML = '<div class="empty">Lade deine Parks…</div>';
   sec.appendChild(listEl);
 
   // Insert after regWrap (region buttons), before map/list
@@ -417,24 +490,15 @@ function openAllMyParks(){
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.onclick = function(){
+  var topBar = rekTopbar('Alle meine Parks', function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-  };
-  var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:17px;font-weight:700;color:var(--text);';
-  titleEl.textContent = 'Alle meine Parks';
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl);
+  });
   ov.appendChild(topBar);
 
   var listEl = document.createElement('div');
-  listEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px 20px;';
+  listEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
   listEl.classList.add('sheet-scroll');
-  listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;">&#9203; Lade...</div>';
+  listEl.innerHTML = '<div class="empty">Lade…</div>';
   ov.appendChild(listEl);
 
   document.body.appendChild(ov);
@@ -448,7 +512,7 @@ function openAllMyParks(){
 
 function loadMyParks(el){
   if(typeof db === 'undefined' || !db || !firebase.auth().currentUser){
-    el.innerHTML = '<div style="padding:10px;color:var(--muted);font-size:13px;">Einloggen um deine Parks zu sehen.</div>';
+    el.innerHTML = '<div class="empty">Einloggen um deine Parks zu sehen.</div>';
     return;
   }
   var uid = firebase.auth().currentUser.uid;
@@ -492,7 +556,7 @@ function loadMyParks(el){
       });
       renderMyParks(el, Object.values(parkMap));
     }).catch(function(){
-      el.innerHTML = '<div style="padding:10px;color:var(--muted);font-size:13px;">Keine Park-Daten gefunden. Trainiere in einem Park und reiche einen Rekord ein!</div>';
+      el.innerHTML = rekEmpty('Keine Park-Daten', 'Trainiere in einem Park und reiche einen Rekord ein!');
     });
   });
 }
@@ -501,7 +565,7 @@ function renderMyParks(el, parks){
   el.innerHTML = '';
 
   if(parks.length === 0){
-    el.innerHTML = '<div style="text-align:center;padding:20px;"><div style="font-size:28px;margin-bottom:8px;">&#128170;</div><div style="font-size:13px;color:var(--muted);">Du hast noch in keinem Park trainiert.<br>Besuche einen Park und reiche einen Rekord ein!</div></div>';
+    el.innerHTML = rekEmpty('Noch kein Park', 'Du hast noch in keinem Park trainiert.<br>Besuche einen Park und reiche einen Rekord ein!');
     return;
   }
 
@@ -511,47 +575,51 @@ function renderMyParks(el, parks){
   // Top 3
   var topLabel = document.createElement('h2');
   topLabel.className = 'stitle';
-  topLabel.style.cssText = 'margin:0 0 8px;';
+  topLabel.style.cssText = 'margin:0 0 10px;';
   topLabel.textContent = 'Deine Top-Parks';
   el.appendChild(topLabel);
 
+  var topList = rekList();
   var top3 = parks.slice(0,3);
   top3.forEach(function(p, i){
     var card = rekRowCard();
-    var medal = i===0?'&#129351;':i===1?'&#129352;':'&#129353;';
     card.innerHTML =
-      '<div style="font-size:20px;width:28px;text-align:center;">'+medal+'</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);">'+p.workoutCount+' Workouts · '+p.totalReps+' Wdh. gesamt</div>'+
+      '<span class="row-index num" style="color:var(--accent);">'+rekIdx(i+1)+'</span>'+
+      '<div class="row-main">'+
+        '<div class="row-title">'+p.parkName+'</div>'+
+        '<div class="row-sub">'+p.workoutCount+' Workouts · '+p.totalReps+' Wdh. gesamt</div>'+
       '</div>'+
-      '<div style="font-size:18px;color:var(--muted);" aria-hidden="true">&#8250;</div>';
+      '<span class="row-chev" aria-hidden="true"></span>';
     card.onclick = (function(park){ return function(){ openParkLeaderboardById(park.parkId, park.parkName); }; })(p);
-    el.appendChild(card);
+    topList.appendChild(card);
   });
+  el.appendChild(topList);
+  if(window.caliMotion) caliMotion.stagger(topList);
 
   // Top 10 list
   if(parks.length > 3){
     var moreLabel = document.createElement('h2');
     moreLabel.className = 'stitle';
-    moreLabel.style.cssText = 'margin:14px 0 8px;';
+    moreLabel.style.cssText = 'margin:14px 0 10px;';
     moreLabel.textContent = 'Alle besuchten Parks ('+parks.length+')';
     el.appendChild(moreLabel);
 
-    parks.slice(3, 10).forEach(function(p){
+    var moreList = rekList();
+    parks.slice(3, 10).forEach(function(p, i){
       var row = rekRowCard();
       row.innerHTML =
-        '<div style="font-size:20px;">&#128170;</div>'+
-        '<div style="flex:1;min-width:0;">'+
-          '<div style="font-size:13px;font-weight:600;color:var(--text);">'+p.parkName+'</div>'+
-          '<div style="font-size:11px;color:var(--muted);">'+p.workoutCount+' Workouts</div>'+
+        '<span class="row-index num">'+rekIdx(i+4)+'</span>'+
+        '<div class="row-main">'+
+          '<div class="row-title">'+p.parkName+'</div>'+
+          '<div class="row-sub">'+p.workoutCount+' Workouts</div>'+
         '</div>'+
-        '<div style="font-size:16px;color:var(--muted);" aria-hidden="true">&#8250;</div>';
+        '<span class="row-chev" aria-hidden="true"></span>';
       row.onclick = (function(park){ return function(){ openParkLeaderboardById(park.parkId, park.parkName); }; })(p);
-      el.appendChild(row);
+      moreList.appendChild(row);
     });
+    el.appendChild(moreList);
+    if(window.caliMotion) caliMotion.stagger(moreList);
   }
-  if(window.caliMotion) caliMotion.stagger(el);
 }
 
 function showAllMyParks(){
@@ -575,15 +643,15 @@ function showAllMyParks(){
     var parks = Object.values(parkMap);
     parks.sort(function(a,b){ return b.workoutCount-a.workoutCount; });
     body.innerHTML = '';
-    if(parks.length===0){ body.innerHTML='<div style="padding:10px;color:var(--muted);font-size:13px;">Keine Parks gefunden.</div>'; return; }
-    parks.forEach(function(p){
-      var row = document.createElement('div');
-      row.className = 'pressable';
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 14px;border:none;border-radius:16px;margin-bottom:8px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,0.05);cursor:pointer;';
-      row.innerHTML = '<div style="font-size:18px;">&#128170;</div><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+p.parkName+'</div><div style="font-size:11px;color:var(--muted);">'+p.workoutCount+' Einträge</div></div><div style="font-size:16px;color:var(--accent-ink);" aria-hidden="true">&#8250;</div>';
+    if(parks.length===0){ body.innerHTML='<div class="empty">Keine Parks gefunden.</div>'; return; }
+    var list = rekList();
+    parks.forEach(function(p, i){
+      var row = rekRowCard();
+      row.innerHTML = '<span class="row-index num">'+rekIdx(i+1)+'</span><div class="row-main"><div class="row-title">'+p.parkName+'</div><div class="row-sub">'+p.workoutCount+' Einträge</div></div><span class="row-chev" aria-hidden="true"></span>';
       row.onclick = (function(park){ return function(){ openParkLeaderboardById(park.parkId, park.parkName); }; })(p);
-      body.appendChild(row);
+      list.appendChild(row);
     });
+    body.appendChild(list);
   });
 }
 
@@ -596,29 +664,22 @@ function openParkLeaderboardById(parkId, parkName){
   ov.id = 'park-lb-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
-  // Top bar
-  var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.onclick = function(){
+  // Top bar: Zurück · Parkname · "+ Eintrag" (einzige orangene CTA dieses Screens)
+  var topBar = rekTopbar(parkName, function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-  };
-  var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;min-width:0;';
-  titleEl.innerHTML = '<div style="font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">&#128170; '+parkName+'</div>';
+  });
   var recBtn = document.createElement('button');
-  recBtn.className = 'pressable';
-  recBtn.style.cssText = 'background:var(--accent-deep);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 16px;min-height:36px;cursor:pointer;flex-shrink:0;box-shadow:0 12px 30px rgba(255,85,0,0.22);';
+  recBtn.type = 'button';
+  recBtn.className = 'btn sm pressable';
+  recBtn.style.cssText = 'flex-shrink:0;';
   recBtn.textContent = '+ Eintrag';
   recBtn.onclick = function(){ openRecordSubmit(parkId, parkName); };
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(recBtn);
+  topBar.replaceChild(recBtn, topBar._slot);
   ov.appendChild(topBar);
 
   // Bestenliste direkt
   var body = document.createElement('div');
-  body.style.cssText = 'flex:1;overflow-y:auto;padding:16px 20px;';
+  body.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
   body.classList.add('sheet-scroll');
   ov.appendChild(body);
   document.body.appendChild(ov);
@@ -636,46 +697,36 @@ function openMyParksOverview(){
   ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow:hidden;';
 
   // Top bar
-  var topBar = document.createElement('div');
-  topBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;';
-  var backBtn = document.createElement('button');
-  backBtn.style.cssText = 'background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;color:var(--text);';
-  backBtn.innerHTML = '&#8592; Zurück';
-  backBtn.onclick = function(){
+  var topBar = rekTopbar('Park-Rekorde', function(){
     if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
-  };
-  var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'flex:1;font-size:17px;font-weight:700;color:var(--text);';
-  titleEl.textContent = 'Park-Rekorde';
-  topBar.appendChild(backBtn); topBar.appendChild(titleEl);
+  });
   ov.appendChild(topBar);
 
   // Filter Tabs
   var filterBar = document.createElement('div');
-  filterBar.style.cssText = 'display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none;';
+  filterBar.style.cssText = 'display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--line);flex-shrink:0;overflow-x:auto;scrollbar-width:none;';
   var filters = [
-    {id:'mine',    label:'&#128170; Meine Parks'},
-    {id:'top',     label:'&#127942; Meistbesucht'},
-    {id:'rekorde', label:'&#127937; Meine Rekorde'},
-    {id:'all',     label:'&#127758; Alle Parks'},
+    {id:'mine',    label:'Meine Parks'},
+    {id:'top',     label:'Meistbesucht'},
+    {id:'rekorde', label:'Meine Rekorde'},
+    {id:'all',     label:'Alle Parks'},
   ];
   var activeFilter = 'mine';
   var contentEl = document.createElement('div');
-  contentEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px 20px;';
+  contentEl.style.cssText = 'flex:1;overflow-y:auto;padding:16px;';
 
   contentEl.classList.add('sheet-scroll');
 
   filters.forEach(function(f){
     var btn = document.createElement('button');
-    btn.className = 'pressable';
+    btn.type = 'button';
     btn.dataset.fid = f.id;
-    var isActive = f.id === activeFilter;
-    btn.style.cssText = rekChipStyle(isActive);
-    btn.innerHTML = f.label;
+    rekChipSet(btn, f.id === activeFilter);
+    btn.textContent = f.label;
     btn.onclick = function(){
       activeFilter = f.id;
       filterBar.querySelectorAll('button').forEach(function(b){
-        b.style.cssText = rekChipStyle(b.dataset.fid === activeFilter);
+        rekChipSet(b, b.dataset.fid === activeFilter);
       });
       loadParksFilter(contentEl, activeFilter);
     };
@@ -691,11 +742,12 @@ function openMyParksOverview(){
 }
 
 function loadParksFilter(el, filter){
-  el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;">&#9203; Lade...</div>';
+  el.innerHTML = '<div class="empty">Lade…</div>';
   if(typeof db==='undefined'||!db||!firebase.auth().currentUser){
-    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">Einloggen um Parks zu sehen.</div>'; return;
+    el.innerHTML='<div class="empty" style="padding:40px 10px;">Einloggen um Parks zu sehen.</div>'; return;
   }
   var uid = firebase.auth().currentUser.uid;
+  var errHtml = function(e){ return '<div style="padding:20px;color:var(--red);font-size:11px;">Fehler: '+e.message+'</div>'; };
 
   if(filter === 'mine' || filter === 'rekorde'){
     // Eigene Einträge
@@ -719,7 +771,7 @@ function loadParksFilter(el, filter){
         });
         var parks = Object.values(parkMap).sort(function(a,b){ return b.count-a.count; });
         renderParksOverview(el, parks, filter);
-      }).catch(function(e){ el.innerHTML='<div style="padding:20px;color:var(--muted);">Fehler: '+e.message+'</div>'; });
+      }).catch(function(e){ el.innerHTML=errHtml(e); });
 
   } else if(filter === 'top'){
     // Meistbesuchte Parks global — aus allen Einträgen
@@ -735,7 +787,7 @@ function loadParksFilter(el, filter){
         });
         var parks = Object.values(parkMap).sort(function(a,b){ return Object.keys(b.users).length - Object.keys(a.users).length; });
         renderParksOverview(el, parks, filter);
-      }).catch(function(e){ el.innerHTML='<div style="padding:20px;color:var(--muted);">Fehler: '+e.message+'</div>'; });
+      }).catch(function(e){ el.innerHTML=errHtml(e); });
 
   } else {
     // Alle Parks — aus Leaderboard
@@ -751,14 +803,14 @@ function loadParksFilter(el, filter){
         });
         var parks = Object.values(parkMap).sort(function(a,b){ return b.count-a.count; });
         renderParksOverview(el, parks, filter);
-      }).catch(function(e){ el.innerHTML='<div style="padding:20px;color:var(--muted);">Fehler: '+e.message+'</div>'; });
+      }).catch(function(e){ el.innerHTML=errHtml(e); });
   }
 }
 
 function renderParksOverview(el, parks, filter){
   el.innerHTML = '';
   if(parks.length === 0){
-    el.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">&#128170;</div><div style="font-size:15px;color:var(--muted);">Keine Parks gefunden.</div></div>';
+    el.innerHTML = '<div class="empty" style="padding:40px 10px;">Keine Parks gefunden.</div>';
     return;
   }
 
@@ -770,29 +822,26 @@ function renderParksOverview(el, parks, filter){
   topLabel.textContent = filter==='mine'?'Deine Top-Parks':filter==='top'?'Meistbesuchte Parks':filter==='rekorde'?'Deine Rekord-Parks':'Top-Parks';
   el.appendChild(topLabel);
 
+  var topList = rekList();
   top3.forEach(function(p, i){
-    var medals = ['&#129351;','&#129352;','&#129353;'];
-    var card = document.createElement('div');
-    card.className = 'pressable';
-    card.setAttribute('role','button');
-    card.tabIndex = 0;
-    card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border-radius:20px;margin-bottom:10px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.06);cursor:pointer;';
-    card.onkeydown = function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); if(card.onclick) card.onclick(ev); } };
+    var card = rekRowCard();
     var sub = filter==='top' ? Object.keys(p.users||{}).length+' Athleten' : p.count+' Einträge';
     if(filter==='rekorde' && p.myBest){
       var bestEx = Object.keys(p.myBest).sort(function(a,b){ return p.myBest[b]-p.myBest[a]; })[0];
       if(bestEx) sub += ' · Best: '+bestEx+' '+p.myBest[bestEx];
     }
     card.innerHTML =
-      '<div style="font-size:28px;flex-shrink:0;">'+medals[i]+'</div>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+sub+'</div>'+
+      '<span class="row-index num" style="color:var(--accent);">'+rekIdx(i+1)+'</span>'+
+      '<div class="row-main">'+
+        '<div class="row-title">'+p.parkName+'</div>'+
+        '<div class="row-sub">'+sub+'</div>'+
       '</div>'+
-      '<div style="font-size:22px;color:var(--muted);" aria-hidden="true">›</div>';
+      '<span class="row-chev" aria-hidden="true"></span>';
     card.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
-    el.appendChild(card);
+    topList.appendChild(card);
   });
+  el.appendChild(topList);
+  if(window.caliMotion) caliMotion.stagger(topList);
 
   if(parks.length > 3){
     var restLabel = document.createElement('h2');
@@ -801,47 +850,51 @@ function renderParksOverview(el, parks, filter){
     restLabel.textContent = 'Weitere Parks';
     el.appendChild(restLabel);
 
+    var restList = rekList();
     parks.slice(3,13).forEach(function(p, i){
       var row = rekRowCard();
       var sub2 = filter==='top' ? Object.keys(p.users||{}).length+' Athleten' : p.count+' Einträge';
       row.innerHTML =
-        '<div class="num" style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--accent-ink);flex-shrink:0;">#'+(i+4)+'</div>'+
-        '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);">'+sub2+'</div></div>'+
-        '<div style="font-size:18px;color:var(--muted);" aria-hidden="true">›</div>';
+        '<span class="row-index num">'+rekIdx(i+4)+'</span>'+
+        '<div class="row-main"><div class="row-title">'+p.parkName+'</div>'+
+        '<div class="row-sub">'+sub2+'</div></div>'+
+        '<span class="row-chev" aria-hidden="true"></span>';
       row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
-      el.appendChild(row);
+      restList.appendChild(row);
     });
+    el.appendChild(restList);
+    if(window.caliMotion) caliMotion.stagger(restList);
 
     if(parks.length > 13){
       var moreBtn = document.createElement('button');
-      moreBtn.className = 'pressable';
-      moreBtn.style.cssText = 'width:100%;background:none;border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;min-height:44px;cursor:pointer;color:var(--muted);margin-top:8px;';
+      moreBtn.type = 'button';
+      moreBtn.className = 'btn-g pressable';
+      moreBtn.style.cssText = 'width:100%;min-height:44px;margin-top:8px;';
       moreBtn.textContent = 'Alle '+parks.length+' Parks anzeigen';
       moreBtn.onclick = function(){
         moreBtn.remove();
-        var frag = document.createDocumentFragment();
+        var extraList = rekList();
         parks.slice(13).forEach(function(p, i){
           var row = rekRowCard();
-          row.innerHTML = '<div class="num" style="width:28px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);">#'+(i+14)+'</div>'+
-            '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+p.parkName+'</div></div>'+
-            '<div style="font-size:18px;color:var(--muted);" aria-hidden="true">›</div>';
+          row.innerHTML = '<span class="row-index num">'+rekIdx(i+14)+'</span>'+
+            '<div class="row-main"><div class="row-title">'+p.parkName+'</div></div>'+
+            '<span class="row-chev" aria-hidden="true"></span>';
           row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
-          frag.appendChild(row);
+          extraList.appendChild(row);
         });
-        el.appendChild(frag);
+        el.appendChild(extraList);
+        if(window.caliMotion) caliMotion.stagger(extraList);
       };
       el.appendChild(moreBtn);
     }
   }
-  if(window.caliMotion) caliMotion.stagger(el);
 }
 
 function loadMyParksOverview(el){
-  el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;">&#9203; Lade deine Parks...</div>';
+  el.innerHTML = '<div class="empty">Lade deine Parks…</div>';
 
   if(typeof db==='undefined'||!db||!firebase.auth().currentUser){
-    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);">Einloggen um deine Parks zu sehen.</div>'; return;
+    el.innerHTML='<div class="empty" style="padding:40px 10px;">Einloggen um deine Parks zu sehen.</div>'; return;
   }
   var uid = firebase.auth().currentUser.uid;
 
@@ -862,7 +915,7 @@ function loadMyParksOverview(el){
       el.innerHTML = '';
 
       if(parks.length === 0){
-        el.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">&#128170;</div><div style="font-size:15px;color:var(--muted);">Du hast noch keine Rekorde eingereicht.<br>Reiche deinen ersten Rekord ein!</div></div>';
+        el.innerHTML = rekEmpty('Noch keine Rekorde', 'Du hast noch keine Rekorde eingereicht.<br>Reiche deinen ersten Rekord ein!');
         return;
       }
 
@@ -874,22 +927,21 @@ function loadMyParksOverview(el){
       top3Label.textContent = 'Deine Top-Parks';
       el.appendChild(top3Label);
 
+      var topList = rekList();
       top3.forEach(function(p, i){
-        var medals = ['&#129351;','&#129352;','&#129353;'];
-        var card = document.createElement('div');
-        card.className = 'pressable';
-        card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px;border:none;border-radius:20px;margin-bottom:10px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.06);cursor:pointer;';
+        var card = rekRowCard();
         var topEx = Object.keys(p.exercises).sort(function(a,b){ return p.exercises[b]-p.exercises[a]; })[0] || '';
         card.innerHTML =
-          '<div style="font-size:28px;flex-shrink:0;">'+medals[i]+'</div>'+
-          '<div style="flex:1;min-width:0;">'+
-            '<div style="font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
-            '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+p.count+' Einträge'+(topEx?' · Meist: '+topEx:'')+' </div>'+
+          '<span class="row-index num" style="color:var(--accent);">'+rekIdx(i+1)+'</span>'+
+          '<div class="row-main">'+
+            '<div class="row-title">'+p.parkName+'</div>'+
+            '<div class="row-sub">'+p.count+' Einträge'+(topEx?' · Meist: '+topEx:'')+'</div>'+
           '</div>'+
-          '<div style="font-size:22px;color:var(--muted);">›</div>';
+          '<span class="row-chev" aria-hidden="true"></span>';
         card.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
-        el.appendChild(card);
+        topList.appendChild(card);
       });
+      el.appendChild(topList);
 
       if(parks.length > 3){
         // TOP 10 Rest
@@ -899,52 +951,52 @@ function loadMyParksOverview(el){
         restLabel.textContent = 'Weitere Parks';
         el.appendChild(restLabel);
 
+        var restList = rekList();
         parks.slice(3, 10).forEach(function(p, i){
-          var row = document.createElement('div');
-          row.className = 'pressable';
-          row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;border:none;border-radius:16px;margin-bottom:8px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,0.05);cursor:pointer;';
-          var rankEl = document.createElement('div');
-          rankEl.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:var(--accent-ink);flex-shrink:0;';
-          rankEl.textContent = '#'+(i+4);
+          var row = rekRowCard();
+          var rankEl = document.createElement('span');
+          rankEl.className = 'row-index num';
+          rankEl.textContent = rekIdx(i+4);
           var infoEl = document.createElement('div');
-          infoEl.style.cssText = 'flex:1;min-width:0;';
-          infoEl.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.parkName+'</div>'+
-            '<div style="font-size:11px;color:var(--muted);">'+p.count+' Einträge</div>';
+          infoEl.className = 'row-main';
+          infoEl.innerHTML = '<div class="row-title">'+p.parkName+'</div>'+
+            '<div class="row-sub">'+p.count+' Einträge</div>';
           row.appendChild(rankEl); row.appendChild(infoEl);
-          var chev = document.createElement('div');
-          chev.style.cssText = 'font-size:18px;color:var(--muted);';
+          var chev = document.createElement('span');
+          chev.className = 'row-chev';
           chev.setAttribute('aria-hidden','true');
-          chev.textContent = '›';
           row.appendChild(chev);
           row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
-          el.appendChild(row);
+          restList.appendChild(row);
         });
+        el.appendChild(restList);
       }
 
       // Alle Parks Button
       if(parks.length > 10){
         var allBtn = document.createElement('button');
-        allBtn.className = 'pressable';
-        allBtn.style.cssText = 'width:100%;background:none;border:1px solid var(--border);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;min-height:44px;cursor:pointer;color:var(--muted);margin-top:8px;';
+        allBtn.type = 'button';
+        allBtn.className = 'btn-g pressable';
+        allBtn.style.cssText = 'width:100%;min-height:44px;margin-top:8px;';
         allBtn.textContent = 'Alle '+parks.length+' Parks anzeigen';
         allBtn.onclick = function(){
           allBtn.remove();
+          var extraList = rekList();
           parks.slice(10).forEach(function(p, i){
-            var row = document.createElement('div');
-            row.className = 'pressable';
-            row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;border:none;border-radius:16px;margin-bottom:8px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,0.05);cursor:pointer;';
-            row.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:800;font-size:14px;color:var(--accent-ink);flex-shrink:0;">#'+(i+11)+'</div>'+
-              '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+p.parkName+'</div><div style="font-size:11px;color:var(--muted);">'+p.count+' Einträge</div></div>'+
-              '<div style="font-size:18px;color:var(--muted);">›</div>';
+            var row = rekRowCard();
+            row.innerHTML = '<span class="row-index num">'+rekIdx(i+11)+'</span>'+
+              '<div class="row-main"><div class="row-title">'+p.parkName+'</div><div class="row-sub">'+p.count+' Einträge</div></div>'+
+              '<span class="row-chev" aria-hidden="true"></span>';
             row.onclick = function(){ openParkLeaderboardById(p.parkId, p.parkName); };
-            el.appendChild(row);
+            extraList.appendChild(row);
           });
+          el.appendChild(extraList);
         };
         el.appendChild(allBtn);
       }
     })
     .catch(function(e){
-      el.innerHTML='<div style="padding:20px;color:var(--muted);font-size:13px;">Fehler: '+e.message+'</div>';
+      el.innerHTML='<div style="padding:20px;color:var(--red);font-size:11px;">Fehler: '+e.message+'</div>';
     });
 }
 
@@ -954,27 +1006,30 @@ function openSuggestExercise(){
   var ex = document.getElementById('suggest-ex-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'suggest-ex-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.className = 'backdrop';
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
-    '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;">Übung vorschlagen</div>'+
-    '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Fehlt eine Übung? Schlag sie vor!</div>';
+  box.className = 'sheet';
+  box.innerHTML = '<div class="sheet-grip"></div>'+
+    '<div class="ttl">Übung vorschlagen</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin:4px 0 16px;">Fehlt eine Übung? Schlag sie vor!</div>';
 
   var nameInput = document.createElement('input');
   nameInput.type = 'text'; nameInput.placeholder = 'Übungsname (z.B. Typewriter Pull-Up)';
-  nameInput.style.cssText = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:#fff;color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  nameInput.className = 'inp';
+  nameInput.style.cssText = 'margin-bottom:10px;';
 
   // Kategorie
   var catSelect = document.createElement('select');
-  catSelect.style.cssText = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:#fff;color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  catSelect.className = 'inp';
+  catSelect.style.cssText = 'margin-bottom:10px;';
   ['Pull','Push','Core','Legs','Skills'].forEach(function(c){
     var opt = document.createElement('option'); opt.value=c; opt.textContent=c;
     catSelect.appendChild(opt);
   });
 
   var unitSelect = document.createElement('select');
-  unitSelect.style.cssText = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:#fff;color:var(--text);margin-bottom:10px;box-sizing:border-box;';
+  unitSelect.className = 'inp';
+  unitSelect.style.cssText = 'margin-bottom:10px;';
   ['Wdh','Sek','Min'].forEach(function(u){
     var opt = document.createElement('option'); opt.value=u; opt.textContent=u;
     unitSelect.appendChild(opt);
@@ -982,11 +1037,13 @@ function openSuggestExercise(){
 
   var descInput = document.createElement('textarea');
   descInput.placeholder = 'Kurze Beschreibung (optional)';
-  descInput.style.cssText = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:#fff;color:var(--text);margin-bottom:16px;box-sizing:border-box;height:70px;resize:none;';
+  descInput.className = 'inp';
+  descInput.style.cssText = 'margin-bottom:16px;height:70px;resize:none;';
 
   var sendBtn = document.createElement('button');
-  sendBtn.className = 'pressable';
-  sendBtn.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:14px;min-height:48px;cursor:pointer;margin-bottom:8px;box-shadow:0 12px 30px rgba(255,85,0,0.22);';
+  sendBtn.type = 'button';
+  sendBtn.className = 'btn pressable';
+  sendBtn.style.cssText = 'margin:0 0 8px;';
   sendBtn.textContent = 'Vorschlag senden';
   sendBtn.onclick = function(){
     var name = nameInput.value.trim();
@@ -1004,14 +1061,16 @@ function openSuggestExercise(){
       createdAt: Date.now(),
     }).then(function(){
       ov.remove();
-      if(typeof toast==='function') toast('✅ Vorschlag gesendet! Admin prüft ihn.');
+      if(typeof toast==='function') toast('Vorschlag gesendet. Admin prüft ihn.');
     }).catch(function(e){ alert('Fehler: '+e.message); sendBtn.disabled=false; sendBtn.textContent='Vorschlag senden'; });
   };
 
   box.appendChild(nameInput); box.appendChild(catSelect);
   box.appendChild(unitSelect); box.appendChild(descInput); box.appendChild(sendBtn);
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn-g pressable';
+  cancelBtn.style.cssText = 'width:100%;min-height:44px;';
   cancelBtn.textContent = 'Abbrechen';
   cancelBtn.onclick = function(){ ov.remove(); };
   box.appendChild(cancelBtn);

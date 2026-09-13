@@ -1,6 +1,9 @@
 
 loadChallenges();
 
+// Zweistelliger Index ("01") — auch jenseits von 99 stabil
+function prPadIdx(n){ return n<10 ? '0'+n : String(n); }
+
 function buildChallengePresets(){
   var el = document.getElementById('challenge-presets');
   if(!el) return;
@@ -15,24 +18,35 @@ function buildChallengePresets(){
   for(var i=0;i<PRESET_CHALLENGES.length;i++){
     (function(ch){
       var card = document.createElement('div');
-      card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:8px;';
+      card.className = 'card';
+
+      // Foto (grayscale via .ch-photo in tracker.html) nur, wenn die Challenge eins hat
+      if(ch.image){
+        var ph = document.createElement('div');
+        ph.className = 'ch-photo';
+        var img = document.createElement('img');
+        img.src = ch.image; img.alt = ''; img.loading = 'lazy';
+        ph.appendChild(img);
+        card.appendChild(ph);
+      }
 
       var top = document.createElement('div');
-      top.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
+      top.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:8px;';
 
-      var icon = document.createElement('span');
-      icon.style.cssText = 'font-size:22px;';
-      icon.textContent = ch.icon;
+      // Icon-Slot: Line-Icon im 44px-Ring statt Emoji (ch.icon bleibt als Datenfeld erhalten)
+      var icon = document.createElement('div');
+      icon.style.cssText = 'flex-shrink:0;';
+      icon.innerHTML = (typeof iconWrap === 'function') ? iconWrap('target',{size:18,box:44}) : '';
 
       var info = document.createElement('div');
-      info.style.cssText = 'flex:1;';
+      info.style.cssText = 'flex:1;min-width:0;';
 
       var t = document.createElement('div');
-      t.style.cssText = 'font-family:inherit;font-size:15px;font-weight:700;color:var(--text);';
+      t.className = 'ttl';
       t.textContent = ch.title;
 
       var d = document.createElement('div');
-      d.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;';
+      d.className = 'row-sub';
       d.textContent = ch.desc;
 
       info.appendChild(t);
@@ -41,12 +55,12 @@ function buildChallengePresets(){
       top.appendChild(info);
 
       var exp = document.createElement('div');
-      exp.style.cssText = 'font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:8px;line-height:1.5;font-style:italic;';
+      exp.style.cssText = 'font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:10px;line-height:1.6;';
       exp.textContent = ch.explanation;
 
       var btn = document.createElement('button');
-      btn.className = 'pressable';
-      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;cursor:pointer;width:100%;margin-top:10px;min-height:36px;';
+      btn.className = 'btn-g pressable';
+      btn.style.cssText = 'width:100%;min-height:44px;margin-top:12px;';
       btn.textContent = 'Challenge annehmen';
       btn.onclick = function(){
         activeChallenge = {
@@ -127,14 +141,14 @@ function getPercentile(exName, val, gender){
   return table[0][1];
 }
 
-// color = Textfarbe (Ink-Variante, AA-Kontrast), fill = Balkenfüllung (helles Original)
+// color = Textfarbe, fill = Balkenfüllung — auf dunklem Grund identisch (Tokens aus tracker.html)
 function getPercentileLabel(pct){
-  if(pct>=99.5) return {text:'Legendär! Top 0.5%', color:'var(--amber-ink)', fill:'var(--amber)'};
-  if(pct>=99)   return {text:'Weltklasse! Top 1%', color:'var(--amber-ink)', fill:'var(--amber)'};
-  if(pct>=95)   return {text:'Elite! Top 5%', color:'var(--accent-ink)', fill:'var(--accent)'};
-  if(pct>=90)   return {text:'Stark! Top 10%', color:'var(--accent-ink)', fill:'var(--accent)'};
-  if(pct>=75)   return {text:'Gut! Top 25%', color:'var(--teal-ink)', fill:'var(--teal)'};
-  if(pct>=50)   return {text:'Solide! Besser als die Hälfte', color:'var(--teal-ink)', fill:'var(--teal)'};
+  if(pct>=99.5) return {text:'Legendär! Top 0.5%', color:'var(--amber)', fill:'var(--amber)'};
+  if(pct>=99)   return {text:'Weltklasse! Top 1%', color:'var(--amber)', fill:'var(--amber)'};
+  if(pct>=95)   return {text:'Elite! Top 5%', color:'var(--accent)', fill:'var(--accent)'};
+  if(pct>=90)   return {text:'Stark! Top 10%', color:'var(--accent)', fill:'var(--accent)'};
+  if(pct>=75)   return {text:'Gut! Top 25%', color:'var(--teal)', fill:'var(--teal)'};
+  if(pct>=50)   return {text:'Solide! Besser als die Hälfte', color:'var(--teal)', fill:'var(--teal)'};
   if(pct>=25)   return {text:'Weiter so! Guter Start', color:'var(--muted)', fill:'var(--muted)'};
   return {text:'Bleib dran! Jeder fängt irgendwo an', color:'var(--muted)', fill:'var(--muted)'};
 }
@@ -149,34 +163,38 @@ function showPercentile(exName, val, gender){
   var lbl = getPercentileLabel(pct);
 
   var card = document.createElement('div');
-  card.style.cssText='background:#fff;border:none;border-left:4px solid var(--accent);border-radius:20px;padding:18px;margin-top:12px;box-shadow:0 12px 30px rgba(0,0,0,0.06);';
+  card.className='card';
+  card.style.cssText='margin-top:12px;';
 
-  var title = document.createElement('div');
-  title.style.cssText='font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;';
+  var title = document.createElement('span');
+  title.className='eyebrow';
   title.textContent='Weltweiter Vergleich';
 
   var pctText = document.createElement('div');
-  pctText.style.cssText='font-family:inherit;font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;color:'+lbl.color+';line-height:1.3;margin-bottom:4px;';
+  pctText.className='kpi num';
+  pctText.style.cssText='font-size:22px;color:'+lbl.color+';margin-bottom:4px;';
   var displayPct = Math.min(99.9, Math.round(pct*10)/10);
   pctText.textContent='Besser als '+displayPct+'%';
 
   var sub = document.createElement('div');
-  sub.style.cssText='font-size:12px;color:var(--muted);margin-bottom:14px;';
+  sub.className='row-sub';
+  sub.style.cssText='margin-bottom:14px;';
   sub.textContent='aller Menschen weltweit';
 
-  // Progress bar — startet bei 0 und füllt sich sichtbar
+  // Progress bar (3px-Linie) — startet bei 0 und füllt sich sichtbar
   var barWrap = document.createElement('div');
-  barWrap.style.cssText='background:var(--bg3);border-radius:20px;height:10px;overflow:hidden;margin-bottom:8px;';
+  barWrap.className='linebar';
+  barWrap.style.cssText='margin-bottom:10px;';
   var bar = document.createElement('div');
-  bar.style.cssText='height:100%;border-radius:20px;background:'+(lbl.fill||lbl.color)+';width:0%;transition:width var(--dur-slow) var(--ease-out);';
+  bar.style.cssText='width:0%;background:'+(lbl.fill||lbl.color)+';';
   barWrap.appendChild(bar);
 
   var labelDiv = document.createElement('div');
-  labelDiv.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:'+lbl.color+';';
+  labelDiv.style.cssText='font-size:11px;font-weight:600;color:'+lbl.color+';';
   labelDiv.textContent=lbl.text;
 
   var source = document.createElement('div');
-  source.style.cssText='font-size:11px;color:var(--muted);margin-top:8px;';
+  source.style.cssText='font-size:10px;color:var(--muted2);margin-top:8px;';
   source.textContent='Daten: strengthlevel.com (4.8M+ Einträge)';
 
   card.appendChild(title);
@@ -195,15 +213,16 @@ function showPercentile(exName, val, gender){
 // ── PROFIL ────────────────────────────────────────────────
 var prData = {name:'',age:'',weight:'',height:'',gender:'m',goal:'strength',joinDate:'',avatar:''};
 
+// icon = Name aus CALI_ICONS (Line-Icons), kein Emoji mehr
 var BADGES = [
-  {id:'first_workout', icon:'&#x1F4AA;', title:'Erstes Workout', desc:'Dein erstes Workout abgeschlossen', check:function(){return ents.length>0;}},
-  {id:'10_workouts',   icon:'&#x1F525;', title:'10 Workouts',    desc:'10 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=10;}},
-  {id:'50_workouts',   icon:'&#x1F3C6;', title:'50 Workouts',    desc:'50 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=50;}},
-  {id:'first_max',     icon:'&#x2B50;',  title:'Max Getestet',   desc:'Ersten Max-Test eingetragen',      check:function(){return maxEntries.length>0;}},
-  {id:'elite_pullup',  icon:'&#x1F451;', title:'Klimmzug Elite', desc:'Mehr als 20 Klimmzüge Max',        check:function(){for(var i=0;i<maxEntries.length;i++){if(maxEntries[i].name==='Klimmzuge Max'&&parseFloat(maxEntries[i].val)>=20)return true;}return false;}},
-  {id:'challenge_done',icon:'&#x1F3AF;', title:'Challenge Held', desc:'Eine Challenge abgeschlossen',     check:function(){return activeChallenge&&activeChallenge.params&&calcChallengeProgress()>=activeChallenge.params.target;}},
-  {id:'streak_7',      icon:'&#x1F525;', title:'7-Tage Streak',  desc:'7 Tage in Folge trainiert',        check:function(){var dates=[];for(var i=0;i<ents.length;i++){if(dates.indexOf(ents[i].date)===-1)dates.push(ents[i].date);}dates.sort();var streak=1;for(var i=1;i<dates.length;i++){var d1=new Date(dates[i-1]);var d2=new Date(dates[i]);if((d2-d1)/(86400000)===1){streak++;if(streak>=7)return true;}else{streak=1;}}return false;}},
-  {id:'variety',       icon:'&#x1F3CB;', title:'Allrounder',     desc:'10 verschiedene Übungen trainiert',check:function(){var ex={};for(var i=0;i<ents.length;i++)ex[ents[i].name]=1;return Object.keys(ex).length>=10;}},
+  {id:'first_workout', icon:'dumbbell', title:'Erstes Workout', desc:'Dein erstes Workout abgeschlossen', check:function(){return ents.length>0;}},
+  {id:'10_workouts',   icon:'flame',    title:'10 Workouts',    desc:'10 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=10;}},
+  {id:'50_workouts',   icon:'trophy',   title:'50 Workouts',    desc:'50 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=50;}},
+  {id:'first_max',     icon:'trend',    title:'Max Getestet',   desc:'Ersten Max-Test eingetragen',      check:function(){return maxEntries.length>0;}},
+  {id:'elite_pullup',  icon:'star',     title:'Klimmzug Elite', desc:'Mehr als 20 Klimmzüge Max',        check:function(){for(var i=0;i<maxEntries.length;i++){if(maxEntries[i].name==='Klimmzuge Max'&&parseFloat(maxEntries[i].val)>=20)return true;}return false;}},
+  {id:'challenge_done',icon:'target',   title:'Challenge Held', desc:'Eine Challenge abgeschlossen',     check:function(){return activeChallenge&&activeChallenge.params&&calcChallengeProgress()>=activeChallenge.params.target;}},
+  {id:'streak_7',      icon:'calendar', title:'7-Tage Streak',  desc:'7 Tage in Folge trainiert',        check:function(){var dates=[];for(var i=0;i<ents.length;i++){if(dates.indexOf(ents[i].date)===-1)dates.push(ents[i].date);}dates.sort();var streak=1;for(var i=1;i<dates.length;i++){var d1=new Date(dates[i-1]);var d2=new Date(dates[i]);if((d2-d1)/(86400000)===1){streak++;if(streak>=7)return true;}else{streak=1;}}return false;}},
+  {id:'variety',       icon:'flex',     title:'Allrounder',     desc:'10 verschiedene Übungen trainiert',check:function(){var ex={};for(var i=0;i<ents.length;i++)ex[ents[i].name]=1;return Object.keys(ex).length>=10;}},
 ];
 
 // ── ABZEICHEN-PERSISTENZ ──────────────────────────────────
@@ -224,8 +243,8 @@ function checkBadgeUnlocks(){
   if(newly.length){
     try{ localStorage.setItem('cali_badges_earned',JSON.stringify(earned)); }catch(x){}
     if(typeof toast==='function'){
-      if(newly.length===1) toast('🏅 Abzeichen freigeschaltet: '+newly[0].title);
-      else toast('🏅 '+newly.length+' Abzeichen freigeschaltet!');
+      if(newly.length===1) toast('Abzeichen freigeschaltet: '+newly[0].title);
+      else toast(newly.length+' Abzeichen freigeschaltet!');
     }
   }
   return earned;
@@ -278,16 +297,16 @@ function prSetAvatar(inp){
   reader.readAsDataURL(inp.files[0]);
 }
 
-// Literale Hex-Ink-Töne (AA als Text, hexToRgb braucht echtes Hex für den Tint)
+// Level-Stufen nach Trainingstagen — Farben als Tokens (auf dunklem Grund als Text lesbar)
 function prGetLevel(){
   var d={};
   for(var i=0;i<ents.length;i++) d[ents[i].date]=1;
   var days = Object.keys(d).length;
-  if(days>=100) return {label:'Elite',           color:'#B45309'}; // amber-ink
-  if(days>=50)  return {label:'Erfahren',        color:'#C24400'}; // accent-ink
-  if(days>=20)  return {label:'Fortgeschritten', color:'#0E7C72'}; // teal-ink
-  if(days>=5)   return {label:'Einsteiger',      color:'#6D4AD1'}; // purple-ink
-  return        {label:'Starter',                color:'#6E6759'}; // muted
+  if(days>=100) return {label:'Elite',           color:'var(--amber)'};
+  if(days>=50)  return {label:'Erfahren',        color:'var(--accent)'};
+  if(days>=20)  return {label:'Fortgeschritten', color:'var(--teal)'};
+  if(days>=5)   return {label:'Einsteiger',      color:'var(--purple)'};
+  return        {label:'Starter',                color:'var(--muted)'};
 }
 
 
@@ -363,21 +382,23 @@ function buildProfilStatsDetail(){
   ];
 
   var grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;';
+  grid.className = 'stat-grid';
+  grid.style.cssText = 'margin-bottom:16px;';
   for(var i=0;i<bigStats.length;i++){
     var box=document.createElement('div');
-    box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;';
-    var val=document.createElement('div');
-    val.className='num';
-    val.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1.1;margin-bottom:3px;';
-    val.textContent=bigStats[i].value;
-    var lbl=document.createElement('div');
-    lbl.style.cssText='font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;';
+    box.className='stat-tile';
+    var lbl=document.createElement('span');
+    lbl.className='lbl';
     lbl.textContent=bigStats[i].label;
+    var val=document.createElement('div');
+    val.className='kpi num';
+    val.style.cssText='font-size:22px;';
+    val.textContent=bigStats[i].value;
     var sub=document.createElement('div');
-    sub.style.cssText='font-size:11px;color:var(--muted);margin-top:2px;';
+    sub.className='row-sub';
+    sub.style.cssText='margin-top:0;';
     sub.textContent=bigStats[i].sub;
-    box.appendChild(val);box.appendChild(lbl);box.appendChild(sub);
+    box.appendChild(lbl);box.appendChild(val);box.appendChild(sub);
     grid.appendChild(box);
   }
   el.appendChild(grid);
@@ -385,7 +406,8 @@ function buildProfilStatsDetail(){
 
   // ── Wdh per exercise ranking ──
   var title2=document.createElement('div');
-  title2.style.cssText='font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;margin-top:4px;';
+  title2.className='lbl';
+  title2.style.cssText='margin:4px 0 8px;';
   title2.textContent='Alle Übungen · Wiederholungen gesamt';
   el.appendChild(title2);
 
@@ -395,39 +417,51 @@ function buildProfilStatsDetail(){
 
   if(!sorted.length){
     var none=document.createElement('div');
-    none.style.cssText='font-size:12px;color:var(--muted);padding:8px 0;';
+    none.className='empty';
     none.textContent='Noch keine Workouts eingetragen.';
     el.appendChild(none);
     return;
   }
 
+  var list=document.createElement('div');
+  list.className='list';
   var maxVal = sorted[0].total;
   for(var i=0;i<sorted.length;i++){
     var row=document.createElement('div');
-    row.style.cssText='margin-bottom:8px;';
-    // Name + value
-    var top=document.createElement('div');
-    top.style.cssText='display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;';
+    row.className='list-row';
+    row.style.cssText='cursor:default;';
+    var idx=document.createElement('span');
+    idx.className='row-index num';
+    idx.textContent=prPadIdx(i+1);
+    var main=document.createElement('div');
+    main.className='row-main';
     var nm=document.createElement('div');
-    nm.style.cssText='font-size:12px;color:var(--text);';
+    nm.className='row-title';
     nm.textContent=sorted[i].name;
-    var vl=document.createElement('div');
-    vl.className='num';
-    vl.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:var(--accent-ink);';
-    vl.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
-    top.appendChild(nm);top.appendChild(vl);
-    // Bar — füllt sich von 0
+    // Bar (3px-Linie) — füllt sich von 0
     var barWrap=document.createElement('div');
-    barWrap.style.cssText='background:var(--bg3);border-radius:4px;height:4px;overflow:hidden;';
+    barWrap.className='linebar';
+    barWrap.style.cssText='margin-top:6px;';
     var bar=document.createElement('div');
     var pct=maxVal>0?Math.round((sorted[i].total/maxVal)*100):0;
-    bar.style.cssText='height:100%;border-radius:4px;background:var(--accent);width:0%;transition:width var(--dur-slow) var(--ease-out);';
+    bar.style.cssText='width:0%;';
     barWrap.appendChild(bar);
     if(window.caliMotion) caliMotion.animateBar(bar, pct);
     else bar.style.width = pct+'%';
-    row.appendChild(top);row.appendChild(barWrap);
-    el.appendChild(row);
+    main.appendChild(nm);main.appendChild(barWrap);
+    var right=document.createElement('div');
+    right.style.cssText='display:flex;align-items:baseline;gap:4px;flex-shrink:0;';
+    var vl=document.createElement('span');
+    vl.className='row-val num';
+    vl.textContent=Math.round(sorted[i].total).toLocaleString();
+    var un=document.createElement('span');
+    un.className='unit';
+    un.textContent='Wdh';
+    right.appendChild(vl);right.appendChild(un);
+    row.appendChild(idx);row.appendChild(main);row.appendChild(right);
+    list.appendChild(row);
   }
+  el.appendChild(list);
 }
 
 function buildProfilUI(){
@@ -448,20 +482,20 @@ function buildProfilUI(){
   var goEl=document.getElementById('pr-inp-goal');
   if(goEl) goEl.value=prData.goal||'strength';
 
-  // Name display
+  // Name display (Uppercase kommt per CSS-Klasse .ttl aus pages.html)
   var nd=document.getElementById('pr-name-display');
   if(nd) nd.textContent=prData.name||'Dein Name';
 
-  // Level
+  // Level-Pille: Rahmen/Fläche kommen aus pages.html, nur Text + Textfarbe hier
   var lv=prGetLevel();
   var lb=document.getElementById('pr-level-badge');
-  if(lb){lb.textContent=lv.label;lb.style.color=lv.color;lb.style.borderColor=lv.color;lb.style.background='rgba('+hexToRgb(lv.color)+',0.1)';}
+  if(lb){lb.textContent=lv.label;lb.style.color=lv.color;}
 
   // Member since
   var ms=document.getElementById('pr-member-since');
   if(ms&&prData.joinDate) ms.textContent='Mitglied seit '+prData.joinDate.slice(5).replace('-','.')+'.'+prData.joinDate.slice(0,4);
 
-  // Avatar
+  // Avatar (Grayscale-Filter sitzt auf #pr-avatar in pages.html)
   var av=document.getElementById('pr-avatar');
   if(av&&prData.avatar){
     av.style.cssText+='background-image:url('+prData.avatar+');background-size:cover;background-position:center;';
@@ -496,15 +530,17 @@ function buildProfilUI(){
     sr.innerHTML='';
     for(var i=0;i<stats.length;i++){
       var box=document.createElement('div');
-      box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px 8px;text-align:center;';
-      var val=document.createElement('div');
-      val.className='num';
-      val.style.cssText='font-family:inherit;font-weight:800;font-size:28px;color:var(--accent);line-height:1.1;';
-      val.textContent=String(stats[i].value);
-      var lbl=document.createElement('div');
-      lbl.style.cssText='font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;margin-top:3px;';
+      box.className='stat-tile';
+      box.style.cssText='padding:12px 10px;gap:6px;';
+      var lbl=document.createElement('span');
+      lbl.className='lbl';
+      lbl.style.cssText='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
       lbl.textContent=stats[i].label;
-      box.appendChild(val);box.appendChild(lbl);
+      var val=document.createElement('div');
+      val.className='kpi num';
+      val.style.cssText='font-size:24px;';
+      val.textContent=String(stats[i].value);
+      box.appendChild(lbl);box.appendChild(val);
       sr.appendChild(box);
       if(window.caliMotion) caliMotion.countUp(val, Math.round(stats[i].value), {duration:600});
     }
@@ -512,6 +548,7 @@ function buildProfilUI(){
   }
 
   // Badges (persistiert — einmal verdient bleibt verdient)
+  // Grid aus bordered Kacheln: verdient = Linie --line2 + Icon in Orange, gesperrt = gestrichelte Linie + --muted2
   var badgeEl=document.getElementById('pr-badges');
   if(badgeEl){
     badgeEl.innerHTML='';
@@ -521,16 +558,20 @@ function buildProfilUI(){
       var b=BADGES[i];
       var has=!!earnedMap[b.id];
       var box=document.createElement('div');
-      box.style.cssText='background:'+(has?'rgba(255,85,0,0.06)':'var(--bg2)')+';border:1px solid '+(has?'rgba(255,85,0,0.3)':'var(--border)')+';border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:8px;opacity:'+(has?'1':'0.35')+';width:100%;';
+      box.className='badge-item';
+      box.style.cssText='margin:0;width:calc(50% - 4px);box-sizing:border-box;flex-direction:column;align-items:flex-start;gap:10px;padding:12px;'+(has?'border-color:var(--line2);':'border-style:dashed;background:transparent;');
       var icon=document.createElement('div');
-      icon.style.cssText='font-size:22px;flex-shrink:0;';
-      icon.innerHTML=b.icon;
+      icon.style.cssText='flex-shrink:0;';
+      icon.innerHTML=(typeof iconWrap==='function') ? iconWrap(b.icon,{size:18,box:36,color:(has?'var(--accent)':'var(--muted2)')}) : '';
       var info=document.createElement('div');
+      info.style.cssText='min-width:0;width:100%;';
       var t=document.createElement('div');
-      t.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:'+(has?'var(--accent-ink)':'var(--muted)')+';';
+      t.className='row-title';
+      t.style.cssText='color:'+(has?'var(--text)':'var(--muted2)')+';';
       t.textContent=b.title;
       var d2=document.createElement('div');
-      d2.style.cssText='font-size:11px;color:var(--muted);margin-top:1px;';
+      d2.className='row-sub';
+      d2.style.cssText='white-space:normal;'+(has?'':'color:var(--muted2);');
       d2.textContent=b.desc;
       info.appendChild(t);info.appendChild(d2);
       box.appendChild(icon);box.appendChild(info);
@@ -539,7 +580,8 @@ function buildProfilUI(){
     }
     if(!earned){
       var hint=document.createElement('div');
-      hint.style.cssText='font-size:12px;color:var(--muted);padding:8px 0;';
+      hint.className='empty';
+      hint.style.cssText='width:100%;';
       hint.textContent='Noch keine Abzeichen. Fang an zu trainieren!';
       badgeEl.appendChild(hint);
     }
@@ -551,7 +593,7 @@ function buildProfilUI(){
   if(bests){
     bests.innerHTML='';
     if(!maxEntries.length){
-      bests.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Noch keine Max-Werte eingetragen.</div>';
+      bests.innerHTML='<div class="empty">Noch keine Max-Werte eingetragen.</div>';
     } else {
       var bestMap={};
       for(var i=0;i<maxEntries.length;i++){
@@ -559,20 +601,38 @@ function buildProfilUI(){
         var v=parseFloat(me.val)||0;
         if(!bestMap[me.name]||v>parseFloat(bestMap[me.name].val)) bestMap[me.name]=me;
       }
+      var bestList=document.createElement('div');
+      bestList.className='list';
+      var bi=0;
       for(var name in bestMap){
         var me=bestMap[name];
+        bi++;
         var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:6px;';
+        row.className='list-row';
+        row.style.cssText='cursor:default;';
+        var idx=document.createElement('span');
+        idx.className='row-index num';
+        idx.textContent=prPadIdx(bi);
+        var main=document.createElement('div');
+        main.className='row-main';
         var left=document.createElement('div');
-        left.style.cssText='font-size:13px;font-weight:500;color:var(--text);';
+        left.className='row-title';
         left.textContent=name.replace(' Max','');
+        main.appendChild(left);
         var right=document.createElement('div');
-        right.className='num';
-        right.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);';
-        right.textContent=me.val+' '+me.unit;
-        row.appendChild(left);row.appendChild(right);
-        bests.appendChild(row);
+        right.style.cssText='display:flex;align-items:baseline;gap:4px;flex-shrink:0;';
+        var rv=document.createElement('span');
+        rv.className='row-val num';
+        rv.style.cssText='font-size:16px;';
+        rv.textContent=me.val;
+        var ru=document.createElement('span');
+        ru.className='unit';
+        ru.textContent=me.unit||'';
+        right.appendChild(rv);right.appendChild(ru);
+        row.appendChild(idx);row.appendChild(main);row.appendChild(right);
+        bestList.appendChild(row);
       }
+      bests.appendChild(bestList);
     }
   }
 
@@ -584,25 +644,37 @@ function buildProfilUI(){
     var sorted = [];
     for(var name in repsByEx){ sorted.push({name:name, total:repsByEx[name]}); }
     sorted.sort(function(a,b){return b.total-a.total;});
+    var repsList=document.createElement('div');
+    repsList.className='list';
     for(var i=0;i<sorted.length&&i<10;i++){
       var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:6px;';
-      var rank=document.createElement('div');
-      rank.className='num';
-      rank.style.cssText='font-family:inherit;font-size:13px;color:var(--muted);width:20px;text-align:center;';
-      rank.textContent=String(i+1);
+      row.className='list-row';
+      row.style.cssText='cursor:default;';
+      var rank=document.createElement('span');
+      rank.className='row-index num';
+      rank.textContent=prPadIdx(i+1);
+      var main2=document.createElement('div');
+      main2.className='row-main';
       var name2=document.createElement('div');
-      name2.style.cssText='font-size:13px;color:var(--text);flex:1;';
+      name2.className='row-title';
       name2.textContent=sorted[i].name;
-      var total=document.createElement('div');
-      total.className='num';
-      total.style.cssText='font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);';
-      total.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
-      row.appendChild(rank);row.appendChild(name2);row.appendChild(total);
-      repsEl.appendChild(row);
+      main2.appendChild(name2);
+      var right2=document.createElement('div');
+      right2.style.cssText='display:flex;align-items:baseline;gap:4px;flex-shrink:0;';
+      var total=document.createElement('span');
+      total.className='row-val num';
+      total.textContent=Math.round(sorted[i].total).toLocaleString();
+      var tu=document.createElement('span');
+      tu.className='unit';
+      tu.textContent='Wdh';
+      right2.appendChild(total);right2.appendChild(tu);
+      row.appendChild(rank);row.appendChild(main2);row.appendChild(right2);
+      repsList.appendChild(row);
     }
     if(!sorted.length){
-      repsEl.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Noch keine Wdh eingetragen.</div>';
+      repsEl.innerHTML='<div class="empty">Noch keine Wdh eingetragen.</div>';
+    } else {
+      repsEl.appendChild(repsList);
     }
   }
   // Always build streak section at end
@@ -641,6 +713,16 @@ var db   = firebase.firestore();
 var currentUser = null;
 var authMode = 'login';
 
+// Segment-Control-Zustand über die Klasse 'on' (.seg-ctl in tracker.html).
+// Die alten Inline-Werte background/color werden dabei entfernt, damit die Klasse greift.
+function segCtlSet(btn, on){
+  if(!btn) return;
+  btn.style.background = '';
+  btn.style.color = '';
+  if(on){ btn.classList.add('on'); btn.setAttribute('aria-selected','true'); }
+  else { btn.classList.remove('on'); btn.setAttribute('aria-selected','false'); }
+}
+
 function showAuthTab(mode){
   authMode = mode;
   var loginBtn    = document.getElementById('tab-login');
@@ -648,17 +730,13 @@ function showAuthTab(mode){
   var submitBtn   = document.getElementById('auth-submit-btn');
   var nameRow     = document.getElementById('auth-name-row');
   if(mode==='login'){
-    loginBtn.style.background    = 'var(--accent-deep)';
-    loginBtn.style.color         = '#fff';
-    registerBtn.style.background = 'none';
-    registerBtn.style.color      = 'var(--muted)';
+    segCtlSet(loginBtn, true);
+    segCtlSet(registerBtn, false);
     submitBtn.textContent        = 'Einloggen';
     if(nameRow) nameRow.style.display = 'none';
   } else {
-    registerBtn.style.background = 'var(--accent-deep)';
-    registerBtn.style.color      = '#fff';
-    loginBtn.style.background    = 'none';
-    loginBtn.style.color         = 'var(--muted)';
+    segCtlSet(registerBtn, true);
+    segCtlSet(loginBtn, false);
     submitBtn.textContent        = 'Registrieren';
     if(nameRow) nameRow.style.display = 'block';
   }
@@ -736,21 +814,21 @@ function openSettings(){
 
   var ov = document.createElement('div');
   ov.id = 'settings-ov';
-  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.className = 'backdrop';
 
   var box = document.createElement('div');
   box.id = 'settings-box';
-  box.className = 'sheet-scroll';
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
-  box.innerHTML = '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;">&#9881;&#65039; Einstellungen</div>';
+  box.className = 'sheet sheet-scroll';
+  box.style.cssText = 'max-height:88vh;overflow-y:auto;';
+  box.innerHTML = '<div class="sheet-grip"></div><div class="ttl" style="margin-bottom:14px;">Einstellungen</div>';
 
   box.appendChild(panel);
   try{ buildPrivacyToggle(); }catch(e){}
   try{ checkAndShowAdminBtn(); }catch(e){}
 
   var closeBtn = document.createElement('button');
-  closeBtn.className = 'pressable';
-  closeBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:12px;cursor:pointer;';
+  closeBtn.className = 'btn-g pressable';
+  closeBtn.style.cssText = 'width:100%;min-height:44px;margin-top:8px;';
   closeBtn.textContent = 'Schließen';
   closeBtn.onclick = function(){ closeSettings(); };
   box.appendChild(closeBtn);

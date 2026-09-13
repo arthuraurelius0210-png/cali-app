@@ -190,11 +190,12 @@ function playVideo(url){
   vid.src = url;
   vid.controls = true;
   vid.autoplay = true;
-  vid.style.cssText = 'width:100%;max-width:500px;max-height:80vh;border-radius:16px;';
+  vid.style.cssText = 'width:100%;max-width:500px;max-height:80vh;border-radius:var(--r-card);border:1px solid var(--line2);';
   var closeBtn = document.createElement('button');
-  closeBtn.className = 'pressable';
-  closeBtn.style.cssText = 'margin-top:16px;background:rgba(255,255,255,0.2);border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:700;padding:12px 24px;min-height:44px;border-radius:10px;cursor:pointer;';
-  closeBtn.textContent = '✕ Schließen';
+  closeBtn.type = 'button';
+  closeBtn.className = 'btn-g pressable';
+  closeBtn.style.cssText = 'margin-top:16px;min-height:44px;padding:0 24px;';
+  closeBtn.textContent = 'Schließen';
   closeBtn.onclick = function(){ vid.pause(); ov.remove(); };
   ov.appendChild(vid); ov.appendChild(closeBtn);
   ov.onclick = function(e){ if(e.target===ov){ vid.pause(); ov.remove(); } };
@@ -211,34 +212,43 @@ function openRecordSubmit(parkId, parkName){
   var ex = document.getElementById('lb-submit-ov'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'lb-submit-ov';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+  ov.className = 'backdrop';
 
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:90vh;overflow-y:auto;';
+  box.className = 'sheet';
+  box.style.cssText = 'max-height:90vh;overflow-y:auto;';
   box.classList.add('sheet-scroll');
-  box.innerHTML = '<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;"></div>'+
-    '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;">Rekord einreichen</div>'+
-    (parkName?'<div style="font-size:13px;color:var(--accent-ink);margin-bottom:16px;">📍 '+parkName+'</div>':'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Globale Bestenliste</div>');
+  box.innerHTML = '<div class="sheet-grip"></div>'+
+    '<div class="ttl">Rekord einreichen</div>'+
+    (parkName?'<div style="font-size:11px;color:var(--accent);margin:4px 0 16px;">'+parkName+'</div>':'<div style="font-size:11px;color:var(--muted);margin:4px 0 16px;">Globale Bestenliste</div>');
+
+  // Auswahl-Kachel (2-Spalten-Grid): aktiv = Akzent-Rahmen + Tint
+  function lbExTileSet(b, active){
+    b.style.borderColor = active ? 'var(--accent)' : 'var(--line)';
+    b.style.background = active ? 'var(--accent-soft)' : 'var(--card2)';
+    b.setAttribute('aria-pressed', active ? 'true' : 'false');
+  }
 
   // Step 1: Übung wählen
   var s1 = document.createElement('div');
   s1.innerHTML = '<h2 class="stitle" style="margin:0 0 10px;">Schritt 1: Übung wählen</h2>';
   var exGrid = document.createElement('div');
+  exGrid.className = 'sheet-scroll';
   exGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;max-height:260px;overflow-y:auto;';
   var recordExercises = getRekExercises('all');
   var selectedExId = recordExercises[0].id;
   recordExercises.forEach(function(ex){
     var btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'pressable';
     btn.dataset.exId = ex.id;
-    btn.style.cssText = 'padding:10px 12px;min-height:44px;border-radius:10px;border:1px solid '+(ex.id===selectedExId?'var(--accent-deep)':'var(--border)')+';background:'+(ex.id===selectedExId?'rgba(255,85,0,0.1)':'none')+';font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--text);text-align:left;';
-    btn.innerHTML = ex.name+'<div style="font-size:11px;color:var(--muted);font-weight:400;">'+ex.unit+'</div>';
+    btn.style.cssText = 'padding:10px 12px;min-height:44px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--card2);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;color:var(--text);text-align:left;transition:border-color var(--dur-fast) ease,background-color var(--dur-fast) ease;';
+    btn.innerHTML = '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+ex.name+'</div><div class="unit" style="display:block;margin-top:3px;">'+ex.unit+'</div>';
+    lbExTileSet(btn, ex.id===selectedExId);
     btn.onclick = function(){
       selectedExId = ex.id;
       exGrid.querySelectorAll('button').forEach(function(b){
-        var a = b.dataset.exId === selectedExId;
-        b.style.borderColor = a?'var(--accent-deep)':'var(--border)';
-        b.style.background = a?'rgba(255,85,0,0.1)':'none';
+        lbExTileSet(b, b.dataset.exId === selectedExId);
       });
       var exInfo = recordExercises.find(function(e){ return e.id===selectedExId; });
       valLabel.textContent = 'Schritt 2: Ergebnis ('+exInfo.unit+')';
@@ -258,8 +268,8 @@ function openRecordSubmit(parkId, parkName){
   valInput.type = 'number';
   valInput.min = '1';
   valInput.placeholder = 'z.B. 20';
-  valInput.className = 'num';
-  valInput.style.cssText = 'width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:17px;font-weight:700;text-align:center;background:#fff;color:var(--text);margin-bottom:20px;box-sizing:border-box;';
+  valInput.className = 'inp num';
+  valInput.style.cssText = 'font-size:17px;font-weight:600;text-align:center;margin-bottom:20px;';
   s2.appendChild(valLabel); s2.appendChild(valInput);
   box.appendChild(s2);
 
@@ -273,7 +283,7 @@ function openRecordSubmit(parkId, parkName){
   var stream = null;
 
   var camWrap = document.createElement('div');
-  camWrap.style.cssText = 'border-radius:16px;overflow:hidden;background:#000;margin-bottom:12px;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center;';
+  camWrap.style.cssText = 'border-radius:var(--r-card);border:1px solid var(--line);overflow:hidden;background:var(--bg);margin-bottom:12px;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center;';
 
   var preview = document.createElement('video');
   preview.style.cssText = 'width:100%;max-height:300px;display:none;';
@@ -287,8 +297,9 @@ function openRecordSubmit(parkId, parkName){
   resultVid.playsinline = true;
 
   var camPlaceholder = document.createElement('div');
-  camPlaceholder.style.cssText = 'color:#fff;font-size:13px;text-align:center;padding:20px;';
-  camPlaceholder.innerHTML = '📹<br>Kamera starten um Video aufzunehmen';
+  camPlaceholder.className = 'empty';
+  camPlaceholder.style.cssText = 'padding:20px;';
+  camPlaceholder.textContent = 'Kamera starten um Video aufzunehmen';
 
   camWrap.appendChild(preview); camWrap.appendChild(resultVid); camWrap.appendChild(camPlaceholder);
 
@@ -296,14 +307,16 @@ function openRecordSubmit(parkId, parkName){
   camBtnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:20px;';
 
   var startCamBtn = document.createElement('button');
-  startCamBtn.style.cssText = 'flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;color:var(--text);transition:transform var(--dur-fast) var(--ease-out);';
-  startCamBtn.classList.add('pressable');
-  startCamBtn.textContent = '📷 Kamera starten';
+  startCamBtn.type = 'button';
+  startCamBtn.className = 'btn-g pressable';
+  startCamBtn.style.cssText = 'flex:1;min-height:44px;';
+  startCamBtn.textContent = 'Kamera starten';
 
   var recBtn = document.createElement('button');
-  recBtn.style.cssText = 'flex:1;background:var(--red);border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:12px;min-height:44px;cursor:pointer;color:#fff;display:none;transition:transform var(--dur-fast) var(--ease-out);';
-  recBtn.classList.add('pressable');
-  recBtn.textContent = '⏺ Aufnahme starten';
+  recBtn.type = 'button';
+  recBtn.className = 'btn-g danger pressable';
+  recBtn.style.cssText = 'flex:1;min-height:44px;display:none;';
+  recBtn.textContent = 'Aufnahme starten';
 
   var isRecording = false;
 
@@ -333,15 +346,15 @@ function openRecordSubmit(parkId, parkName){
         resultVid.src = url;
         resultVid.style.display = 'block';
         preview.style.display = 'none';
-        recBtn.textContent = '🔄 Neu aufnehmen';
+        recBtn.textContent = 'Neu aufnehmen';
         submitBtn2.disabled = false;
         submitBtn2.style.opacity = '1';
         if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); }
       };
       mediaRecorder.start();
       isRecording = true;
-      recBtn.textContent = '⏹ Aufnahme stoppen';
-      recBtn.style.background = 'var(--red)';
+      // Laufende Aufnahme: pulsierender Live-Dot statt Emoji/Farbfläche
+      recBtn.innerHTML = '<span class="rec-dot" aria-hidden="true"></span>Aufnahme stoppen';
     } else {
       mediaRecorder.stop();
       isRecording = false;
@@ -354,8 +367,9 @@ function openRecordSubmit(parkId, parkName){
 
   // Submit button
   var submitBtn2 = document.createElement('button');
-  submitBtn2.className = 'pressable';
-  submitBtn2.style.cssText = 'width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:700;padding:15px;min-height:48px;cursor:pointer;opacity:0.4;box-shadow:0 12px 30px rgba(255,85,0,0.22);';
+  submitBtn2.type = 'button';
+  submitBtn2.className = 'btn pressable';
+  submitBtn2.style.cssText = 'margin:0;opacity:0.4;';
   submitBtn2.textContent = 'Einreichen';
   submitBtn2.disabled = true;
 
@@ -414,7 +428,9 @@ function openRecordSubmit(parkId, parkName){
 
   // Cancel
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:12px;cursor:pointer;margin-top:4px;';
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn-g pressable';
+  cancelBtn.style.cssText = 'width:100%;min-height:44px;margin-top:8px;';
   cancelBtn.textContent = 'Abbrechen';
   cancelBtn.onclick = function(){
     if(stream) stream.getTracks().forEach(function(t){ t.stop(); });
@@ -450,7 +466,7 @@ function saveLeaderboardEntry(entry, parkId, ov){
     if(ov) ov.remove();
     // Check if this beats personal best → also submit to global
     checkPersonalBest(entry);
-    showToast('🏆 Eingereicht! Admin prüft deinen Eintrag.');
+    showToast('Eingereicht. Admin prüft deinen Eintrag.');
   }).catch(function(e){
     alert('Fehler: '+e.message);
   });
@@ -472,14 +488,15 @@ function checkPersonalBest(entry){
         ? exLabel + ' · Vorher: ' + current + ' ' + entry.unit
         : exLabel + ' · Dein erster Eintrag';
       if(typeof showCelebrationOverlay === 'function'){
+        // Icon-Slot: Line-Icon (Trophäe) per CALI_ICONS-Name statt Emoji/HTML
         showCelebrationOverlay({
-          icon:'🏆',
+          iconName: 'trophy',
           title:'Neuer Rekord!',
           big: entry.value + ' ' + entry.unit,
           sub: subLine
         });
       } else {
-        showToast('🎉 Neuer persönlicher Rekord: '+entry.value+' '+entry.unit+'!');
+        showToast('Neuer persönlicher Rekord: '+entry.value+' '+entry.unit);
       }
     }
   });

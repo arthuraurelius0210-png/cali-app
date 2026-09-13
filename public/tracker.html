@@ -2,9 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ff5500">
+<meta name="theme-color" content="#0B0B0B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CALI">
@@ -17,9 +17,10 @@
   }
 </script>
 <title>CALI Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="/hero-workout.jpg">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Doto:wght@700..900&display=swap" rel="stylesheet">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -30,309 +31,447 @@
   .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
     background-clip: padding-box;
   }
-  .marker-cluster-small { background-color: rgba(255,85,0,0.2); }
-  .marker-cluster-small div { background-color: rgba(255,85,0,0.7); }
-  .marker-cluster-medium { background-color: rgba(255,85,0,0.3); }
-  .marker-cluster-medium div { background-color: rgba(255,85,0,0.8); }
-  .marker-cluster-large { background-color: rgba(255,85,0,0.4); }
-  .marker-cluster-large div { background-color: rgba(255,85,0,0.9); }
-  .marker-cluster div { color: #fff; font-weight: 800; font-family: system-ui; }
+  .marker-cluster-small { background-color: rgba(255,90,31,0.2); }
+  .marker-cluster-small div { background-color: rgba(255,90,31,0.75); }
+  .marker-cluster-medium { background-color: rgba(255,90,31,0.3); }
+  .marker-cluster-medium div { background-color: rgba(255,90,31,0.85); }
+  .marker-cluster-large { background-color: rgba(255,90,31,0.4); }
+  .marker-cluster-large div { background-color: rgba(255,90,31,0.95); }
+  .marker-cluster div { color: #fff; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .leaflet-container { background: #1B1B1B; font-family: 'JetBrains Mono', monospace; }
 </style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
+/* ═══════════════════════════════════════════════════════════════
+   DARK MONO — Design-Contract v2 (Foundation)
+   Tokens: nur über var(--…) verwenden, nie Hex in JS.
+   ═══════════════════════════════════════════════════════════════ */
 :root{
-  --bg:#F7F5F0;--bg2:#ffffff;--bg3:#EDEAE1;
-  --border:#E2DECE;--border2:#CFC7B0;
-  --text:#18140F;--muted:#6E6759;--muted2:#8B8474;--muted-soft:var(--muted2);
-  --accent:#ff5500;--accent-ink:#C24400;--accent-deep:#CC4400;
-  --success:#22C55E;--success-ink:#0F7A3F;
-  --orange:#FF6B35;--teal:#4ECDC4;--teal-ink:#0E7C72;--purple:#A78BFA;--purple-ink:#6D4AD1;
-  --amber:#F59E0B;--amber-ink:#B45309;--blue:#38BDF8;--blue-ink:#0369A1;--red:#D93036;
-  --display:'Bebas Neue',sans-serif;--body:'DM Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
-  --ease-out:cubic-bezier(0.22,1,0.36,1);--ease-spring:cubic-bezier(0.34,1.56,0.64,1);--ease-sheet:cubic-bezier(0.32,0.72,0,1);
-  --dur-fast:150ms;--dur-med:250ms;--dur-slow:400ms;
+  color-scheme:dark;
+  /* Kern-Palette */
+  --bg:#0B0B0B;--card:#141414;--card2:#1B1B1B;
+  --line:#262626;--line2:#333333;
+  --text:#F2F2F2;--muted:#9A9A9A;--muted2:#5E5E5E;--muted-soft:var(--muted2);
+  --accent:#FF5A1F;--accent-soft:rgba(255,90,31,0.12);
+  --success:#3DDC84;--red:#FF4D4D;
+  --cta2:#EDEDED;--cta2-ink:#0B0B0B;
+  /* Legacy-Remap (alte Namen, die JS/pages.html noch referenzieren) */
+  --bg2:var(--card);--bg3:var(--card2);
+  --border:var(--line);--border2:var(--line2);
+  --accent-ink:var(--accent);--accent-deep:var(--accent);--orange:var(--accent);
+  --success-ink:var(--success);
+  --teal:#3FB8B0;--teal-ink:var(--teal);
+  --purple:#9B8AE6;--purple-ink:var(--purple);
+  --amber:#E0A030;--amber-ink:var(--amber);
+  --blue:#4FB3E8;--blue-ink:var(--blue);
+  /* Form */
+  --shadow-card:none;
+  --r-card:10px;--r-pill:999px;--r-sm:6px;--r-input:8px;
+  --nav-h:64px;
+  /* Schrift */
+  --body:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --display:var(--body);
+  --dot:'Doto','JetBrains Mono',ui-monospace,monospace;
+  /* Motion — trocken, kurz, kein Overshoot */
+  --ease-out:cubic-bezier(0.22,1,0.36,1);--ease-spring:var(--ease-out);--ease-sheet:cubic-bezier(0.32,0.72,0,1);
+  --dur-fast:120ms;--dur-med:200ms;--dur-slow:320ms;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;overflow-x:hidden;overscroll-behavior-y:contain;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:13px;line-height:1.5;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-font-smoothing:antialiased;}
 body{-webkit-tap-highlight-color:transparent;}
+::selection{background:var(--accent-soft);color:var(--text);}
 :focus-visible{outline:2px solid var(--accent) !important;outline-offset:2px;}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
 }
 
-/* ── NAV ── */
-nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
-.logo{font-family:var(--display);font-weight:400;font-size:25px;letter-spacing:4px;color:var(--text);cursor:pointer;}
-.tabs{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
-.tabs::-webkit-scrollbar{display:none;}
-.tab{background:none;border:none;color:var(--muted);font-family:var(--body);font-weight:700;font-size:13px;letter-spacing:0;padding:11px 14px;min-height:44px;cursor:pointer;border-radius:20px;white-space:nowrap;transition:background-color var(--dur-med) ease,color var(--dur-med) ease,transform var(--dur-fast) var(--ease-out);}
-.tab.on{background:var(--accent-deep);color:#fff;}
+/* ── TYPE ROLES ── */
+.lbl,.eyebrow{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);line-height:1.4;}
+.eyebrow{display:block;margin-bottom:6px;}
+.ttl{font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text);line-height:1.3;}
+.u{text-transform:uppercase;letter-spacing:.12em;}
+.num{font-variant-numeric:tabular-nums;}
+.dotnum{font-family:var(--dot);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:0;line-height:1;}
+.kpi{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);line-height:1;}
+.kpi.lg{font-size:38px;}
+.unit{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);}
+.delta{font-size:10px;font-weight:600;color:var(--success);font-variant-numeric:tabular-nums;}
+.delta.acc{color:var(--accent);}
+.idx,.row-index{font-size:11px;font-weight:500;color:var(--muted2);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:22px;}
+.chev,.row-chev{color:var(--muted2);font-size:16px;line-height:1;flex-shrink:0;}
+.row-chev::after{content:'\203A';}
+.stitle{font-family:var(--body);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--text);margin:24px 0 12px;}
+.page-title{font-size:18px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text);line-height:1.2;}
+.page-sub{font-size:11px;font-weight:400;color:var(--muted);margin-top:6px;line-height:1.5;}
+.sec-head{display:flex;align-items:center;gap:12px;margin:22px 0 10px;}
+.sec-head h2,.sec-head .lbl{white-space:nowrap;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);}
+.sec-line{flex:1;height:1px;background:var(--line);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0;vertical-align:middle;}
+
+/* ── BOTTOM NAV (ersetzt die obere Tab-Leiste; goPage() toggelt weiterhin .tab/.tab.on über #tab-*) ── */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:100;background:var(--bg);border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom,0px);}
+.tabs{display:flex;align-items:stretch;justify-content:space-between;width:100%;max-width:480px;margin:0 auto;height:var(--nav-h);padding:0 2px;}
+/* 8px/.08em statt 9px/.1em: sieben deutsche Labels ("CHALLENGE") passen sonst nicht in 360px */
+.tab{flex:1;min-width:0;background:none;border:none;color:var(--muted);font-family:var(--body);font-weight:500;font-size:8px;letter-spacing:.08em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 0;cursor:pointer;border-radius:var(--r-sm);white-space:nowrap;transition:color var(--dur-fast) ease,opacity var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out);}
+.tab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.tab span{display:block;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.tab.on{color:var(--accent);}
+.logo{font-family:var(--body);font-weight:600;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:var(--text);cursor:pointer;}
 
 /* ── PAGES ── */
-.page{display:none;padding:20px 20px 200px;max-width:480px;margin:0 auto;overflow:visible;}
+.page{display:none;padding:12px 16px calc(var(--nav-h) + 136px + env(safe-area-inset-bottom,0px));max-width:480px;margin:0 auto;overflow:visible;}
 .page.on{display:block;animation:pageIn var(--dur-med) var(--ease-out);}
-@keyframes pageIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
-/* ── START SCREEN ── */
+/* ── HOME HEADER ── */
 .start-screen{display:block;}
-.start-top{padding:20px 0 8px;}
-.start-logo{font-family:var(--display);font-weight:400;font-size:42px;letter-spacing:6px;color:var(--text);margin-bottom:2px;}
-.start-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.start-top{padding:4px 0 8px;}
+.home-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0 10px;}
+.start-logo,.wordmark{font-family:var(--body);font-weight:600;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:var(--text);line-height:1;cursor:pointer;}
+.date-chip{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);white-space:nowrap;}
+.greeting{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);line-height:1.7;margin-bottom:16px;max-width:260px;}
+.start-sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3em;}
 .start-bottom{padding:0;margin-top:20px;}
 
+/* ── TOP BAR (Unterseiten) ── */
+.topbar{height:48px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);margin:0 0 14px;}
+.topbar-title{flex:1;text-align:center;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.topbar-slot{width:36px;height:36px;flex-shrink:0;}
+
 /* ── BUTTONS ── */
-.start-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:19px;font-weight:800;padding:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
-.start-btn:active{transform:scale(0.97);}
-.btn{width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:15px;font-weight:700;padding:15px;cursor:pointer;margin-top:8px;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
-.btn:active{transform:scale(0.97);}
-.btn-g{background:#fff;border:none;color:var(--text);border-radius:20px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 16px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.06);transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
+.btn,.start-btn{width:100%;min-height:48px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-pill);font-family:inherit;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;padding:14px 18px;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease,background-color var(--dur-fast) ease;}
+.btn{margin-top:8px;}
+.btn.sm{width:auto;min-height:36px;padding:0 16px;font-size:10px;margin:0;}
+.btn.sec,.btn-sec{background:var(--cta2);color:var(--cta2-ink);}
+.btn-g{background:transparent;border:1px solid var(--line2);color:var(--text);border-radius:var(--r-pill);font-family:inherit;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;padding:9px 16px;min-height:36px;cursor:pointer;box-shadow:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease,border-color var(--dur-fast) ease;}
+.btn-g.sm{min-height:32px;padding:0 12px;font-size:11px;}
+.btn-g.danger{border-color:var(--red);color:var(--red);}
+.btn.sec:disabled,.btn:disabled,.start-btn:disabled{opacity:.5;cursor:default;}
+.pk-btn{transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease,border-color var(--dur-fast) ease;box-shadow:none;}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line2);background:transparent;color:var(--text);display:inline-flex;align-items:center;justify-content:center;font-family:inherit;font-size:16px;font-weight:500;cursor:pointer;padding:0;flex-shrink:0;line-height:1;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease,border-color var(--dur-fast) ease;}
+.icon-btn.sm{width:36px;height:36px;font-size:14px;}
+.icon-btn.acc{background:var(--accent);border-color:var(--accent);color:#fff;}
+.icon-btn.danger{border-color:var(--red);color:var(--red);}
+.icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.icon-btn.sm svg{width:16px;height:16px;}
 
 /* ── CARDS ── */
-.card{background:var(--bg2);border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.card,.pk-card,.plan-card,.cc,.ch-card,.wh-item,.ei,.hi,.bb,.peb,.badge-item,.stat-tile,.list{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:none;}
+.card{padding:14px;margin-bottom:10px;transition:border-color var(--dur-fast) ease;}
+.pk-card{transition:border-color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.card .card,.card .pk-card,.pk-card .card{background:var(--card2);}
 
-/* ── PREMIUM CARD/BUTTON — soft shadow, gentle hover lift (Parks page etc.) ── */
-.pk-card{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);transition:box-shadow 0.2s ease,transform 0.2s ease;}
-.pk-btn{transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
-.stitle{font-family:var(--body);font-weight:700;font-size:16px;letter-spacing:0;color:var(--accent-ink);margin:28px 0 14px;}
-
-/* ── SIMPLE ACTION TILE ── */
-.action-tile{aspect-ratio:1;background:#fff;border:none;color:var(--text);border-radius:20px;font-family:inherit;font-size:11px;font-weight:600;padding:14px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;box-shadow:0 12px 30px rgba(0,0,0,0.06);transition:box-shadow 0.2s ease,transform 0.2s ease;}
+/* ── ACTION TILE ── */
+.action-tile{aspect-ratio:1;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:var(--r-card);font-family:inherit;font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-shadow:none;transition:border-color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
 .action-tile span{font-size:20px;}
-.action-tile-icon-wrap{width:34px;height:34px;border-radius:11px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;}
+.action-tile-icon-wrap{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.action-tile-icon-wrap svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 
-/* ── WORKOUT BAR ── */
-.wo-bar{background:var(--accent-deep);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:24px;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:0 12px 30px rgba(255,85,0,0.22);}
-.wo-bar-left{display:flex;flex-direction:column;gap:2px;}
-.wo-bar-status{font-size:12px;color:#fff;font-weight:700;}
-.wo-bar-timer{font-family:inherit;font-weight:800;font-size:32px;color:#fff;font-variant-numeric:tabular-nums;line-height:1;}
-.wo-bar-date{font-size:11px;color:#fff;}
-.wo-end-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 14px;cursor:pointer;text-align:center;}
-.wo-bar-right{display:flex;gap:6px;}
-.wo-time{font-family:inherit;font-weight:800;font-size:32px;color:#fff;}
-.wo-label{font-size:11px;color:#fff;}
-.wo-end{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:10px;padding:8px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;}
+/* ── STAT TILE ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.stat-tile{padding:14px;display:flex;flex-direction:column;gap:8px;position:relative;min-width:0;}
+.stat-tile .delta{position:absolute;top:14px;right:14px;}
+.stat-tile .kpi-row{display:flex;align-items:baseline;gap:6px;}
+.minibars{display:flex;align-items:flex-end;gap:3px;height:20px;margin-top:2px;}
+.minibars i{display:block;width:2px;height:var(--h,30%);background:var(--line2);flex-shrink:0;}
+.minibars i.on{background:var(--accent);}
+
+/* ── SEGMENT CONTROL ── */
+.seg-ctl{display:flex;background:var(--card2);border-radius:var(--r-pill);padding:3px;height:32px;gap:2px;margin-bottom:14px;}
+.seg-ctl>button{flex:1;min-width:0;background:none;border:none;border-radius:var(--r-pill);color:var(--muted);font-family:inherit;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1;transition:background-color var(--dur-fast) ease,color var(--dur-fast) ease;}
+.seg-ctl>button.on,.seg-ctl>button[aria-selected="true"]{background:var(--line2);color:var(--text);}
+
+/* ── SEGMENTED / LINE BARS ── */
+.segbar{--pct:0;position:relative;height:6px;background:repeating-linear-gradient(90deg,var(--line2) 0 4px,transparent 4px 6px);}
+.segbar::before{content:'';position:absolute;inset:0;width:calc(var(--pct)*1%);max-width:100%;background:repeating-linear-gradient(90deg,var(--accent) 0 4px,transparent 4px 6px);transition:width var(--dur-slow) var(--ease-out);}
+.segbar-dots{display:flex;gap:2px;height:6px;}
+.segbar-dots i{display:block;flex:1;height:6px;background:var(--line2);transition:background-color var(--dur-fast) ease;transition-delay:calc(var(--k,0)*30ms);}
+.segbar-dots i.on{background:var(--accent);}
+.linebar{height:3px;background:var(--line2);overflow:hidden;}
+.linebar>i,.linebar>div{display:block;height:100%;width:calc(var(--pct,0)*1%);background:var(--accent);transition:width var(--dur-slow) var(--ease-out);}
+.prog-bar{background:var(--line2);border-radius:0;height:3px;overflow:hidden;margin:8px 0;}
+.prog-fill{height:100%;background:var(--accent);border-radius:0;transition:width var(--dur-slow) var(--ease-out);}
+.dotgrid{display:grid;grid-template-columns:repeat(auto-fill,6px);gap:4px;}
+.dotgrid i{display:block;width:6px;height:6px;border-radius:50%;background:var(--line2);}
+.dotgrid i.on{background:var(--accent);}
+
+/* ── TOGGLE ── */
+.toggle{width:40px;height:22px;border-radius:var(--r-pill);background:var(--line2);border:none;position:relative;cursor:pointer;padding:0;flex-shrink:0;transition:background-color var(--dur-fast) ease;}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform var(--dur-fast) var(--ease-out);}
+.toggle.on,.toggle[aria-checked="true"]{background:var(--accent);}
+.toggle.on::after,.toggle[aria-checked="true"]::after{transform:translateX(18px);}
+
+/* ── LIST ROWS ── */
+.list{overflow:hidden;margin-bottom:10px;}
+.list-row{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 14px;border-bottom:1px solid var(--line);cursor:pointer;background:transparent;width:100%;text-align:left;font-family:inherit;color:var(--text);border-left:none;border-right:none;border-top:none;transition:background-color var(--dur-fast) ease;}
+.list-row:last-child{border-bottom:none;}
+.row-main{flex:1;min-width:0;}
+.row-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.row-sub{font-size:11px;font-weight:400;color:var(--muted);margin-top:2px;line-height:1.4;}
+.row-val{font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;flex-shrink:0;}
+.row-icon{width:44px;height:44px;border:1px solid var(--line);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;}
+.row-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;}
+/* Auto-Nummerierung per CSS-Counter: Container .numbered, jede direkte Kind-Zeile bekommt "01"… als ::before */
+.numbered{counter-reset:li;}
+.numbered>*{counter-increment:li;}
+.numbered>*::before{content:counter(li,decimal-leading-zero);font-size:11px;font-weight:500;color:var(--muted2);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:22px;}
+.numbered>.empty,.numbered>.stitle,.numbered>h2,.numbered>.pk-card:not([role="button"]){counter-increment:none;}
+.numbered>.empty::before,.numbered>.stitle::before,.numbered>h2::before,.numbered>.peb::before,.numbered>.pk-card:not([role="button"])::before{content:none;}
+.numbered>.peb>.peb-header::before{content:counter(li,decimal-leading-zero);font-size:11px;font-weight:500;color:var(--muted2);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:22px;}
+
+/* ── WORKOUT BAR (aktives Workout) ── */
+.wo-bar{background:var(--card);border:1px solid var(--line);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:var(--r-card);margin-bottom:16px;position:relative;overflow:hidden;box-shadow:none;}
+.wo-bar-left{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.wo-bar-status{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.14em;display:flex;align-items:center;gap:6px;}
+.wo-bar-timer{font-family:var(--dot);font-weight:800;font-size:40px;color:var(--text);font-variant-numeric:tabular-nums;line-height:1;}
+.wo-bar-date{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.12em;}
+.wo-bar-right{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.wo-end-btn{background:var(--cta2);border:none;color:var(--cta2-ink);border-radius:var(--r-pill);font-family:inherit;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;padding:10px 14px;cursor:pointer;text-align:center;line-height:1.3;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.wo-cancel-btn{background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:var(--r-pill);font-family:inherit;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;padding:7px 12px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.wo-time{font-family:var(--dot);font-weight:800;font-size:32px;color:var(--text);}
+.wo-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;}
+.wo-end{background:var(--cta2);border:none;color:var(--cta2-ink);border-radius:var(--r-pill);padding:8px 12px;font-family:inherit;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;}
 
 /* ── SETS ── */
-.set-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.set-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
 .set-item:last-child{border:none;}
-.set-n{font-size:11px;font-weight:700;color:var(--muted);width:18px;}
-.set-reps{flex:1;font-size:15px;font-weight:600;color:var(--text);}
-.set-band{font-size:11px;color:var(--teal-ink);}
-.set-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px 8px;}
+.set-n{font-size:11px;font-weight:500;color:var(--muted2);width:22px;font-variant-numeric:tabular-nums;}
+.set-reps{flex:1;font-size:14px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;}
+.set-band{font-size:11px;color:var(--muted);}
+.set-del{background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:6px 8px;font-family:inherit;}
 
-/* ── INPUT ── */
+/* ── INPUTS ── */
+.inp,.fg input,.fg select,.fg textarea,.peb-inp,.sinp,.b-cust,.bsets input,.bsets-add,.cs,.emom-inp{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:var(--r-input);padding:11px 14px;font-family:inherit;font-size:16px;font-weight:500;outline:none;width:100%;min-height:44px;-webkit-appearance:none;appearance:none;transition:border-color var(--dur-fast) ease;}
+.inp:focus,.fg input:focus,.fg select:focus,.fg textarea:focus,.peb-inp:focus,.sinp:focus,.b-cust:focus,.bsets input:focus,.cs:focus,.emom-inp:focus{border-color:var(--line2);}
+select.inp,.fg select,.cs{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239A9A9A' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
+::placeholder{color:var(--muted2);opacity:1;}
+.cs{width:auto;min-height:32px;padding:6px 30px 6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;border-radius:var(--r-pill);}
 .bsets{display:flex;gap:8px;margin-top:12px;align-items:center;}
-.bsets input,.bsets-add{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:16px;font-weight:600;outline:none;}
-.bsets-add{flex:none;background:var(--accent-deep);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);}
-
-/* ── FORM ── */
+.bsets input{flex:1;}
+.bsets-add{flex:none;width:auto;background:var(--accent);color:#fff;border:none;border-radius:var(--r-pill);padding:10px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
 .fg{margin-bottom:12px;}
-.fg label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;}
-.fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:16px;outline:none;}
-.fg input:focus,.fg select:focus{border-color:var(--border2);}
+.fg label{display:block;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:6px;}
+.sinp{text-align:center;padding:8px;min-height:40px;}
+.peb-inp{padding:9px 12px;min-height:40px;}
 
-/* ── EXERCISE ROW ── */
-.ex-row{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff;border:none;border-radius:20px;margin-bottom:8px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.05);transition:box-shadow 0.2s ease,transform 0.2s ease;}
-.ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ex-name-t{font-size:13px;font-weight:600;color:var(--text);flex:1;}
-.ex-cat-t{font-size:11px;color:var(--muted);}
+/* ── EXERCISE ROW (Übungsauswahl) ── */
+.ex-row{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);margin-bottom:8px;cursor:pointer;box-shadow:none;transition:border-color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.ex-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ex-name-t{font-size:13px;font-weight:500;color:var(--text);flex:1;}
+.ex-cat-t{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;}
 
 /* ── PLAN CARDS ── */
-.plan-btn{width:100%;background:#fff;border:none;color:var(--text);border-radius:20px;font-family:inherit;font-size:14px;font-weight:700;padding:16px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;margin-bottom:8px;box-shadow:0 8px 20px rgba(0,0,0,0.05);transition:box-shadow 0.2s ease,transform 0.2s ease;}
-.plan-card{background:var(--bg2);border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px 20px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
-.plan-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.plan-name{font-size:15px;font-weight:700;color:var(--text);}
-.plan-excount{font-size:11px;color:var(--muted);}
-.plan-exrow{display:flex;align-items:center;gap:8px;padding:5px 0;}
-.plan-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.plan-exname{font-size:12px;font-weight:600;color:var(--text);flex:1;}
-.plan-exsets{font-size:11px;color:var(--muted);}
-.plan-actions{display:flex;gap:8px;margin-top:10px;}
-.plan-start-btn{flex:1;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);}
-.plan-del-btn{background:var(--bg3);border:none;color:var(--muted);border-radius:16px;font-family:inherit;font-size:12px;font-weight:700;padding:11px 14px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);}
+.plan-btn{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:var(--r-card);font-family:inherit;font-size:13px;font-weight:500;padding:0 14px;min-height:52px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;margin-bottom:0;box-shadow:none;transition:border-color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.plan-card{padding:14px;margin-bottom:10px;counter-reset:pl;transition:border-color var(--dur-fast) ease;}
+.plan-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
+.plan-name{font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text);}
+.plan-excount{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;white-space:nowrap;}
+.plan-exrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);counter-increment:pl;}
+.plan-exrow:last-of-type{border-bottom:none;}
+.plan-exrow::before{content:counter(pl,decimal-leading-zero);font-size:11px;font-weight:500;color:var(--muted2);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:22px;}
+.plan-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.plan-exname{font-size:13px;font-weight:500;color:var(--text);flex:1;}
+.plan-exsets{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.plan-actions{display:flex;gap:8px;margin-top:12px;}
+.plan-start-btn{flex:1;background:var(--accent);color:#fff;border:none;border-radius:var(--r-pill);font-family:inherit;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;padding:11px;min-height:40px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.plan-del-btn{background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:var(--r-pill);font-family:inherit;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;padding:11px 14px;min-height:40px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease,border-color var(--dur-fast) ease;}
 
-/* ── PLAN BLOCKS (active workout) ── */
-.peb{background:#fff;border:none;border-radius:20px;margin-bottom:12px;overflow:visible;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
-.peb-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;}
-.peb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.peb-name{flex:1;font-size:14px;font-weight:700;color:var(--text);}
-.peb-status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--muted);}
-.peb-status.done{background:rgba(255,85,0,0.1);color:var(--accent-ink);}
-.peb-arrow{font-size:12px;color:var(--muted);transition:transform var(--dur-med) var(--ease-out);}
+/* ── PLAN BLOCKS (aktives Workout) ── */
+.peb{margin-bottom:10px;overflow:visible;box-shadow:none;transition:border-color var(--dur-fast) ease;}
+.peb-header{display:flex;align-items:center;gap:10px;padding:12px 14px;min-height:52px;cursor:pointer;}
+.peb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.peb-name{flex:1;font-size:13px;font-weight:500;color:var(--text);min-width:0;}
+.peb-status{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;padding:4px 8px;border-radius:var(--r-pill);background:var(--card2);color:var(--muted);border:1px solid var(--line);white-space:nowrap;}
+.peb-status.done{background:var(--accent-soft);color:var(--accent);border-color:transparent;}
+.peb-arrow{font-size:12px;color:var(--muted2);transition:transform var(--dur-med) var(--ease-out);}
 .peb-arrow.open{transform:rotate(90deg);}
-.peb-body{display:none;padding:0 14px 14px;}
+.peb-body{display:none;padding:0 14px 14px;border-top:1px solid var(--line);padding-top:12px;}
 .peb-body.open{display:block;}
 .peb-setrow{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;margin-bottom:8px;}
-.peb-snum{font-size:13px;font-weight:700;text-align:center;}
-.peb-inp{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:16px;font-weight:600;outline:none;width:100%;}
-.peb-add-btn{width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;margin-top:4px;transition:transform var(--dur-fast) var(--ease-out);}
+.peb-snum{font-size:11px;font-weight:500;text-align:center;color:var(--muted2);font-variant-numeric:tabular-nums;}
+.peb-add-btn{width:100%;background:var(--cta2);color:var(--cta2-ink);border:none;border-radius:var(--r-pill);font-family:inherit;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;padding:12px;min-height:44px;cursor:pointer;margin-top:4px;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
 
 /* ── PLAN FORM ── */
-.pf-ex-item{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:16px;padding:10px 12px;margin-bottom:6px;}
-.pf-ex-col{flex:1;}
-.pf-ex-name{font-size:13px;font-weight:700;color:var(--text);}
-.pf-ex-sets{font-size:11px;color:var(--muted);margin-top:2px;}
-.pf-ex-del{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;}
+.pf-ex-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:6px;min-height:48px;}
+.pf-ex-col{flex:1;min-width:0;}
+.pf-ex-name{font-size:13px;font-weight:500;color:var(--text);}
+.pf-ex-sets{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.pf-ex-del{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;font-family:inherit;}
 .sh{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;padding:0 0 6px;}
-.sh span{font-size:11px;color:var(--muted);font-weight:600;}
-.sr{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
-.snum{font-size:14px;font-weight:700;text-align:center;}
-.sinp{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px;font-family:inherit;font-size:16px;font-weight:600;outline:none;text-align:center;}
-.sdel{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px;}
+.sh span{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.12em;}
+.sr{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);}
+.snum{font-size:11px;font-weight:500;text-align:center;color:var(--muted2);font-variant-numeric:tabular-nums;}
+.sdel{background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:6px;font-family:inherit;}
 
 /* ── WORKOUT EXERCISE LIST ── */
-.wo-ex-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+/* Rahmen schon beim ersten Paint (app1.js _woExListEl hängt später zusätzlich .list an) */
+.wo-ex-list{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;margin-bottom:10px;}
+.wo-ex-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);}
 .wo-ex-item:last-child{border:none;}
-.wo-ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
-.wo-ex-col{flex:1;}
-.wo-ex-name{font-size:14px;font-weight:700;color:var(--text);}
-.wo-ex-sets{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
+.wo-ex-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.wo-ex-col{flex:1;min-width:0;}
+.wo-ex-name{font-size:13px;font-weight:500;color:var(--text);}
+.wo-ex-sets{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;font-variant-numeric:tabular-nums;}
 
-/* ── BAND CHIPS ── */
-.band-row-lbl{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;}
+/* ── CHIPS / PILLS ── */
+.band-row-lbl{font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
-.chip{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:9px 14px;min-height:36px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
-.chip.on{background:rgba(78,205,196,0.12);border-color:var(--teal);color:var(--teal-ink);}
-.b-cust{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:16px;outline:none;margin-top:4px;}
-
-/* ── CAT FILTER ── */
+.chip,.cat-btn,.fp,.belt-toggle{background:var(--card2);border:1px solid var(--line);color:var(--muted);border-radius:var(--r-pill);padding:8px 14px;min-height:36px;font-family:inherit;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease,border-color var(--dur-fast) ease,color var(--dur-fast) ease,opacity var(--dur-fast) ease;}
+.chip.on,.cat-btn.on,.fp.on{background:var(--line2);border-color:var(--line2);color:var(--text);}
+.belt-toggle{border-radius:var(--r-pill);}
+.belt-toggle.on{background:var(--line2);border-color:var(--line2);color:var(--text);}
+.belt-row{display:flex;align-items:center;gap:8px;margin:8px 0;}
+.b-cust{margin-top:4px;padding:9px 12px;min-height:40px;}
 .cat-scroll{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:12px;}
 .cat-scroll::-webkit-scrollbar{display:none;}
-.cat-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:9px 14px;min-height:36px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
-.cat-btn.on{background:var(--text);color:var(--bg);border-color:var(--text);}
-
-/* ── BELT TOGGLE ── */
-.belt-toggle{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
-.belt-toggle.on{background:var(--blue-ink);border-color:var(--blue-ink);color:#fff;}
-.belt-row{display:flex;align-items:center;gap:8px;margin:8px 0;}
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
 
 /* ── CHART ── */
 canvas{max-width:100%;}
-.cc{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
-.ct{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.cl{font-size:12px;font-weight:700;color:var(--muted);}
-.cs{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:5px 10px;font-family:inherit;font-size:12px;outline:none;}
-.empty{font-size:13px;color:var(--muted);padding:16px 0;text-align:center;}
+.cc{padding:14px;margin-bottom:10px;transition:border-color var(--dur-fast) ease;}
+.ct{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;}
+.cl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);}
+.empty{font-size:11px;color:var(--muted2);padding:16px 0;text-align:center;text-transform:uppercase;letter-spacing:.1em;}
 
 /* ── MAX ── */
-.max-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.max-item{display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:10px 0;border-bottom:1px solid var(--line);}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
-.fp{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:9px 14px;min-height:36px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
-.fp.on{background:var(--text);color:var(--bg);border-color:var(--text);}
-.ei{background:#fff;border:none;border-radius:20px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
+.ei{padding:12px 14px;margin-bottom:8px;}
 .et{display:flex;flex-direction:column;gap:2px;}
-.ed{font-size:11px;color:var(--muted);}
-.en{font-size:14px;font-weight:700;color:var(--text);}
-.edel{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;align-self:flex-end;padding:6px;}
+.ed{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;}
+.en{font-size:13px;font-weight:500;color:var(--text);}
+.edel{background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;align-self:flex-end;padding:6px;font-family:inherit;}
 
 /* ── CHALLENGE ── */
-.ch-card{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.ch-card{padding:14px;margin-bottom:10px;overflow:hidden;transition:border-color var(--dur-fast) ease;}
+
+/* ── PHOTOS: grayscale + Verlauf ── */
+.hero{position:relative;border-radius:var(--r-card);overflow:hidden;border:1px solid var(--line);min-height:300px;background:var(--card);}
+.hero-photo{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;filter:grayscale(1) contrast(1.15) brightness(0.85);}
+.hero-photo img,.hero>img{width:100%;height:100%;object-fit:cover;display:block;}
+.hero-shade{position:absolute;inset:0;background:linear-gradient(transparent 30%,rgba(11,11,11,0.95));pointer-events:none;}
+.hero-body{position:relative;}
+.hero-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:14px;display:flex;align-items:center;gap:12px;}
+img.photo,.ch-card img,.ch-photo img,.hero img,img[src*="challenge-"],img[src*="hero-workout"],.avatar img,img.avatar{filter:grayscale(1) contrast(1.15) brightness(0.85);}
+.ch-photo{position:relative;height:140px;overflow:hidden;border-radius:var(--r-sm);margin-bottom:12px;background:var(--card2);}
+.ch-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.ch-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 30%,rgba(11,11,11,0.95));}
+/* Fallback für das per Inline-Style gesetzte Hero-Foto in #streak-widget (main2ba.js), bis es auf .hero/.hero-photo umgestellt ist */
+#streak-widget>div[style*="hero-workout"]{background-blend-mode:luminosity !important;border-radius:var(--r-card) !important;box-shadow:none !important;border:1px solid var(--line);}
+.avatar{width:88px;height:88px;border-radius:50%;overflow:hidden;border:1px solid var(--line2);background:var(--card2);}
 
 /* ── HR ── */
-.uz{background:var(--bg2);border:2px dashed var(--border2);border-radius:24px;padding:28px;text-align:center;cursor:pointer;margin-bottom:12px;}
-.ui{font-size:36px;margin-bottom:8px;}
-.ut{font-size:13px;color:var(--muted);line-height:1.6;}
+.uz{background:var(--card);border:1px dashed var(--line2);border-radius:var(--r-card);padding:28px;text-align:center;cursor:pointer;margin-bottom:10px;}
+.ui{font-size:24px;margin-bottom:8px;color:var(--muted);}
+.ut{font-size:11px;color:var(--muted);line-height:1.6;}
 .hg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.hi{background:#fff;border:none;border-radius:20px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,0.06);}
-.hi img{width:100%;display:block;}
-.hii{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;}
-.hd{font-size:11px;color:var(--muted);}
-.hdel{background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;}
+.hi{overflow:hidden;}
+.hi img{width:100%;display:block;filter:grayscale(1) contrast(1.15) brightness(0.85);}
+.hii{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-top:1px solid var(--line);}
+.hd{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+.hdel{background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;font-family:inherit;}
 
 /* ── WORKOUT HISTORY ── */
-.wh-item{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px 20px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;content-visibility:auto;contain-intrinsic-size:auto 120px;}
-.wh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.wh-date{font-size:14px;font-weight:800;color:var(--accent-ink);}
-.wh-dur{font-size:12px;color:var(--muted);}
+.wh-item{padding:14px;margin-bottom:10px;transition:border-color var(--dur-fast) ease;content-visibility:auto;contain-intrinsic-size:auto 120px;}
+.wh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+.wh-date{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);}
+.wh-dur{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-variant-numeric:tabular-nums;}
 .wh-exlist{display:flex;flex-direction:column;gap:6px;}
 .wh-ex{display:flex;align-items:flex-start;gap:8px;}
-.wh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
-.wh-exname{font-size:13px;font-weight:700;color:var(--text);}
-.wh-sets{font-size:11px;color:var(--muted);margin-top:2px;}
+.wh-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.wh-exname{font-size:13px;font-weight:500;color:var(--text);}
+.wh-sets{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
 
 /* ── BESTS ── */
-.bb{background:#fff;border:none;border-radius:20px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
-.bbn{font-size:14px;font-weight:700;color:var(--text);}
+.bb{padding:12px 14px;margin-bottom:8px;}
+.bbn{font-size:13px;font-weight:500;color:var(--text);}
 
 /* ── PROFIL ── */
-.badge-item{background:#fff;border:none;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:8px;margin-bottom:8px;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
+.badge-item{padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 
 /* ── TOAST — CSS owns the entrance (toastIn), JS (app1.js toast()) owns the exit fade ── */
-.toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:3000;white-space:nowrap;pointer-events:none;animation:toastIn var(--dur-med) var(--ease-out);}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,12px);}to{opacity:1;transform:translate(-50%,0);}}
+.toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--cta2);color:var(--cta2-ink);border:1px solid var(--cta2);padding:10px 16px;border-radius:var(--r-pill);font-size:11px;font-weight:600;letter-spacing:.02em;z-index:3000;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:toastIn var(--dur-med) var(--ease-out);}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,8px);}to{opacity:1;transform:translate(-50%,0);}}
 
 /* ── HINT ── */
-.start-hint{font-size:11px;color:var(--muted);text-align:center;}
+.start-hint{font-size:10px;color:var(--muted2);text-align:center;text-transform:uppercase;letter-spacing:.12em;}
 
-/* ── PROG BAR ── */
-.prog-bar{background:var(--bg3);border-radius:20px;height:4px;overflow:hidden;margin:8px 0;}
-.prog-fill{height:100%;background:var(--accent);border-radius:20px;transition:width var(--dur-slow) var(--ease-out);}
-
-/* ── TYPE UTILITIES ── */
-.num{font-variant-numeric:tabular-nums;}
-.page-title{font-size:32px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.1;}
-.page-sub{font-size:13px;font-weight:400;color:var(--muted);margin-top:6px;line-height:1.5;}
-
-/* ── DESKTOP-ONLY HOVER LIFTS (touch gets :active press instead) ── */
+/* ── HOVER: nur Rahmenwechsel --line → --line2 ── */
 @media (hover:hover){
-  .start-btn:hover,.btn:hover,.btn-g:hover,.pk-btn:hover,.plan-start-btn:hover,.plan-del-btn:hover,.peb-add-btn:hover{transform:scale(1.02);}
-  .card:hover,.pk-card:hover,.action-tile:hover,.plan-card:hover,.cc:hover,.ch-card:hover,.wh-item:hover{box-shadow:0 16px 40px rgba(0,0,0,0.10);transform:translateY(-2px);}
-  .ex-row:hover,.plan-btn:hover{box-shadow:0 12px 28px rgba(0,0,0,0.08);transform:translateY(-1px);}
+  .card:hover,.pk-card:hover,.action-tile:hover,.plan-card:hover,.cc:hover,.ch-card:hover,.wh-item:hover,.ex-row:hover,.plan-btn:hover,.peb:hover,.ei:hover,.bb:hover,.stat-tile:hover,.list-row:hover{border-color:var(--line2);}
+  .btn-g:hover,.icon-btn:hover,.plan-del-btn:hover,.chip:hover,.cat-btn:hover,.fp:hover{border-color:var(--muted2);}
+  .btn:hover,.start-btn:hover,.plan-start-btn:hover,.peb-add-btn:hover,.bsets-add:hover,.wo-end-btn:hover{opacity:.92;}
+  .tab:hover{color:var(--text);}
+  .tab.on:hover{color:var(--accent);}
+  .list-row:hover{background:var(--card2);}
 }
 
-/* ── PRESS FEEDBACK ── */
-.pk-btn:active,.btn-g:active,.plan-start-btn:active,.plan-del-btn:active,.peb-add-btn:active,.tab:active,.chip:active,.cat-btn:active,.fp:active,.belt-toggle:active,.bsets-add:active,.wo-end-btn:active{transform:scale(0.96);}
-.ex-row:active,.plan-btn:active,.action-tile:active,.pk-card:active{transform:scale(0.97);}
-.pressable{transition:transform var(--dur-fast) var(--ease-out);}
-.pressable:active{transform:scale(0.985);}
+/* ── PRESS FEEDBACK: scale(0.98) + Opazität ── */
+.btn:active,.start-btn:active,.pk-btn:active,.btn-g:active,.icon-btn:active,.plan-start-btn:active,.plan-del-btn:active,.peb-add-btn:active,.tab:active,.chip:active,.cat-btn:active,.fp:active,.belt-toggle:active,.bsets-add:active,.wo-end-btn:active,.wo-cancel-btn:active,.seg-ctl>button:active,.toggle:active,
+.ex-row:active,.plan-btn:active,.action-tile:active,.pk-card:active,.list-row:active,.peb-header:active{transform:scale(0.98);opacity:.85;}
+.pressable{transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.pressable:active{transform:scale(0.98);opacity:.85;}
 
 /* ── MOTION SYSTEM ── */
 /* Entrance: builders add .anim-in (+ style.setProperty('--i',n) for stagger) — or call caliMotion.stagger(container) */
-@keyframes riseIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes riseIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 /* fill-mode backwards (nicht both): der from-Zustand gilt während des Stagger-Delays,
    nach dem Lauf fällt das Element auf seine eigenen Styles zurück — sonst würde die
    Animation inline gesetzte opacity-Werte (gesperrte Abzeichen, bereits hinzugefügte
    Pläne) dauerhaft auf 1 überschreiben. */
-.anim-in{animation:riseIn var(--dur-med) var(--ease-out) backwards;animation-delay:calc(var(--i,0)*40ms);}
+.anim-in{animation:riseIn var(--dur-med) var(--ease-out) backwards;animation-delay:calc(var(--i,0)*30ms);}
 
 /* Bottom sheet + backdrop: base class at creation, -in class via double rAF (caliMotion.sheetIn does both) */
 .sheet-anim{transform:translateY(100%);transition:transform var(--dur-slow) var(--ease-sheet);will-change:transform;}
 .sheet-anim.sheet-in{transform:translateY(0);}
 .backdrop-anim{opacity:0;transition:opacity var(--dur-med) ease;}
 .backdrop-anim.backdrop-in{opacity:1;}
+/* Sheet-/Overlay-Optik (Klassen für Builder; Inline-Styles der Builder bleiben gültig) */
+.sheet{background:var(--card);border-top:1px solid var(--line2);border-radius:var(--r-card) var(--r-card) 0 0;width:100%;max-width:480px;padding:20px 16px calc(28px + env(safe-area-inset-bottom,0px));}
+.sheet-grip{width:36px;height:3px;background:var(--line2);border-radius:var(--r-pill);margin:0 auto 16px;}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;}
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:2000;overflow-y:auto;}
 
 /* Fullscreen overlay entrance (caliMotion.overlayIn) */
-.overlay-anim{opacity:0;transform:translateY(16px);transition:opacity var(--dur-med) var(--ease-out),transform var(--dur-med) var(--ease-out);}
+.overlay-anim{opacity:0;transform:translateY(10px);transition:opacity var(--dur-med) var(--ease-out),transform var(--dur-med) var(--ease-out);}
 .overlay-anim.overlay-in{opacity:1;transform:translateY(0);}
 
 /* Scroll containment for sheet/overlay scroll areas */
 .sheet-scroll{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 
-/* Streak flame pulse */
-@keyframes flamePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
-.flame-pulse{display:inline-block;animation:flamePulse 1.8s ease-in-out infinite;transform-origin:50% 80%;}
+/* Streak flame pulse (Legacy-Hook, jetzt ohne Overshoot) */
+@keyframes flamePulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+.flame-pulse{display:inline-block;animation:flamePulse 1.8s ease-in-out infinite;}
 
 /* Live recording dot (wo-bar) */
 @keyframes recPulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
-.rec-dot{animation:recPulse 1.6s ease-in-out infinite;}
+.rec-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);font-size:0;line-height:0;animation:recPulse 1.6s ease-in-out infinite;flex-shrink:0;}
+.live-dot.pulse{animation:recPulse 1.6s ease-in-out infinite;}
 
 /* XP float-up label (caliMotion.floatUp) */
 @keyframes floatUp{0%{opacity:0;transform:translate(-50%,6px);}15%{opacity:1;}100%{opacity:0;transform:translate(-50%,-44px);}}
-.float-up{position:fixed;z-index:4000;pointer-events:none;font-size:15px;font-weight:800;color:var(--accent-ink);animation:floatUp 1.2s var(--ease-out) forwards;white-space:nowrap;}
+.float-up{position:fixed;z-index:4000;pointer-events:none;font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--accent);animation:floatUp 1.2s var(--ease-out) forwards;white-space:nowrap;font-variant-numeric:tabular-nums;}
 
-/* Celebration burst (caliMotion.celebrate) */
+/* Celebration burst (caliMotion.celebrate) — Partikel nur Orange + Weiß (Inline-Farben aus motion.js werden überschrieben) */
 .cali-burst{position:fixed;inset:0;z-index:5000;pointer-events:none;}
 @keyframes burstFly{0%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg);}100%{opacity:0;transform:translate(calc(-50% + var(--tx,0px)),calc(-50% + var(--ty,-120px))) scale(0.4) rotate(var(--rot,180deg));}}
-.burst-p{position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:3px;animation:burstFly var(--bd,900ms) var(--ease-out) forwards;}
+.burst-p{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:1px;background:var(--accent) !important;animation:burstFly var(--bd,900ms) var(--ease-out) forwards;}
+.burst-p:nth-child(2n){background:#fff !important;}
 
 /* Accordion physics: wrap collapsible content in .acc-body > one child; toggle .open */
 .acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur-med) var(--ease-out);}
 .acc-body.open{grid-template-rows:1fr;}
 .acc-body>*{overflow:hidden;min-height:0;}
 
-/* ── LOGIN ── */
+/* ── LOGIN / LOADING ── */
 #login-screen{background:var(--bg);}
 #loading-screen{background:var(--bg);}
+.auth-wordmark{font-family:var(--body);font-weight:600;font-size:40px;letter-spacing:.25em;text-transform:uppercase;color:var(--text);line-height:1;padding-left:.25em;}
+.auth-sub{font-size:12px;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-top:10px;padding-left:.3em;}
+.auth-link{background:none;border:none;color:var(--muted);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em;font-family:inherit;cursor:pointer;padding:8px;}
+.auth-or{display:flex;align-items:center;gap:12px;color:var(--muted2);font-size:10px;text-transform:uppercase;letter-spacing:.14em;margin:14px 0;}
+.auth-or>i{flex:1;height:1px;background:var(--line);display:block;}
+.motto-card{background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);line-height:1.6;}
+.version-card{text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted2);padding:16px 0;}
 </style>
 
   <!-- Firebase -->
@@ -347,52 +486,51 @@ canvas{max-width:100%;}
 
 <!-- LOADING SCREEN -->
 <div id="loading-screen" style="display:none;visibility:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;">
-  <div style="font-family:var(--display);font-weight:400;font-size:52px;letter-spacing:6px;color:var(--accent);">CALI</div>
-  <div style="font-size:13px;color:var(--muted);margin-top:8px;font-family:inherit;">Lädt...</div>
+  <div class="auth-wordmark">CALI</div>
+  <div class="auth-sub" style="display:flex;align-items:center;gap:8px;"><span class="live-dot pulse"></span>Lädt</div>
 </div>
 
 <!-- LOGIN SCREEN -->
-<div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;">
-  <div style="font-family:var(--display);font-weight:400;font-size:52px;letter-spacing:6px;color:var(--accent);margin-bottom:8px;">CALI</div>
-  <div style="font-size:13px;color:var(--muted);margin-bottom:40px;">Calisthenics Tracker</div>
-  <div style="display:flex;gap:0;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px;width:100%;max-width:320px;">
-    <button id="tab-login" onclick="showAuthTab('login')" style="flex:1;background:var(--accent-deep);color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:700;padding:10px;cursor:pointer;">Login</button>
-    <button id="tab-register" onclick="showAuthTab('register')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:700;padding:10px;cursor:pointer;">Registrieren</button>
+<div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;">
+  <div class="auth-wordmark">CALI</div>
+  <div class="auth-sub" style="margin-bottom:40px;">Tracker</div>
+  <div class="seg-ctl" style="width:100%;max-width:320px;margin-bottom:24px;">
+    <button id="tab-login" class="on" aria-selected="true" onclick="showAuthTab('login')">Login</button>
+    <button id="tab-register" aria-selected="false" onclick="showAuthTab('register')">Registrieren</button>
   </div>
   <div style="width:100%;max-width:320px;">
     <div style="margin-bottom:12px;">
-      <div style="font-size:12px;color:var(--muted);font-family:inherit;font-weight:600;margin-bottom:6px;">E-Mail</div>
-      <input type="email" id="auth-email" placeholder="deine@email.com" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
+      <div class="lbl" style="margin-bottom:6px;">E-Mail</div>
+      <input type="email" id="auth-email" class="inp" placeholder="deine@email.com">
     </div>
     <div style="margin-bottom:12px;">
-      <div style="font-size:12px;color:var(--muted);font-family:inherit;font-weight:600;margin-bottom:6px;">Passwort</div>
-      <input type="password" id="auth-password" placeholder="Mindestens 6 Zeichen" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
+      <div class="lbl" style="margin-bottom:6px;">Passwort</div>
+      <input type="password" id="auth-password" class="inp" placeholder="Mindestens 6 Zeichen">
     </div>
     <div id="auth-name-row" style="display:none;margin-bottom:12px;">
-      <div style="font-size:12px;color:var(--muted);font-family:inherit;font-weight:600;margin-bottom:6px;">Name</div>
-      <input type="text" id="auth-name" placeholder="Dein Name" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
+      <div class="lbl" style="margin-bottom:6px;">Name</div>
+      <input type="text" id="auth-name" class="inp" placeholder="Dein Name">
     </div>
-    <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:800;padding:14px;cursor:pointer;margin-bottom:16px;box-shadow:0 12px 30px rgba(255,85,0,0.22);">Einloggen</button>
-    <div style="display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin-bottom:16px;"><div style="flex:1;height:1px;background:var(--border);"></div>oder<div style="flex:1;height:1px;background:var(--border);"></div></div>
-    <button onclick="authGoogle()" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:13px;cursor:pointer;">Mit Google anmelden</button>
-    <div id="auth-error" style="color:var(--red);font-size:12px;text-align:center;margin-top:12px;display:none;"></div>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center;">
-      <button onclick="demoLogin()" style="background:none;border:none;color:var(--muted);font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;">Ohne Login testen (Demo)</button>
+    <button id="auth-submit-btn" onclick="authSubmit()" class="btn" style="margin:8px 0 0;">Einloggen</button>
+    <div class="auth-or"><i></i>oder<i></i></div>
+    <button onclick="authGoogle()" class="btn-g" style="width:100%;min-height:44px;">Mit Google anmelden</button>
+    <div id="auth-error" style="color:var(--red);font-size:11px;text-align:center;margin-top:12px;display:none;"></div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);text-align:center;">
+      <button onclick="demoLogin()" class="auth-link">Ohne Login testen (Demo)</button>
     </div>
   </div>
 </div>
 
 
-<nav>
-  <div class="logo" role="button" tabindex="0" aria-label="Zur Startseite" onclick="goPage('e')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPage('e');}">CALI</div>
+<nav aria-label="Hauptnavigation">
   <div class="tabs">
-    <button class="tab on" id="tab-e" onclick="goPage('e')">Workout</button>
-    <button class="tab" id="tab-p" onclick="goPage('p')">Pläne</button>
-    <button class="tab" id="tab-m" onclick="goPage('m')">Max</button>
-    <button class="tab" id="tab-ch" onclick="goPage('ch')">Challenge</button>
-    <button class="tab" id="tab-pr" onclick="goPage('pr')">Profil</button>
-    <button class="tab" id="tab-parks" onclick="goPage('parks')">Parks</button>
-    <button class="tab" id="tab-rek" onclick="goPage('rek')">Rekorde</button>
+    <button class="tab on" id="tab-e" onclick="goPage('e')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/></svg><span>Workout</span></button>
+    <button class="tab" id="tab-p" onclick="goPage('p')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>Pläne</span></button>
+    <button class="tab" id="tab-m" onclick="goPage('m')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span>Max</span></button>
+    <button class="tab" id="tab-ch" onclick="goPage('ch')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg><span>Challenge</span></button>
+    <button class="tab" id="tab-pr" onclick="goPage('pr')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c.2-2.5 1.8-4 4-4"/></svg><span>Profil</span></button>
+    <button class="tab" id="tab-parks" onclick="goPage('parks')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span>Parks</span></button>
+    <button class="tab" id="tab-rek" onclick="goPage('rek')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4a3 3 0 003 3M17 5h3a3 3 0 01-3 3"/><path d="M12 13v3M9 20h6M9.5 20c0-2 1-2.5 2.5-3s2.5-1 2.5-3"/></svg><span>Rekorde</span></button>
   </div>
 </nav>
 
@@ -402,13 +540,15 @@ canvas{max-width:100%;}
   <!-- START SCREEN (shown when no active workout) -->
   <div id="start-screen" class="start-screen">
     <div class="start-top">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div>
-          <div class="start-logo">CALI</div>
-          <div class="start-sub">Calisthenics Tracker</div>
+      <div class="home-head">
+        <div class="start-logo" role="button" tabindex="0" aria-label="Zur Startseite" onclick="goPage('e')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPage('e');}">CALI</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="date-chip"><span class="live-dot"></span><span id="start-date"></span></div>
+          <button id="ob-btn" onclick="goPage('pr')" class="icon-btn sm" aria-label="Profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c.2-2.5 1.8-4 4-4"/></svg></button>
         </div>
-        <button id="ob-btn" onclick="goPage('pr')" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;padding:8px 12px;cursor:pointer;">Profil</button>
       </div>
+      <!-- Begrüßung: Name wird von JS (prData) in #start-greeting geschrieben; ohne Namen bleibt der neutrale Text -->
+      <div id="start-greeting" class="greeting">Schön dich zu sehen.</div>
       <!-- Streak widget / hero image -->
       <div id="streak-widget" style="margin-bottom:16px;"></div>
 
@@ -419,28 +559,28 @@ canvas{max-width:100%;}
       <div id="start-dashboard" style="margin-bottom:20px;"></div>
 
       <!-- Trainingspläne -->
-      <div style="display:flex;align-items:center;gap:12px;margin:22px 0 12px;">
-        <h2 style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;">Trainingspläne</h2>
-        <div style="flex:1;height:1px;background:var(--border);"></div>
+      <div class="sec-head">
+        <h2 class="lbl">Trainingspläne</h2>
+        <div class="sec-line"></div>
       </div>
-      <div id="plan-btns" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="plan-btns" class="numbered" style="display:flex;flex-direction:column;gap:8px;"></div>
 
       <!-- Bestleistungen -->
-      <div style="display:flex;align-items:center;gap:12px;margin:22px 0 12px;">
-        <h2 style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;">Bestleistungen</h2>
-        <div style="flex:1;height:1px;background:var(--border);"></div>
+      <div class="sec-head">
+        <h2 class="lbl">Bestleistungen</h2>
+        <div class="sec-line"></div>
       </div>
       <div id="bests"></div>
 
       <!-- Schnellstart -->
-      <div style="display:flex;align-items:center;gap:12px;margin:22px 0 12px;">
-        <h2 style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;">Schnellstart</h2>
-        <div style="flex:1;height:1px;background:var(--border);"></div>
+      <div class="sec-head">
+        <h2 class="lbl">Schnellstart</h2>
+        <div class="sec-line"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-        <button class="action-tile" onclick="showEmomSetup(true)"><span class="action-tile-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="9" y="1" width="6" height="2.5" rx="1.25" fill="var(--accent)"/><circle cx="12" cy="14" r="9" fill="var(--accent)"/><rect x="11" y="8" width="2" height="7" rx="1" fill="#fff"/><rect x="12" y="13" width="6" height="2" rx="1" fill="#fff"/></svg></span>EMOM</button>
-        <button class="action-tile" onclick="goPage('p')"><span class="action-tile-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="4" fill="var(--accent)"/><rect x="6.5" y="8" width="11" height="2" rx="1" fill="#fff"/><rect x="6.5" y="12" width="11" height="2" rx="1" fill="#fff"/><rect x="6.5" y="16" width="7" height="2" rx="1" fill="#fff"/></svg></span>Pläne</button>
-        <button class="action-tile" onclick="goPage('ch')"><span class="action-tile-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M8 3h8v5a4 4 0 01-8 0V3z" fill="var(--accent)"/><rect x="11" y="11" width="2" height="4" fill="var(--accent)"/><rect x="8" y="18" width="8" height="2" rx="1" fill="var(--accent)"/><rect x="9" y="15" width="6" height="2" fill="var(--accent)"/></svg></span>Challenges</button>
+        <button class="action-tile" onclick="showEmomSetup(true)"><span class="action-tile-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span>EMOM</button>
+        <button class="action-tile" onclick="goPage('p')"><span class="action-tile-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>Pläne</button>
+        <button class="action-tile" onclick="goPage('ch')"><span class="action-tile-icon-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>Challenges</button>
       </div>
     </div>
   </div>
@@ -448,66 +588,68 @@ canvas{max-width:100%;}
 
   <!-- EMOM SETUP SCREEN -->
   <div id="emom-setup" style="display:none;">
-    <h2 class="stitle">EMOM-Timer</h2>
-    <div style="display:flex;gap:0;margin-bottom:16px;background:var(--bg3);border-radius:10px;padding:4px;">
-      <button id="emom-mode-single" onclick="emomSetMode('single')" style="flex:1;background:var(--text);color:var(--bg);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">Eine Übung</button>
-      <button id="emom-mode-mix" onclick="emomSetMode('mix')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">Mix (pro Minute)</button>
-      <button id="emom-mode-pure" onclick="emomSetMode('pure')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">&#9201; Timer</button>
+    <div class="topbar">
+      <button type="button" class="icon-btn sm" onclick="showEmomSetup(false)" aria-label="Zurück">&#8592;</button>
+      <div class="topbar-title">EMOM-Timer</div>
+      <div class="topbar-slot"></div>
     </div>
-    <div id="emom-mode-desc" style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Eine Übung für alle Minuten — jede Minute gleiche Übung.</div>
+    <div class="seg-ctl" style="margin-bottom:16px;">
+      <button id="emom-mode-single" class="on" aria-selected="true" onclick="emomSetMode('single')">Eine Übung</button>
+      <button id="emom-mode-mix" aria-selected="false" onclick="emomSetMode('mix')">Mix (pro Minute)</button>
+      <button id="emom-mode-pure" aria-selected="false" onclick="emomSetMode('pure')">Timer</button>
+    </div>
+    <div id="emom-mode-desc" style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Eine Übung für alle Minuten — jede Minute gleiche Übung.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
       <div class="fg"><label>Minuten total</label>
-        <input type="number" id="emom-minutes" value="10" min="1" max="60" oninput="if(emomMode==='mix')emomBuildMixGrid()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;width:100%;box-sizing:border-box;">
+        <input type="number" id="emom-minutes" value="10" min="1" max="60" oninput="if(emomMode==='mix')emomBuildMixGrid()" class="num">
       </div>
       <div class="fg"><label>Sekunden pro Minute</label>
-        <input type="number" id="emom-secs" value="60" min="10" max="300" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;width:100%;box-sizing:border-box;">
+        <input type="number" id="emom-secs" value="60" min="10" max="300" class="num">
       </div>
     </div>
     <div id="emom-single-section">
       <div class="fg" style="margin-bottom:12px;"><label>Übung</label>
-        <select id="emom-ex-pick" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
+        <select id="emom-ex-pick"></select>
       </div>
     </div>
     <div id="emom-mix-section" style="display:none;">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Lege für jede Minute eine Übung und ein Wdh-Ziel fest:</div>
+      <div class="lbl" style="margin-bottom:10px;">Pro Minute eine Übung + Wdh-Ziel</div>
       <div id="emom-mix-grid" style="margin-bottom:8px;"></div>
     </div>
     <button onclick="emomStart()" id="emom-start-btn" class="btn" style="display:none;">EMOM starten</button>
-    <button onclick="showEmomSetup(false)" style="width:100%;background:none;border:1px solid var(--border2);color:var(--muted);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;margin-top:8px;">Abbrechen</button>
+    <button onclick="showEmomSetup(false)" class="btn-g" style="width:100%;min-height:44px;margin-top:8px;">Abbrechen</button>
   </div>
 
   <!-- EMOM ACTIVE SCREEN -->
   <div id="emom-active" style="display:none;">
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-family:inherit;font-size:12px;color:var(--muted);margin-bottom:8px;">EMOM-Runde</div>
-      <div id="emom-round-display" class="num" style="font-family:inherit;font-weight:800;font-size:36px;color:var(--accent-ink);line-height:1;">Min 1 / 10</div>
-      <div id="emom-ex-display" style="font-size:16px;color:var(--text);margin-top:8px;font-weight:500;"></div>
-    </div>
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
-        <button onclick="emomAdjustTime(-5)" aria-label="5 Sekunden weniger" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:18px;font-weight:700;padding:10px 16px;cursor:pointer;">-5</button>
-        <div id="emom-timer-display" class="num" style="font-family:inherit;font-weight:800;font-size:72px;color:var(--accent-ink);line-height:1;letter-spacing:0;">60</div>
-        <button onclick="emomAdjustTime(5)" aria-label="5 Sekunden mehr" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:18px;font-weight:700;padding:10px 16px;cursor:pointer;">+5</button>
+    <div class="card" style="text-align:center;padding:18px 14px;margin-bottom:12px;">
+      <div class="lbl" style="margin-bottom:8px;">EMOM-Runde</div>
+      <div id="emom-round-display" class="num" style="font-size:22px;font-weight:600;color:var(--text);line-height:1;">Min 1 / 10</div>
+      <div id="emom-ex-display" style="font-size:13px;color:var(--text);margin-top:8px;font-weight:500;"></div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:20px;">
+        <button onclick="emomAdjustTime(-5)" aria-label="5 Sekunden weniger" class="icon-btn num" style="font-size:13px;">-5</button>
+        <div id="emom-timer-display" class="dotnum" style="font-size:72px;color:var(--accent);min-width:2.2em;">60</div>
+        <button onclick="emomAdjustTime(5)" aria-label="5 Sekunden mehr" class="icon-btn num" style="font-size:13px;">+5</button>
       </div>
-      <div style="font-size:12px;color:var(--muted);font-family:inherit;margin-top:4px;">Sekunden</div>
+      <div class="unit" style="margin-top:8px;">Sekunden</div>
     </div>
-    <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:24px;">
-      <div id="emom-progress-bar" style="height:100%;background:var(--accent);width:100%;transition:width 1s linear;border-radius:20px;"></div>
+    <div class="linebar" style="margin-bottom:16px;">
+      <div id="emom-progress-bar" style="height:100%;background:var(--accent);width:100%;transition:width 1s linear;"></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button onclick="emomSkip(-1)" aria-label="Vorherige Minute" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:18px;padding:10px;cursor:pointer;">&#9664;</button>
-      <button onclick="emomSkip(1)" aria-label="Nächste Minute" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:18px;padding:10px;cursor:pointer;">&#9654;</button>
+      <button onclick="emomSkip(-1)" aria-label="Vorherige Minute" class="btn-g" style="flex:1;min-height:44px;">&#9664;</button>
+      <button onclick="emomSkip(1)" aria-label="Nächste Minute" class="btn-g" style="flex:1;min-height:44px;">&#9654;</button>
     </div>
-    <div id="emom-reps-card" class="card" style="margin-bottom:16px;">
-      <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;">Wiederholungen eintragen</div>
+    <div id="emom-reps-card" class="card" style="margin-bottom:12px;">
+      <div class="lbl" style="margin-bottom:8px;">Wiederholungen eintragen</div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <input type="number" id="emom-reps-inp" placeholder="z.B. 10" min="0" class="num" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:18px;outline:none;">
-        <button onclick="emomLogRep()" style="background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:10px 16px;cursor:pointer;">OK</button>
+        <input type="number" id="emom-reps-inp" placeholder="z.B. 10" min="0" class="num inp" style="flex:1;font-size:18px;">
+        <button onclick="emomLogRep()" class="btn sm" style="min-height:44px;">OK</button>
       </div>
     </div>
     <div id="emom-logged" style="margin-bottom:10px;"></div>
 
-    <button onclick="emomStop()" style="width:100%;background:none;border:1px solid var(--red);color:var(--red);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;">EMOM beenden</button>
+    <button onclick="emomStop()" class="btn-g danger" style="width:100%;min-height:44px;">EMOM beenden</button>
   </div>
 
   <!-- ACTIVE WORKOUT (hidden until started) -->
@@ -516,50 +658,50 @@ canvas{max-width:100%;}
     <!-- Timer bar -->
     <div class="wo-bar">
       <div class="wo-bar-left">
-        <div class="wo-bar-status"><span class="rec-dot">&#9679;</span> Workout aktiv</div>
-        <div class="wo-bar-timer" id="wo-timer">00:00</div>
+        <div class="wo-bar-status"><span class="rec-dot" aria-hidden="true"></span>Workout aktiv</div>
+        <div class="wo-bar-timer dotnum" id="wo-timer">00:00</div>
         <div class="wo-bar-date" id="wo-date"></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="wo-bar-right">
         <button class="wo-end-btn" onclick="endWorkout()">Workout<br>beenden</button>
-        <button onclick="cancelWorkout()" style="background:none;border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:10px;font-family:inherit;font-size:11px;padding:6px 10px;cursor:pointer;">Abbrechen</button>
+        <button onclick="cancelWorkout()" class="wo-cancel-btn">Abbrechen</button>
       </div>
     </div>
 
     <!-- Plan blocks (shown when plan loaded) -->
     <div id="plan-blocks-wrap" style="display:none;">
       <h2 class="stitle">Plan-Übungen — tippen zum Eintragen</h2>
-      <div id="plan-blocks-list"></div>
+      <div id="plan-blocks-list" class="numbered"></div>
     </div>
 
     <!-- Current workout exercises -->
     <h2 class="stitle">Dieses Workout</h2>
-    <div class="wo-ex-list" id="wo-ex-list">
+    <div class="wo-ex-list numbered" id="wo-ex-list">
       <div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>
     </div>
 
     <!-- EMOM in active workout -->
   <div id="wo-emom-btn-wrap" style="padding:0 0 8px 0;display:none;">
-    <button onclick="showEmomSetup(true)" style="width:100%;background:none;border:1px solid var(--border2);color:var(--accent-ink);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;cursor:pointer;">⏱ EMOM starten</button>
+    <button onclick="showEmomSetup(true)" class="btn-g" style="width:100%;min-height:44px;color:var(--accent);">EMOM starten</button>
   </div>
 
   <!-- Add exercise -->
     <h2 class="stitle" id="plan-add-label" style="display:none;">Übung hinzufügen</h2>
     <div class="card" id="plan-add-form" style="display:none;">
       <div style="margin-bottom:10px;">
-        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Kategorie</div>
-        <select id="wo-cat-sel" onchange="woCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;margin-bottom:10px;">
+        <div class="lbl" style="margin-bottom:6px;">Kategorie</div>
+        <select id="wo-cat-sel" onchange="woCatChanged()" class="inp" style="margin-bottom:10px;">
           <option value="Alle">Alle Kategorien</option>
           <option value="Pull">Pull</option>
           <option value="Push">Push</option>
           <option value="Core">Core</option>
           <option value="Legs">Legs</option>
           <option value="Skills">Skills</option>
-          
-          
+
+
         </select>
-        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Übung</div>
-        <select id="wo-ex-sel" onchange="woExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
+        <div class="lbl" style="margin-bottom:6px;">Übung</div>
+        <select id="wo-ex-sel" onchange="woExSelChanged()" class="inp"></select>
       </div>
 
       <div id="band-row" style="display:none;margin-bottom:12px;">
@@ -575,24 +717,23 @@ canvas{max-width:100%;}
         <input class="b-cust" id="b-cust" placeholder="Eigene Bandstärke..." oninput="custBand(this.value)">
       </div>
 
-      <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Sätze</div>
+      <div class="lbl" style="margin-bottom:6px;">Sätze</div>
       <!-- GÜRTEL -->
       <div style="margin-bottom:10px;">
-        <button id="belt-toggle-btn" onclick="toggleBelt()"
-          style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 16px;cursor:pointer;">
+        <button id="belt-toggle-btn" onclick="toggleBelt()" class="belt-toggle" aria-pressed="false">
           Gürtel: aus
         </button>
       </div>
       <div id="belt-kg-row" style="display:none;margin-bottom:10px;">
-        <div style="font-size:12px;font-weight:600;color:var(--amber-ink);font-family:inherit;margin-bottom:6px;">Gewicht am Gürtel (kg)</div>
-        <input type="number" id="belt-kg-input" placeholder="z.B. 10" min="0"
-          style="width:100%;background:rgba(245,158,11,0.05);border:1px solid var(--amber);color:var(--amber-ink);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"
+        <div class="lbl" style="color:var(--amber-ink);margin-bottom:6px;">Gewicht am Gürtel (kg)</div>
+        <input type="number" id="belt-kg-input" placeholder="z.B. 10" min="0" class="inp num"
+          style="border-color:var(--amber);color:var(--amber-ink);"
           oninput="beltKgVal=this.value;">
       </div>
       <div id="set-header" style="display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;padding:0 0 6px;">
-        <span style="font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;">#</span>
-        <span id="lbl-n" style="font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;text-align:center;">Wdh.</span>
-        <span id="lbl-b" style="font-size:11px;font-weight:600;color:var(--amber-ink);font-family:inherit;text-align:center;display:none;">Mit Band</span>
+        <span class="lbl">#</span>
+        <span id="lbl-n" class="lbl" style="text-align:center;">Wdh.</span>
+        <span id="lbl-b" class="lbl" style="color:var(--amber-ink);text-align:center;display:none;">Mit Band</span>
         <span></span>
       </div>
       <div id="sbox"></div>
@@ -606,8 +747,11 @@ canvas{max-width:100%;}
 
 <!-- VERLAUF PAGE -->
 <div class="page" id="page-v">
-  <button onclick="goPage('pr')" style="background:#fff;border:none;color:var(--text);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;margin-bottom:4px;">&#8592; Zurück</button>
-  <h2 class="stitle">Fortschritt</h2>
+  <div class="topbar">
+    <button type="button" class="icon-btn sm" onclick="goPage('pr')" aria-label="Zurück">&#8592;</button>
+    <div class="topbar-title">Fortschritt</div>
+    <div class="topbar-slot"></div>
+  </div>
   <div class="cc">
     <div class="ct">
       <div class="cl">Verlauf</div>
@@ -625,7 +769,7 @@ canvas{max-width:100%;}
 <div class="page" id="page-h" style="display:none!important;">
   <h2 class="stitle">Herzfrequenz-Screenshots</h2>
   <div class="uz" onclick="document.getElementById('hff').click()">
-    <div class="ui">&#128202;</div>
+    <div class="ui"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
     <div class="ut"><strong>Screenshot hochladen</strong><br>PNG oder JPG</div>
     <input type="file" id="hff" accept="image/*" multiple style="display:none" onchange="uploadHF(this)">
   </div>
@@ -636,12 +780,13 @@ canvas{max-width:100%;}
 
 <!-- PLANE PAGE -->
 <div class="page" id="page-p">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:28px;">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;">
     <div>
       <h2 class="page-title">Meine Pläne</h2>
       <div class="page-sub">Plane deine Workouts, behalte den Überblick und erreiche deine Ziele.</div>
     </div>
-    <button class="pk-btn" onclick="showPlanForm()" style="background:var(--accent-deep);color:#fff;border:none;border-radius:16px;box-shadow:0 12px 30px rgba(255,85,0,0.22);font-family:inherit;font-size:13px;font-weight:700;padding:12px 18px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:4px;">+ Neuer Plan</button>
+    <!-- Ghost: der eine orangene Primär-CTA der Pläne-Seite ist "Workout starten" in der Heute-Karte -->
+    <button class="btn-g sm pk-btn" onclick="showPlanForm()" style="white-space:nowrap;flex-shrink:0;margin-top:2px;">+ Neuer Plan</button>
   </div>
   <div id="plan-list"></div>
 
@@ -654,33 +799,33 @@ canvas{max-width:100%;}
         <input type="text" id="pf-name" placeholder="z.B. Pull Tag, Push Tag...">
       </div>
 
-      <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;">Übungen im Plan</div>
-      <div id="pf-ex-list" style="margin-bottom:10px;"></div>
+      <div class="lbl" style="margin-bottom:8px;">Übungen im Plan</div>
+      <div id="pf-ex-list" class="numbered" style="margin-bottom:10px;"></div>
 
       <!-- Add exercise to plan -->
-      <div style="background:var(--bg3);border:none;border-radius:16px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;">Übung hinzufügen</div>
+      <div style="background:var(--card2);border:1px solid var(--line);border-radius:var(--r-card);padding:12px;margin-bottom:10px;">
+        <div class="lbl" style="margin-bottom:8px;">Übung hinzufügen</div>
         <div style="margin-bottom:8px;">
-          <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Kategorie</div>
-          <select id="pf-cat-sel" onchange="pfCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;margin-bottom:10px;">
+          <div class="lbl" style="margin-bottom:6px;">Kategorie</div>
+          <select id="pf-cat-sel" onchange="pfCatChanged()" class="inp" style="margin-bottom:10px;">
             <option value="Alle">Alle Kategorien</option>
             <option value="Pull">Pull</option>
             <option value="Push">Push</option>
             <option value="Core">Core</option>
             <option value="Legs">Legs</option>
             <option value="Skills">Skills</option>
-            
-            
+
+
           </select>
-          <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Übung</div>
-          <select id="pf-ex-sel" onchange="pfExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
+          <div class="lbl" style="margin-bottom:6px;">Übung</div>
+          <select id="pf-ex-sel" onchange="pfExSelChanged()" class="inp"></select>
         </div>
-        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Geplante Sätze</div>
+        <div class="lbl" style="margin-bottom:6px;">Geplante Sätze</div>
         <div class="sh"><span>#</span><span id="pf-lbl-n">Wdh. (Ziel)</span><span></span><span></span></div>
         <div id="pf-sbox"></div>
         <div style="margin-top:8px;"><button class="btn-g" onclick="pfAddSet()">+ Satz</button></div>
         <div style="height:10px;"></div>
-        <button class="btn-g" style="width:100%;color:var(--accent-ink);" onclick="pfAddEx()">+ Zum Plan</button>
+        <button class="btn-g" style="width:100%;color:var(--accent);" onclick="pfAddEx()">+ Zum Plan</button>
       </div>
 
       <button class="btn" onclick="savePlan()">Plan speichern</button>
@@ -715,33 +860,44 @@ canvas{max-width:100%;}
   <script src="xp.js"></script>
 
   <script>
+  // Home-Header: Datum "SA 06 SEP" (Uppercase kommt aus CSS, Umlaute bleiben)
+  (function(){
+    try{
+      var d=new Date();
+      var days=['So','Mo','Di','Mi','Do','Fr','Sa'];
+      var mons=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+      var el=document.getElementById('start-date');
+      if(el) el.textContent=days[d.getDay()]+' '+('0'+d.getDate()).slice(-2)+' '+mons[d.getMonth()];
+    }catch(e){}
+  })();
+
   function openFeedback(){
     var ex=document.getElementById('feedback-ov'); if(ex) ex.remove();
     var ov=document.createElement('div');
     ov.id='feedback-ov';
-    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+    ov.className='backdrop';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
     var box=document.createElement('div');
-    box.style.cssText='background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
-    box.innerHTML='<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
-      '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">💬 Feedback</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Was fällt dir auf? Bug, Idee oder Lob — alles willkommen!</div>';
+    box.className='sheet';
+    box.style.cssText='background:var(--card);border-top:1px solid var(--line2);border-radius:var(--r-card) var(--r-card) 0 0;width:100%;max-width:480px;padding:20px 16px 36px;';
+    box.innerHTML='<div class="sheet-grip"></div>'+
+      '<div class="ttl" style="margin-bottom:4px;">Feedback</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Was fällt dir auf? Bug, Idee oder Lob — alles willkommen.</div>';
 
     var typeWrap=document.createElement('div');
-    typeWrap.style.cssText='display:flex;gap:8px;margin-bottom:14px;';
-    var types=[{id:'bug',label:'🐛 Bug'},{id:'idea',label:'💡 Idee'},{id:'lob',label:'👍 Lob'}];
+    typeWrap.className='seg-ctl';
+    typeWrap.style.cssText='margin-bottom:14px;';
+    var types=[{id:'bug',label:'Bug'},{id:'idea',label:'Idee'},{id:'lob',label:'Lob'}];
     var selType='bug';
     types.forEach(function(t){
       var btn=document.createElement('button');
       btn.dataset.tid=t.id;
-      btn.style.cssText='flex:1;padding:9px;border-radius:10px;border:1px solid '+(t.id===selType?'var(--accent)':'var(--border)')+';background:'+(t.id===selType?'rgba(255,85,0,0.1)':'none')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:'+(t.id===selType?'var(--accent-ink)':'var(--muted)')+';transition:transform var(--dur-fast) var(--ease-out);';
+      btn.className=t.id===selType?'on':'';
       btn.textContent=t.label;
       btn.onclick=function(){
         selType=t.id;
         typeWrap.querySelectorAll('button').forEach(function(b){
-          var a=b.dataset.tid===selType;
-          b.style.borderColor=a?'var(--accent)':'var(--border)';
-          b.style.background=a?'rgba(255,85,0,0.1)':'none';
-          b.style.color=a?'var(--accent-ink)':'var(--muted)';
+          b.className=b.dataset.tid===selType?'on':'';
         });
       };
       typeWrap.appendChild(btn);
@@ -749,12 +905,14 @@ canvas{max-width:100%;}
     box.appendChild(typeWrap);
 
     var ta=document.createElement('textarea');
+    ta.className='inp';
     ta.placeholder='Beschreib kurz was dir aufgefallen ist...';
-    ta.style.cssText='width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);height:100px;resize:none;box-sizing:border-box;margin-bottom:12px;';
+    ta.style.cssText='width:100%;height:100px;resize:none;box-sizing:border-box;margin-bottom:12px;';
     box.appendChild(ta);
 
     var sendBtn=document.createElement('button');
-    sendBtn.style.cssText='width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:800;padding:15px;cursor:pointer;margin-bottom:8px;transition:transform var(--dur-fast) var(--ease-out);';
+    sendBtn.className='btn';
+    sendBtn.style.cssText='margin:0 0 8px;';
     sendBtn.textContent='Senden';
     sendBtn.onclick=function(){
       var txt=ta.value.trim();
@@ -763,16 +921,17 @@ canvas{max-width:100%;}
       var uid=typeof firebase!=='undefined'&&firebase.auth().currentUser?firebase.auth().currentUser.uid:'anonym';
       if(typeof db!=='undefined'){
         db.collection('feedback').add({type:selType,message:txt,uid:uid,date:Date.now()})
-          .then(function(){ov.remove();if(typeof toast==='function')toast('✅ Danke für dein Feedback!');})
-          .catch(function(){ov.remove();if(typeof toast==='function')toast('✅ Danke!');});
+          .then(function(){ov.remove();if(typeof toast==='function')toast('Danke für dein Feedback!');})
+          .catch(function(){ov.remove();if(typeof toast==='function')toast('Danke!');});
       } else {
-        ov.remove();if(typeof toast==='function')toast('✅ Danke für dein Feedback!');
+        ov.remove();if(typeof toast==='function')toast('Danke für dein Feedback!');
       }
     };
     box.appendChild(sendBtn);
 
     var cancelBtn=document.createElement('button');
-    cancelBtn.style.cssText='width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+    cancelBtn.className='auth-link';
+    cancelBtn.style.cssText='width:100%;';
     cancelBtn.textContent='Abbrechen';
     cancelBtn.onclick=function(){ov.remove();};
     box.appendChild(cancelBtn);
