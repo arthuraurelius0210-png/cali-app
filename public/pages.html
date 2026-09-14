@@ -1,8 +1,10 @@
 <!-- MAX TEST PAGE -->
 <div class="page" id="page-m">
-  <div style="margin-bottom:20px;">
-    <h2 class="page-title">Max Test</h2>
-    <div class="page-sub">Trage deine maximalen Werte ein. Alle 2-3 Wochen testen — immer ausgeruht am Anfang des Trainings.</div>
+  <!-- Top-Bar (Spec §Form): links Wortmarke, Mitte Screen-Titel uppercase (per CSS), rechts leerer Slot -->
+  <div class="topbar">
+    <div class="logo">CALI</div>
+    <h2 class="topbar-title" style="margin:0;">Max-Test</h2>
+    <div class="topbar-slot"></div>
   </div>
 
   <!-- Add max entry -->
@@ -31,6 +33,7 @@
       </div>
     </div>
     <button class="btn" onclick="saveMaxEntry()">+ Eintragen</button>
+    <div class="row-sub" style="margin-top:10px;">Alle 2-3 Wochen testen, immer ausgeruht am Anfang des Trainings.</div>
   </div>
 
   <!-- Percentile Box -->
@@ -38,6 +41,13 @@
 
   <!-- Chart -->
   <h2 class="stitle">Verlauf</h2>
+  <!-- Zeitraum (Segment-Control) + Stat-Kacheln: Logik in tracker.html (maxSetRange / maxRenderStats),
+       gerendert nur mit echten Werten aus maxEntries -->
+  <div class="seg-ctl" id="max-range" role="tablist" aria-label="Zeitraum">
+    <button type="button" role="tab" data-range="year" aria-selected="false" onclick="maxSetRange('year')">Jahr</button>
+    <button type="button" role="tab" data-range="all" class="on" aria-selected="true" onclick="maxSetRange('all')">Alle</button>
+  </div>
+  <div class="stat-grid" id="max-stats" style="display:none;"></div>
   <div class="cc">
     <div class="ct">
       <div class="cl">Max Steigerung</div>
@@ -56,10 +66,11 @@
 
 <!-- CHALLENGE PAGE -->
 <div class="page" id="page-ch">
-  <!-- Header -->
-  <div style="margin-bottom:16px;">
-    <h2 class="page-title">Challenges</h2>
-    <div class="page-sub">Fordere dich selbst heraus und bleib motiviert.</div>
+  <!-- Top-Bar (Spec §Form): links Wortmarke, Mitte Screen-Titel, rechts leerer Slot -->
+  <div class="topbar">
+    <div class="logo">CALI</div>
+    <h2 class="topbar-title" style="margin:0;">Challenges</h2>
+    <div class="topbar-slot"></div>
   </div>
 
   <!-- Streak / Punkte (Werte aus app2.js buildChallengeUI) -->
@@ -112,9 +123,9 @@
     </div>
   </div>
 
-  <!-- TRENDING CHALLENGES -->
+  <!-- BELIEBTE CHALLENGES (app2.js buildTrendingChallenges füllt #ch-trending) -->
   <div class="sec-head">
-    <h2 class="lbl" style="margin:0;">Trending Challenges</h2>
+    <h2 class="lbl" style="margin:0;">Beliebte Challenges</h2>
     <div class="sec-line"></div>
     <button type="button" class="lbl" onclick="openChDrawer('preset')" style="background:none;border:none;padding:0;cursor:pointer;font-family:inherit;color:var(--accent);white-space:nowrap;">Alle Challenges &#8594;</button>
   </div>
@@ -138,9 +149,15 @@
 <!-- PROFIL PAGE -->
 <div class="page" id="page-pr">
 
+  <!-- Top-Bar (Spec §Profil): Mitte Screen-Titel, rechts Kontext-Icon Zahnrad (openSettings, main2aa.js) -->
+  <div class="topbar">
+    <div class="topbar-slot"></div>
+    <h2 class="topbar-title" style="margin:0;">Profil</h2>
+    <button type="button" onclick="openSettings()" class="icon-btn sm" aria-label="Einstellungen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 000-3l2-1.5-2-3.5-2.4 1a7.6 7.6 0 00-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 00-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 000 3l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 002.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 002.6-1.5l2.4 1 2-3.5z"/></svg></button>
+  </div>
+
   <!-- Hero Section -->
-  <div id="pr-hero" class="card" style="position:relative;text-align:center;padding:22px 14px 18px;margin-bottom:10px;">
-    <button type="button" onclick="openSettings()" class="icon-btn sm" aria-label="Einstellungen" style="position:absolute;top:10px;right:10px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 000-3l2-1.5-2-3.5-2.4 1a7.6 7.6 0 00-2.6-1.5L14 2h-4l-.4 2.5a7.6 7.6 0 00-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.6 7.6 0 000 3l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 002.6 1.5L10 22h4l.4-2.5a7.6 7.6 0 002.6-1.5l2.4 1 2-3.5z"/></svg></button>
+  <div id="pr-hero" class="card" style="text-align:center;padding:18px 14px;margin-bottom:10px;">
     <div style="position:relative;width:108px;height:108px;margin:0 auto 12px;">
       <svg id="xp-ring-svg" width="108" height="108" viewBox="0 0 90 90" style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
         <circle cx="45" cy="45" r="40" fill="none" stroke="var(--line2)" stroke-width="3"/>
@@ -161,6 +178,9 @@
     <div id="pr-member-since" class="lbl" style="margin-top:8px;">Mitglied seit heute</div>
   </div>
 
+  <!-- LEVEL-Zeile direkt unter dem Profil-Header (Spec §Profil) — gefüllt von buildXPWidget (xp.js) -->
+  <div id="xp-widget" style="margin-bottom:10px;"></div>
+
   <!-- Stats Row -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;" id="pr-stats-row"></div>
 
@@ -176,8 +196,6 @@
   <div id="pr-streak-section" style="margin-bottom:10px;"></div>
   <div id="pr-streak-calendar" style="margin-bottom:10px;"></div>
 
-  <!-- Privacy Toggle -->
-  <div id="xp-widget" style="margin-bottom:10px;"></div>
   <div class="list">
     <button type="button" onclick="openMonthlyLeaderboard()" class="list-row pressable">
       <div class="row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 5H4a3 3 0 003 3M17 5h3a3 3 0 01-3 3"/><path d="M12 13v3M9 20h6M9.5 20c0-2 1-2.5 2.5-3s2.5-1 2.5-3"/></svg></div>
@@ -316,7 +334,8 @@
       <button type="button" onclick="closeSettings();openAdminPanel();" class="btn-g" style="width:100%;min-height:44px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg> Admin Panel — Einträge prüfen</button>
     </div>
 
-    <div class="version-card">CALI · Tracker</div>
+    <!-- Version = CACHE_NAME in sw.js ('cali-v3'); beim SW-Bump hier mitziehen -->
+    <div class="version-card">CALI · v3</div>
 
   </div>
   </div>
@@ -327,16 +346,24 @@
   <div id="pr-total-reps" style="margin-bottom:10px;"></div>
 
   <h2 class="stitle">Trainings-Statistiken</h2>
-  <div id="pr-stats-detail" style="margin-bottom:24px;"></div>
+  <div id="pr-stats-detail" style="margin-bottom:10px;"></div>
+
+  <!-- Motto-Karte (Spec §Profil): Tagline + kleines Grid-Icon, uppercase per CSS (.motto-card) -->
+  <div class="motto-card" style="margin-bottom:24px;">
+    <span>Disziplin. Fortschritt. Wiederholen.</span>
+    <span class="row-icon" style="width:36px;height:36px;" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></span>
+  </div>
 
 </div>
 
 
 <!-- PARKS PAGE -->
 <div class="page" id="page-parks">
-  <div style="margin-bottom:16px;">
-    <h2 class="page-title">Calisthenics Parks</h2>
-    <div class="page-sub">Finde Parks in deiner Nähe und trainiere draußen.</div>
+  <!-- Top-Bar (Spec §Form): links Wortmarke, Mitte Screen-Titel, rechts leerer Slot -->
+  <div class="topbar">
+    <div class="logo">CALI</div>
+    <h2 class="topbar-title" style="margin:0;">Parks</h2>
+    <div class="topbar-slot"></div>
   </div>
 
   <!-- Primär-CTA: Standort (parks.js ersetzt den Text nach dem Klick) -->

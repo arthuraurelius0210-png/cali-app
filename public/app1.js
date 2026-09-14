@@ -143,8 +143,8 @@ var EX_DB = [
         ];
 
 var EX_CATS = ['Alle','Pull','Push','Core','Legs','Skills',];
-// Kategoriefarben nur über Tokens (Dark Mono): 6px-Dots, keine Flächen
-var EX_CAT_COLORS = {Pull:'var(--accent)',Push:'var(--amber)',Core:'var(--purple)',Legs:'var(--teal)',Skills:'var(--success)',Alle:'var(--muted)'};
+// Kategorie-Dots (Dark Mono): ein Orange, sonst neutral — alle Kategorien auf --muted2 (inaktiver Dot)
+var EX_CAT_COLORS = {Pull:'var(--muted2)',Push:'var(--muted2)',Core:'var(--muted2)',Legs:'var(--muted2)',Skills:'var(--muted2)',Alle:'var(--muted2)'};
 var activeExCat = 'Alle';
 
 var PRESET_PLANS = [
@@ -180,8 +180,9 @@ var PRESET_PLANS = [
 
 var activePfCat = 'Alle';
 
-// Schlüssel (gr/or/te/pu/am/bl) sind gespeicherte Daten — nur die Werte sind Tokens
-var COLS = {gr:'var(--accent)',or:'var(--amber)',te:'var(--teal)',pu:'var(--purple)',am:'var(--success)',bl:'var(--blue)'};
+// Schlüssel (gr/or/te/pu/am/bl) sind gespeicherte Daten — die Werte sind Tokens.
+// Dark Mono: keine Kategorie-Palette mehr, alle Dots neutral (--muted2), Orange bleibt dem CTA vorbehalten.
+var COLS = {gr:'var(--muted2)',or:'var(--muted2)',te:'var(--muted2)',pu:'var(--muted2)',am:'var(--muted2)',bl:'var(--muted2)'};
 var CC = {'Klimmzuge':'gr','Dips':'or','Liegestutze':'te','Plank':'pu','Australian Rows':'gr','Pike Push-ups':'or','Muscle-Ups':'am','L-Sit Hold':'pu','Tuck Front Lever':'pu'};
 
 function ld(){
@@ -867,12 +868,13 @@ function _woSetInput(i, field, val, accent){
   inp.oninput = inp.onchange = function(){ sv(parseInt(this.getAttribute('data-i'),10), this.getAttribute('data-f'), this.value); };
   return inp;
 }
-// Beschriftetes Feld (Label + Input) für Band/kg in der Karte des aktuellen Satzes
+// Beschriftetes Feld (Label + Input) für Band/kg in der Karte des aktuellen Satzes.
+// accent ist optional: ohne Wert bleibt das Label .lbl (--muted) und der Input bekommt den Standardrahmen --line.
 function _woSetField(i, field, val, label, accent){
   var wrap = document.createElement('div');
   var lbl = document.createElement('div');
   lbl.className = 'lbl';
-  lbl.style.cssText = 'margin-bottom:6px;color:'+accent+';';
+  lbl.style.cssText = 'margin-bottom:6px;'+(accent ? 'color:'+accent+';' : '');
   lbl.textContent = label;
   wrap.appendChild(lbl);
   wrap.appendChild(_woSetInput(i, field, val, accent));
@@ -926,8 +928,8 @@ function bsets(){
     num.textContent = ('0'+(i+1)).slice(-2);
     row.appendChild(num);
     row.appendChild(_woSetInput(i, 'n', sets[i].n, ''));
-    if(showBand) row.appendChild(_woSetInput(i, 'b', sets[i].b, 'var(--amber)'));
-    if(showKg) row.appendChild(_woSetInput(i, 'kg', sets[i].kg || beltKgVal, 'var(--blue)'));
+    if(showBand) row.appendChild(_woSetInput(i, 'b', sets[i].b, ''));
+    if(showKg) row.appendChild(_woSetInput(i, 'kg', sets[i].kg || beltKgVal, ''));
     var del = document.createElement('button');
     del.type = 'button';
     del.className = 'pressable';
@@ -975,11 +977,12 @@ function bsets(){
   var cur = document.createElement('input');
   cur.type = stepable ? 'number' : 'text';
   cur.id = 'wo-set-cur';
-  cur.className = 'num';
+  // Die eine große Live-Zahl des Screens: Punktmatrix (Doto via .dotnum), 64px zwischen den −/+ Kreisbuttons
+  cur.className = 'dotnum num';
   cur.placeholder = '0';
   cur.value = sets[last].n || '';
   cur.setAttribute('aria-label', unit+' Satz '+(last+1));
-  cur.style.cssText = 'flex:1;min-width:0;max-width:160px;background:transparent;border:none;border-bottom:1px solid var(--line2);border-radius:0;color:var(--text);font-family:inherit;font-size:38px;font-weight:600;line-height:1.1;text-align:center;padding:4px 0;outline:none;-webkit-appearance:none;appearance:none;-moz-appearance:textfield;';
+  cur.style.cssText = 'flex:1;min-width:0;max-width:200px;background:transparent;border:none;border-bottom:1px solid var(--line2);border-radius:0;color:var(--text);font-size:64px;line-height:1.1;text-align:center;padding:4px 0;outline:none;-webkit-appearance:none;appearance:none;-moz-appearance:textfield;';
   cur.setAttribute('data-i', String(last));
   cur.oninput = cur.onchange = function(){ sv(parseInt(this.getAttribute('data-i'),10), 'n', this.value); };
   stp.appendChild(cur);
@@ -1003,8 +1006,8 @@ function bsets(){
   if(showBand || showKg){
     var extra = document.createElement('div');
     extra.style.cssText = 'display:grid;grid-template-columns:'+((showBand&&showKg)?'1fr 1fr':'1fr')+';gap:8px;margin-top:14px;text-align:left;';
-    if(showBand) extra.appendChild(_woSetField(last, 'b', sets[last].b, 'Mit Band', 'var(--amber)'));
-    if(showKg) extra.appendChild(_woSetField(last, 'kg', sets[last].kg || beltKgVal, 'Gürtel kg', 'var(--blue)'));
+    if(showBand) extra.appendChild(_woSetField(last, 'b', sets[last].b, 'Mit Band', ''));
+    if(showKg) extra.appendChild(_woSetField(last, 'kg', sets[last].kg || beltKgVal, 'Gürtel kg', ''));
     card.appendChild(extra);
   }
 
@@ -1066,7 +1069,7 @@ function bb(){
     for(var k=0;k<e.sets.length;k++){
       if(k>0)st+=' &middot; ';
       st+='S'+(k+1)+': '+e.sets[k].n;
-      if(e.sets[k].b&&e.band)st+=' <span style="color:var(--amber)">(+'+e.sets[k].b+' Band)</span>';
+      if(e.sets[k].b&&e.band)st+=' <span style="color:var(--muted)">(+'+e.sets[k].b+' Band)</span>';
       var v=parseFloat(e.sets[k].n);
       if(!isNaN(v)&&v>best)best=v;
     }
@@ -1225,7 +1228,7 @@ function buildHistory(){
         if(ex.sets[k].b&&ex.band)st+=' (+'+ex.sets[k].b+')';
       }
       h+='<div class="wh-ex"><div class="wh-dot" style="background:'+col+'"></div>';
-      h+='<div><div class="wh-exname">'+ex.name+(ex.band?' <span style="font-size:11px;color:var(--amber)">'+ex.band+'</span>':'')+'</div>';
+      h+='<div><div class="wh-exname">'+ex.name+(ex.band?' <span style="font-size:11px;color:var(--muted)">'+ex.band+'</span>':'')+'</div>';
       h+='<div class="wh-sets">'+st+'</div></div></div>';
     }
     h+='</div></div>';

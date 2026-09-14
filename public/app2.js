@@ -279,6 +279,10 @@ function buildPlanList(){
   // Chevron rechts im Karten-Kopf: togglePlanExpand dreht ihn (Selektor
   // '.plan-top div:last-child div:last-child' — deshalb ein <div>, kein .row-chev-Span)
   var PLAN_CHEV='<div aria-hidden="true" style="color:var(--muted2);font-size:16px;line-height:1;transition:transform var(--dur-fast) var(--ease-out);">&#8250;</div>';
+  // Zweistelliger Index je Sektion ("01", "02" …) wie auf Home (#plan-btns.numbered). Bewusst als
+  // <span> direkt in .plan-top statt .numbered-Wrapper: der CSS-Counter würde auf dem Karten-Root
+  // feuern (eigene Zeile über .plan-top), und ein <span> lässt den Chevron-Selektor oben unberührt.
+  var planIdx=function(n){ return '<span class="idx num">'+('0'+(n+1)).slice(-2)+'</span>'; };
 
   // MY PLANS section — eigene Pläne stehen vor den Vorlagen
   h+='<h2 class="stitle" style="margin:0 0 8px;">Meine Pläne</h2>';
@@ -286,7 +290,7 @@ function buildPlanList(){
     for(var i=0;i<plans.length;i++){
       var pl=plans[i];
       h+='<div class="plan-card pressable" style="cursor:pointer;" role="button" tabindex="0" onclick="togglePlanExpand(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();togglePlanExpand(this);}">';
-      h+='<div class="plan-top"><div class="plan-name">'+pl.name+'</div>';
+      h+='<div class="plan-top">'+planIdx(i)+'<div class="plan-name" style="flex:1;min-width:0;">'+pl.name+'</div>';
       h+='<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><div class="row-sub num" style="margin:0;">'+pl.exercises.length+' Übungen</div>'+PLAN_CHEV+'</div></div>';
       h+='<div class="plan-ex-detail acc-body"><div><div style="height:6px;"></div>';
       for(var j=0;j<pl.exercises.length;j++){
@@ -311,7 +315,7 @@ function buildPlanList(){
     var alreadyAdded=false;
     for(var ai=0;ai<plans.length;ai++){if(plans[ai].name===pl.name){alreadyAdded=true;break;}}
     h+='<div class="plan-card pressable" style="opacity:'+(alreadyAdded?'0.5':'1')+';cursor:pointer;" role="button" tabindex="0" onclick="togglePlanExpand(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();togglePlanExpand(this);}">';
-    h+='<div class="plan-top"><div class="plan-name" style="color:var(--muted)">'+pl.name+'</div>';
+    h+='<div class="plan-top">'+planIdx(pi)+'<div class="plan-name" style="color:var(--muted);flex:1;min-width:0;">'+pl.name+'</div>';
     h+='<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">';
     h+='<div class="row-sub num" style="margin:0;">'+pl.exercises.length+' Übungen</div>';
     h+='<div style="'+PLAN_TAG_CSS+'">Vorlage</div>';
@@ -1102,6 +1106,23 @@ function buildChCards(){
   buildChCardCommunity();
 }
 
+// Foto für die Challenge-Hauptkarte (Grayscale + Verlauf per .ch-photo in tracker.html):
+// Preset-Bild wenn vorhanden, sonst deterministisch aus den vorhandenen challenge-*.jpg
+// (Community wie in renderTrendingCard → Handstand). Nur Deko, keine Inhalte.
+function chPhotoFor(ch){
+  if(!ch) return null;
+  if(typeof PRESET_CHALLENGES !== 'undefined'){
+    for(var i=0;i<PRESET_CHALLENGES.length;i++){
+      if(PRESET_CHALLENGES[i].id === ch.id && PRESET_CHALLENGES[i].image) return PRESET_CHALLENGES[i].image;
+    }
+  }
+  if(ch.type === 'community') return '/challenge-handstand.jpg';
+  var key = ((ch.params && ch.params.exName) || '')+' '+(ch.title || '');
+  if(/dip/i.test(key)) return '/challenge-dip.jpg';
+  if(/handstand|balance|skill/i.test(key)) return '/challenge-handstand.jpg';
+  return '/challenge-pullup.jpg';
+}
+
 function buildChCardPersonal(){
   var el = document.getElementById('ch-card-personal-inner');
   if(!el) return;
@@ -1114,8 +1135,11 @@ function buildChCardPersonal(){
     var target = activeChallenge.params.target || 1;
     var pct = Math.min(100, Math.round((prog/target)*100));
     var done = pct >= 100;
-    // Titel + Ring-Icon (Line-Icon statt gefülltem Pokal), darunter Segmentbalken + echte Zahlen
+    var photo = chPhotoFor(activeChallenge);
+    // Grayscale-Foto oben (§Challenges), Titel + Ring-Icon (Line-Icon statt gefülltem Pokal),
+    // darunter Segmentbalken + echte Zahlen
     el.innerHTML =
+      (photo ? '<div class="ch-photo" style="height:120px;"><img src="'+photo+'" alt="" loading="lazy"></div>' : '')+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">'+
         '<div class="ttl" style="min-width:0;">'+activeChallenge.title+'</div>'+
         planIconRing('trophy', 44, 18, done?'var(--accent)':'var(--muted)')+
@@ -1217,7 +1241,7 @@ function buildTrendingChallenges(){
   var el = document.getElementById('ch-trending');
   if(!el) return;
   if(!currentUser){
-    el.innerHTML = '<div class="row-sub" style="margin:0;padding:12px 0;">Einloggen um Trending Challenges zu sehen.</div>';
+    el.innerHTML = '<div class="row-sub" style="margin:0;padding:12px 0;">Einloggen um beliebte Challenges zu sehen.</div>';
     return;
   }
   if(trendingCache && (Date.now() - trendingCacheTime) < 300000){

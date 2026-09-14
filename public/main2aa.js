@@ -603,33 +603,34 @@ function buildProfilUI(){
       }
       var bestList=document.createElement('div');
       bestList.className='list';
-      var bi=0;
       for(var name in bestMap){
         var me=bestMap[name];
-        bi++;
+        // Records-Rezept (Spec §Records): Line-Icon links (44px bordered Quadrat),
+        // Label uppercase 10px (per CSS-Klasse, String bleibt Mixed Case), Wert 22px + Einheit
         var row=document.createElement('div');
         row.className='list-row';
         row.style.cssText='cursor:default;';
-        var idx=document.createElement('span');
-        idx.className='row-index num';
-        idx.textContent=prPadIdx(bi);
+        var icon=document.createElement('div');
+        icon.className='row-icon';
+        icon.innerHTML=(typeof ci==='function')?ci('trophy'):'';
         var main=document.createElement('div');
         main.className='row-main';
         var left=document.createElement('div');
-        left.className='row-title';
+        left.className='lbl';
+        left.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
         left.textContent=name.replace(' Max','');
         main.appendChild(left);
         var right=document.createElement('div');
         right.style.cssText='display:flex;align-items:baseline;gap:4px;flex-shrink:0;';
         var rv=document.createElement('span');
-        rv.className='row-val num';
-        rv.style.cssText='font-size:16px;';
+        rv.className='kpi num';
+        rv.style.cssText='font-size:22px;';
         rv.textContent=me.val;
         var ru=document.createElement('span');
         ru.className='unit';
         ru.textContent=me.unit||'';
         right.appendChild(rv);right.appendChild(ru);
-        row.appendChild(idx);row.appendChild(main);row.appendChild(right);
+        row.appendChild(icon);row.appendChild(main);row.appendChild(right);
         bestList.appendChild(row);
       }
       bests.appendChild(bestList);

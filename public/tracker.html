@@ -136,6 +136,8 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:100;background:var(--bg);bord
 .topbar{height:48px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);margin:0 0 14px;}
 .topbar-title{flex:1;text-align:center;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .topbar-slot{width:36px;height:36px;flex-shrink:0;}
+/* Wortmarke links in der Top-Bar der Haupt-Tabs (Max, Challenges, Parks, Pläne): kompakt, nicht klickbar, so breit wie ein Slot */
+.topbar .logo{font-size:13px;letter-spacing:.2em;line-height:1;min-width:36px;flex-shrink:0;cursor:default;}
 
 /* ── BUTTONS ── */
 .btn,.start-btn{width:100%;min-height:48px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-pill);font-family:inherit;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;padding:14px 18px;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease,background-color var(--dur-fast) ease;}
@@ -752,6 +754,15 @@ img.photo,.ch-card img,.ch-photo img,.hero img,img[src*="challenge-"],img[src*="
     <div class="topbar-title">Fortschritt</div>
     <div class="topbar-slot"></div>
   </div>
+  <!-- Zeitraum (Spec §Progress): filtert Chart + Kacheln — Logik im Inline-Script unten (vSetRange, drawChart-Wrapper) -->
+  <div class="seg-ctl" id="v-range" role="tablist" aria-label="Zeitraum">
+    <button type="button" role="tab" data-range="week" aria-selected="false" onclick="vSetRange('week')">Woche</button>
+    <button type="button" role="tab" data-range="month" aria-selected="false" onclick="vSetRange('month')">Monat</button>
+    <button type="button" role="tab" data-range="year" aria-selected="false" onclick="vSetRange('year')">Jahr</button>
+    <button type="button" role="tab" data-range="all" class="on" aria-selected="true" onclick="vSetRange('all')">Alle</button>
+  </div>
+  <!-- Stat-Kacheln mit echten Werten aus ents (vRenderStats) -->
+  <div class="stat-grid" id="v-stats"></div>
   <div class="cc">
     <div class="ct">
       <div class="cl">Verlauf</div>
@@ -759,6 +770,14 @@ img.photo,.ch-card img,.ch-photo img,.hero img,img[src*="challenge-"],img[src*="
     </div>
     <canvas id="mc" style="max-height:200px;"></canvas>
     <div id="ce" class="empty" style="display:none;">Noch keine Einträge</div>
+  </div>
+  <!-- Trainings-Historie als Punktraster: letzte 84 Tage, Trainingstag = .on (vRenderDots) -->
+  <div class="card" id="v-dots-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+      <span class="lbl">Trainingstage · letzte 12 Wochen</span>
+      <span class="lbl num" id="v-dots-count" style="color:var(--text);white-space:nowrap;"></span>
+    </div>
+    <div class="dotgrid" id="v-dots" aria-hidden="true"></div>
   </div>
 
   <h2 class="stitle">Workout-Verlauf</h2>
@@ -780,13 +799,12 @@ img.photo,.ch-card img,.ch-photo img,.hero img,img[src*="challenge-"],img[src*="
 
 <!-- PLANE PAGE -->
 <div class="page" id="page-p">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;">
-    <div>
-      <h2 class="page-title">Meine Pläne</h2>
-      <div class="page-sub">Plane deine Workouts, behalte den Überblick und erreiche deine Ziele.</div>
-    </div>
-    <!-- Ghost: der eine orangene Primär-CTA der Pläne-Seite ist "Workout starten" in der Heute-Karte -->
-    <button class="btn-g sm pk-btn" onclick="showPlanForm()" style="white-space:nowrap;flex-shrink:0;margin-top:2px;">+ Neuer Plan</button>
+  <!-- Top-Bar (Spec §Form): links Wortmarke, Mitte Screen-Titel, rechts Kontext-Icon "+" = Neuer Plan.
+       Ghost-Ring statt Orange: der eine orangene Primär-CTA der Pläne-Seite ist "Workout starten" in der Heute-Karte -->
+  <div class="topbar">
+    <div class="logo">CALI</div>
+    <h2 class="topbar-title" style="margin:0;">Meine Pläne</h2>
+    <button type="button" class="icon-btn sm" onclick="showPlanForm()" aria-label="Neuer Plan" title="Neuer Plan">+</button>
   </div>
   <div id="plan-list"></div>
 
@@ -869,6 +887,150 @@ img.photo,.ch-card img,.ch-photo img,.hero img,img[src*="challenge-"],img[src*="
       var el=document.getElementById('start-date');
       if(el) el.textContent=days[d.getDay()]+' '+('0'+d.getDate()).slice(-2)+' '+mons[d.getMonth()];
     }catch(e){}
+  })();
+
+  // ── FORTSCHRITT + MAX-TEST: Zeitraum-Segment, Stat-Kacheln, Punktraster (Spec §Progress/Max) ──
+  // Markup: #v-range/#v-stats/#v-dots (oben in #page-v) und #max-range/#max-stats (pages.html).
+  // drawChart() (app1.js) und drawMaxChart() (app2.js) bleiben unverändert und werden hier gewrappt:
+  // für den gewählten Zeitraum sehen sie nur die Einträge im Fenster, danach ist die
+  // Datenliste (ents / maxEntries) wieder vollständig. Datums-Keys wie in app1.js: ISO 'JJJJ-MM-TT'.
+  var vRange = 'all';
+  var maxRange = 'all';
+  var V_RANGE_DAYS = {week:7, month:30, year:365};
+
+  function vIsoDaysAgo(n){
+    var d = new Date(); d.setDate(d.getDate()-n);
+    return d.toISOString().slice(0,10);
+  }
+  function vFmtDate(iso){ return iso ? iso.slice(8,10)+'.'+iso.slice(5,7)+'.'+iso.slice(0,4) : ''; }
+  function vSince(list, days){
+    if(!days) return list;
+    var from = vIsoDaysAgo(days-1), out = [];
+    for(var i=0;i<list.length;i++){ if(list[i].date>=from) out.push(list[i]); }
+    return out;
+  }
+  // Segment-Zustand nur über Klasse .on + aria-selected (Aussehen aus .seg-ctl)
+  function vSegMark(wrapId, val){
+    var wrap = document.getElementById(wrapId); if(!wrap) return;
+    var btns = wrap.querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      var on = btns[i].getAttribute('data-range')===val;
+      btns[i].className = on ? 'on' : '';
+      btns[i].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+  }
+  function vCountUp(el){
+    if(!el || !window.caliMotion) return;
+    var cus = el.querySelectorAll('[data-cu]');
+    for(var i=0;i<cus.length;i++){
+      caliMotion.countUp(cus[i], parseInt(cus[i].getAttribute('data-cu'),10)||0, {duration:600});
+    }
+  }
+
+  // Kacheln: Workouts (Trainingstage) + Sätze, Wiederholungen + Ø pro Workout — Wdh-Summe wie in
+  // buildProfilStatsDetail (main2aa.js): alle Sätze, parseFloat(n)
+  function vRenderStats(){
+    var el = document.getElementById('v-stats');
+    if(!el || typeof ents==='undefined') return;
+    var list = vSince(ents, V_RANGE_DAYS[vRange]);
+    var days = {}, sets = 0, reps = 0;
+    for(var i=0;i<list.length;i++){
+      var e = list[i], ss = e.sets||[];
+      days[e.date] = 1; sets += ss.length;
+      for(var k=0;k<ss.length;k++) reps += parseFloat(ss[k].n)||0;
+    }
+    var n = Object.keys(days).length; reps = Math.round(reps);
+    var avg = n ? Math.round(reps/n) : 0;
+    el.innerHTML =
+      '<div class="stat-tile"><span class="lbl">Workouts</span>'+
+        '<div class="kpi-row"><span class="kpi num" data-cu="'+n+'">'+n+'</span></div>'+
+        '<div class="row-sub num">'+sets.toLocaleString()+' '+(sets===1?'Satz':'Sätze')+'</div></div>'+
+      '<div class="stat-tile"><span class="lbl">Wiederholungen</span>'+
+        '<div class="kpi-row"><span class="kpi num" data-cu="'+reps+'">'+reps.toLocaleString()+'</span></div>'+
+        (n ? '<div class="row-sub num">Ø '+avg.toLocaleString()+' pro Workout</div>' : '')+
+      '</div>';
+    vCountUp(el);
+  }
+
+  // Punktraster: 84 Tage, ältester links oben, heute zuletzt; Trainingstag = .on
+  function vRenderDots(){
+    var el = document.getElementById('v-dots'), cnt = document.getElementById('v-dots-count');
+    if(!el || typeof ents==='undefined') return;
+    var days = {}; for(var i=0;i<ents.length;i++) days[ents[i].date] = 1;
+    var h = '', on = 0;
+    for(var d=83; d>=0; d--){
+      var iso = vIsoDaysAgo(d), hit = !!days[iso];
+      if(hit) on++;
+      h += '<i'+(hit?' class="on"':'')+' title="'+vFmtDate(iso)+'"></i>';
+    }
+    el.innerHTML = h;
+    if(cnt) cnt.textContent = on+' '+(on===1?'Tag':'Tage');
+  }
+
+  function vSetRange(r){
+    vRange = V_RANGE_DAYS[r] ? r : 'all';
+    vSegMark('v-range', vRange);
+    if(typeof drawChart==='function') drawChart(); // Wrapper zieht Kacheln + Punktraster nach
+  }
+
+  // Kacheln über dem Max-Chart: Einträge im Zeitraum + letzter Test-Tag, bester Wert der im Chart
+  // gewählten Übung (Min:Sek via parseMaxVal aus app2.js in Sekunden verglichen)
+  function maxRenderStats(){
+    var el = document.getElementById('max-stats');
+    if(!el || typeof maxEntries==='undefined') return;
+    var list = vSince(maxEntries, maxRange==='year' ? 365 : 0);
+    if(!list.length){ el.innerHTML=''; el.style.display='none'; return; }
+    var last = '', sel = document.getElementById('max-chart-ex'), exName = sel ? sel.value : '';
+    var best = null, bestNum = -1;
+    for(var i=0;i<list.length;i++){
+      if(list[i].date>last) last = list[i].date;
+      if(list[i].name!==exName) continue;
+      var v = (typeof parseMaxVal==='function') ? parseMaxVal(list[i].val, list[i].unit) : (parseFloat(list[i].val)||0);
+      if(v>bestNum){ bestNum = v; best = list[i]; }
+    }
+    var h = '<div class="stat-tile"'+(best?'':' style="grid-column:1 / -1;"')+'><span class="lbl">Einträge</span>'+
+      '<div class="kpi-row"><span class="kpi num" data-cu="'+list.length+'">'+list.length+'</span></div>'+
+      '<div class="row-sub num">Letzter Test '+vFmtDate(last)+'</div></div>';
+    if(best){
+      h += '<div class="stat-tile"><span class="lbl">Bester Wert</span>'+
+        '<div class="kpi-row"><span class="kpi num">'+best.val+'</span><span class="unit">'+(best.unit||'')+'</span></div>'+
+        '<div class="row-sub">'+exName.replace(/ Max$/,'')+'</div></div>';
+    }
+    el.innerHTML = h; el.style.display = '';
+    vCountUp(el);
+  }
+
+  function maxSetRange(r){
+    maxRange = r==='year' ? 'year' : 'all';
+    vSegMark('max-range', maxRange);
+    if(typeof drawMaxChart==='function') drawMaxChart(); // Wrapper rendert die Kacheln mit
+  }
+
+  (function(){
+    if(typeof drawChart==='function'){
+      var drawChartAll = drawChart;
+      drawChart = function(){
+        var ce = document.getElementById('ce');
+        if(ce) ce.textContent = V_RANGE_DAYS[vRange] ? 'Keine Einträge im Zeitraum' : 'Noch keine Einträge';
+        if(typeof ents!=='undefined' && V_RANGE_DAYS[vRange]){
+          var all = ents; ents = vSince(all, V_RANGE_DAYS[vRange]);
+          try{ drawChartAll(); } finally { ents = all; }
+        } else { drawChartAll(); }
+        try{ vRenderStats(); vRenderDots(); }catch(e){}
+      };
+    }
+    if(typeof drawMaxChart==='function'){
+      var drawMaxChartAll = drawMaxChart;
+      drawMaxChart = function(){
+        var ce = document.getElementById('max-chart-empty');
+        if(ce) ce.textContent = maxRange==='year' ? 'Keine Einträge im Zeitraum' : 'Noch keine Einträge';
+        if(typeof maxEntries!=='undefined' && maxRange==='year'){
+          var all = maxEntries; maxEntries = vSince(all, 365);
+          try{ drawMaxChartAll(); } finally { maxEntries = all; }
+        } else { drawMaxChartAll(); }
+        try{ maxRenderStats(); }catch(e){}
+      };
+    }
   })();
 
   function openFeedback(){
