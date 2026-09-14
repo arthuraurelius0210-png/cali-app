@@ -1301,6 +1301,33 @@ function chTileArt(container, ch){
   container.appendChild(shade);
 }
 
+// Katalog-Masonry (Pinterest-Prinzip, zwei Spalten): Jede Kachel bekommt ihre Form
+// aus der Position in PRESET_CHALLENGES (nicht aus der gefilterten Liste), damit
+// eine Challenge bei jedem Filter gleich aussieht. Muster wiederholt sich.
+var CH_TILE_SHAPES = ['4/5','1/1','3/4','5/4','2/3','1/1','4/5','5/4','3/4','1/1','2/3','4/5'];
+function chTileShape(ch){
+  var i = PRESET_CHALLENGES.indexOf(ch);
+  if(i < 0) i = 0;
+  return CH_TILE_SHAPES[i % CH_TILE_SHAPES.length];
+}
+// '3/4' → 0.75 (Breite geteilt durch Höhe).
+function chShapeRatio(shape){
+  var p = String(shape).split('/');
+  return parseFloat(p[0]) / parseFloat(p[1]);
+}
+// Verteilt items in Reihenfolge auf zwei Spalten: jedes kommt in die aktuell
+// kürzere Spalte (Gleichstand → links). Relative Höhe = 1/Verhältnis + Lücke.
+// Reine Arithmetik, kein Layout-Messen, kein Reflow.
+function chMasonryDistribute(items, ratioOf){
+  var cols = [[], []], heights = [0, 0], GAP = 0.03;
+  for(var i=0;i<items.length;i++){
+    var c = heights[1] < heights[0] ? 1 : 0;
+    cols[c].push(items[i]);
+    heights[c] += 1 / ratioOf(items[i]) + GAP;
+  }
+  return cols;
+}
+
 function buildChCardPreset(){
   var el = document.getElementById('ch-card-preset-inner');
   if(!el) return;
@@ -1920,12 +1947,12 @@ function openChallengeCatalog(opts){
   head.appendChild(resultLbl);
   ov.appendChild(head);
 
-  // Scrollbereich mit Kachel-Galerie (2 Spalten) + Leerzustand
+  // Scrollbereich mit Kachel-Masonry (2 Spalten, versetzt) + Leerzustand
   var scroll = document.createElement('div');
   scroll.className = 'sheet-scroll';
   scroll.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px calc(24px + env(safe-area-inset-bottom,0px));';
   var list = document.createElement('div');
-  list.className = 'ch-grid';
+  list.className = 'ch-masonry';
   var emptyBox = document.createElement('div');
   emptyBox.style.display = 'none';
   var emptyTxt = document.createElement('div');
@@ -1957,11 +1984,15 @@ function openChallengeCatalog(opts){
     var match = chCatalogMatcher(state.q);
     var hits = index.filter(function(item){ return passesFilters(item) && match(item); });
     list.innerHTML = '';
-    hits.forEach(function(item){
+    function buildTile(item){
       var ch = item.ch;
       var running = !!(activeChallenge && activeChallenge.id === ch.id);
+      var shape = chTileShape(ch), ratio = chShapeRatio(shape);
+      // s-short (1/1, 5/4): nur Kopfzeile + Titel; s-tall (2/3): Titel darf 3 Zeilen
+      var sizeCls = ratio >= 1 ? ' s-short' : (ratio < 0.7 ? ' s-tall' : '');
       var tile = document.createElement('div');
-      tile.className = 'ch-tile pressable'+(running ? ' active' : '');
+      tile.className = 'ch-tile pressable'+sizeCls+(running ? ' active' : '');
+      tile.style.aspectRatio = shape.replace('/', ' / ');
       tile.setAttribute('role', 'button');
       tile.setAttribute('tabindex', '0');
       tile.setAttribute('aria-label', ch.title);
@@ -1995,14 +2026,25 @@ function openChallengeCatalog(opts){
       var open = function(){ openChallengeDetail(ch, ov); };
       tile.onclick = open;
       tile.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
-      list.appendChild(tile);
+      return tile;
+    }
+    // Treffer in Reihenfolge auf die kürzere von zwei Spalten verteilen
+    var cols = chMasonryDistribute(hits, function(item){ return chShapeRatio(chTileShape(item.ch)); });
+    cols.forEach(function(colItems){
+      var col = document.createElement('div');
+      col.className = 'ch-col';
+      colItems.forEach(function(item){ col.appendChild(buildTile(item)); });
+      list.appendChild(col);
     });
     var n = hits.length, total = index.length;
     countEl.textContent = String(n);
     resultLbl.textContent = n+' von '+total+' Challenges';
     list.style.display = n === 0 ? 'none' : '';
     emptyBox.style.display = n === 0 ? '' : 'none';
-    if(n && window.caliMotion) caliMotion.stagger(list, 12);
+    // Beide Spalten einzeln staggern, sonst würde nur die linke animieren
+    if(n && window.caliMotion){
+      for(var ci=0; ci<list.children.length; ci++) caliMotion.stagger(list.children[ci], 8);
+    }
   }
 
   document.body.appendChild(ov);
