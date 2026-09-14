@@ -93,6 +93,7 @@ var EX_DB = [
   {name:'Scapula Pull-ups',             cat:'Pull', unit:'Wdh', col:'gr', band:0},
   {name:'Hanging Knee Raises',          cat:'Pull', unit:'Wdh', col:'gr', band:0},
   {name:'Toes to Bar',                  cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Dead Hang',                    cat:'Pull', unit:'Sek', col:'gr', band:0},
   // PUSH
   {name:'Liegestutze',                  cat:'Push', unit:'Wdh', col:'or', band:0},
   {name:'Liegestutze (eng)',            cat:'Push', unit:'Wdh', col:'or', band:0},
@@ -122,6 +123,9 @@ var EX_DB = [
   {name:'Sit-ups',                     cat:'Core', unit:'Wdh', col:'pu', band:0},
   {name:'Mountain Climbers',           cat:'Core', unit:'Sek', col:'pu', band:0},
   {name:'Windshield Wipers',           cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'Superman Hold',               cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Reverse Plank',               cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Russian Twists',              cat:'Core', unit:'Wdh', col:'pu', band:0},
   // LEGS
   {name:'Pistol Squat',                cat:'Legs', unit:'Wdh', col:'te', band:0},
   {name:'Box Pistol Squat',            cat:'Legs', unit:'Wdh', col:'te', band:0},
@@ -132,6 +136,9 @@ var EX_DB = [
   {name:'Nordic Curl Negatives',       cat:'Legs', unit:'Wdh', col:'te', band:0},
   {name:'Calf Raises',                 cat:'Legs', unit:'Wdh', col:'te', band:0},
   {name:'Burpees',                     cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Wall Sit',                    cat:'Legs', unit:'Sek', col:'te', band:0},
+  {name:'Lunges',                      cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Glute Bridge',                cat:'Legs', unit:'Wdh', col:'te', band:0},
   // SKILLS
   {name:'Klimmzug Pyramide',          cat:'Skills', unit:'Runden', col:'am', band:1},
   {name:'Muscle-Up Transition',       cat:'Skills', unit:'Wdh',    col:'am', band:1},
@@ -140,6 +147,7 @@ var EX_DB = [
   {name:'Ring Muscle-Up',             cat:'Skills', unit:'Wdh',    col:'am', band:0},
   {name:'Handstand Walk',             cat:'Skills', unit:'Meter',  col:'am', band:0},
   {name:'360 Pull-up',                cat:'Skills', unit:'Wdh',    col:'am', band:0},
+  {name:'Frog Stand',                 cat:'Skills', unit:'Sek',    col:'am', band:0},
   // SCHWIMMEN
             // LAUFEN
         ];
@@ -551,11 +559,15 @@ function finalizeEndWorkout(autoCommitted){
 
   // Save each exercise as individual entry
   var setCount = 0;
+  // ts = Speicherzeitpunkt der Einheit (Challenge-Metriken wie sessions_by_hour, app2.js);
+  // ältere Einträge haben nur die numerische id (= Zeitstempel + i) als Fallback.
+  var savedAt = new Date().getTime();
   for(var i=0;i<woExercises.length;i++){
     var ex = woExercises[i];
     setCount += ex.sets.length;
     ents.push({
-      id: new Date().getTime()+i,
+      id: savedAt+i,
+      ts: savedAt,
       date: woDate,
       woId: woId,
       name: ex.name,

@@ -693,7 +693,7 @@ var CHALLENGE_TEMPLATES = [
   },
   {
     id:'t4', icon:'\u23F1', title:'Ausdauer-Held',
-    desc:'Halte eine Übung (Plank, L-Sit oder Hollow Body) für insgesamt {target} Sekunden diese Woche!',
+    desc:'Sammle diese Woche insgesamt {target} Sekunden Haltezeit (Plank, L-Sit, Hollow Body, Dead Hang …)!',
     calc: function(data){
       return {target:120, metric:'hold_total_week'};
     }
@@ -792,6 +792,51 @@ function loadChallenges(){
 function chUnitLabel(){
   var u = activeChallenge && activeChallenge.params && activeChallenge.params.unit;
   return u ? ' '+u : '';
+}
+
+// ── Manuelle Check-ins (metric 'manual', Presets p71 ff.) ──
+// activeChallenge.checkins = ISO-Datumsliste; wird über saveChallenges()/fbSave() mitgespeichert.
+// perDay: höchstens ein Eintrag pro Kalendertag. Beim Erreichen des Ziels nur Konfetti + Hinweis —
+// XP und Abschluss laufen weiter über den bestehenden Claim-Flow ('Challenge abschließen').
+function chIsManual(){
+  return !!(activeChallenge && activeChallenge.params && activeChallenge.params.metric === 'manual');
+}
+function chManualCheckin(){
+  if(!chIsManual()) return;
+  var p = activeChallenge.params;
+  var target = p.target || 1;
+  if(calcChallengeProgress() >= target) return;
+  var today = new Date().toISOString().slice(0,10);
+  if(!Array.isArray(activeChallenge.checkins)) activeChallenge.checkins = [];
+  if(p.perDay){
+    for(var i=0;i<activeChallenge.checkins.length;i++){
+      if(String(activeChallenge.checkins[i]).slice(0,10) === today){ toast('Heute schon eingetragen'); return; }
+    }
+  }
+  activeChallenge.checkins.push(today);
+  saveChallenges();
+  if(typeof fbSave === 'function') fbSave();
+  var prog = calcChallengeProgress();
+  buildChallengeUI();
+  var ov = document.getElementById('ch-drawer-overlay');
+  var content = ov && ov.querySelector('[data-ch-drawer-content]');
+  if(content){ content.innerHTML = ''; buildDrawerPersonal(content); }
+  if(prog >= target){
+    if(window.caliMotion && caliMotion.celebrate) caliMotion.celebrate('burst');
+    toast('Challenge geschafft! Jetzt abschließen.');
+  } else {
+    toast('Eingetragen: '+prog+' / '+target+chUnitLabel());
+  }
+}
+// Heller Sekundär-Button 'Erledigt' (Ziel 1) bzw. '+1 eintragen' — nur für offene manual-Challenges.
+function chManualButton(extraCss){
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'btn sec pressable';
+  b.style.cssText = extraCss || '';
+  b.textContent = ((activeChallenge.params.target || 1) > 1) ? '+1 eintragen' : 'Erledigt';
+  b.onclick = function(ev){ ev.stopPropagation(); chManualCheckin(); };
+  return b;
 }
 
 function calcChallengeProgress(){
@@ -911,17 +956,16 @@ function calcChallengeProgress(){
     return bestSets;
   }
   if(metric==='hold_total_week'){
-    // Beste Wochen-Gesamthaltezeit einer der drei Halteübungen
-    var holdNames=['Plank','L-Sit Hold','Hollow Body Hold'];
-    var perHold={};
+    // Gesamte Haltezeit dieser Woche: alle Sek-Einträge zusammen (Plank, L-Sit, Hollow Body,
+    // Dead Hang, Wandsitz …) — Katalog-Semantik 'total hold time this week' (p51, Template t4)
+    var holdSum=0;
     for(var i=0;i<ents.length;i++){
-      if(ents[i].date>=weekStr && holdNames.indexOf(ents[i].name)>-1){
-        perHold[ents[i].name]=(perHold[ents[i].name]||0)+setSum(ents[i]);
-      }
+      var eH=ents[i];
+      if(!eH||!eH.date||eH.date<weekStr) continue;
+      if(entUnit(eH)!=='Sek') continue;
+      holdSum+=setSum(eH);
     }
-    var bestHold=0;
-    for(var key3 in perHold){ if(perHold[key3]>bestHold) bestHold=perHold[key3]; }
-    return Math.round(bestHold);
+    return Math.round(holdSum);
   }
   if(metric==='volume_one_workout'){
     var volPerSess={};
@@ -962,11 +1006,14 @@ function calcChallengeProgress(){
   function volMatching(s, exName){ var t=0; for(var nm in s.vol){ if(s.vol.hasOwnProperty(nm) && nameMatches(nm, exName)) t+=s.vol[nm]; } return t; }
 
   if(metric==='volume_session_ex'){
-    // Wdh einer Übung (oder aller Wdh-Übungen ohne exName) in einer Einheit — Bestwert seit Start
+    // Wdh einer Übung (oder aller Wdh-Übungen ohne exName) in einer Einheit — Bestwert seit Start.
+    // Sessions über maxDur (falls Dauer bekannt) zählen nicht — gleiche Regel wie rounds_in_session (p23–p28, p87).
     var sessA=sessionVolumes('Wdh');
+    var maxDurA=parseFloat(p.maxDur);
     var bestA=0;
     for(var ka in sessA){
       if(!sessA.hasOwnProperty(ka)) continue;
+      if(maxDurA>0 && sessA[ka].dur>0 && sessA[ka].dur>maxDurA) continue;
       var vA=p.exName ? volMatching(sessA[ka], p.exName) : sessA[ka].all;
       if(vA>bestA) bestA=vA;
     }
@@ -1073,6 +1120,103 @@ function calcChallengeProgress(){
       if(prevV>0 && newV>prevV) return 1;
     }
     return 0;
+  }
+
+  // ── Metriken der Presets p23–p100 (app3.js) ──
+  // manual: Check-ins per Button (chManualCheckin) statt Trainingsdaten.
+  if(metric==='manual'){
+    var cks=activeChallenge.checkins;
+    if(!Array.isArray(cks)) return 0;
+    if(!p.perDay) return cks.length;
+    var ckDays={};
+    for(var i=0;i<cks.length;i++){ if(cks[i]) ckDays[String(cks[i]).slice(0,10)]=true; }
+    return Object.keys(ckDays).length;
+  }
+  // Zeitstempel eines Eintrags: ts (finalizeEndWorkout, app1.js) oder die numerische id
+  // (= Date.now()+i bei alten Einträgen). 0, wenn nichts Brauchbares da ist.
+  function entTs(e){ var t=parseFloat(e.ts); if(!(t>1e11)) t=parseFloat(e.id); return t>1e11 ? t : 0; }
+  // Alle Einheiten seit Challenge-Start: Datum, Übungsnamen, Kategorien, Satzzahl, Dauer, frühester Zeitstempel
+  function sessionsSince(){
+    var sess={};
+    for(var i=0;i<ents.length;i++){
+      var e=ents[i];
+      if(!e||!e.date||e.date<sinceStr) continue;
+      var sk=sessionKey(e);
+      var s=sess[sk]||(sess[sk]={date:e.date, names:{}, cats:{}, sets:0, dur:0, ts:0});
+      if(e.name){ s.names[e.name]=true; var c=exCat(e.name); if(c) s.cats[c]=true; }
+      s.sets+=(e.sets||[]).length;
+      var d=parseFloat(e.dur); if(d>0 && d>s.dur) s.dur=d;
+      var t=entTs(e); if(t>0 && (!s.ts || t<s.ts)) s.ts=t;
+    }
+    return sess;
+  }
+  function dayNum(dateStr){ var t=Date.parse(dateStr); return isNaN(t) ? 0 : Math.floor(t/86400000); }
+  if(metric==='sessions_in_window'){
+    // Meiste verschiedene Einheiten in einem Fenster von p.days Tagen seit Start
+    // (gleitend ab jedem Trainingstag — schließt das feste Fenster ab Start ein)
+    var winDays=Math.max(1, Math.floor(parseFloat(p.days))||1);
+    var sessW=sessionsSince(); var dayNums=[];
+    for(var kw in sessW){ if(sessW.hasOwnProperty(kw)) dayNums.push(dayNum(sessW[kw].date)); }
+    dayNums.sort(function(x,y){ return x-y; });
+    var bestW=0;
+    for(var iw=0;iw<dayNums.length;iw++){
+      var cntW=0;
+      for(var jw=iw;jw<dayNums.length && dayNums[jw]<dayNums[iw]+winDays;jw++) cntW++;
+      if(cntW>bestW) bestW=cntW;
+    }
+    return bestW;
+  }
+  if(metric==='longest_session_min'){
+    var sessL=sessionsSince(); var bestL=0;
+    for(var kl in sessL){ if(sessL.hasOwnProperty(kl) && sessL[kl].dur>bestL) bestL=sessL[kl].dur; }
+    return Math.floor(bestL/60);
+  }
+  if(metric==='distinct_exercises_session'){
+    var sessD=sessionsSince(); var bestD=0;
+    for(var kd2 in sessD){ if(!sessD.hasOwnProperty(kd2)) continue; var nD=Object.keys(sessD[kd2].names).length; if(nD>bestD) bestD=nD; }
+    return bestD;
+  }
+  if(metric==='categories_in_session'){
+    var sessK=sessionsSince(); var bestK=0;
+    for(var kk in sessK){ if(!sessK.hasOwnProperty(kk)) continue; var nK=Object.keys(sessK[kk].cats).length; if(nK>bestK) bestK=nK; }
+    return bestK;
+  }
+  if(metric==='sessions_by_hour'){
+    // Einheiten nach Speicherzeitpunkt: vor beforeHour, ab afterHour, beide = Fenster
+    // (afterHour > beforeHour = Fenster über Mitternacht). Ohne Zeitstempel zählt eine Einheit nicht.
+    var bH=parseFloat(p.beforeHour), aH=parseFloat(p.afterHour);
+    var hasB=!isNaN(bH), hasA=!isNaN(aH);
+    if(!hasB && !hasA) return 0;
+    var sessH=sessionsSince(); var cntH=0;
+    for(var kh in sessH){
+      if(!sessH.hasOwnProperty(kh) || !sessH[kh].ts) continue;
+      var hr=new Date(sessH[kh].ts).getHours();
+      var ok;
+      if(hasB && hasA) ok = (aH<bH) ? (hr>=aH && hr<bH) : (hr>=aH || hr<bH);
+      else if(hasB) ok = hr<bH;
+      else ok = hr>=aH;
+      if(ok) cntH++;
+    }
+    return cntH;
+  }
+  if(metric==='saved_parks'){
+    if(typeof getSavedParkIds==='function'){ try{ var ids=getSavedParkIds(); return Array.isArray(ids)?ids.length:0; }catch(e){} }
+    try{ var raw=JSON.parse(localStorage.getItem('cali_saved_parks')||'[]'); return Array.isArray(raw)?raw.length:0; }catch(e){ return 0; }
+  }
+  if(metric==='sets_this_week'){
+    var setsW=0;
+    for(var i=0;i<ents.length;i++){ var eS=ents[i]; if(eS && eS.date && eS.date>=weekStr) setsW+=(eS.sets||[]).length; }
+    return setsW;
+  }
+  if(metric==='hold_total_session'){
+    // Sekunden aller Sek-Einträge (oder nur exName) in einer Einheit — Bestwert seit Start
+    var sessT=sessionVolumes('Sek'); var bestT=0;
+    for(var kt in sessT){
+      if(!sessT.hasOwnProperty(kt)) continue;
+      var vT=p.exName ? volMatching(sessT[kt], p.exName) : sessT[kt].all;
+      if(vT>bestT) bestT=vT;
+    }
+    return Math.round(bestT);
   }
   return 0;
 }
@@ -1249,6 +1393,8 @@ function buildChCardPersonal(){
       if(window.caliMotion) caliMotion.animateBar(pFill, pct);
       else pFill.style.width = pct+'%';
     }
+    // Manuelle Challenge: Check-in direkt auf der Karte (Sekundär-Button, Karte selbst bleibt der Tap ins Sheet)
+    if(!done && chIsManual()) el.appendChild(chManualButton('margin:12px 0 0;'));
   }
 }
 
@@ -1584,6 +1730,7 @@ function openChDrawer(type){
   // Content area
   var content = document.createElement('div');
   content.style.cssText = 'padding:0 16px;';
+  content.setAttribute('data-ch-drawer-content', type);
 
   if(type === 'personal'){
     buildDrawerPersonal(content);
@@ -1689,6 +1836,8 @@ function buildDrawerPersonal(el){
       };
       el.appendChild(claimBtn);
     } else {
+      if(chIsManual()) el.appendChild(chManualButton('margin:0 0 8px;'));
+
       var newBtn = document.createElement('button');
       newBtn.type = 'button';
       newBtn.className = 'btn-g pressable';
@@ -1714,7 +1863,7 @@ function buildDrawerPersonal(el){
 function buildDrawerPreset(el){ openChallengeCatalog(); }
 
 // ── CHALLENGE-KATALOG ─────────────────────────────────────
-// Vollbild-Overlay mit Suche, zwei Filterreihen (Muskelgruppe, Schwierigkeit) und
+// Vollbild-Overlay mit Suche, drei Filterreihen (Muskelgruppe, Schwierigkeit, Dauer) und
 // kompakter nummerierter Liste über alle PRESET_CHALLENGES. Tap auf eine Zeile öffnet
 // das Detail-Sheet mit dem einen orangenen "Annehmen". Metadaten (level/cats/kind)
 // und Labels kommen aus app3.js (presetExercises, presetCatLabels, …).
@@ -1744,7 +1893,14 @@ var CH_CATALOG_SYNONYMS = [
   {k:['handstand'],                                         ex:['Wall Handstand Hold']},
   {k:['muscle up','muscle ups','muscleup','muscleups'],     ex:['Muscle-Ups']},
   {k:['front lever'],                                       ex:['Tuck Front Lever Hold']},
-  {k:['sit up','sit ups','situp','situps'],                 ex:['Sit-ups']}
+  {k:['sit up','sit ups','situp','situps'],                 ex:['Sit-ups']},
+  {k:['dead hang','hangen','haengen','toter hang'],         ex:['Dead Hang']},
+  {k:['wall sit','wandsitz'],                               ex:['Wall Sit']},
+  {k:['lunge','lunges','ausfallschritt','ausfallschritte'], ex:['Lunges']},
+  {k:['l sit','lsit'],                                      ex:['L-Sit Hold']},
+  {k:['leg raise','leg raises','beinheben'],                ex:['Leg Raises']},
+  {k:['australian rows','rudern','rows'],                   ex:['Australian Rows']},
+  {k:['skill','skills'],                                    cats:['Skills']}
 ];
 
 // Prüft, ob ein Synonym-Eintrag auf die (vorberechnete) Challenge passt.
@@ -1815,7 +1971,7 @@ function chCatalogMatcher(query){
 
 // Kompakte Meta-Zeile einer Zeile: 'Pull · Schwer · 100 Wdh · Einheit'
 function chCatalogMeta(ch){
-  return presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+ch.target+' '+presetUnit(ch)+' · '+presetKindLabel(ch);
+  return presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+ch.target+' '+presetUnit(ch)+' · '+presetKindLabel(ch)+' · '+presetMinutesLabel(ch);
 }
 
 var CH_CATALOG_GROUPS = [
@@ -1824,6 +1980,7 @@ var CH_CATALOG_GROUPS = [
   {id:'Push', label:'Push'},
   {id:'Core', label:'Core'},
   {id:'Legs', label:'Beine'},
+  {id:'Skills', label:'Skills'},
   {id:'full', label:'Ganzkörper'}
 ];
 var CH_CATALOG_LEVELS = [
@@ -1833,6 +1990,20 @@ var CH_CATALOG_LEVELS = [
   {id:3, label:'Schwer'},
   {id:4, label:'Extrem'}
 ];
+// Dauer-Filter über ch.minutes (presetMinutes: fehlend = 20)
+var CH_CATALOG_DURATIONS = [
+  {id:'all', label:'Alle'},
+  {id:'10',  label:'bis 10 min'},
+  {id:'20',  label:'bis 20 min'},
+  {id:'20+', label:'über 20 min'}
+];
+function chDurationPasses(ch, sel){
+  if(!sel || sel === 'all') return true;
+  var m = presetMinutes(ch);
+  if(sel === '10') return m <= 10;
+  if(sel === '20') return m <= 20;
+  return m > 20;
+}
 
 function openChallengeCatalog(opts){
   opts = opts || {};
@@ -1841,7 +2012,7 @@ function openChallengeCatalog(opts){
   var oldSheet = document.getElementById('ch-catalog-detail');
   if(oldSheet) oldSheet.remove();
 
-  var state = {q: opts.prefill || '', group:'all', level:0};
+  var state = {q: opts.prefill || '', group:'all', level:0, dur:'all'};
   var index = chCatalogIndex();
 
   var ov = document.createElement('div');
@@ -1879,7 +2050,7 @@ function openChallengeCatalog(opts){
   topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(slot);
   ov.appendChild(topBar);
 
-  // Kopf: Suche + zwei Chip-Reihen + Ergebniszeile (bleibt stehen, Liste scrollt)
+  // Kopf: Suche + drei Chip-Reihen (Muskelgruppe, Schwierigkeit, Dauer) + Ergebniszeile (bleibt stehen, Liste scrollt)
   var head = document.createElement('div');
   head.style.cssText = 'flex-shrink:0;padding:12px 16px 0;';
 
@@ -1938,8 +2109,11 @@ function openChallengeCatalog(opts){
   groupRow.setAttribute('aria-label', 'Muskelgruppe');
   var levelRow = chipRow(CH_CATALOG_LEVELS, function(){ return state.level; }, function(v){ state.level = v; });
   levelRow.setAttribute('aria-label', 'Schwierigkeit');
+  var durRow = chipRow(CH_CATALOG_DURATIONS, function(){ return state.dur; }, function(v){ state.dur = v; });
+  durRow.setAttribute('aria-label', 'Dauer');
   head.appendChild(groupRow);
   head.appendChild(levelRow);
+  head.appendChild(durRow);
 
   var resultLbl = document.createElement('div');
   resultLbl.className = 'lbl num';
@@ -1964,9 +2138,9 @@ function openChallengeCatalog(opts){
   resetBtn.style.cssText = 'width:100%;';
   resetBtn.textContent = 'Filter zurücksetzen';
   resetBtn.onclick = function(){
-    state.q = ''; state.group = 'all'; state.level = 0;
+    state.q = ''; state.group = 'all'; state.level = 0; state.dur = 'all';
     inp.value = ''; clearBtn.style.display = 'none';
-    groupRow._paint(); levelRow._paint();
+    groupRow._paint(); levelRow._paint(); durRow._paint();
     renderList();
   };
   emptyBox.appendChild(emptyTxt); emptyBox.appendChild(resetBtn);
@@ -1977,6 +2151,7 @@ function openChallengeCatalog(opts){
     if(state.group === 'full'){ if(item.cats.length < 3) return false; }
     else if(state.group !== 'all'){ if(item.cats.indexOf(state.group) < 0) return false; }
     if(state.level && item.ch.level !== state.level) return false;
+    if(!chDurationPasses(item.ch, state.dur)) return false;
     return true;
   }
 
@@ -2019,7 +2194,7 @@ function openChallengeCatalog(opts){
       t.textContent = ch.title;
       var sub = document.createElement('div');
       sub.className = 'row-sub num';
-      sub.textContent = 'Ziel '+ch.target+' '+presetUnit(ch);
+      sub.textContent = 'Ziel '+ch.target+' '+presetUnit(ch)+' · '+presetMinutesLabel(ch);
       body.appendChild(cats); body.appendChild(t); body.appendChild(sub);
       tile.appendChild(body);
 
@@ -2098,7 +2273,7 @@ function openChallengeDetail(ch, catalogOv){
   var meta = document.createElement('div');
   meta.className = 'lbl';
   meta.style.cssText = 'margin:0 0 12px;';
-  meta.textContent = presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+presetKindLabel(ch);
+  meta.textContent = presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+presetKindLabel(ch)+' · '+presetMinutesLabel(ch);
   box.appendChild(meta);
 
   var desc = document.createElement('div');
