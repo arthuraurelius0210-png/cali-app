@@ -65,7 +65,7 @@ function buildChallengePresets(){
       btn.onclick = function(){
         activeChallenge = {
           id: ch.id, title: ch.title, desc: ch.desc,
-          icon: ch.icon, type: 'preset', params: {target:ch.target, metric:ch.metric, exName:ch.exName},
+          icon: ch.icon, type: 'preset', params: presetParams(ch),
           startDate: new Date().toISOString().slice(0,10), progress:0
         };
         saveChallenges();

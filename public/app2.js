@@ -787,6 +787,13 @@ function loadChallenges(){
   }catch(x){}
 }
 
+// Einheiten-Label hinter der Fortschrittszahl ("12 / 30 Tage") — kommt aus
+// activeChallenge.params.unit (Preset-Feld). Ohne unit bleibt die Anzeige wie bisher.
+function chUnitLabel(){
+  var u = activeChallenge && activeChallenge.params && activeChallenge.params.unit;
+  return u ? ' '+u : '';
+}
+
 function calcChallengeProgress(){
   if(!activeChallenge) return 0;
   var p = activeChallenge.params || {};
@@ -926,6 +933,94 @@ function calcChallengeProgress(){
     var bestVol=0;
     for(var key4 in volPerSess){ if(volPerSess[key4]>bestVol) bestVol=volPerSess[key4]; }
     return Math.round(bestVol);
+  }
+
+  // ── Session-Metriken der Preset-Challenges (p9–p22) ──
+  // Alle gruppieren nach sessionKey und zählen nur Einheiten ab Challenge-Start (sinceStr),
+  // damit eine heute angenommene Challenge nicht durch alte Daten sofort erledigt ist.
+  // Wdh-Einträge zählen als Wiederholungen, Sek-Einträge als Sekunden.
+  // EMOM-Einträge (main2bb.js) haben kein unit-Feld → Einheit aus EX_DB, sonst 'Wdh'.
+  function entUnit(e){ if(e.unit) return e.unit; for(var k=0;k<EX_DB.length;k++){ if(EX_DB[k].name===e.name) return EX_DB[k].unit||'Wdh'; } return 'Wdh'; }
+  function partsOf(){ var arr=p.parts; if(!arr||!arr.length) return []; var out=[]; for(var k=0;k<arr.length;k++){ var pt=arr[k]||{}; var n=parseFloat(pt.n); if(!pt.ex||!(n>0)) continue; out.push({ex:pt.ex, n:n}); } return out; }
+  // Pro Session: Volumen je Übung (Wdh) + bekannte Dauer (Sekunden)
+  function sessionVolumes(onlyUnit){
+    var sess={};
+    for(var i=0;i<ents.length;i++){
+      var e=ents[i];
+      if(!e||!e.date||e.date<sinceStr) continue;
+      if(onlyUnit && entUnit(e)!==onlyUnit) continue;
+      var sk=sessionKey(e);
+      var s=sess[sk]||(sess[sk]={vol:{}, all:0, dur:0});
+      var v=setSum(e);
+      s.vol[e.name]=(s.vol[e.name]||0)+v;
+      s.all+=v;
+      var d=parseFloat(e.dur);
+      if(d>0 && d>s.dur) s.dur=d;
+    }
+    return sess;
+  }
+  function volMatching(s, exName){ var t=0; for(var nm in s.vol){ if(s.vol.hasOwnProperty(nm) && nameMatches(nm, exName)) t+=s.vol[nm]; } return t; }
+
+  if(metric==='volume_session_ex'){
+    // Wdh einer Übung (oder aller Wdh-Übungen ohne exName) in einer Einheit — Bestwert seit Start
+    var sessA=sessionVolumes('Wdh');
+    var bestA=0;
+    for(var ka in sessA){
+      if(!sessA.hasOwnProperty(ka)) continue;
+      var vA=p.exName ? volMatching(sessA[ka], p.exName) : sessA[ka].all;
+      if(vA>bestA) bestA=vA;
+    }
+    return Math.round(bestA);
+  }
+  if(metric==='multi_volume_session'){
+    // Summe über parts von min(Volumen der Übung in der Einheit, Soll) — Bestwert seit Start
+    var partsB=partsOf();
+    if(!partsB.length) return 0;
+    var sessB=sessionVolumes('Wdh');
+    var bestB=0;
+    for(var kb in sessB){
+      if(!sessB.hasOwnProperty(kb)) continue;
+      var sumB=0;
+      for(var pb=0;pb<partsB.length;pb++){ sumB+=Math.min(volMatching(sessB[kb], partsB[pb].ex), partsB[pb].n); }
+      if(sumB>bestB) bestB=sumB;
+    }
+    return Math.round(bestB);
+  }
+  if(metric==='rounds_in_session'){
+    // Runden = min über parts von floor(Volumen / Soll); Sessions über maxDur (falls Dauer bekannt) zählen nicht
+    var partsC=partsOf();
+    if(!partsC.length) return 0;
+    var sessC=sessionVolumes('Wdh');
+    var maxDur=parseFloat(p.maxDur);
+    var bestC=0;
+    for(var kc in sessC){
+      if(!sessC.hasOwnProperty(kc)) continue;
+      if(maxDur>0 && sessC[kc].dur>0 && sessC[kc].dur>maxDur) continue;
+      var rounds=Infinity;
+      for(var pc=0;pc<partsC.length;pc++){
+        var r=Math.floor(volMatching(sessC[kc], partsC[pc].ex)/partsC[pc].n);
+        if(r<rounds) rounds=r;
+      }
+      if(rounds!==Infinity && rounds>bestC) bestC=rounds;
+    }
+    return bestC;
+  }
+  if(metric==='days_with_volume'){
+    // Tage seit Start, an denen das Tagesvolumen der Übung (Wdh oder Sek je Eintrag) >= perDay liegt
+    var perDay=parseFloat(p.perDay);
+    if(!(perDay>0)||!p.exName) return 0;
+    var perDate={};
+    for(var i=0;i<ents.length;i++){
+      var eD=ents[i];
+      if(!eD||!eD.date||eD.date<sinceStr) continue;
+      if(!nameMatches(eD.name, p.exName)) continue;
+      var uD=entUnit(eD);
+      if(uD!=='Wdh' && uD!=='Sek') continue;
+      perDate[eD.date]=(perDate[eD.date]||0)+setSum(eD);
+    }
+    var daysCnt=0;
+    for(var kd in perDate){ if(perDate.hasOwnProperty(kd) && perDate[kd]>=perDay) daysCnt++; }
+    return daysCnt;
   }
   if(metric==='skills_this_week'){
     var skillsSeen={};
@@ -1148,7 +1243,7 @@ function buildChCardPersonal(){
         '<div style="flex:1;">'+planSegbarHTML('data-chbar')+'</div>'+
         '<div class="num" style="font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;">'+pct+'%</div>'+
       '</div>'+
-      '<div class="row-sub num" style="margin:0;">'+prog+' / '+target+' abgeschlossen'+(done?' &nbsp;<span style="color:var(--accent);font-weight:600;">Geschafft!</span>':'')+'</div>';
+      '<div class="row-sub num" style="margin:0;">'+prog+' / '+target+chUnitLabel()+' abgeschlossen'+(done?' &nbsp;<span style="color:var(--accent);font-weight:600;">Geschafft!</span>':'')+'</div>';
     var pFill = el.querySelector('[data-chbar]');
     if(pFill){
       if(window.caliMotion) caliMotion.animateBar(pFill, pct);
@@ -1469,7 +1564,7 @@ function buildDrawerPersonal(el){
       '</div>'+
       planSegbarHTML('data-chbar')+
       '<div class="row-sub num" style="display:flex;justify-content:space-between;margin:8px 0 0;">'+
-        '<span>'+prog+' / '+target+'</span><span>'+pct+'%</span>'+
+        '<span>'+prog+' / '+target+chUnitLabel()+'</span><span>'+pct+'%</span>'+
       '</div>';
     el.appendChild(card);
     var chFill = card.querySelector('[data-chbar]');
@@ -1558,7 +1653,7 @@ function buildDrawerPreset(el){
         activeChallenge = {
           id:ch.id, title:ch.title, desc:ch.desc,
           icon:ch.icon, type:'preset',
-          params:{target:ch.target, metric:ch.metric, exName:ch.exName},
+          params:presetParams(ch),
           startDate:new Date().toISOString().slice(0,10), progress:0
         };
         saveChallenges(); fbSave();

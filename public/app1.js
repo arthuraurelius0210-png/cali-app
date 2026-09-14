@@ -119,11 +119,13 @@ var EX_DB = [
   {name:'Dragon Flag Negatives',       cat:'Core', unit:'Wdh', col:'pu', band:0},
   {name:'Ab Wheel Rollout',            cat:'Core', unit:'Wdh', col:'pu', band:0},
   {name:'V-Ups',                       cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'Sit-ups',                     cat:'Core', unit:'Wdh', col:'pu', band:0},
   {name:'Mountain Climbers',           cat:'Core', unit:'Sek', col:'pu', band:0},
   {name:'Windshield Wipers',           cat:'Core', unit:'Wdh', col:'pu', band:0},
   // LEGS
   {name:'Pistol Squat',                cat:'Legs', unit:'Wdh', col:'te', band:0},
   {name:'Box Pistol Squat',            cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Kniebeugen',                  cat:'Legs', unit:'Wdh', col:'te', band:0},
   {name:'Jump Squats',                 cat:'Legs', unit:'Wdh', col:'te', band:0},
   {name:'Bulgarian Split Squat',       cat:'Legs', unit:'Wdh', col:'te', band:0},
   {name:'Shrimp Squat',                cat:'Legs', unit:'Wdh', col:'te', band:0},

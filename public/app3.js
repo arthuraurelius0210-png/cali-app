@@ -154,7 +154,7 @@ function buildStartChallengeWidget(){
   t1.textContent = activeChallenge.title;
   var t2 = document.createElement('div');
   t2.className = 'row-sub num';
-  t2.textContent = prog+' / '+target+' · '+pct+' %';
+  t2.textContent = prog+' / '+target+(typeof chUnitLabel==='function'?chUnitLabel():'')+' · '+pct+' %';
   txt.appendChild(t0);
   txt.appendChild(t1);
   txt.appendChild(t2);
@@ -240,7 +240,8 @@ var PRESET_CHALLENGES = [
     id:'p1', icon:'💯', title:'100 Klimmzüge Challenge', image:'/challenge-pullup.jpg',
     desc:'Schaffe 100 Klimmzüge in einer einzigen Einheit. Pause erlaubt, aber kein Verlassen der Stange für mehr als 3 Minuten.',
     explanation:'Verteile die 100 Wdh. auf so viele Sätze wie du brauchst. Ziel: maximale Gesamtmenge. Starte mit deinen stärksten Sätzen.',
-    target:100, metric:'volume_exercise', exName:'Klimmzuge'
+    // "in einer einzigen Einheit" → Session-Metrik statt Wochensumme
+    target:100, metric:'volume_session_ex', exName:'Klimmzuge', unit:'Wdh'
   },
   {
     id:'p2', icon:'⏱', title:'1-Minuten Muscle-Up',
@@ -284,7 +285,110 @@ var PRESET_CHALLENGES = [
     explanation:'Auch 15 Minuten zählen! Der Punkt ist die Gewohnheit. Nutze leichte Tage für Mobilität oder Skills.',
     target:7, metric:'streak_days', exName:''
   },
+  // ── Session-, Runden- und Tages-Challenges (Metriken in calcChallengeProgress, app2.js) ──
+  // icon ist nur ein Daten-Schlüssel (wird nicht gerendert). unit erscheint hinter der Fortschrittszahl.
+  {
+    id:'p9', icon:'rounds', title:'Zwanzig-Minuten-Zirkel',
+    desc:'So viele Runden wie möglich in 20 Minuten: 5 Klimmzüge, 10 Liegestütze, 15 Kniebeugen.',
+    explanation:'Timer auf 20 Minuten, dann nur noch Runden zählen. Einsteiger schaffen 8 bis 12 Runden, Fortgeschrittene über 20. Skalieren ist erlaubt: Band-Klimmzüge oder Australian Rows, Liegestütze auf den Knien.',
+    target:15, metric:'rounds_in_session', exName:'', unit:'Runden', maxDur:1500,
+    parts:[{ex:'Klimmzuge',n:5},{ex:'Liegestutze',n:10},{ex:'Kniebeugen',n:15}]
+  },
+  {
+    id:'p10', icon:'volume', title:'Sechshundert',
+    desc:'100 Klimmzüge, 200 Liegestütze, 300 Kniebeugen in einer Einheit. Reihenfolge frei, aufteilen erlaubt.',
+    explanation:'Der Klassiker unter den Volumen-Tests, im Original noch mit zwei Läufen drumherum. Beliebte Aufteilung: 20 Runden à 5, 10, 15. Rechne mit 45 bis 70 Minuten.',
+    target:600, metric:'multi_volume_session', exName:'', unit:'Wdh',
+    parts:[{ex:'Klimmzuge',n:100},{ex:'Liegestutze',n:200},{ex:'Kniebeugen',n:300}]
+  },
+  {
+    id:'p11', icon:'volume', title:'Vierhundert',
+    desc:'100 Klimmzüge, 100 Liegestütze, 100 Sit-ups, 100 Kniebeugen in einer Einheit, Übung für Übung.',
+    explanation:'Jede Übung wird komplett abgeschlossen, bevor die nächste beginnt. Die Klimmzüge sind der Flaschenhals, plane sie zuerst.',
+    target:400, metric:'multi_volume_session', exName:'', unit:'Wdh',
+    parts:[{ex:'Klimmzuge',n:100},{ex:'Liegestutze',n:100},{ex:'Sit-ups',n:100},{ex:'Kniebeugen',n:100}]
+  },
+  {
+    id:'p12', icon:'volume', title:'Fünf Runden',
+    desc:'5 Runden: 20 Klimmzüge, 30 Liegestütze, 40 Sit-ups, 50 Kniebeugen. Zwischen den Runden genau 3 Minuten Pause.',
+    explanation:'Insgesamt 700 Wiederholungen. Die Pause ist Pflicht, nicht Option: sie hält die Qualität der späteren Runden.',
+    target:700, metric:'multi_volume_session', exName:'', unit:'Wdh',
+    parts:[{ex:'Klimmzuge',n:100},{ex:'Liegestutze',n:150},{ex:'Sit-ups',n:200},{ex:'Kniebeugen',n:250}]
+  },
+  {
+    id:'p13', icon:'rounds', title:'Jede Minute, 30 Minuten',
+    desc:'Jede Minute auf die Minute: 5 Klimmzüge, 10 Liegestütze, 15 Kniebeugen. 30 Minuten lang.',
+    explanation:'Was von der Minute übrig bleibt, ist Pause. Nutze den EMOM-Timer der App im Mix-Modus. Wer 30 Runden schafft, hat 900 Wiederholungen hinter sich.',
+    target:30, metric:'rounds_in_session', exName:'', unit:'Runden', maxDur:2100,
+    parts:[{ex:'Klimmzuge',n:5},{ex:'Liegestutze',n:10},{ex:'Kniebeugen',n:15}]
+  },
+  {
+    id:'p14', icon:'tempo', title:'Auf und ab',
+    desc:'30 Liegestütze in einem Satz nach Tempo: runter auf Kommando, unten halten, hoch auf Kommando. Rund 3:30 Minuten.',
+    explanation:'Die Zahl ist nicht der Gegner, die Pausen unten sind es. Ein Satz, kein Absetzen. Wer die Position unten verliert, fängt von vorn an.',
+    target:30, metric:'best_set', exName:'Liegestutze', unit:'Wdh'
+  },
+  {
+    id:'p15', icon:'days', title:'Hundert am Tag',
+    desc:'30 Tage lang jeden Tag 100 Liegestütze. Verteilen über den Tag ist erlaubt.',
+    explanation:'Die bekannteste 30-Tage-Challenge. Trag jeden Tag ein, auch wenn es fünf Sätze à 20 sind. Ein verpasster Tag zählt nicht, die Challenge läuft aber weiter.',
+    target:30, metric:'days_with_volume', exName:'Liegestutze', unit:'Tage', perDay:100
+  },
+  {
+    id:'p16', icon:'days', title:'Kniebeugen-Monat',
+    desc:'30 Tage lang jeden Tag 100 Kniebeugen.',
+    explanation:'Beine und Ausdauer in einem. Tiefe Kniebeugen, Fersen am Boden. Am Anfang brennt es, ab Tag 10 wird es Routine.',
+    target:30, metric:'days_with_volume', exName:'Kniebeugen', unit:'Tage', perDay:100
+  },
+  {
+    id:'p17', icon:'days', title:'Plank-Monat',
+    desc:'30 Tage lang jeden Tag mindestens 60 Sekunden Plank, am Stück oder verteilt.',
+    explanation:'Wer will, steigert: Woche 1 je 60 Sekunden, Woche 4 je 3 Minuten. Zählen tut die Gesamtzeit pro Tag.',
+    target:30, metric:'days_with_volume', exName:'Plank', unit:'Tage', perDay:60
+  },
+  {
+    id:'p18', icon:'volume', title:'Tausend',
+    desc:'1000 Wiederholungen in einer Einheit. Alle Übungen mit Wiederholungen zählen, Halteübungen nicht.',
+    explanation:'Klassische Aufteilung für eine Übung: 10 Sätze à 30, 10 à 25, 10 à 20, 10 à 15, 10 à 10. Oder mischen, bis die 1000 voll sind.',
+    target:1000, metric:'volume_session_ex', exName:'', unit:'Wdh'
+  },
+  {
+    id:'p19', icon:'ladder', title:'Die Leiter',
+    desc:'Minute 1: 1 Liegestütz. Minute 2: 2. Minute 3: 3. So weiter, bis die Minute nicht mehr reicht.',
+    explanation:'Ziel sind 15 Sprossen, das sind 120 Liegestütze in 15 Minuten. Der EMOM-Timer der App zählt die Minuten für dich.',
+    target:120, metric:'volume_session_ex', exName:'Liegestutze', unit:'Wdh'
+  },
+  {
+    id:'p20', icon:'cards', title:'Kartendeck',
+    desc:'52 Karten, vier Farben, vier Übungen: Liegestütze, Kniebeugen, Sit-ups, Burpees. Kartenwert = Wiederholungen.',
+    explanation:'Bube 11, Dame 12, König 13, Ass 14. Pro Farbe 104 Wiederholungen, insgesamt 416 in einer Einheit. Karten mischen, ziehen, machen, nächste.',
+    target:416, metric:'multi_volume_session', exName:'', unit:'Wdh',
+    parts:[{ex:'Liegestutze',n:104},{ex:'Kniebeugen',n:104},{ex:'Sit-ups',n:104},{ex:'Burpees',n:104}]
+  },
+  {
+    id:'p21', icon:'volume', title:'Hundert Burpees',
+    desc:'100 Burpees in einer Einheit, auf Zeit.',
+    explanation:'Unter 10 Minuten ist stark, unter 7 ist Elite. Aufteilen in 10er-Blöcke mit kurzem Durchatmen hält das Tempo.',
+    target:100, metric:'volume_session_ex', exName:'Burpees', unit:'Wdh'
+  },
+  {
+    id:'p22', icon:'hold', title:'Kopfüber',
+    desc:'Handstand an der Wand, 60 Sekunden am Stück.',
+    explanation:'Fingerspitzen zur Wand, Körper eine Linie, aktiv aus den Schultern drücken. Baue mit 3 × 20 Sekunden auf, dann 2 × 30, dann eine Minute.',
+    target:60, metric:'best_set', exName:'Wall Handstand Hold', unit:'Sek'
+  },
 ];
+
+// Alle Preset-Felder in activeChallenge.params übernehmen (unit, parts, perDay, maxDur) —
+// wird von allen drei "Annehmen"-Stellen genutzt (app3.js, app2.js Drawer, main2aa.js).
+function presetParams(ch){
+  var p = {target:ch.target, metric:ch.metric, exName:ch.exName};
+  if(ch.unit) p.unit = ch.unit;
+  if(ch.parts) p.parts = ch.parts;
+  if(ch.perDay !== undefined) p.perDay = ch.perDay;
+  if(ch.maxDur !== undefined) p.maxDur = ch.maxDur;
+  return p;
+}
 
 var showPresets = false;
 
@@ -338,7 +442,7 @@ function buildChallengePresets(){
       btn.onclick = function(){
         activeChallenge = {
           id: ch.id, title: ch.title, desc: ch.desc,
-          icon: ch.icon, type: 'preset', params: {target:ch.target, metric:ch.metric, exName:ch.exName},
+          icon: ch.icon, type: 'preset', params: presetParams(ch),
           startDate: new Date().toISOString().slice(0,10), progress:0
         };
         saveChallenges();
