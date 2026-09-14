@@ -1,0 +1,911 @@
+
+loadChallenges();
+
+function buildChallengePresets(){
+  var el = document.getElementById('challenge-presets');
+  if(!el) return;
+  el.innerHTML = '';
+
+  var title = document.createElement('h2');
+  title.className = 'stitle';
+  title.style.cssText = 'margin:0 0 10px;';
+  title.textContent = 'Vorgefertigte Challenges';
+  el.appendChild(title);
+
+  for(var i=0;i<PRESET_CHALLENGES.length;i++){
+    (function(ch){
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border:none;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:14px 16px;margin-bottom:8px;';
+
+      var top = document.createElement('div');
+      top.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
+
+      var icon = document.createElement('span');
+      icon.style.cssText = 'font-size:22px;';
+      icon.textContent = ch.icon;
+
+      var info = document.createElement('div');
+      info.style.cssText = 'flex:1;';
+
+      var t = document.createElement('div');
+      t.style.cssText = 'font-family:inherit;font-size:15px;font-weight:700;color:var(--text);';
+      t.textContent = ch.title;
+
+      var d = document.createElement('div');
+      d.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;';
+      d.textContent = ch.desc;
+
+      info.appendChild(t);
+      info.appendChild(d);
+      top.appendChild(icon);
+      top.appendChild(info);
+
+      var exp = document.createElement('div');
+      exp.style.cssText = 'font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:8px;line-height:1.5;font-style:italic;';
+      exp.textContent = ch.explanation;
+
+      var btn = document.createElement('button');
+      btn.className = 'pressable';
+      btn.style.cssText = 'background:rgba(255,85,0,0.08);color:var(--accent-ink);border:1px solid rgba(255,85,0,0.3);border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;cursor:pointer;width:100%;margin-top:10px;min-height:36px;';
+      btn.textContent = 'Challenge annehmen';
+      btn.onclick = function(){
+        activeChallenge = {
+          id: ch.id, title: ch.title, desc: ch.desc,
+          icon: ch.icon, type: 'preset', params: {target:ch.target, metric:ch.metric, exName:ch.exName},
+          startDate: new Date().toISOString().slice(0,10), progress:0
+        };
+        saveChallenges();
+        buildChallengeUI();
+        showPresets = false;
+        toast(ch.title + ' angenommen!');
+      };
+
+      card.appendChild(top);
+      card.appendChild(exp);
+      card.appendChild(btn);
+      el.appendChild(card);
+    })(PRESET_CHALLENGES[i]);
+  }
+  if(window.caliMotion) caliMotion.stagger(el);
+}
+
+loadChallenges();
+
+// ---- INIT ----
+
+// ── PERCENTILE DATA (Source: strengthlevel.com, 4.8M+ lifts) ──────────────
+// Format: [reps, percentile] for males
+var PERCENTILE_DATA = {
+  'Klimmzuge Max': {
+    male:   [[0,5],[1,15],[2,22],[3,30],[4,38],[5,45],[6,51],[7,57],[8,62],[9,67],[10,71],[11,75],[12,78],[13,81],[14,84],[15,86],[16,88],[17,90],[18,91],[19,92],[20,93],[21,94],[22,95],[23,96],[24,97],[25,97.5],[30,98.5],[35,99],[40,99.5],[50,99.9]],
+    female: [[0,5],[1,20],[2,35],[3,48],[4,58],[5,67],[6,74],[7,80],[8,85],[9,88],[10,91],[12,94],[15,97],[20,99]]
+  },
+  'Liegestutze Max': {
+    male:   [[0,5],[5,15],[10,28],[15,40],[20,52],[25,62],[30,70],[35,77],[40,82],[45,87],[50,91],[55,93],[60,95],[70,97],[80,98.5],[100,99.5]],
+    female: [[0,5],[5,20],[10,40],[15,57],[20,70],[25,80],[30,87],[35,92],[40,95],[50,98]]
+  },
+  'Dips Max': {
+    male:   [[0,5],[1,18],[2,28],[3,37],[5,50],[8,62],[10,70],[12,76],[15,83],[20,90],[25,94],[30,97],[35,98.5]],
+    female: [[0,5],[1,25],[2,42],[3,55],[5,68],[8,80],[10,87],[12,92],[15,96]]
+  },
+  'Muscle-Ups Max': {
+    male:   [[0,70],[1,80],[2,85],[3,88],[5,92],[8,95],[10,97],[15,99],[20,99.5]],
+    female: [[0,85],[1,90],[2,93],[3,96],[5,98],[8,99.5]]
+  },
+  'Plank Max': {
+    male:   [[30,10],[60,25],[90,45],[120,62],[150,74],[180,83],[210,89],[240,93],[300,97],[360,98.5]],
+    female: [[30,15],[60,32],[90,52],[120,68],[150,79],[180,87],[210,92],[240,95],[300,98]]
+  },
+  'L-Sit Hold Max': {
+    male:   [[5,30],[10,50],[15,65],[20,77],[30,88],[45,95],[60,98]],
+    female: [[5,35],[10,55],[15,70],[20,82],[30,91],[45,97]]
+  },
+  };
+
+function getPercentile(exName, val, gender){
+  var data = PERCENTILE_DATA[exName];
+  if(!data) return -1;
+  var table = (gender==='f') ? data.female : data.male;
+  if(!table) return -1;
+  var num = parseFloat(val);
+  if(isNaN(num)) return -1;
+
+  var isTime = false;
+  if(isTime){
+    // Reverse: lower time = higher percentile
+    for(var i=0;i<table.length;i++){
+      if(num<=table[i][0]) return table[i][1];
+    }
+    return 1;
+  }
+
+  // Normal: higher = better
+  if(num<=0) return table[0][1];
+  for(var i=table.length-1;i>=0;i--){
+    if(num>=table[i][0]) return table[i][1];
+  }
+  return table[0][1];
+}
+
+// color = Textfarbe (Ink-Variante, AA-Kontrast), fill = Balkenfüllung (helles Original)
+function getPercentileLabel(pct){
+  if(pct>=99.5) return {text:'Legendär! Top 0.5%', color:'var(--amber-ink)', fill:'var(--amber)'};
+  if(pct>=99)   return {text:'Weltklasse! Top 1%', color:'var(--amber-ink)', fill:'var(--amber)'};
+  if(pct>=95)   return {text:'Elite! Top 5%', color:'var(--accent-ink)', fill:'var(--accent)'};
+  if(pct>=90)   return {text:'Stark! Top 10%', color:'var(--accent-ink)', fill:'var(--accent)'};
+  if(pct>=75)   return {text:'Gut! Top 25%', color:'var(--teal-ink)', fill:'var(--teal)'};
+  if(pct>=50)   return {text:'Solide! Besser als die Hälfte', color:'var(--teal-ink)', fill:'var(--teal)'};
+  if(pct>=25)   return {text:'Weiter so! Guter Start', color:'var(--muted)', fill:'var(--muted)'};
+  return {text:'Bleib dran! Jeder fängt irgendwo an', color:'var(--muted)', fill:'var(--muted)'};
+}
+
+function showPercentile(exName, val, gender){
+  var el = document.getElementById('percentile-box');
+  if(!el) return;
+  var pct = getPercentile(exName, val, gender);
+  if(pct<0){el.style.display='none';return;}
+  el.style.display='block';
+  el.innerHTML='';
+  var lbl = getPercentileLabel(pct);
+
+  var card = document.createElement('div');
+  card.style.cssText='background:#fff;border:none;border-left:4px solid var(--accent);border-radius:20px;padding:18px;margin-top:12px;box-shadow:0 12px 30px rgba(0,0,0,0.06);';
+
+  var title = document.createElement('div');
+  title.style.cssText='font-family:inherit;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;';
+  title.textContent='Weltweiter Vergleich';
+
+  var pctText = document.createElement('div');
+  pctText.style.cssText='font-family:inherit;font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;color:'+lbl.color+';line-height:1.3;margin-bottom:4px;';
+  var displayPct = Math.min(99.9, Math.round(pct*10)/10);
+  pctText.textContent='Besser als '+displayPct+'%';
+
+  var sub = document.createElement('div');
+  sub.style.cssText='font-size:12px;color:var(--muted);margin-bottom:14px;';
+  sub.textContent='aller Menschen weltweit';
+
+  // Progress bar — startet bei 0 und füllt sich sichtbar
+  var barWrap = document.createElement('div');
+  barWrap.style.cssText='background:var(--bg3);border-radius:20px;height:10px;overflow:hidden;margin-bottom:8px;';
+  var bar = document.createElement('div');
+  bar.style.cssText='height:100%;border-radius:20px;background:'+(lbl.fill||lbl.color)+';width:0%;transition:width var(--dur-slow) var(--ease-out);';
+  barWrap.appendChild(bar);
+
+  var labelDiv = document.createElement('div');
+  labelDiv.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:'+lbl.color+';';
+  labelDiv.textContent=lbl.text;
+
+  var source = document.createElement('div');
+  source.style.cssText='font-size:11px;color:var(--muted);margin-top:8px;';
+  source.textContent='Daten: strengthlevel.com (4.8M+ Einträge)';
+
+  card.appendChild(title);
+  card.appendChild(pctText);
+  card.appendChild(sub);
+  card.appendChild(barWrap);
+  card.appendChild(labelDiv);
+  card.appendChild(source);
+  el.appendChild(card);
+  if(window.caliMotion) caliMotion.animateBar(bar, displayPct);
+  else bar.style.width = displayPct+'%';
+}
+
+
+
+// ── PROFIL ────────────────────────────────────────────────
+var prData = {name:'',age:'',weight:'',height:'',gender:'m',goal:'strength',joinDate:'',avatar:''};
+
+var BADGES = [
+  {id:'first_workout', icon:'&#x1F4AA;', title:'Erstes Workout', desc:'Dein erstes Workout abgeschlossen', check:function(){return ents.length>0;}},
+  {id:'10_workouts',   icon:'&#x1F525;', title:'10 Workouts',    desc:'10 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=10;}},
+  {id:'50_workouts',   icon:'&#x1F3C6;', title:'50 Workouts',    desc:'50 Workouts abgeschlossen',        check:function(){var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;return Object.keys(d).length>=50;}},
+  {id:'first_max',     icon:'&#x2B50;',  title:'Max Getestet',   desc:'Ersten Max-Test eingetragen',      check:function(){return maxEntries.length>0;}},
+  {id:'elite_pullup',  icon:'&#x1F451;', title:'Klimmzug Elite', desc:'Mehr als 20 Klimmzüge Max',        check:function(){for(var i=0;i<maxEntries.length;i++){if(maxEntries[i].name==='Klimmzuge Max'&&parseFloat(maxEntries[i].val)>=20)return true;}return false;}},
+  {id:'challenge_done',icon:'&#x1F3AF;', title:'Challenge Held', desc:'Eine Challenge abgeschlossen',     check:function(){return activeChallenge&&activeChallenge.params&&calcChallengeProgress()>=activeChallenge.params.target;}},
+  {id:'streak_7',      icon:'&#x1F525;', title:'7-Tage Streak',  desc:'7 Tage in Folge trainiert',        check:function(){var dates=[];for(var i=0;i<ents.length;i++){if(dates.indexOf(ents[i].date)===-1)dates.push(ents[i].date);}dates.sort();var streak=1;for(var i=1;i<dates.length;i++){var d1=new Date(dates[i-1]);var d2=new Date(dates[i]);if((d2-d1)/(86400000)===1){streak++;if(streak>=7)return true;}else{streak=1;}}return false;}},
+  {id:'variety',       icon:'&#x1F3CB;', title:'Allrounder',     desc:'10 verschiedene Übungen trainiert',check:function(){var ex={};for(var i=0;i<ents.length;i++)ex[ents[i].name]=1;return Object.keys(ex).length>=10;}},
+];
+
+// ── ABZEICHEN-PERSISTENZ ──────────────────────────────────
+// Einmal verdiente Abzeichen bleiben verdient (auch wenn z.B. die aktive
+// Challenge wechselt). Neu verdiente werden mit Toast gefeiert.
+// Auch aus endWorkout aufrufbar, damit der Unlock im Moment des Verdienens landet.
+function checkBadgeUnlocks(){
+  var earned={};
+  try{ earned=JSON.parse(localStorage.getItem('cali_badges_earned')||'{}')||{}; }catch(x){ earned={}; }
+  var newly=[];
+  for(var i=0;i<BADGES.length;i++){
+    var b=BADGES[i];
+    if(earned[b.id]) continue;
+    var has=false;
+    try{ has=b.check(); }catch(e){}
+    if(has){ earned[b.id]=1; newly.push(b); }
+  }
+  if(newly.length){
+    try{ localStorage.setItem('cali_badges_earned',JSON.stringify(earned)); }catch(x){}
+    if(typeof toast==='function'){
+      if(newly.length===1) toast('🏅 Abzeichen freigeschaltet: '+newly[0].title);
+      else toast('🏅 '+newly.length+' Abzeichen freigeschaltet!');
+    }
+  }
+  return earned;
+}
+
+function lpr(){
+  try{
+    var d=localStorage.getItem('cali_profile');
+    if(d) prData=JSON.parse(d);
+    if(!prData.joinDate) prData.joinDate=new Date().toISOString().slice(0,10);
+  }catch(x){prData.joinDate=new Date().toISOString().slice(0,10);}
+}
+
+function spr(){
+  try{localStorage.setItem('cali_profile',JSON.stringify(prData));}catch(x){}
+}
+
+function prSave(){
+  prData.name   = document.getElementById('pr-inp-name').value.trim();
+  prData.age    = document.getElementById('pr-inp-age').value;
+  prData.weight = document.getElementById('pr-inp-weight').value;
+  prData.height = document.getElementById('pr-inp-height').value;
+  prData.gender = document.getElementById('pr-inp-gender').value;
+  prData.goal   = document.getElementById('pr-inp-goal').value;
+  spr();
+  fbSave();
+  buildProfilUI();
+}
+
+// Kein natives prompt(): öffnet das Einstellungen-Sheet und fokussiert das Namensfeld
+function prEditName(){
+  if(typeof openSettings !== 'function') return;
+  openSettings();
+  setTimeout(function(){
+    var inp = document.getElementById('pr-inp-name');
+    if(!inp) return;
+    try{ inp.focus(); if(inp.select) inp.select(); }catch(x){}
+  }, 320);
+}
+
+function prSetAvatar(inp){
+  if(!inp.files||!inp.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    prData.avatar = e.target.result;
+    spr();
+    var av = document.getElementById('pr-avatar');
+    if(av) av.style.backgroundImage='url('+e.target.result+')';
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+
+// Literale Hex-Ink-Töne (AA als Text, hexToRgb braucht echtes Hex für den Tint)
+function prGetLevel(){
+  var d={};
+  for(var i=0;i<ents.length;i++) d[ents[i].date]=1;
+  var days = Object.keys(d).length;
+  if(days>=100) return {label:'Elite',           color:'#B45309'}; // amber-ink
+  if(days>=50)  return {label:'Erfahren',        color:'#C24400'}; // accent-ink
+  if(days>=20)  return {label:'Fortgeschritten', color:'#0E7C72'}; // teal-ink
+  if(days>=5)   return {label:'Einsteiger',      color:'#6D4AD1'}; // purple-ink
+  return        {label:'Starter',                color:'#6E6759'}; // muted
+}
+
+
+function buildProfilStatsDetail(){
+  var el = document.getElementById('pr-stats-detail');
+  if(!el) return;
+  el.innerHTML = '';
+
+  // ── Calc all stats ──
+  var totalWorkoutDays = 0;
+  var uniqueDates = {};
+  var totalDuration = 0; // seconds
+  var maxDuration = 0;
+  var minDuration = Infinity;
+  var totalRepsAll = 0;
+  var repsByEx = {};
+  var totalSets = 0;
+  var workoutDurations = [];
+
+  for(var i=0;i<ents.length;i++){
+    var e = ents[i];
+    if(!uniqueDates[e.date]) uniqueDates[e.date] = 0;
+    // Parse duration
+    var durSecs = 0;
+    if(e.dur && parseInt(e.dur)>0){
+      durSecs = parseInt(e.dur);
+    } else if(e.woDur){
+      // Parse "4min 02sek" format
+      var wdStr = String(e.woDur);
+      var mMatch = wdStr.match(/(\d+)min/);
+      var sMatch = wdStr.match(/(\d+)sek/);
+      var cMatch = wdStr.match(/^(\d+):(\d+)$/);
+      if(mMatch||sMatch){ durSecs=(parseInt(mMatch?mMatch[1]:0)||0)*60+(parseInt(sMatch?sMatch[1]:0)||0); }
+      else if(cMatch){ durSecs=(parseInt(cMatch[1])||0)*60+(parseInt(cMatch[2])||0); }
+    }
+    uniqueDates[e.date] = (uniqueDates[e.date]||0) + durSecs;
+    totalDuration += durSecs;
+    if(durSecs>maxDuration) maxDuration=durSecs;
+    totalSets += e.sets.length;
+    if(!repsByEx[e.name]) repsByEx[e.name]=0;
+    for(var k=0;k<e.sets.length;k++){
+      var r=parseFloat(e.sets[k].n)||0;
+      repsByEx[e.name]+=r;
+      totalRepsAll+=r;
+    }
+  }
+
+  var days = Object.keys(uniqueDates);
+  totalWorkoutDays = days.length;
+
+  // Per-day total duration
+  var dayDurs = Object.values ? Object.values(uniqueDates) : days.map(function(d){return uniqueDates[d];});
+  var avgDurSec = totalWorkoutDays>0 ? Math.round(totalDuration/totalWorkoutDays) : 0;
+  var maxDurDay = 0;
+  for(var d=0;d<dayDurs.length;d++) if(dayDurs[d]>maxDurDay) maxDurDay=dayDurs[d];
+
+  function fmtTime(secs){
+    if(!secs) return '0 Min';
+    var h=Math.floor(secs/3600);
+    var m=Math.floor((secs%3600)/60);
+    if(h>0) return h+'h '+m+'min';
+    return m+' Min';
+  }
+
+  // ── Big stat cards ──
+  var bigStats = [
+    {label:'Gesamte Trainingszeit', value:fmtTime(totalDuration), sub:'seit Beginn'},
+    {label:'Durchschnitt pro Tag', value:fmtTime(avgDurSec), sub:'pro Trainingstag'},
+    {label:'Längster Trainingstag', value:fmtTime(maxDurDay), sub:'an einem Tag'},
+    {label:'Gesamte Wiederholungen', value:totalRepsAll.toLocaleString(), sub:'alle Übungen'},
+    {label:'Gesamte Sätze', value:totalSets.toLocaleString(), sub:'alle Sätze'},
+    {label:'Trainingstage', value:String(totalWorkoutDays), sub:'Tage trainiert'},
+  ];
+
+  var grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;';
+  for(var i=0;i<bigStats.length;i++){
+    var box=document.createElement('div');
+    box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px;';
+    var val=document.createElement('div');
+    val.className='num';
+    val.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);line-height:1.1;margin-bottom:3px;';
+    val.textContent=bigStats[i].value;
+    var lbl=document.createElement('div');
+    lbl.style.cssText='font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;';
+    lbl.textContent=bigStats[i].label;
+    var sub=document.createElement('div');
+    sub.style.cssText='font-size:11px;color:var(--muted);margin-top:2px;';
+    sub.textContent=bigStats[i].sub;
+    box.appendChild(val);box.appendChild(lbl);box.appendChild(sub);
+    grid.appendChild(box);
+  }
+  el.appendChild(grid);
+  if(window.caliMotion) caliMotion.stagger(grid);
+
+  // ── Wdh per exercise ranking ──
+  var title2=document.createElement('div');
+  title2.style.cssText='font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;margin-top:4px;';
+  title2.textContent='Alle Übungen · Wiederholungen gesamt';
+  el.appendChild(title2);
+
+  var sorted=[];
+  for(var name in repsByEx) sorted.push({name:name,total:repsByEx[name]});
+  sorted.sort(function(a,b){return b.total-a.total;});
+
+  if(!sorted.length){
+    var none=document.createElement('div');
+    none.style.cssText='font-size:12px;color:var(--muted);padding:8px 0;';
+    none.textContent='Noch keine Workouts eingetragen.';
+    el.appendChild(none);
+    return;
+  }
+
+  var maxVal = sorted[0].total;
+  for(var i=0;i<sorted.length;i++){
+    var row=document.createElement('div');
+    row.style.cssText='margin-bottom:8px;';
+    // Name + value
+    var top=document.createElement('div');
+    top.style.cssText='display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;';
+    var nm=document.createElement('div');
+    nm.style.cssText='font-size:12px;color:var(--text);';
+    nm.textContent=sorted[i].name;
+    var vl=document.createElement('div');
+    vl.className='num';
+    vl.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:var(--accent-ink);';
+    vl.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
+    top.appendChild(nm);top.appendChild(vl);
+    // Bar — füllt sich von 0
+    var barWrap=document.createElement('div');
+    barWrap.style.cssText='background:var(--bg3);border-radius:4px;height:4px;overflow:hidden;';
+    var bar=document.createElement('div');
+    var pct=maxVal>0?Math.round((sorted[i].total/maxVal)*100):0;
+    bar.style.cssText='height:100%;border-radius:4px;background:var(--accent);width:0%;transition:width var(--dur-slow) var(--ease-out);';
+    barWrap.appendChild(bar);
+    if(window.caliMotion) caliMotion.animateBar(bar, pct);
+    else bar.style.width = pct+'%';
+    row.appendChild(top);row.appendChild(barWrap);
+    el.appendChild(row);
+  }
+}
+
+function buildProfilUI(){
+  setTimeout(function(){ try{ buildXPWidget(document.getElementById('xp-widget')); initXPSystem(); updateXPRing(); }catch(e){} },200);
+  // Fill inputs
+  var fields = {
+    'pr-inp-name':   prData.name||'',
+    'pr-inp-age':    prData.age||'',
+    'pr-inp-weight': prData.weight||'',
+    'pr-inp-height': prData.height||''
+  };
+  for(var id in fields){
+    var el=document.getElementById(id);
+    if(el&&(!document.activeElement||document.activeElement.id!==id)) el.value=fields[id];
+  }
+  var gEl=document.getElementById('pr-inp-gender');
+  if(gEl) gEl.value=prData.gender||'m';
+  var goEl=document.getElementById('pr-inp-goal');
+  if(goEl) goEl.value=prData.goal||'strength';
+
+  // Name display
+  var nd=document.getElementById('pr-name-display');
+  if(nd) nd.textContent=prData.name||'Dein Name';
+
+  // Level
+  var lv=prGetLevel();
+  var lb=document.getElementById('pr-level-badge');
+  if(lb){lb.textContent=lv.label;lb.style.color=lv.color;lb.style.borderColor=lv.color;lb.style.background='rgba('+hexToRgb(lv.color)+',0.1)';}
+
+  // Member since
+  var ms=document.getElementById('pr-member-since');
+  if(ms&&prData.joinDate) ms.textContent='Mitglied seit '+prData.joinDate.slice(5).replace('-','.')+'.'+prData.joinDate.slice(0,4);
+
+  // Avatar
+  var av=document.getElementById('pr-avatar');
+  if(av&&prData.avatar){
+    av.style.cssText+='background-image:url('+prData.avatar+');background-size:cover;background-position:center;';
+    var em=document.getElementById('pr-avatar-emoji');
+    if(em) em.style.display='none';
+  }
+
+  // Stats
+  var d={};for(var i=0;i<ents.length;i++)d[ents[i].date]=1;
+  var totalWorkouts=Object.keys(d).length;
+  var totalSets=0;for(var i=0;i<ents.length;i++)totalSets+=ents[i].sets.length;
+  var exSet={};for(var i=0;i<ents.length;i++)exSet[ents[i].name]=1;
+  // Count total reps per exercise
+  var repsByEx = {};
+  var totalReps = 0;
+  for(var i=0;i<ents.length;i++){
+    var exName = ents[i].name;
+    if(!repsByEx[exName]) repsByEx[exName]=0;
+    for(var k=0;k<ents[i].sets.length;k++){
+      var v = parseFloat(ents[i].sets[k].n)||0;
+      repsByEx[exName] += v;
+      totalReps += v;
+    }
+  }
+  var stats=[
+    {label:'Workouts', value:totalWorkouts},
+    {label:'Ges. Wdh', value:totalReps},
+    {label:'Übungen', value:Object.keys(exSet).length}
+  ];
+  var sr=document.getElementById('pr-stats-row');
+  if(sr){
+    sr.innerHTML='';
+    for(var i=0;i<stats.length;i++){
+      var box=document.createElement('div');
+      box.style.cssText='background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);padding:12px 8px;text-align:center;';
+      var val=document.createElement('div');
+      val.className='num';
+      val.style.cssText='font-family:inherit;font-weight:800;font-size:28px;color:var(--accent);line-height:1.1;';
+      val.textContent=String(stats[i].value);
+      var lbl=document.createElement('div');
+      lbl.style.cssText='font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;margin-top:3px;';
+      lbl.textContent=stats[i].label;
+      box.appendChild(val);box.appendChild(lbl);
+      sr.appendChild(box);
+      if(window.caliMotion) caliMotion.countUp(val, Math.round(stats[i].value), {duration:600});
+    }
+    if(window.caliMotion) caliMotion.stagger(sr);
+  }
+
+  // Badges (persistiert — einmal verdient bleibt verdient)
+  var badgeEl=document.getElementById('pr-badges');
+  if(badgeEl){
+    badgeEl.innerHTML='';
+    var earnedMap=checkBadgeUnlocks();
+    var earned=0;
+    for(var i=0;i<BADGES.length;i++){
+      var b=BADGES[i];
+      var has=!!earnedMap[b.id];
+      var box=document.createElement('div');
+      box.style.cssText='background:'+(has?'rgba(255,85,0,0.06)':'var(--bg2)')+';border:1px solid '+(has?'rgba(255,85,0,0.3)':'var(--border)')+';border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:8px;opacity:'+(has?'1':'0.35')+';width:100%;';
+      var icon=document.createElement('div');
+      icon.style.cssText='font-size:22px;flex-shrink:0;';
+      icon.innerHTML=b.icon;
+      var info=document.createElement('div');
+      var t=document.createElement('div');
+      t.style.cssText='font-family:inherit;font-size:13px;font-weight:700;color:'+(has?'var(--accent-ink)':'var(--muted)')+';';
+      t.textContent=b.title;
+      var d2=document.createElement('div');
+      d2.style.cssText='font-size:11px;color:var(--muted);margin-top:1px;';
+      d2.textContent=b.desc;
+      info.appendChild(t);info.appendChild(d2);
+      box.appendChild(icon);box.appendChild(info);
+      badgeEl.appendChild(box);
+      if(has) earned++;
+    }
+    if(!earned){
+      var hint=document.createElement('div');
+      hint.style.cssText='font-size:12px;color:var(--muted);padding:8px 0;';
+      hint.textContent='Noch keine Abzeichen. Fang an zu trainieren!';
+      badgeEl.appendChild(hint);
+    }
+    if(window.caliMotion) caliMotion.stagger(badgeEl);
+  }
+
+  // Best performances from maxEntries
+  var bests=document.getElementById('pr-bests');
+  if(bests){
+    bests.innerHTML='';
+    if(!maxEntries.length){
+      bests.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Noch keine Max-Werte eingetragen.</div>';
+    } else {
+      var bestMap={};
+      for(var i=0;i<maxEntries.length;i++){
+        var me=maxEntries[i];
+        var v=parseFloat(me.val)||0;
+        if(!bestMap[me.name]||v>parseFloat(bestMap[me.name].val)) bestMap[me.name]=me;
+      }
+      for(var name in bestMap){
+        var me=bestMap[name];
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:6px;';
+        var left=document.createElement('div');
+        left.style.cssText='font-size:13px;font-weight:500;color:var(--text);';
+        left.textContent=name.replace(' Max','');
+        var right=document.createElement('div');
+        right.className='num';
+        right.style.cssText='font-family:inherit;font-weight:800;font-size:22px;color:var(--accent);';
+        right.textContent=me.val+' '+me.unit;
+        row.appendChild(left);row.appendChild(right);
+        bests.appendChild(row);
+      }
+    }
+  }
+
+  // Total reps per exercise breakdown
+  var repsEl = document.getElementById('pr-total-reps');
+  if(repsEl){
+    repsEl.innerHTML='';
+    // Sort by total reps descending
+    var sorted = [];
+    for(var name in repsByEx){ sorted.push({name:name, total:repsByEx[name]}); }
+    sorted.sort(function(a,b){return b.total-a.total;});
+    for(var i=0;i<sorted.length&&i<10;i++){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border:none;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:6px;';
+      var rank=document.createElement('div');
+      rank.className='num';
+      rank.style.cssText='font-family:inherit;font-size:13px;color:var(--muted);width:20px;text-align:center;';
+      rank.textContent=String(i+1);
+      var name2=document.createElement('div');
+      name2.style.cssText='font-size:13px;color:var(--text);flex:1;';
+      name2.textContent=sorted[i].name;
+      var total=document.createElement('div');
+      total.className='num';
+      total.style.cssText='font-family:inherit;font-weight:800;font-size:20px;color:var(--accent);';
+      total.textContent=Math.round(sorted[i].total).toLocaleString()+' Wdh';
+      row.appendChild(rank);row.appendChild(name2);row.appendChild(total);
+      repsEl.appendChild(row);
+    }
+    if(!sorted.length){
+      repsEl.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">Noch keine Wdh eingetragen.</div>';
+    }
+  }
+  // Always build streak section at end
+  buildProfilStreakSection();
+  buildProfilStatsDetail();
+  buildPrivacyToggle();
+  checkAndShowAdminBtn();
+}
+
+function hexToRgb(hex){
+  var r=parseInt(hex.slice(1,3),16);
+  var g=parseInt(hex.slice(3,5),16);
+  var b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+
+
+
+// ── FIREBASE ──────────────────────────────────────────────
+var firebaseConfig = {
+  apiKey: "AIzaSyAzZLudHZd3ht7ASlrgghei-PW6qS9ClMM",
+  authDomain: "cali-app-75cc9.firebaseapp.com",
+  projectId: "cali-app-75cc9",
+  storageBucket: "cali-app-75cc9.firebasestorage.app",
+  messagingSenderId: "431823759191",
+  appId: "1:431823759191:web:d2ccaa761109b2d883c012",
+  measurementId: "G-KZQP7PCWYK"
+};
+
+firebase.initializeApp(firebaseConfig);
+var fbTimeout = null;
+
+
+var auth = firebase.auth();
+var db   = firebase.firestore();
+var currentUser = null;
+var authMode = 'login';
+
+function showAuthTab(mode){
+  authMode = mode;
+  var loginBtn    = document.getElementById('tab-login');
+  var registerBtn = document.getElementById('tab-register');
+  var submitBtn   = document.getElementById('auth-submit-btn');
+  var nameRow     = document.getElementById('auth-name-row');
+  if(mode==='login'){
+    loginBtn.style.background    = 'var(--accent-deep)';
+    loginBtn.style.color         = '#fff';
+    registerBtn.style.background = 'none';
+    registerBtn.style.color      = 'var(--muted)';
+    submitBtn.textContent        = 'Einloggen';
+    if(nameRow) nameRow.style.display = 'none';
+  } else {
+    registerBtn.style.background = 'var(--accent-deep)';
+    registerBtn.style.color      = '#fff';
+    loginBtn.style.background    = 'none';
+    loginBtn.style.color         = 'var(--muted)';
+    submitBtn.textContent        = 'Registrieren';
+    if(nameRow) nameRow.style.display = 'block';
+  }
+  var err = document.getElementById('auth-error');
+  if(err) err.style.display = 'none';
+}
+
+function authSubmit(){
+  var email    = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  var nameEl   = document.getElementById('auth-name');
+  var name     = nameEl ? nameEl.value.trim() : '';
+  var errEl    = document.getElementById('auth-error');
+
+  if(!email || !password){
+    if(errEl){errEl.textContent='E-Mail und Passwort eingeben!';errEl.style.display='block';}
+    return;
+  }
+
+  if(authMode==='register'){
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(function(cred){
+        return cred.user.updateProfile({displayName: name||email.split('@')[0]});
+      })
+      .then(function(){
+        // Force onboarding for new registrations
+        try{ localStorage.removeItem('cali_onboarded'); }catch(x){}
+        try{ localStorage.removeItem('cali_profile'); }catch(x){}
+        prData = {};
+        toast('Konto erstellt! Willkommen!');
+        setTimeout(showOnboarding, 1500);
+      })
+      .catch(function(e){
+        if(errEl){errEl.textContent=getAuthError(e.code);errEl.style.display='block';}
+      });
+  } else {
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(function(e){
+        if(errEl){errEl.textContent=getAuthError(e.code);errEl.style.display='block';}
+      });
+  }
+}
+
+function authGoogle(){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .catch(function(e){
+      var errEl = document.getElementById('auth-error');
+      if(errEl){errEl.textContent=getAuthError(e.code);errEl.style.display='block';}
+    });
+}
+
+function authLogout(){
+  auth.signOut();
+}
+
+// Logout-Bestätigung über das Sheet statt des nativen confirm() (Fallback bleibt)
+function confirmLogout(){
+  if(typeof confirmSheet === 'function'){
+    confirmSheet({
+      title:'Wirklich ausloggen?',
+      confirmLabel:'Ausloggen',
+      onConfirm:function(){ authLogout(); }
+    });
+  } else if(confirm('Wirklich ausloggen?')){
+    authLogout();
+  }
+}
+
+// ── EINSTELLUNGEN (Zahnrad im Profil) ─────────────────────
+function openSettings(){
+  var exOv = document.getElementById('settings-ov'); if(exOv) exOv.remove();
+  var panel = document.getElementById('pr-settings-panel');
+  if(!panel) return;
+
+  var ov = document.createElement('div');
+  ov.id = 'settings-ov';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+
+  var box = document.createElement('div');
+  box.id = 'settings-box';
+  box.className = 'sheet-scroll';
+  box.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:20px;';
+  box.innerHTML = '<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;">&#9881;&#65039; Einstellungen</div>';
+
+  box.appendChild(panel);
+  try{ buildPrivacyToggle(); }catch(e){}
+  try{ checkAndShowAdminBtn(); }catch(e){}
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'pressable';
+  closeBtn.style.cssText = 'width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:12px;cursor:pointer;';
+  closeBtn.textContent = 'Schließen';
+  closeBtn.onclick = function(){ closeSettings(); };
+  box.appendChild(closeBtn);
+
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target===ov) closeSettings(); };
+  document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
+}
+
+function closeSettings(){
+  var panel = document.getElementById('pr-settings-panel');
+  var home = document.getElementById('pr-settings-home');
+  if(panel && home) home.appendChild(panel);
+  var ov = document.getElementById('settings-ov');
+  if(ov) ov.remove();
+}
+
+function settingsStub(label){
+  if(typeof toast === 'function') toast(label+' — kommt bald!');
+}
+
+function checkForAppUpdate(){
+  if(!('serviceWorker' in navigator)){ if(typeof toast==='function') toast('Nicht unterstützt.'); return; }
+  // Laufendes Workout nicht durch den Reload zerstören
+  if(typeof woActive!=='undefined' && woActive){
+    if(typeof toast==='function') toast('Update nach dem Workout — Training läuft noch');
+    return;
+  }
+  if(typeof toast === 'function') toast('Suche nach Updates...');
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    Promise.all(regs.map(function(r){ return r.update(); })).then(function(){
+      setTimeout(function(){ location.reload(); }, 800);
+    });
+  }).catch(function(){});
+}
+
+function getAuthError(code){
+  var errors = {
+    'auth/email-already-in-use':   'E-Mail bereits registriert',
+    'auth/invalid-email':          'Ungültige E-Mail Adresse',
+    'auth/weak-password':          'Passwort zu schwach (min. 6 Zeichen)',
+    'auth/user-not-found':         'Kein Konto mit dieser E-Mail',
+    'auth/wrong-password':         'Falsches Passwort',
+    'auth/too-many-requests':      'Zu viele Versuche. Bitte warten.',
+    'auth/popup-closed-by-user':   'Anmeldung abgebrochen',
+  };
+  return errors[code] || 'Fehler: ' + code;
+}
+
+// Auth state listener
+if(auth){
+auth.onAuthStateChanged(function(user){
+  clearTimeout(fbTimeout);
+  if(user){
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    var nav = document.getElementById('main-nav');
+    if(nav) nav.style.display = 'flex';
+    document.getElementById('page-e').className = 'page on';
+    // Load user data from Firestore
+    loadUserData(user.uid);
+    toast('Willkommen ' + (user.displayName||user.email) + '!');
+    // Onboarding check happens inside loadUserData callback
+  } else {
+    currentUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    var nav = document.getElementById('main-nav');
+    if(nav) nav.style.display = 'none';
+    // Hide all pages
+    var pages = ['e','p','m','ch','v','pr','h'];
+    for(var i=0;i<pages.length;i++){
+      var pg = document.getElementById('page-'+pages[i]);
+      if(pg) pg.className = 'page';
+    }
+  }
+}); // end onAuthStateChanged
+} else {
+  // Firebase not available - show login
+  var ls2=document.getElementById('login-screen');if(ls2)ls2.style.display='flex';
+}
+
+// ── FIRESTORE SYNC ────────────────────────────────────────
+function getUserDoc(){
+  if(!currentUser) return null;
+  return db.collection('users').doc(currentUser.uid);
+}
+
+function saveUserData(){
+  if(!currentUser) return;
+  var doc = getUserDoc();
+  doc.set({
+    ents:       ents,
+    maxEntries: maxEntries,
+    plans:      plans,
+    prData:     prData,
+    challenge:  activeChallenge||null,
+    updatedAt:  new Date().toISOString()
+  }, {merge: true}).catch(function(e){ console.log('Save error:', e); });
+}
+
+function loadUserData(uid){
+  db.collection('users').doc(uid).get()
+    .then(function(doc){
+      if(doc.exists){
+        var d = doc.data();
+        if(d.ents)       ents       = d.ents;
+        if(d.maxEntries) maxEntries = d.maxEntries;
+        if(d.plans)      plans      = d.plans;
+        if(d.prData)     prData     = d.prData;
+        if(d.challenge)  activeChallenge = d.challenge;
+        try{
+          localStorage.setItem('cali_v4', JSON.stringify(ents));
+          localStorage.setItem('cali_max', JSON.stringify(maxEntries));
+          localStorage.setItem('cali_plans', JSON.stringify(plans));
+          localStorage.setItem('cali_profile', JSON.stringify(prData));
+        }catch(x){}
+        bb(); buildStartPlanBtns(); buildStartChallengeWidget();
+      }
+      // Check onboarding AFTER data loaded
+      lstreak();
+      var onboarded = false;
+      try{ onboarded = !!localStorage.getItem('cali_onboarded'); }catch(x){}
+      var isNew = !prData || !prData.name;
+      if(isNew && !onboarded){
+        setTimeout(showOnboarding, 1500);
+      } else {
+        if(!streakData.goalSet) showWeeklyGoalModal();
+        buildStreakWidget();
+      }
+    })
+    .catch(function(e){
+      console.log('Load error:', e);
+      // Even on error, check onboarding
+      lstreak();
+      var onboarded = false;
+      try{ onboarded = !!localStorage.getItem('cali_onboarded'); }catch(x){}
+      if(!prData || (!prData.name && !onboarded)){
+        setTimeout(showOnboarding, 400);
+      } else {
+        buildStreakWidget();
+      }
+    });
+}
+
+// ld() wird direkt genutzt, kein Override nötig
+
+// Auto-save to Firebase when data changes
+function fbSave(){
+  if(currentUser) saveUserData();
+}
+
+
+// Populate chart select
+var cexEl=document.getElementById('cex');
+if(cexEl){for(var xi=0;xi<EX_DB.length;xi++){var opt=document.createElement('option');opt.textContent=EX_DB[xi].name;cexEl.appendChild(opt);}}
+
+// Demo-Modus: demoLogin() in main2ba.js (das frühere startDemo hier war unreferenziert)

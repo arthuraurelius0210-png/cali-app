@@ -1,0 +1,361 @@
+<!-- MAX TEST PAGE -->
+<div class="page" id="page-m">
+  <div class="stitle">MAX TEST</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+    Trage deine maximalen Werte ein. Alle 2-3 Wochen testen — immer ausgeruht am Anfang des Trainings.
+  </div>
+
+  <!-- Add max entry -->
+  <div class="card">
+    <div class="row2">
+      <div class="fg">
+        <label>DATUM</label>
+        <input type="date" id="max-date">
+      </div>
+      <div class="fg">
+        <label>UBUNG</label>
+        <select id="max-ex" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;width:100%;"></select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label id="max-val-lbl">ERGEBNIS (WDH)</label>
+      <input type="text" id="max-val" placeholder="z.B. 12">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div class="fg">
+        <label>GESCHLECHT</label>
+        <select id="max-gender" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;">
+          <option value="m">Mannlich</option>
+          <option value="f">Weiblich</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="saveMaxEntry()">+ EINTRAGEN</button>
+  </div>
+
+  <!-- Percentile Box -->
+  <div id="percentile-box" style="display:none;margin-bottom:16px;"></div>
+
+  <!-- Chart -->
+  <div class="stitle">VERLAUF</div>
+  <div class="cc">
+    <div class="ct">
+      <div class="cl">MAX STEIGUNG</div>
+      <select class="cs" id="max-chart-ex" onchange="drawMaxChart()"></select>
+    </div>
+    <canvas id="max-chart" style="max-height:200px;"></canvas>
+    <div id="max-chart-empty" class="empty" style="display:none;">Noch keine Eintrage</div>
+  </div>
+
+  <!-- Entries -->
+  <div class="stitle">EINGETRAGENE MAXWERTE</div>
+  <div class="filter-row" id="max-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+  <div class="card" id="max-list"></div>
+</div>
+
+
+<!-- CHALLENGE PAGE -->
+<div class="page" id="page-ch">
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-top:20px;margin-bottom:18px;gap:12px;">
+    <div>
+      <div style="font-size:26px;font-weight:800;color:var(--text);margin-bottom:4px;">Challenges</div>
+      <div style="font-size:12px;color:var(--muted);">Fordere dich selbst heraus und bleib motiviert.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <div style="background:#fff;border-radius:12px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);text-align:center;">
+        <div style="font-size:15px;font-weight:800;color:var(--text);">&#128293; <span id="ch-streak-val">0</span></div>
+        <div style="font-size:8px;color:var(--muted);margin-top:1px;">Streak</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);text-align:center;">
+        <div style="font-size:15px;font-weight:800;color:var(--text);">&#128142; <span id="ch-points-val">0</span></div>
+        <div style="font-size:8px;color:var(--muted);margin-top:1px;">Points</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KARTE 1: MEINE CHALLENGE (groß, oben) -->
+  <div id="ch-card-personal" onclick="openChDrawer('personal')" style="background:#fff;border-radius:16px;padding:20px 20px 18px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px;"></div>
+    <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:12px;">MEINE CHALLENGE</div>
+    <div id="ch-card-personal-inner"></div>
+    <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#ccc;font-size:20px;">&#8250;</div>
+  </div>
+
+  <!-- KARTEN 2+3: nebeneinander -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+
+    <div id="ch-card-preset" onclick="openChDrawer('preset')" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#38BDF8;border-radius:3px 0 0 3px;"></div>
+      <div style="width:34px;height:34px;border-radius:10px;background:rgba(56,189,248,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:12px;"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M13 2L5 14h5.5l-1.5 8 9-12h-5.5L13 2z" fill="#38BDF8"/></svg></div>
+      <div style="font-size:11px;color:#38BDF8;font-weight:700;margin-bottom:10px;">VOREINGESTELLT</div>
+      <div id="ch-card-preset-inner"></div>
+      <div style="font-size:11px;color:#38BDF8;font-weight:700;margin-top:10px;">Ansehen &#8594;</div>
+    </div>
+
+    <div id="ch-card-community" onclick="openCommunityPage()" style="background:#fff;border-radius:16px;padding:18px 16px 16px;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#4ECDC4;border-radius:3px 0 0 3px;"></div>
+      <div style="width:34px;height:34px;border-radius:10px;background:rgba(78,205,196,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:12px;"><svg width="18" height="18" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="#4ECDC4"/><circle cx="17" cy="9" r="2.5" fill="#4ECDC4" opacity="0.6"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" fill="#4ECDC4"/><path d="M14.5 20c0-2.6 1.7-5.2 4.3-5.6 2 .5 3.2 2.7 3.2 5.6" fill="#4ECDC4" opacity="0.6"/></svg></div>
+      <div style="font-size:11px;color:#4ECDC4;font-weight:700;margin-bottom:10px;">COMMUNITY</div>
+      <div id="ch-card-community-inner"></div>
+      <div style="font-size:11px;color:#4ECDC4;font-weight:700;margin-top:10px;">Ansehen &#8594;</div>
+    </div>
+
+  </div>
+
+  <!-- SKILL LERNPFAD -->
+  <div style="background:rgba(255,85,0,0.06);border-radius:16px;padding:16px;margin-bottom:16px;cursor:pointer;display:flex;align-items:center;gap:14px;" onclick="goPage('sk')">
+    <div style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">&#11088;</div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">Skill Lernpfad</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.4;">Strukturiere deinen Fortschritt und meistere neue Skills Schritt für Schritt.</div>
+    </div>
+    <div style="width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;">&#8250;</div>
+  </div>
+
+  <!-- TRENDING CHALLENGES -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);">TRENDING CHALLENGES</div>
+    <div onclick="openChDrawer('preset')" style="font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;">Alle anzeigen &#8594;</div>
+  </div>
+  <div id="ch-trending" style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;"></div>
+
+  <!-- BOTTOM BANNER -->
+  <div style="background:rgba(255,85,0,0.06);border-radius:16px;padding:18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div>
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;">Jede Wiederholung zählt.</div>
+      <div style="font-size:11px;color:var(--muted);">Bleib konstant und feiere deine Fortschritte!</div>
+    </div>
+    <div style="font-size:30px;flex-shrink:0;">&#128170;</div>
+  </div>
+
+  <!-- hidden containers (content rendered into drawers) -->
+  <div id="challenge-box" style="display:none;"></div>
+  <div id="challenge-presets" style="display:none;"></div>
+</div>
+
+
+<!-- PROFIL PAGE -->
+<div class="page" id="page-pr">
+
+  <!-- Hero Section -->
+  <div id="pr-hero" style="position:relative;background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;">
+    <button onclick="openSettings()" style="position:absolute;top:14px;right:14px;width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);">&#9881;&#65039;</button>
+    <div style="position:relative;width:90px;height:90px;margin:0 auto 12px;">
+      <svg id="xp-ring-svg" width="90" height="90" style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
+        <circle cx="45" cy="45" r="40" fill="none" stroke="var(--border)" stroke-width="5"/>
+        <circle id="xp-ring-progress" cx="45" cy="45" r="40" fill="none" stroke="var(--accent)" stroke-width="5"
+          stroke-linecap="round"
+          stroke-dasharray="251.2"
+          stroke-dashoffset="251.2"
+          style="transition:stroke-dashoffset 1s ease;"/>
+      </svg>
+      <div id="pr-avatar" style="position:absolute;top:9px;left:9px;width:72px;height:72px;border-radius:50%;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;" onclick="document.getElementById('pr-avatar-inp').click();">
+        <span id="pr-avatar-emoji">&#x1F4AA;</span>
+      </div>
+      <div id="xp-level-badge" style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap;display:none;">LVL 1</div>
+    </div>
+    <input type="file" id="pr-avatar-inp" accept="image/*" style="display:none;" onchange="prSetAvatar(this)">
+    <div id="pr-name-display" style="font-family:inherit;font-size:26px;color:var(--text);cursor:pointer;" onclick="prEditName()">DEIN NAME</div>
+    <div id="pr-level-badge" style="display:inline-block;background:rgba(255,85,0,0.1);color:var(--accent);border:1px solid rgba(255,85,0,0.3);border-radius:20px;font-family:inherit;font-size:11px;padding:3px 12px;margin-top:6px;">BEGINNER</div>
+    <div id="pr-member-since" style="font-size:11px;color:var(--muted2);margin-top:6px;">Mitglied seit heute</div>
+  </div>
+
+  <!-- Stats Row -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;" id="pr-stats-row"></div>
+
+  <!-- Achievements -->
+  <div class="stitle">ABZEICHEN</div>
+  <div id="pr-badges" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+
+  <!-- Best Performances -->
+  <div class="stitle">BESTLEISTUNGEN</div>
+  <div id="pr-bests" style="margin-bottom:16px;"></div>
+
+  <div class="stitle">STREAK &amp; WOCHENZIEL</div>
+  <div id="pr-streak-section" style="margin-bottom:16px;"></div>
+  <div id="pr-streak-calendar" style="margin-bottom:16px;"></div>
+
+  <!-- Privacy Toggle -->
+  <div id="xp-widget" style="margin-bottom:12px;"></div>
+  <button onclick="openMonthlyLeaderboard()" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <span>&#127942; MONATSRANGLISTE</span><span style="color:var(--muted);">&#8250;</span>
+  </button>
+  <button onclick="openBattleOverview()" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <span>&#9876;&#65039; MEINE BATTLES</span><span style="color:var(--muted);">&#8250;</span>
+  </button>
+  <button onclick="goPage('v')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <span>&#128200; VERLAUF</span><span style="color:var(--muted);">&#8250;</span>
+  </button>
+
+  <!-- Settings Panel content lives here, hidden; openSettings() moves #pr-settings-panel into a modal sheet -->
+  <div id="pr-settings-home" style="display:none;">
+  <div id="pr-settings-panel">
+
+    <div class="stitle" style="margin-top:0;">KONTO</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fg">
+          <label>NAME</label>
+          <input type="text" id="pr-inp-name" placeholder="Dein Name" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>ALTER</label>
+          <input type="number" id="pr-inp-age" placeholder="z.B. 22" min="10" max="99" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>GEWICHT (KG)</label>
+          <input type="number" id="pr-inp-weight" placeholder="z.B. 75" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>GROSSE (CM)</label>
+          <input type="number" id="pr-inp-height" placeholder="z.B. 180" oninput="prSave()">
+        </div>
+        <div class="fg">
+          <label>GESCHLECHT</label>
+          <select id="pr-inp-gender" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;">
+            <option value="m">Mannlich</option>
+            <option value="f">Weiblich</option>
+            <option value="x">Divers</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>TRAININGSZIEL</label>
+          <select id="pr-inp-goal" onchange="prSave()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;">
+            <option value="strength">Kraft aufbauen</option>
+            <option value="skills">Skills lernen</option>
+            <option value="endurance">Ausdauer</option>
+            <option value="weight">Gewicht verlieren</option>
+            <option value="all">Alles</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <button onclick="settingsStub('Passwort ändern')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128273; PASSWORT ANDERN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('E-Mail ändern')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#9993;&#65039; E-MAIL ANDERN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Account löschen')" style="width:100%;background:none;border:1.5px solid #ef4444;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:#ef4444;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128465;&#65039; ACCOUNT LOSCHEN</span><span style="color:#ef4444;">&#8250;</span>
+    </button>
+    <button onclick="if(confirm('Wirklich ausloggen?')) authLogout();" style="width:100%;background:none;border:1.5px solid #ef4444;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:#ef4444;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#128682; LOGOUT</span><span style="color:#ef4444;">&#8250;</span>
+    </button>
+
+    <div class="stitle">DATENSCHUTZ &amp; RECHTLICHES</div>
+    <div id="pr-privacy-toggle" style="margin-bottom:10px;"></div>
+    <button onclick="settingsStub('Datenschutzerklärung')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128220; DATENSCHUTZERKLARUNG</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Impressum')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128203; IMPRESSUM</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Daten exportieren')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#11015;&#65039; DATEN EXPORTIEREN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+
+    <div class="stitle">APP-EINSTELLUNGEN</div>
+    <button onclick="settingsStub('Einheiten')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128207; EINHEITEN (kg/lbs, cm/inch)</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="settingsStub('Benachrichtigungen')" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#128276; BENACHRICHTIGUNGEN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+
+    <div class="stitle">SUPPORT</div>
+    <button onclick="closeSettings();openFeedback();" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span>&#128172; FEEDBACK SENDEN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+    <button onclick="checkForAppUpdate()" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;padding:14px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span>&#128260; NACH UPDATES SUCHEN</span><span style="color:var(--muted);">&#8250;</span>
+    </button>
+
+    <!-- Admin Panel Button (nur für Admin sichtbar) -->
+    <div id="admin-panel-btn" style="display:none;margin-bottom:8px;">
+      <div class="stitle">ADMIN</div>
+      <button onclick="closeSettings();openAdminPanel();" style="width:100%;background:rgba(255,85,0,0.08);color:var(--accent);border:1.5px solid rgba(255,85,0,0.3);border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;padding:14px;cursor:pointer;">&#128274; ADMIN PANEL — EINTRÄGE PRÜFEN</button>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- Total Reps -->
+  <div class="stitle">GESAMT WIEDERHOLUNGEN</div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Alle Wdh seit Beginn</div>
+  <div id="pr-total-reps" style="margin-bottom:16px;"></div>
+
+  <div class="stitle">TRAININGS-STATISTIKEN</div>
+  <div id="pr-stats-detail" style="margin-bottom:24px;"></div>
+
+</div>
+
+
+<!-- PARKS PAGE -->
+<div class="page" id="page-parks">
+  <div style="margin-top:24px;margin-bottom:32px;">
+    <div style="font-size:44px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.05;">Calisthenics Parks</div>
+    <div style="font-size:17px;font-weight:500;color:var(--muted);margin-top:8px;">Finde Parks in deiner Nähe und trainiere draußen.</div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-bottom:28px;">
+    <button onclick="openMyParksOverview()" class="pk-btn" style="flex:1;background:#fff;color:var(--text);border:none;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);font-family:inherit;font-size:12.5px;font-weight:600;padding:16px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#127942; Rekorde</button>
+    <button onclick="openSuggestPark()" class="pk-btn" style="flex:1;background:#fff;color:var(--text);border:none;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);font-family:inherit;font-size:12.5px;font-weight:600;padding:16px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#43; Park melden</button>
+    <button id="parks-locate-btn" onclick="locateAndLoad()" class="pk-btn" style="flex:1.15;background:var(--accent);color:#fff;border:none;border-radius:20px;box-shadow:0 12px 30px rgba(255,85,0,0.22);font-family:inherit;font-size:12.5px;font-weight:700;padding:17px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">&#128205; Standort</button>
+  </div>
+
+  <div id="parks-status" style="font-size:11.5px;color:var(--muted);margin-bottom:16px;min-height:18px;"></div>
+
+  <!-- Trainingspartner finden -->
+  <div onclick="openBuddyFinderPage()" class="pk-card" style="display:flex;align-items:center;gap:16px;padding:22px 22px;margin-bottom:28px;cursor:pointer;">
+    <div style="width:52px;height:52px;border-radius:16px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-3 4 2 3-2 3 2 4-2 2 3-3 5-3-1-3 2-3-2-3 1-4-5z"/></svg></div></div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:16px;font-weight:700;color:var(--text);">Trainingspartner finden</div>
+      <div style="font-size:12px;font-weight:400;color:var(--muted);margin-top:3px;">Finde Leute in deiner Nähe zum Trainieren</div>
+    </div>
+    <div style="color:var(--muted);font-size:20px;flex-shrink:0;">&#8250;</div>
+  </div>
+
+  <!-- Radius-Auswahl -->
+  <div style="display:flex;gap:10px;margin-bottom:28px;" id="parks-radius-btns">
+    <button onclick="setRadius(2000)" id="rbtn-2" class="pk-btn" style="flex:1;height:48px;background:var(--accent);color:#fff;border:none;border-radius:24px;box-shadow:0 8px 20px rgba(255,85,0,0.25);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">2 km</button>
+    <button onclick="setRadius(5000)" id="rbtn-5" class="pk-btn" style="flex:1;height:48px;background:#fff;color:var(--muted);border:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-radius:24px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">5 km</button>
+    <button onclick="setRadius(10000)" id="rbtn-10" class="pk-btn" style="flex:1;height:48px;background:#fff;color:var(--muted);border:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-radius:24px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">10 km</button>
+    <button onclick="setRadius(20000)" id="rbtn-20" class="pk-btn" style="flex:1;height:48px;background:#fff;color:var(--muted);border:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-radius:24px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">20 km</button>
+  </div>
+
+  <!-- Karte -->
+  <div style="position:relative;margin-bottom:32px;">
+    <div id="parks-map" style="width:100%;height:460px;border-radius:24px;overflow:hidden;background:var(--bg3);box-shadow:0 12px 30px rgba(0,0,0,0.08);"></div>
+    <button onclick="locateAndLoad()" style="position:absolute;left:20px;bottom:20px;background:#fff;color:var(--text);border:none;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,0.16);font-family:inherit;font-size:12px;font-weight:700;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#8982; Mein Standort</button>
+    <button onclick="document.getElementById('parks-list-section').scrollIntoView({behavior:'smooth'})" style="position:absolute;right:20px;bottom:20px;background:#fff;color:var(--text);border:none;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,0.16);font-family:inherit;font-size:12px;font-weight:700;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:400;">&#9776; Liste</button>
+  </div>
+
+  <!-- Park-Liste -->
+  <div id="parks-list-section">
+    <div id="parks-list-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"></div>
+    <div id="parks-list"></div>
+  </div>
+
+  <!-- Hinweis -->
+  <div style="display:flex;align-items:center;gap:18px;background:rgba(255,85,0,0.07);border-radius:24px;padding:24px;margin-top:12px;">
+    <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,85,0,0.12);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">&#128506;&#65039;</div>
+    <div style="flex:1;">
+      <div style="font-size:16px;font-weight:700;color:var(--text);">Respektiere die Parks</div>
+      <div style="font-size:12.5px;font-weight:400;color:var(--muted);margin-top:4px;line-height:1.6;">Halte die Parks sauber und nimm Rücksicht auf andere.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS PAGE -->
+<div class="page" id="page-sk">
+  <div style="padding-top:4px;">
+    <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">SKILL LERNPFAD</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Klicke auf eine Progressionsstufe um sie als abgeschlossen zu markieren.</div>
+    <div id="sk-list"></div>
+  </div>
+</div>
+<div class="page" id="page-rek">
+  <div id="rek-root" style="padding:0 0 80px;"></div>
+</div>

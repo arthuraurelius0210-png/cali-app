@@ -1,5 +1,21 @@
 {
   "projects": {
     "default": "cali-app-75cc9"
-  }
+  },
+  "targets": {
+    "cali-app-75cc9": {
+      "hosting": {
+        "classic": [
+          "cali-classic-75cc9"
+        ],
+        "premium": [
+          "cali-premium-75cc9"
+        ],
+        "prod": [
+          "cali-app-75cc9"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

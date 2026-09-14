@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ff5500">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CALI">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+</script>
+<title>CALI Tracker</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="/hero-workout.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<style>
+  .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+    background-clip: padding-box;
+  }
+  .marker-cluster-small { background-color: rgba(255,85,0,0.2); }
+  .marker-cluster-small div { background-color: rgba(255,85,0,0.7); }
+  .marker-cluster-medium { background-color: rgba(255,85,0,0.3); }
+  .marker-cluster-medium div { background-color: rgba(255,85,0,0.8); }
+  .marker-cluster-large { background-color: rgba(255,85,0,0.4); }
+  .marker-cluster-large div { background-color: rgba(255,85,0,0.9); }
+  .marker-cluster div { color: #fff; font-weight: 800; font-family: system-ui; }
+</style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F7F5F0;--bg2:#ffffff;--bg3:#EDEAE1;
+  --border:#E2DECE;--border2:#CFC7B0;
+  --text:#18140F;--muted:#6E6759;--muted2:#8B8474;--muted-soft:var(--muted2);
+  --accent:#ff5500;--accent-ink:#C24400;--accent-deep:#CC4400;
+  --success:#22C55E;--success-ink:#0F7A3F;
+  --orange:#FF6B35;--teal:#4ECDC4;--teal-ink:#0E7C72;--purple:#A78BFA;--purple-ink:#6D4AD1;
+  --amber:#F59E0B;--amber-ink:#B45309;--blue:#38BDF8;--blue-ink:#0369A1;--red:#D93036;
+  --display:'Bebas Neue',sans-serif;--body:'DM Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  --ease-out:cubic-bezier(0.22,1,0.36,1);--ease-spring:cubic-bezier(0.34,1.56,0.64,1);--ease-sheet:cubic-bezier(0.32,0.72,0,1);
+  --dur-fast:150ms;--dur-med:250ms;--dur-slow:400ms;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;overflow-x:hidden;overscroll-behavior-y:contain;}
+body{-webkit-tap-highlight-color:transparent;}
+:focus-visible{outline:2px solid var(--accent) !important;outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
+}
+
+/* ── NAV ── */
+nav{background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
+.logo{font-family:var(--display);font-weight:400;font-size:25px;letter-spacing:4px;color:var(--text);cursor:pointer;}
+.tabs{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{background:none;border:none;color:var(--muted);font-family:var(--body);font-weight:700;font-size:13px;letter-spacing:0;padding:11px 14px;min-height:44px;cursor:pointer;border-radius:20px;white-space:nowrap;transition:background-color var(--dur-med) ease,color var(--dur-med) ease,transform var(--dur-fast) var(--ease-out);}
+.tab.on{background:var(--accent-deep);color:#fff;}
+
+/* ── PAGES ── */
+.page{display:none;padding:20px 20px 200px;max-width:480px;margin:0 auto;overflow:visible;}
+.page.on{display:block;animation:pageIn var(--dur-med) var(--ease-out);}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── START SCREEN ── */
+.start-screen{display:block;}
+.start-top{padding:20px 0 8px;}
+.start-logo{font-family:var(--display);font-weight:400;font-size:42px;letter-spacing:6px;color:var(--text);margin-bottom:2px;}
+.start-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.start-bottom{padding:0;margin-top:20px;}
+
+/* ── BUTTONS ── */
+.start-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:19px;font-weight:800;padding:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
+.start-btn:active{transform:scale(0.97);}
+.btn{width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:20px;font-family:inherit;font-size:15px;font-weight:700;padding:15px;cursor:pointer;margin-top:8px;box-shadow:0 12px 30px rgba(255,85,0,0.22);transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
+.btn:active{transform:scale(0.97);}
+.btn-g{background:#fff;border:none;color:var(--text);border-radius:20px;font-family:inherit;font-size:13px;font-weight:700;padding:9px 16px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.06);transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
+
+/* ── PREMIUM CARD/BUTTON — soft shadow, gentle hover lift (Parks page etc.) ── */
+.pk-card{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.pk-btn{transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-med) ease;}
+.stitle{font-family:var(--body);font-weight:700;font-size:16px;letter-spacing:0;color:var(--accent-ink);margin:28px 0 14px;}
+
+/* ── SIMPLE ACTION TILE ── */
+.action-tile{aspect-ratio:1;background:#fff;border:none;color:var(--text);border-radius:20px;font-family:inherit;font-size:11px;font-weight:600;padding:14px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;box-shadow:0 12px 30px rgba(0,0,0,0.06);transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.action-tile span{font-size:20px;}
+.action-tile-icon-wrap{width:34px;height:34px;border-radius:11px;background:rgba(255,85,0,0.1);display:flex;align-items:center;justify-content:center;}
+
+/* ── WORKOUT BAR ── */
+.wo-bar{background:var(--accent-deep);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:24px;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:0 12px 30px rgba(255,85,0,0.22);}
+.wo-bar-left{display:flex;flex-direction:column;gap:2px;}
+.wo-bar-status{font-size:12px;color:#fff;font-weight:700;}
+.wo-bar-timer{font-family:inherit;font-weight:800;font-size:32px;color:#fff;font-variant-numeric:tabular-nums;line-height:1;}
+.wo-bar-date{font-size:11px;color:#fff;}
+.wo-end-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 14px;cursor:pointer;text-align:center;}
+.wo-bar-right{display:flex;gap:6px;}
+.wo-time{font-family:inherit;font-weight:800;font-size:32px;color:#fff;}
+.wo-label{font-size:11px;color:#fff;}
+.wo-end{background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:10px;padding:8px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;}
+
+/* ── SETS ── */
+.set-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.set-item:last-child{border:none;}
+.set-n{font-size:11px;font-weight:700;color:var(--muted);width:18px;}
+.set-reps{flex:1;font-size:15px;font-weight:600;color:var(--text);}
+.set-band{font-size:11px;color:var(--teal-ink);}
+.set-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px 8px;}
+
+/* ── INPUT ── */
+.bsets{display:flex;gap:8px;margin-top:12px;align-items:center;}
+.bsets input,.bsets-add{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:16px;font-weight:600;outline:none;}
+.bsets-add{flex:none;background:var(--accent-deep);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:16px;outline:none;}
+.fg input:focus,.fg select:focus{border-color:var(--border2);}
+
+/* ── EXERCISE ROW ── */
+.ex-row{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff;border:none;border-radius:20px;margin-bottom:8px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.05);transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ex-name-t{font-size:13px;font-weight:600;color:var(--text);flex:1;}
+.ex-cat-t{font-size:11px;color:var(--muted);}
+
+/* ── PLAN CARDS ── */
+.plan-btn{width:100%;background:#fff;border:none;color:var(--text);border-radius:20px;font-family:inherit;font-size:14px;font-weight:700;padding:16px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;margin-bottom:8px;box-shadow:0 8px 20px rgba(0,0,0,0.05);transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.plan-card{background:var(--bg2);border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px 20px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.plan-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.plan-name{font-size:15px;font-weight:700;color:var(--text);}
+.plan-excount{font-size:11px;color:var(--muted);}
+.plan-exrow{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.plan-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.plan-exname{font-size:12px;font-weight:600;color:var(--text);flex:1;}
+.plan-exsets{font-size:11px;color:var(--muted);}
+.plan-actions{display:flex;gap:8px;margin-top:10px;}
+.plan-start-btn{flex:1;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);}
+.plan-del-btn{background:var(--bg3);border:none;color:var(--muted);border-radius:16px;font-family:inherit;font-size:12px;font-weight:700;padding:11px 14px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out);}
+
+/* ── PLAN BLOCKS (active workout) ── */
+.peb{background:#fff;border:none;border-radius:20px;margin-bottom:12px;overflow:visible;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
+.peb-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;}
+.peb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.peb-name{flex:1;font-size:14px;font-weight:700;color:var(--text);}
+.peb-status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--muted);}
+.peb-status.done{background:rgba(255,85,0,0.1);color:var(--accent-ink);}
+.peb-arrow{font-size:12px;color:var(--muted);transition:transform var(--dur-med) var(--ease-out);}
+.peb-arrow.open{transform:rotate(90deg);}
+.peb-body{display:none;padding:0 14px 14px;}
+.peb-body.open{display:block;}
+.peb-setrow{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;margin-bottom:8px;}
+.peb-snum{font-size:13px;font-weight:700;text-align:center;}
+.peb-inp{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:16px;font-weight:600;outline:none;width:100%;}
+.peb-add-btn{width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;margin-top:4px;transition:transform var(--dur-fast) var(--ease-out);}
+
+/* ── PLAN FORM ── */
+.pf-ex-item{display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:16px;padding:10px 12px;margin-bottom:6px;}
+.pf-ex-col{flex:1;}
+.pf-ex-name{font-size:13px;font-weight:700;color:var(--text);}
+.pf-ex-sets{font-size:11px;color:var(--muted);margin-top:2px;}
+.pf-ex-del{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;}
+.sh{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;padding:0 0 6px;}
+.sh span{font-size:11px;color:var(--muted);font-weight:600;}
+.sr{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.snum{font-size:14px;font-weight:700;text-align:center;}
+.sinp{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px;font-family:inherit;font-size:16px;font-weight:600;outline:none;text-align:center;}
+.sdel{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px;}
+
+/* ── WORKOUT EXERCISE LIST ── */
+.wo-ex-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+.wo-ex-item:last-child{border:none;}
+.wo-ex-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.wo-ex-col{flex:1;}
+.wo-ex-name{font-size:14px;font-weight:700;color:var(--text);}
+.wo-ex-sets{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
+
+/* ── BAND CHIPS ── */
+.band-row-lbl{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:9px 14px;min-height:36px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
+.chip.on{background:rgba(78,205,196,0.12);border-color:var(--teal);color:var(--teal-ink);}
+.b-cust{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:16px;outline:none;margin-top:4px;}
+
+/* ── CAT FILTER ── */
+.cat-scroll{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:12px;}
+.cat-scroll::-webkit-scrollbar{display:none;}
+.cat-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:9px 14px;min-height:36px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
+.cat-btn.on{background:var(--text);color:var(--bg);border-color:var(--text);}
+
+/* ── BELT TOGGLE ── */
+.belt-toggle{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
+.belt-toggle.on{background:var(--blue-ink);border-color:var(--blue-ink);color:#fff;}
+.belt-row{display:flex;align-items:center;gap:8px;margin:8px 0;}
+
+/* ── CHART ── */
+canvas{max-width:100%;}
+.cc{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
+.ct{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cl{font-size:12px;font-weight:700;color:var(--muted);}
+.cs{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:5px 10px;font-family:inherit;font-size:12px;outline:none;}
+.empty{font-size:13px;color:var(--muted);padding:16px 0;text-align:center;}
+
+/* ── MAX ── */
+.max-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.fp{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:9px 14px;min-height:36px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),background-color var(--dur-fast) ease;}
+.fp.on{background:var(--text);color:var(--bg);border-color:var(--text);}
+.ei{background:#fff;border:none;border-radius:20px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
+.et{display:flex;flex-direction:column;gap:2px;}
+.ed{font-size:11px;color:var(--muted);}
+.en{font-size:14px;font-weight:700;color:var(--text);}
+.edel{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;align-self:flex-end;padding:6px;}
+
+/* ── CHALLENGE ── */
+.ch-card{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;}
+
+/* ── HR ── */
+.uz{background:var(--bg2);border:2px dashed var(--border2);border-radius:24px;padding:28px;text-align:center;cursor:pointer;margin-bottom:12px;}
+.ui{font-size:36px;margin-bottom:8px;}
+.ut{font-size:13px;color:var(--muted);line-height:1.6;}
+.hg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.hi{background:#fff;border:none;border-radius:20px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,0.06);}
+.hi img{width:100%;display:block;}
+.hii{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;}
+.hd{font-size:11px;color:var(--muted);}
+.hdel{background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;}
+
+/* ── WORKOUT HISTORY ── */
+.wh-item{background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,0.06);padding:18px 20px;margin-bottom:12px;transition:box-shadow 0.2s ease,transform 0.2s ease;content-visibility:auto;contain-intrinsic-size:auto 120px;}
+.wh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.wh-date{font-size:14px;font-weight:800;color:var(--accent-ink);}
+.wh-dur{font-size:12px;color:var(--muted);}
+.wh-exlist{display:flex;flex-direction:column;gap:6px;}
+.wh-ex{display:flex;align-items:flex-start;gap:8px;}
+.wh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.wh-exname{font-size:13px;font-weight:700;color:var(--text);}
+.wh-sets{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── BESTS ── */
+.bb{background:#fff;border:none;border-radius:20px;padding:14px 16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
+.bbn{font-size:14px;font-weight:700;color:var(--text);}
+
+/* ── PROFIL ── */
+.badge-item{background:#fff;border:none;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:8px;margin-bottom:8px;box-shadow:0 8px 20px rgba(0,0,0,0.05);}
+
+/* ── TOAST — CSS owns the entrance (toastIn), JS (app1.js toast()) owns the exit fade ── */
+.toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:3000;white-space:nowrap;pointer-events:none;animation:toastIn var(--dur-med) var(--ease-out);}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,12px);}to{opacity:1;transform:translate(-50%,0);}}
+
+/* ── HINT ── */
+.start-hint{font-size:11px;color:var(--muted);text-align:center;}
+
+/* ── PROG BAR ── */
+.prog-bar{background:var(--bg3);border-radius:20px;height:4px;overflow:hidden;margin:8px 0;}
+.prog-fill{height:100%;background:var(--accent);border-radius:20px;transition:width var(--dur-slow) var(--ease-out);}
+
+/* ── TYPE UTILITIES ── */
+.num{font-variant-numeric:tabular-nums;}
+.page-title{font-size:32px;font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.1;}
+.page-sub{font-size:13px;font-weight:400;color:var(--muted);margin-top:6px;line-height:1.5;}
+
+/* ── DESKTOP-ONLY HOVER LIFTS (touch gets :active press instead) ── */
+@media (hover:hover){
+  .start-btn:hover,.btn:hover,.btn-g:hover,.pk-btn:hover,.plan-start-btn:hover,.plan-del-btn:hover,.peb-add-btn:hover{transform:scale(1.02);}
+  .card:hover,.pk-card:hover,.action-tile:hover,.plan-card:hover,.cc:hover,.ch-card:hover,.wh-item:hover{box-shadow:0 16px 40px rgba(0,0,0,0.10);transform:translateY(-2px);}
+  .ex-row:hover,.plan-btn:hover{box-shadow:0 12px 28px rgba(0,0,0,0.08);transform:translateY(-1px);}
+}
+
+/* ── PRESS FEEDBACK ── */
+.pk-btn:active,.btn-g:active,.plan-start-btn:active,.plan-del-btn:active,.peb-add-btn:active,.tab:active,.chip:active,.cat-btn:active,.fp:active,.belt-toggle:active,.bsets-add:active,.wo-end-btn:active{transform:scale(0.96);}
+.ex-row:active,.plan-btn:active,.action-tile:active,.pk-card:active{transform:scale(0.97);}
+.pressable{transition:transform var(--dur-fast) var(--ease-out);}
+.pressable:active{transform:scale(0.985);}
+
+/* ── MOTION SYSTEM ── */
+/* Entrance: builders add .anim-in (+ style.setProperty('--i',n) for stagger) — or call caliMotion.stagger(container) */
+@keyframes riseIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+/* fill-mode backwards (nicht both): der from-Zustand gilt während des Stagger-Delays,
+   nach dem Lauf fällt das Element auf seine eigenen Styles zurück — sonst würde die
+   Animation inline gesetzte opacity-Werte (gesperrte Abzeichen, bereits hinzugefügte
+   Pläne) dauerhaft auf 1 überschreiben. */
+.anim-in{animation:riseIn var(--dur-med) var(--ease-out) backwards;animation-delay:calc(var(--i,0)*40ms);}
+
+/* Bottom sheet + backdrop: base class at creation, -in class via double rAF (caliMotion.sheetIn does both) */
+.sheet-anim{transform:translateY(100%);transition:transform var(--dur-slow) var(--ease-sheet);will-change:transform;}
+.sheet-anim.sheet-in{transform:translateY(0);}
+.backdrop-anim{opacity:0;transition:opacity var(--dur-med) ease;}
+.backdrop-anim.backdrop-in{opacity:1;}
+
+/* Fullscreen overlay entrance (caliMotion.overlayIn) */
+.overlay-anim{opacity:0;transform:translateY(16px);transition:opacity var(--dur-med) var(--ease-out),transform var(--dur-med) var(--ease-out);}
+.overlay-anim.overlay-in{opacity:1;transform:translateY(0);}
+
+/* Scroll containment for sheet/overlay scroll areas */
+.sheet-scroll{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+
+/* Streak flame pulse */
+@keyframes flamePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+.flame-pulse{display:inline-block;animation:flamePulse 1.8s ease-in-out infinite;transform-origin:50% 80%;}
+
+/* Live recording dot (wo-bar) */
+@keyframes recPulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+.rec-dot{animation:recPulse 1.6s ease-in-out infinite;}
+
+/* XP float-up label (caliMotion.floatUp) */
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,6px);}15%{opacity:1;}100%{opacity:0;transform:translate(-50%,-44px);}}
+.float-up{position:fixed;z-index:4000;pointer-events:none;font-size:15px;font-weight:800;color:var(--accent-ink);animation:floatUp 1.2s var(--ease-out) forwards;white-space:nowrap;}
+
+/* Celebration burst (caliMotion.celebrate) */
+.cali-burst{position:fixed;inset:0;z-index:5000;pointer-events:none;}
+@keyframes burstFly{0%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg);}100%{opacity:0;transform:translate(calc(-50% + var(--tx,0px)),calc(-50% + var(--ty,-120px))) scale(0.4) rotate(var(--rot,180deg));}}
+.burst-p{position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:3px;animation:burstFly var(--bd,900ms) var(--ease-out) forwards;}
+
+/* Accordion physics: wrap collapsible content in .acc-body > one child; toggle .open */
+.acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur-med) var(--ease-out);}
+.acc-body.open{grid-template-rows:1fr;}
+.acc-body>*{overflow:hidden;min-height:0;}
+
+/* ── LOGIN ── */
+#login-screen{background:var(--bg);}
+#loading-screen{background:var(--bg);}
+</style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+
+
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen" style="display:none;visibility:hidden;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;">
+  <div style="font-family:var(--display);font-weight:400;font-size:52px;letter-spacing:6px;color:var(--accent);">CALI</div>
+  <div style="font-size:13px;color:var(--muted);margin-top:8px;font-family:inherit;">Lädt...</div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg);position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;">
+  <div style="font-family:var(--display);font-weight:400;font-size:52px;letter-spacing:6px;color:var(--accent);margin-bottom:8px;">CALI</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:40px;">Calisthenics Tracker</div>
+  <div style="display:flex;gap:0;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px;width:100%;max-width:320px;">
+    <button id="tab-login" onclick="showAuthTab('login')" style="flex:1;background:var(--accent-deep);color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:700;padding:10px;cursor:pointer;">Login</button>
+    <button id="tab-register" onclick="showAuthTab('register')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:700;padding:10px;cursor:pointer;">Registrieren</button>
+  </div>
+  <div style="width:100%;max-width:320px;">
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--muted);font-family:inherit;font-weight:600;margin-bottom:6px;">E-Mail</div>
+      <input type="email" id="auth-email" placeholder="deine@email.com" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--muted);font-family:inherit;font-weight:600;margin-bottom:6px;">Passwort</div>
+      <input type="password" id="auth-password" placeholder="Mindestens 6 Zeichen" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
+    </div>
+    <div id="auth-name-row" style="display:none;margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--muted);font-family:inherit;font-weight:600;margin-bottom:6px;">Name</div>
+      <input type="text" id="auth-name" placeholder="Dein Name" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box;">
+    </div>
+    <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:800;padding:14px;cursor:pointer;margin-bottom:16px;box-shadow:0 12px 30px rgba(255,85,0,0.22);">Einloggen</button>
+    <div style="display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin-bottom:16px;"><div style="flex:1;height:1px;background:var(--border);"></div>oder<div style="flex:1;height:1px;background:var(--border);"></div></div>
+    <button onclick="authGoogle()" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:13px;cursor:pointer;">Mit Google anmelden</button>
+    <div id="auth-error" style="color:var(--red);font-size:12px;text-align:center;margin-top:12px;display:none;"></div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center;">
+      <button onclick="demoLogin()" style="background:none;border:none;color:var(--muted);font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;">Ohne Login testen (Demo)</button>
+    </div>
+  </div>
+</div>
+
+
+<nav>
+  <div class="logo" role="button" tabindex="0" aria-label="Zur Startseite" onclick="goPage('e')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPage('e');}">CALI</div>
+  <div class="tabs">
+    <button class="tab on" id="tab-e" onclick="goPage('e')">Workout</button>
+    <button class="tab" id="tab-p" onclick="goPage('p')">Pläne</button>
+    <button class="tab" id="tab-m" onclick="goPage('m')">Max</button>
+    <button class="tab" id="tab-ch" onclick="goPage('ch')">Challenge</button>
+    <button class="tab" id="tab-pr" onclick="goPage('pr')">Profil</button>
+    <button class="tab" id="tab-parks" onclick="goPage('parks')">Parks</button>
+    <button class="tab" id="tab-rek" onclick="goPage('rek')">Rekorde</button>
+  </div>
+</nav>
+
+<!-- WORKOUT PAGE -->
+<div class="page on" id="page-e">
+
+  <!-- START SCREEN (shown when no active workout) -->
+  <div id="start-screen" class="start-screen">
+    <div class="start-top">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div class="start-logo">CALI</div>
+          <div class="start-sub">Calisthenics Tracker</div>
+        </div>
+        <button id="ob-btn" onclick="goPage('pr')" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:12px;font-weight:600;padding:8px 12px;cursor:pointer;">Profil</button>
+      </div>
+      <!-- Streak widget / hero image -->
+      <div id="streak-widget" style="margin-bottom:16px;"></div>
+
+      <!-- Primäre Aktion "Jetzt starten" sitzt im Streak-Hero oben (main2ba.js) —
+           hier bewusst kein zweiter Workout-starten-Button. -->
+
+      <!-- Wochenfortschritt-Dashboard -->
+      <div id="start-dashboard" style="margin-bottom:20px;"></div>
+
+      <!-- Trainingspläne -->
+      <div style="display:flex;align-items:center;gap:12px;margin:22px 0 12px;">
+        <h2 style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;">Trainingspläne</h2>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+      <div id="plan-btns" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+      <!-- Bestleistungen -->
+      <div style="display:flex;align-items:center;gap:12px;margin:22px 0 12px;">
+        <h2 style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;">Bestleistungen</h2>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+      <div id="bests"></div>
+
+      <!-- Schnellstart -->
+      <div style="display:flex;align-items:center;gap:12px;margin:22px 0 12px;">
+        <h2 style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;">Schnellstart</h2>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <button class="action-tile" onclick="showEmomSetup(true)"><span class="action-tile-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="9" y="1" width="6" height="2.5" rx="1.25" fill="var(--accent)"/><circle cx="12" cy="14" r="9" fill="var(--accent)"/><rect x="11" y="8" width="2" height="7" rx="1" fill="#fff"/><rect x="12" y="13" width="6" height="2" rx="1" fill="#fff"/></svg></span>EMOM</button>
+        <button class="action-tile" onclick="goPage('p')"><span class="action-tile-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="4" fill="var(--accent)"/><rect x="6.5" y="8" width="11" height="2" rx="1" fill="#fff"/><rect x="6.5" y="12" width="11" height="2" rx="1" fill="#fff"/><rect x="6.5" y="16" width="7" height="2" rx="1" fill="#fff"/></svg></span>Pläne</button>
+        <button class="action-tile" onclick="goPage('ch')"><span class="action-tile-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M8 3h8v5a4 4 0 01-8 0V3z" fill="var(--accent)"/><rect x="11" y="11" width="2" height="4" fill="var(--accent)"/><rect x="8" y="18" width="8" height="2" rx="1" fill="var(--accent)"/><rect x="9" y="15" width="6" height="2" fill="var(--accent)"/></svg></span>Challenges</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- EMOM SETUP SCREEN -->
+  <div id="emom-setup" style="display:none;">
+    <h2 class="stitle">EMOM-Timer</h2>
+    <div style="display:flex;gap:0;margin-bottom:16px;background:var(--bg3);border-radius:10px;padding:4px;">
+      <button id="emom-mode-single" onclick="emomSetMode('single')" style="flex:1;background:var(--text);color:var(--bg);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">Eine Übung</button>
+      <button id="emom-mode-mix" onclick="emomSetMode('mix')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">Mix (pro Minute)</button>
+      <button id="emom-mode-pure" onclick="emomSetMode('pure')" style="flex:1;background:none;color:var(--muted);border:none;border-radius:7px;font-family:inherit;font-size:13px;padding:9px;cursor:pointer;">&#9201; Timer</button>
+    </div>
+    <div id="emom-mode-desc" style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Eine Übung für alle Minuten — jede Minute gleiche Übung.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div class="fg"><label>Minuten total</label>
+        <input type="number" id="emom-minutes" value="10" min="1" max="60" oninput="if(emomMode==='mix')emomBuildMixGrid()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;width:100%;box-sizing:border-box;">
+      </div>
+      <div class="fg"><label>Sekunden pro Minute</label>
+        <input type="number" id="emom-secs" value="60" min="10" max="300" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;width:100%;box-sizing:border-box;">
+      </div>
+    </div>
+    <div id="emom-single-section">
+      <div class="fg" style="margin-bottom:12px;"><label>Übung</label>
+        <select id="emom-ex-pick" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
+      </div>
+    </div>
+    <div id="emom-mix-section" style="display:none;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Lege für jede Minute eine Übung und ein Wdh-Ziel fest:</div>
+      <div id="emom-mix-grid" style="margin-bottom:8px;"></div>
+    </div>
+    <button onclick="emomStart()" id="emom-start-btn" class="btn" style="display:none;">EMOM starten</button>
+    <button onclick="showEmomSetup(false)" style="width:100%;background:none;border:1px solid var(--border2);color:var(--muted);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;margin-top:8px;">Abbrechen</button>
+  </div>
+
+  <!-- EMOM ACTIVE SCREEN -->
+  <div id="emom-active" style="display:none;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-family:inherit;font-size:12px;color:var(--muted);margin-bottom:8px;">EMOM-Runde</div>
+      <div id="emom-round-display" class="num" style="font-family:inherit;font-weight:800;font-size:36px;color:var(--accent-ink);line-height:1;">Min 1 / 10</div>
+      <div id="emom-ex-display" style="font-size:16px;color:var(--text);margin-top:8px;font-weight:500;"></div>
+    </div>
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+        <button onclick="emomAdjustTime(-5)" aria-label="5 Sekunden weniger" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:18px;font-weight:700;padding:10px 16px;cursor:pointer;">-5</button>
+        <div id="emom-timer-display" class="num" style="font-family:inherit;font-weight:800;font-size:72px;color:var(--accent-ink);line-height:1;letter-spacing:0;">60</div>
+        <button onclick="emomAdjustTime(5)" aria-label="5 Sekunden mehr" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:18px;font-weight:700;padding:10px 16px;cursor:pointer;">+5</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-family:inherit;margin-top:4px;">Sekunden</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:24px;">
+      <div id="emom-progress-bar" style="height:100%;background:var(--accent);width:100%;transition:width 1s linear;border-radius:20px;"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="emomSkip(-1)" aria-label="Vorherige Minute" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:18px;padding:10px;cursor:pointer;">&#9664;</button>
+      <button onclick="emomSkip(1)" aria-label="Nächste Minute" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;font-family:inherit;font-size:18px;padding:10px;cursor:pointer;">&#9654;</button>
+    </div>
+    <div id="emom-reps-card" class="card" style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;">Wiederholungen eintragen</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="number" id="emom-reps-inp" placeholder="z.B. 10" min="0" class="num" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:18px;outline:none;">
+        <button onclick="emomLogRep()" style="background:var(--accent-deep);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:10px 16px;cursor:pointer;">OK</button>
+      </div>
+    </div>
+    <div id="emom-logged" style="margin-bottom:10px;"></div>
+
+    <button onclick="emomStop()" style="width:100%;background:none;border:1px solid var(--red);color:var(--red);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer;">EMOM beenden</button>
+  </div>
+
+  <!-- ACTIVE WORKOUT (hidden until started) -->
+  <div id="active-workout" style="display:none;">
+
+    <!-- Timer bar -->
+    <div class="wo-bar">
+      <div class="wo-bar-left">
+        <div class="wo-bar-status"><span class="rec-dot">&#9679;</span> Workout aktiv</div>
+        <div class="wo-bar-timer" id="wo-timer">00:00</div>
+        <div class="wo-bar-date" id="wo-date"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button class="wo-end-btn" onclick="endWorkout()">Workout<br>beenden</button>
+        <button onclick="cancelWorkout()" style="background:none;border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:10px;font-family:inherit;font-size:11px;padding:6px 10px;cursor:pointer;">Abbrechen</button>
+      </div>
+    </div>
+
+    <!-- Plan blocks (shown when plan loaded) -->
+    <div id="plan-blocks-wrap" style="display:none;">
+      <h2 class="stitle">Plan-Übungen — tippen zum Eintragen</h2>
+      <div id="plan-blocks-list"></div>
+    </div>
+
+    <!-- Current workout exercises -->
+    <h2 class="stitle">Dieses Workout</h2>
+    <div class="wo-ex-list" id="wo-ex-list">
+      <div class="empty" id="wo-empty">Noch keine Übungen hinzugefügt.</div>
+    </div>
+
+    <!-- EMOM in active workout -->
+  <div id="wo-emom-btn-wrap" style="padding:0 0 8px 0;display:none;">
+    <button onclick="showEmomSetup(true)" style="width:100%;background:none;border:1px solid var(--border2);color:var(--accent-ink);border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;padding:10px;cursor:pointer;">⏱ EMOM starten</button>
+  </div>
+
+  <!-- Add exercise -->
+    <h2 class="stitle" id="plan-add-label" style="display:none;">Übung hinzufügen</h2>
+    <div class="card" id="plan-add-form" style="display:none;">
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Kategorie</div>
+        <select id="wo-cat-sel" onchange="woCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;margin-bottom:10px;">
+          <option value="Alle">Alle Kategorien</option>
+          <option value="Pull">Pull</option>
+          <option value="Push">Push</option>
+          <option value="Core">Core</option>
+          <option value="Legs">Legs</option>
+          <option value="Skills">Skills</option>
+          
+          
+        </select>
+        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Übung</div>
+        <select id="wo-ex-sel" onchange="woExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
+      </div>
+
+      <div id="band-row" style="display:none;margin-bottom:12px;">
+        <div class="band-row-lbl">Gummiband (optional)</div>
+        <div class="chips">
+          <button class="chip on" id="chip0" onclick="pickBand('',0)">Kein Band</button>
+          <button class="chip" id="chip1" onclick="pickBand('Leicht ~5kg',1)">Leicht ~5kg</button>
+          <button class="chip" id="chip2" onclick="pickBand('Mittel ~10kg',2)">Mittel ~10kg</button>
+          <button class="chip" id="chip3" onclick="pickBand('Stark ~15kg',3)">Stark ~15kg</button>
+          <button class="chip" id="chip4" onclick="pickBand('Sehr stark ~20kg',4)">Sehr stark</button>
+          <button class="chip" id="chip5" onclick="pickBand('Extra ~30kg',5)">Extra ~30kg</button>
+        </div>
+        <input class="b-cust" id="b-cust" placeholder="Eigene Bandstärke..." oninput="custBand(this.value)">
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Sätze</div>
+      <!-- GÜRTEL -->
+      <div style="margin-bottom:10px;">
+        <button id="belt-toggle-btn" onclick="toggleBelt()"
+          style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;padding:10px 16px;cursor:pointer;">
+          Gürtel: aus
+        </button>
+      </div>
+      <div id="belt-kg-row" style="display:none;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:var(--amber-ink);font-family:inherit;margin-bottom:6px;">Gewicht am Gürtel (kg)</div>
+        <input type="number" id="belt-kg-input" placeholder="z.B. 10" min="0"
+          style="width:100%;background:rgba(245,158,11,0.05);border:1px solid var(--amber);color:var(--amber-ink);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"
+          oninput="beltKgVal=this.value;">
+      </div>
+      <div id="set-header" style="display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;padding:0 0 6px;">
+        <span style="font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;">#</span>
+        <span id="lbl-n" style="font-size:11px;font-weight:600;color:var(--muted);font-family:inherit;text-align:center;">Wdh.</span>
+        <span id="lbl-b" style="font-size:11px;font-weight:600;color:var(--amber-ink);font-family:inherit;text-align:center;display:none;">Mit Band</span>
+        <span></span>
+      </div>
+      <div id="sbox"></div>
+      <div style="margin-top:10px;"><button class="btn-g" onclick="addSet()">+ Satz</button></div>
+      <div class="fg" style="margin-top:14px;"><label>Notiz (optional)</label><input type="text" id="inp-note" placeholder="Frei eintragen..."></div>
+      <div style="height:12px;"></div>
+      <button class="btn" onclick="addExToWorkout()">+ Zur Session hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<!-- VERLAUF PAGE -->
+<div class="page" id="page-v">
+  <button onclick="goPage('pr')" style="background:#fff;border:none;color:var(--text);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.05);font-family:inherit;font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer;margin-bottom:4px;">&#8592; Zurück</button>
+  <h2 class="stitle">Fortschritt</h2>
+  <div class="cc">
+    <div class="ct">
+      <div class="cl">Verlauf</div>
+      <select class="cs" id="cex" onchange="drawChart()"></select>
+    </div>
+    <canvas id="mc" style="max-height:200px;"></canvas>
+    <div id="ce" class="empty" style="display:none;">Noch keine Einträge</div>
+  </div>
+
+  <h2 class="stitle">Workout-Verlauf</h2>
+  <div id="wo-history"></div>
+</div>
+
+<!-- HF PAGE -->
+<div class="page" id="page-h" style="display:none!important;">
+  <h2 class="stitle">Herzfrequenz-Screenshots</h2>
+  <div class="uz" onclick="document.getElementById('hff').click()">
+    <div class="ui">&#128202;</div>
+    <div class="ut"><strong>Screenshot hochladen</strong><br>PNG oder JPG</div>
+    <input type="file" id="hff" accept="image/*" multiple style="display:none" onchange="uploadHF(this)">
+  </div>
+  <h2 class="stitle" id="hflbl" style="display:none;">Gespeicherte Screenshots</h2>
+  <div class="hg" id="hgal"></div>
+</div>
+
+
+<!-- PLANE PAGE -->
+<div class="page" id="page-p">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:28px;">
+    <div>
+      <h2 class="page-title">Meine Pläne</h2>
+      <div class="page-sub">Plane deine Workouts, behalte den Überblick und erreiche deine Ziele.</div>
+    </div>
+    <button class="pk-btn" onclick="showPlanForm()" style="background:var(--accent-deep);color:#fff;border:none;border-radius:16px;box-shadow:0 12px 30px rgba(255,85,0,0.22);font-family:inherit;font-size:13px;font-weight:700;padding:12px 18px;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:4px;">+ Neuer Plan</button>
+  </div>
+  <div id="plan-list"></div>
+
+  <!-- NEW PLAN FORM -->
+  <div id="plan-form" style="display:none;">
+    <h2 class="stitle">Plan erstellen</h2>
+    <div class="card">
+      <div class="fg" style="margin-bottom:12px;">
+        <label>Plan-Name</label>
+        <input type="text" id="pf-name" placeholder="z.B. Pull Tag, Push Tag...">
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;">Übungen im Plan</div>
+      <div id="pf-ex-list" style="margin-bottom:10px;"></div>
+
+      <!-- Add exercise to plan -->
+      <div style="background:var(--bg3);border:none;border-radius:16px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:8px;">Übung hinzufügen</div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Kategorie</div>
+          <select id="pf-cat-sel" onchange="pfCatChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;margin-bottom:10px;">
+            <option value="Alle">Alle Kategorien</option>
+            <option value="Pull">Pull</option>
+            <option value="Push">Push</option>
+            <option value="Core">Core</option>
+            <option value="Legs">Legs</option>
+            <option value="Skills">Skills</option>
+            
+            
+          </select>
+          <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Übung</div>
+          <select id="pf-ex-sel" onchange="pfExSelChanged()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;"></select>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:var(--muted);font-family:inherit;margin-bottom:6px;">Geplante Sätze</div>
+        <div class="sh"><span>#</span><span id="pf-lbl-n">Wdh. (Ziel)</span><span></span><span></span></div>
+        <div id="pf-sbox"></div>
+        <div style="margin-top:8px;"><button class="btn-g" onclick="pfAddSet()">+ Satz</button></div>
+        <div style="height:10px;"></div>
+        <button class="btn-g" style="width:100%;color:var(--accent-ink);" onclick="pfAddEx()">+ Zum Plan</button>
+      </div>
+
+      <button class="btn" onclick="savePlan()">Plan speichern</button>
+      <div style="height:8px;"></div>
+      <button class="btn-g" style="width:100%;" onclick="cancelPlanForm()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reihenfolge ist Ladereihenfolge-kritisch — nicht umsortieren. -->
+<script src="motion.js"></script>
+<script src="app1.js"></script>
+<script src="app2.js"></script>
+<script src="app3.js"></script>
+<script src="main2aa.js"></script>
+<script src="main2ab.js"></script>
+<script src="main2ba.js"></script>
+<script src="main2bb.js"></script>
+<script>
+</script>
+
+<div id="ph"></div><script>fetch("pages.html").then(r=>r.text()).then(h=>{var d=document.getElementById("ph"),t=document.createElement("div");t.innerHTML=h;while(t.firstChild)d.parentNode.insertBefore(t.firstChild,d);d.remove();try{var m=document.getElementById("max-date");if(m)m.valueAsDate=new Date();}catch(e){}var wireLatePages=function(){try{buildProfilStreakSection();}catch(e){}try{buildPrivacyToggle();}catch(e){}try{checkAndShowAdminBtn();}catch(e){}};if(document.readyState==="complete"){wireLatePages();}else{window.addEventListener("load",wireLatePages);}});</script>
+<script src="skills.js"></script>
+
+<script src="community.js"></script>
+
+<script src="parks.js"></script>
+<script src="buddyfinder.js"></script>
+  <script src="leaderboard.js"></script>
+  <script src="rekorde.js"></script>
+  <script src="battle.js"></script>
+  <script src="xp.js"></script>
+
+  <script>
+  function openFeedback(){
+    var ex=document.getElementById('feedback-ov'); if(ex) ex.remove();
+    var ov=document.createElement('div');
+    ov.id='feedback-ov';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:flex-end;justify-content:center;';
+    var box=document.createElement('div');
+    box.style.cssText='background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;';
+    box.innerHTML='<div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;"></div>'+
+      '<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">💬 Feedback</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Was fällt dir auf? Bug, Idee oder Lob — alles willkommen!</div>';
+
+    var typeWrap=document.createElement('div');
+    typeWrap.style.cssText='display:flex;gap:8px;margin-bottom:14px;';
+    var types=[{id:'bug',label:'🐛 Bug'},{id:'idea',label:'💡 Idee'},{id:'lob',label:'👍 Lob'}];
+    var selType='bug';
+    types.forEach(function(t){
+      var btn=document.createElement('button');
+      btn.dataset.tid=t.id;
+      btn.style.cssText='flex:1;padding:9px;border-radius:10px;border:1px solid '+(t.id===selType?'var(--accent)':'var(--border)')+';background:'+(t.id===selType?'rgba(255,85,0,0.1)':'none')+';font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:'+(t.id===selType?'var(--accent-ink)':'var(--muted)')+';transition:transform var(--dur-fast) var(--ease-out);';
+      btn.textContent=t.label;
+      btn.onclick=function(){
+        selType=t.id;
+        typeWrap.querySelectorAll('button').forEach(function(b){
+          var a=b.dataset.tid===selType;
+          b.style.borderColor=a?'var(--accent)':'var(--border)';
+          b.style.background=a?'rgba(255,85,0,0.1)':'none';
+          b.style.color=a?'var(--accent-ink)':'var(--muted)';
+        });
+      };
+      typeWrap.appendChild(btn);
+    });
+    box.appendChild(typeWrap);
+
+    var ta=document.createElement('textarea');
+    ta.placeholder='Beschreib kurz was dir aufgefallen ist...';
+    ta.style.cssText='width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:16px;background:var(--bg2);color:var(--text);height:100px;resize:none;box-sizing:border-box;margin-bottom:12px;';
+    box.appendChild(ta);
+
+    var sendBtn=document.createElement('button');
+    sendBtn.style.cssText='width:100%;background:var(--accent-deep);color:#fff;border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:800;padding:15px;cursor:pointer;margin-bottom:8px;transition:transform var(--dur-fast) var(--ease-out);';
+    sendBtn.textContent='Senden';
+    sendBtn.onclick=function(){
+      var txt=ta.value.trim();
+      if(!txt){ta.focus();return;}
+      sendBtn.disabled=true;sendBtn.textContent='Wird gesendet...';
+      var uid=typeof firebase!=='undefined'&&firebase.auth().currentUser?firebase.auth().currentUser.uid:'anonym';
+      if(typeof db!=='undefined'){
+        db.collection('feedback').add({type:selType,message:txt,uid:uid,date:Date.now()})
+          .then(function(){ov.remove();if(typeof toast==='function')toast('✅ Danke für dein Feedback!');})
+          .catch(function(){ov.remove();if(typeof toast==='function')toast('✅ Danke!');});
+      } else {
+        ov.remove();if(typeof toast==='function')toast('✅ Danke für dein Feedback!');
+      }
+    };
+    box.appendChild(sendBtn);
+
+    var cancelBtn=document.createElement('button');
+    cancelBtn.style.cssText='width:100%;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;padding:8px;cursor:pointer;';
+    cancelBtn.textContent='Abbrechen';
+    cancelBtn.onclick=function(){ov.remove();};
+    box.appendChild(cancelBtn);
+
+    ov.appendChild(box);
+    ov.onclick=function(e){if(e.target===ov)ov.remove();};
+    document.body.appendChild(ov);
+    if(window.caliMotion) caliMotion.sheetIn(box, ov);
+    setTimeout(function(){ta.focus();},100);
+  }
+  </script>
+</body>
+</html>
