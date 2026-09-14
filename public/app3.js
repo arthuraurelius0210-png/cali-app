@@ -237,50 +237,50 @@ function buildStartChallengeWidget(){
 // exName bleibt bewusst OHNE Umlaute — er muss die EX_DB-Namen matchen.
 var PRESET_CHALLENGES = [
   {
-    id:'p1', level:3, cats:['Pull'], kind:'session', icon:'💯', title:'100 Klimmzüge Challenge', image:'/challenge-pullup.jpg',
+    id:'p1', level:3, cats:['Pull'], kind:'session', icon:'💯', title:'100 Klimmzüge Challenge', image:'/challenge-p1.jpg',
     desc:'Schaffe 100 Klimmzüge in einer einzigen Einheit. Pause erlaubt, aber kein Verlassen der Stange für mehr als 3 Minuten.',
     explanation:'Verteile die 100 Wdh. auf so viele Sätze wie du brauchst. Ziel: maximale Gesamtmenge. Starte mit deinen stärksten Sätzen.',
     // "in einer einzigen Einheit" → Session-Metrik statt Wochensumme
     target:100, metric:'volume_session_ex', exName:'Klimmzuge', unit:'Wdh'
   },
   {
-    id:'p2', level:4, cats:['Pull','Push'], kind:'session', icon:'⏱', title:'1-Minuten Muscle-Up',
+    id:'p2', level:4, cats:['Pull','Push'], kind:'session', icon:'⏱', title:'1-Minuten Muscle-Up', image:'/challenge-p2.jpg',
     desc:'Schaffe so viele Muscle-Ups wie möglich in 60 Sekunden.',
     explanation:'Starte den Timer, gib alles. Technik ist zweitrangig - Tempo ist alles. Weltrekord liegt bei ~26.',
     target:5, metric:'best_set', exName:'Muscle-Ups'
   },
   {
-    id:'p3', level:3, cats:['Pull'], kind:'session', icon:'🔺', title:'Klimmzug Pyramide bis 10',
+    id:'p3', level:3, cats:['Pull'], kind:'session', icon:'🔺', title:'Klimmzug Pyramide bis 10', image:'/challenge-p3.jpg',
     desc:'1-2-3-4-5-6-7-8-9-10-9-8-7-6-5-4-3-2-1 Klimmzüge. Keine Pause über 90 Sekunden.',
     explanation:'Insgesamt 100 Wdh. in Pyramidenform. Eine der besten Methoden für Volumen und Ausdauer gleichzeitig.',
     target:100, metric:'volume_exercise', exName:'Klimmzuge'
   },
   {
-    id:'p4', level:3, cats:['Push'], kind:'session', icon:'🏋️', title:'Weighted Dips 5x5', image:'/challenge-dip.jpg',
+    id:'p4', level:3, cats:['Push'], kind:'session', icon:'🏋️', title:'Weighted Dips 5x5', image:'/challenge-p4.jpg',
     desc:'5 Sätze je 5 Dips mit Gewichtsgürtel. Steigere das Gewicht jeden Satz.',
     explanation:'Klassisches Kraftprotokoll. Fange leicht an (z.B. 5 kg) und steigere um 2-5 kg pro Satz. Volle ROM!',
     target:25, metric:'volume_exercise', exName:'Dips'
   },
   {
-    id:'p5', level:3, cats:['Core'], kind:'session', icon:'🕐', title:'Plank 5 Minuten',
+    id:'p5', level:3, cats:['Core'], kind:'session', icon:'🕐', title:'Plank 5 Minuten', image:'/challenge-p5.jpg',
     desc:'Halte die Plank-Position für 5 Minuten am Stück.',
     explanation:'Erlaubt: kurze Positionskorrektur. Nicht erlaubt: Knie auf den Boden. Mentale Stärke ist hier 80% der Übung.',
     target:300, metric:'best_set', exName:'Plank'
   },
   {
-    id:'p6', level:1, cats:['Push'], kind:'week', icon:'💥', title:'Explosive Push Week',
+    id:'p6', level:1, cats:['Push'], kind:'week', icon:'💥', title:'Explosive Push Week', image:'/challenge-p6.jpg',
     desc:'Mache diese Woche 200 Liegestütze gesamt - verteilt auf beliebig viele Workouts.',
     explanation:'Liegestütze in jedem Workout zählen. Geht schneller als du denkst, wenn du sie in jede Einheit packst.',
     target:200, metric:'volume_exercise', exName:'Liegestutze'
   },
   {
-    id:'p7', level:3, cats:['Pull'], kind:'session', icon:'🌙', title:'Tuck Front Lever 30 Sek',
+    id:'p7', level:3, cats:['Pull'], kind:'session', icon:'🌙', title:'Tuck Front Lever 30 Sek', image:'/challenge-p7.jpg',
     desc:'Halte den Tuck Front Lever für 30 Sekunden ohne Unterbrechung.',
     explanation:'Baue auf mit 3x10s, dann 2x15s, dann 1x20s. Wenn du 30s schaffst, bist du bereit für den Advanced Tuck.',
     target:30, metric:'best_set', exName:'Tuck Front Lever Hold'
   },
   {
-    id:'p8', level:1, cats:[], kind:'streak', icon:'🔥', title:'7-Tage Streak',
+    id:'p8', level:1, cats:[], kind:'streak', icon:'🔥', title:'7-Tage Streak', image:'/challenge-p8.jpg',
     desc:'Trainiere 7 Tage in Folge - jede Einheit zählt, auch kurze.',
     explanation:'Auch 15 Minuten zählen! Der Punkt ist die Gewohnheit. Nutze leichte Tage für Mobilität oder Skills.',
     target:7, metric:'streak_days', exName:''
@@ -288,91 +288,91 @@ var PRESET_CHALLENGES = [
   // ── Session-, Runden- und Tages-Challenges (Metriken in calcChallengeProgress, app2.js) ──
   // icon ist nur ein Daten-Schlüssel (wird nicht gerendert). unit erscheint hinter der Fortschrittszahl.
   {
-    id:'p9', level:2, cats:['Pull','Push','Legs'], kind:'session', icon:'rounds', title:'Zwanzig-Minuten-Zirkel',
+    id:'p9', level:2, cats:['Pull','Push','Legs'], kind:'session', icon:'rounds', title:'Zwanzig-Minuten-Zirkel', image:'/challenge-p9.jpg',
     desc:'So viele Runden wie möglich in 20 Minuten: 5 Klimmzüge, 10 Liegestütze, 15 Kniebeugen.',
     explanation:'Timer auf 20 Minuten, dann nur noch Runden zählen. Einsteiger schaffen 8 bis 12 Runden, Fortgeschrittene über 20. Skalieren ist erlaubt: Band-Klimmzüge oder Australian Rows, Liegestütze auf den Knien.',
     target:15, metric:'rounds_in_session', exName:'', unit:'Runden', maxDur:1500,
     parts:[{ex:'Klimmzuge',n:5},{ex:'Liegestutze',n:10},{ex:'Kniebeugen',n:15}]
   },
   {
-    id:'p10', level:4, cats:['Pull','Push','Legs'], kind:'session', icon:'volume', title:'Sechshundert',
+    id:'p10', level:4, cats:['Pull','Push','Legs'], kind:'session', icon:'volume', title:'Sechshundert', image:'/challenge-p10.jpg',
     desc:'100 Klimmzüge, 200 Liegestütze, 300 Kniebeugen in einer Einheit. Reihenfolge frei, aufteilen erlaubt.',
     explanation:'Der Klassiker unter den Volumen-Tests, im Original noch mit zwei Läufen drumherum. Beliebte Aufteilung: 20 Runden à 5, 10, 15. Rechne mit 45 bis 70 Minuten.',
     target:600, metric:'multi_volume_session', exName:'', unit:'Wdh',
     parts:[{ex:'Klimmzuge',n:100},{ex:'Liegestutze',n:200},{ex:'Kniebeugen',n:300}]
   },
   {
-    id:'p11', level:3, cats:['Pull','Push','Core','Legs'], kind:'session', icon:'volume', title:'Vierhundert',
+    id:'p11', level:3, cats:['Pull','Push','Core','Legs'], kind:'session', icon:'volume', title:'Vierhundert', image:'/challenge-p11.jpg',
     desc:'100 Klimmzüge, 100 Liegestütze, 100 Sit-ups, 100 Kniebeugen in einer Einheit, Übung für Übung.',
     explanation:'Jede Übung wird komplett abgeschlossen, bevor die nächste beginnt. Die Klimmzüge sind der Flaschenhals, plane sie zuerst.',
     target:400, metric:'multi_volume_session', exName:'', unit:'Wdh',
     parts:[{ex:'Klimmzuge',n:100},{ex:'Liegestutze',n:100},{ex:'Sit-ups',n:100},{ex:'Kniebeugen',n:100}]
   },
   {
-    id:'p12', level:4, cats:['Pull','Push','Core','Legs'], kind:'session', icon:'volume', title:'Fünf Runden',
+    id:'p12', level:4, cats:['Pull','Push','Core','Legs'], kind:'session', icon:'volume', title:'Fünf Runden', image:'/challenge-p12.jpg',
     desc:'5 Runden: 20 Klimmzüge, 30 Liegestütze, 40 Sit-ups, 50 Kniebeugen. Zwischen den Runden genau 3 Minuten Pause.',
     explanation:'Insgesamt 700 Wiederholungen. Die Pause ist Pflicht, nicht Option: sie hält die Qualität der späteren Runden.',
     target:700, metric:'multi_volume_session', exName:'', unit:'Wdh',
     parts:[{ex:'Klimmzuge',n:100},{ex:'Liegestutze',n:150},{ex:'Sit-ups',n:200},{ex:'Kniebeugen',n:250}]
   },
   {
-    id:'p13', level:4, cats:['Pull','Push','Legs'], kind:'session', icon:'rounds', title:'Jede Minute, 30 Minuten',
+    id:'p13', level:4, cats:['Pull','Push','Legs'], kind:'session', icon:'rounds', title:'Jede Minute, 30 Minuten', image:'/challenge-p13.jpg',
     desc:'Jede Minute auf die Minute: 5 Klimmzüge, 10 Liegestütze, 15 Kniebeugen. 30 Minuten lang.',
     explanation:'Was von der Minute übrig bleibt, ist Pause. Nutze den EMOM-Timer der App im Mix-Modus. Wer 30 Runden schafft, hat 900 Wiederholungen hinter sich.',
     target:30, metric:'rounds_in_session', exName:'', unit:'Runden', maxDur:2100,
     parts:[{ex:'Klimmzuge',n:5},{ex:'Liegestutze',n:10},{ex:'Kniebeugen',n:15}]
   },
   {
-    id:'p14', level:2, cats:['Push'], kind:'session', icon:'tempo', title:'Auf und ab',
+    id:'p14', level:2, cats:['Push'], kind:'session', icon:'tempo', title:'Auf und ab', image:'/challenge-p14.jpg',
     desc:'30 Liegestütze in einem Satz nach Tempo: runter auf Kommando, unten halten, hoch auf Kommando. Rund 3:30 Minuten.',
     explanation:'Die Zahl ist nicht der Gegner, die Pausen unten sind es. Ein Satz, kein Absetzen. Wer die Position unten verliert, fängt von vorn an.',
     target:30, metric:'best_set', exName:'Liegestutze', unit:'Wdh'
   },
   {
-    id:'p15', level:3, cats:['Push'], kind:'days', icon:'days', title:'Hundert am Tag',
+    id:'p15', level:3, cats:['Push'], kind:'days', icon:'days', title:'Hundert am Tag', image:'/challenge-p15.jpg',
     desc:'30 Tage lang jeden Tag 100 Liegestütze. Verteilen über den Tag ist erlaubt.',
     explanation:'Die bekannteste 30-Tage-Challenge. Trag jeden Tag ein, auch wenn es fünf Sätze à 20 sind. Ein verpasster Tag zählt nicht, die Challenge läuft aber weiter.',
     target:30, metric:'days_with_volume', exName:'Liegestutze', unit:'Tage', perDay:100
   },
   {
-    id:'p16', level:2, cats:['Legs'], kind:'days', icon:'days', title:'Kniebeugen-Monat',
+    id:'p16', level:2, cats:['Legs'], kind:'days', icon:'days', title:'Kniebeugen-Monat', image:'/challenge-p16.jpg',
     desc:'30 Tage lang jeden Tag 100 Kniebeugen.',
     explanation:'Beine und Ausdauer in einem. Tiefe Kniebeugen, Fersen am Boden. Am Anfang brennt es, ab Tag 10 wird es Routine.',
     target:30, metric:'days_with_volume', exName:'Kniebeugen', unit:'Tage', perDay:100
   },
   {
-    id:'p17', level:1, cats:['Core'], kind:'days', icon:'days', title:'Plank-Monat',
+    id:'p17', level:1, cats:['Core'], kind:'days', icon:'days', title:'Plank-Monat', image:'/challenge-p17.jpg',
     desc:'30 Tage lang jeden Tag mindestens 60 Sekunden Plank, am Stück oder verteilt.',
     explanation:'Wer will, steigert: Woche 1 je 60 Sekunden, Woche 4 je 3 Minuten. Zählen tut die Gesamtzeit pro Tag.',
     target:30, metric:'days_with_volume', exName:'Plank', unit:'Tage', perDay:60
   },
   {
-    id:'p18', level:3, cats:[], kind:'session', icon:'volume', title:'Tausend',
+    id:'p18', level:3, cats:[], kind:'session', icon:'volume', title:'Tausend', image:'/challenge-p18.jpg',
     desc:'1000 Wiederholungen in einer Einheit. Alle Übungen mit Wiederholungen zählen, Halteübungen nicht.',
     explanation:'Klassische Aufteilung für eine Übung: 10 Sätze à 30, 10 à 25, 10 à 20, 10 à 15, 10 à 10. Oder mischen, bis die 1000 voll sind.',
     target:1000, metric:'volume_session_ex', exName:'', unit:'Wdh'
   },
   {
-    id:'p19', level:2, cats:['Push'], kind:'session', icon:'ladder', title:'Die Leiter',
+    id:'p19', level:2, cats:['Push'], kind:'session', icon:'ladder', title:'Die Leiter', image:'/challenge-p19.jpg',
     desc:'Minute 1: 1 Liegestütz. Minute 2: 2. Minute 3: 3. So weiter, bis die Minute nicht mehr reicht.',
     explanation:'Ziel sind 15 Sprossen, das sind 120 Liegestütze in 15 Minuten. Der EMOM-Timer der App zählt die Minuten für dich.',
     target:120, metric:'volume_session_ex', exName:'Liegestutze', unit:'Wdh'
   },
   {
-    id:'p20', level:3, cats:['Push','Core','Legs'], kind:'session', icon:'cards', title:'Kartendeck',
+    id:'p20', level:3, cats:['Push','Core','Legs'], kind:'session', icon:'cards', title:'Kartendeck', image:'/challenge-p20.jpg',
     desc:'52 Karten, vier Farben, vier Übungen: Liegestütze, Kniebeugen, Sit-ups, Burpees. Kartenwert = Wiederholungen.',
     explanation:'Bube 11, Dame 12, König 13, Ass 14. Pro Farbe 104 Wiederholungen, insgesamt 416 in einer Einheit. Karten mischen, ziehen, machen, nächste.',
     target:416, metric:'multi_volume_session', exName:'', unit:'Wdh',
     parts:[{ex:'Liegestutze',n:104},{ex:'Kniebeugen',n:104},{ex:'Sit-ups',n:104},{ex:'Burpees',n:104}]
   },
   {
-    id:'p21', level:3, cats:['Push','Core','Legs'], kind:'session', icon:'volume', title:'Hundert Burpees',
+    id:'p21', level:3, cats:['Push','Core','Legs'], kind:'session', icon:'volume', title:'Hundert Burpees', image:'/challenge-p21.jpg',
     desc:'100 Burpees in einer Einheit, auf Zeit.',
     explanation:'Unter 10 Minuten ist stark, unter 7 ist Elite. Aufteilen in 10er-Blöcke mit kurzem Durchatmen hält das Tempo.',
     target:100, metric:'volume_session_ex', exName:'Burpees', unit:'Wdh'
   },
   {
-    id:'p22', level:2, cats:['Push'], kind:'session', icon:'hold', title:'Kopfüber',
+    id:'p22', level:2, cats:['Push'], kind:'session', icon:'hold', title:'Kopfüber', image:'/challenge-p22.jpg',
     desc:'Handstand an der Wand, 60 Sekunden am Stück.',
     explanation:'Fingerspitzen zur Wand, Körper eine Linie, aktiv aus den Schultern drücken. Baue mit 3 × 20 Sekunden auf, dann 2 × 30, dann eine Minute.',
     target:60, metric:'best_set', exName:'Wall Handstand Hold', unit:'Sek'

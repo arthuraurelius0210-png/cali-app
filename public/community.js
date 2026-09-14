@@ -528,7 +528,7 @@ function renderCommFeed(){
   if(window.caliMotion) caliMotion.stagger(feedEl);
 }
 
-var COMM_PHOTOS = ['/challenge-pullup.jpg', '/challenge-dip.jpg', '/challenge-handstand.jpg'];
+var COMM_PHOTOS = ['/challenge-p1.jpg', '/challenge-p4.jpg', '/challenge-p22.jpg'];
 function commPhotoFor(docId){
   var sum = 0;
   for(var i=0;i<docId.length;i++){ sum += docId.charCodeAt(i); }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cali-v6';
+const CACHE_NAME = 'cali-v7';
 const STATIC_ASSETS = [
   '/tracker.html',
   '/index.html',
@@ -20,9 +20,9 @@ const STATIC_ASSETS = [
   '/leaderboard.js',
   '/buddyfinder.js',
   '/hero-workout.jpg',
-  '/challenge-pullup.jpg',
-  '/challenge-dip.jpg',
-  '/challenge-handstand.jpg',
+  '/challenge-p1.jpg',
+  '/challenge-p4.jpg',
+  '/challenge-p22.jpg',
   '/icon-192.png',
   '/icon-512.png',
   '/manifest.json'

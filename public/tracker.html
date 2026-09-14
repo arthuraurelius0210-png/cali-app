@@ -359,6 +359,33 @@ img.photo,.ch-card img,.ch-photo img,.hero img,img[src*="challenge-"],img[src*="
 .ch-photo{position:relative;height:140px;overflow:hidden;border-radius:var(--r-sm);margin-bottom:12px;background:var(--card2);}
 .ch-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 .ch-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 30%,rgba(11,11,11,0.95));}
+/* ── CHALLENGE-GALERIE: Kacheln (Katalog), Hero (Detail-Sheet), Streifen (Übersichtskarte) ──
+   Bildebene .ch-tile-img (Grayscale wie .ch-photo) oder .ch-tile-fallback (Index + Schraffur),
+   darüber .ch-tile-shade, .ch-tile-top (Schwierigkeit/Art) und .ch-tile-body (Text auf dem Verlauf). */
+.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:24px;}
+.ch-tile{position:relative;aspect-ratio:4/5;border-radius:var(--r-card);border:1px solid var(--line);overflow:hidden;background:var(--card);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out),opacity var(--dur-fast) ease;}
+.ch-tile.active{border-color:var(--accent);}
+img.ch-tile-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) contrast(1.15) brightness(0.8);}
+.ch-tile-fallback{position:absolute;inset:0;background:var(--card);}
+.ch-tile-fallback::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 14px,var(--line) 14px 15px);opacity:.25;}
+.ch-tile-fallback i{position:absolute;top:30px;left:10px;font-family:var(--dot);font-style:normal;font-weight:700;font-size:56px;line-height:1;color:var(--line2);font-variant-numeric:tabular-nums;}
+.ch-tile-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,11,0) 35%,rgba(11,11,11,.55) 65%,rgba(11,11,11,.96) 100%);pointer-events:none;}
+.ch-tile-top{position:absolute;top:10px;left:10px;right:10px;display:flex;align-items:center;justify-content:space-between;gap:6px;pointer-events:none;}
+.ch-tile-top .lbl{white-space:nowrap;}
+.ch-tile-top .lbl.live{color:var(--accent);}
+.ch-lvl{display:flex;gap:2px;flex-shrink:0;}
+.ch-lvl i{display:block;width:6px;height:6px;background:var(--line2);}
+.ch-lvl i.on{background:var(--accent);}
+.ch-tile-body{position:absolute;left:0;right:0;bottom:0;padding:12px;display:flex;flex-direction:column;gap:3px;min-width:0;pointer-events:none;}
+.ch-tile-body .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ch-tile-body .ttl{font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ch-tile-body .row-sub{margin:0;font-size:10px;}
+.ch-detail-hero{position:relative;aspect-ratio:16/9;border-radius:var(--r-card);overflow:hidden;border:1px solid var(--line);background:var(--card);margin-bottom:12px;}
+.ch-detail-hero .ch-tile-body .ttl{font-size:15px;}
+.ch-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+.ch-strip-tile{position:relative;aspect-ratio:1/1;border-radius:var(--r-sm);border:1px solid var(--line);overflow:hidden;background:var(--card);}
+.ch-strip-tile .ch-tile-fallback i{top:6px;left:8px;font-size:26px;}
+.ch-strip-tile .ch-tile-fallback::before{background:repeating-linear-gradient(135deg,transparent 0 8px,var(--line) 8px 9px);}
 /* Fallback für das per Inline-Style gesetzte Hero-Foto in #streak-widget (main2ba.js), bis es auf .hero/.hero-photo umgestellt ist */
 #streak-widget>div[style*="hero-workout"]{background-blend-mode:luminosity !important;border-radius:var(--r-card) !important;box-shadow:none !important;border:1px solid var(--line);}
 .avatar{width:88px;height:88px;border-radius:50%;overflow:hidden;border:1px solid var(--line2);background:var(--card2);}
@@ -407,6 +434,8 @@ img.photo,.ch-card img,.ch-photo img,.hero img,img[src*="challenge-"],img[src*="
   .tab:hover{color:var(--text);}
   .tab.on:hover{color:var(--accent);}
   .list-row:hover{background:var(--card2);}
+  .ch-tile:hover{border-color:var(--line2);}
+  .ch-tile.active:hover{border-color:var(--accent);}
 }
 
 /* ── PRESS FEEDBACK: scale(0.98) + Opazität ── */

@@ -1211,11 +1211,11 @@ function chPhotoFor(ch){
       if(PRESET_CHALLENGES[i].id === ch.id && PRESET_CHALLENGES[i].image) return PRESET_CHALLENGES[i].image;
     }
   }
-  if(ch.type === 'community') return '/challenge-handstand.jpg';
+  if(ch.type === 'community') return '/challenge-p22.jpg';
   var key = ((ch.params && ch.params.exName) || '')+' '+(ch.title || '');
-  if(/dip/i.test(key)) return '/challenge-dip.jpg';
-  if(/handstand|balance|skill/i.test(key)) return '/challenge-handstand.jpg';
-  return '/challenge-pullup.jpg';
+  if(/dip/i.test(key)) return '/challenge-p4.jpg';
+  if(/handstand|balance|skill/i.test(key)) return '/challenge-p22.jpg';
+  return '/challenge-p1.jpg';
 }
 
 function buildChCardPersonal(){
@@ -1252,20 +1252,76 @@ function buildChCardPersonal(){
   }
 }
 
+// ---- Challenge-Kacheln (Katalog-Galerie, Detail-Hero, Übersichtsstreifen) ----
+// Bildebene: Preset-Foto (Grayscale per .ch-tile-img) oder Fallback mit großem
+// Index + Schraffur. Alle drei Verwendungen teilen sich die Klassen aus tracker.html,
+// damit Kacheln mit und ohne Bild gleich "gewollt" aussehen.
+
+// Zweistelliger Index des Presets in der Gesamtliste ('07'), '' für Unbekanntes.
+function presetIndexLabel(ch){
+  var i = PRESET_CHALLENGES.indexOf(ch);
+  if(i < 0) return '';
+  return (i + 1 < 10 ? '0' : '') + (i + 1);
+}
+
+// Schwierigkeit als 4 kleine Quadrate (bis ch.level gefüllt).
+function chLevelDots(ch){
+  var wrap = document.createElement('div');
+  wrap.className = 'ch-lvl';
+  wrap.setAttribute('aria-label', presetLevelLabel(ch));
+  wrap.setAttribute('role', 'img');
+  for(var i=1;i<=4;i++){
+    var d = document.createElement('i');
+    if(i <= (ch.level || 0)) d.className = 'on';
+    wrap.appendChild(d);
+  }
+  return wrap;
+}
+
+// Bild- oder Fallback-Ebene + Verlauf in den Container hängen.
+function chTileArt(container, ch){
+  if(ch.image){
+    var img = document.createElement('img');
+    img.className = 'ch-tile-img';
+    img.src = ch.image;
+    img.alt = '';
+    img.setAttribute('loading', 'lazy');
+    container.appendChild(img);
+  } else {
+    var fb = document.createElement('div');
+    fb.className = 'ch-tile-fallback';
+    var idx = document.createElement('i');
+    idx.className = 'dotnum';
+    idx.textContent = presetIndexLabel(ch);
+    fb.appendChild(idx);
+    container.appendChild(fb);
+  }
+  var shade = document.createElement('div');
+  shade.className = 'ch-tile-shade';
+  container.appendChild(shade);
+}
+
 function buildChCardPreset(){
   var el = document.getElementById('ch-card-preset-inner');
   if(!el) return;
   el.innerHTML =
-    '<div class="kpi-row" style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px;"><span class="kpi num" style="font-size:22px;">'+PRESET_CHALLENGES.length+'</span><span class="unit">Challenges</span></div>'+
-    '<div style="display:flex;flex-direction:column;gap:6px;">'+
-      PRESET_CHALLENGES.slice(0,3).map(function(c){
-        return '<div class="row-sub" style="margin:0;display:flex;align-items:center;gap:8px;min-width:0;">'+
-          '<span style="width:6px;height:6px;border-radius:50%;background:var(--line2);flex-shrink:0;"></span>'+
-          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.title+'</span>'+
-        '</div>';
-      }).join('')+
-      '<div class="row-sub num" style="margin:0;padding-left:14px;">+ '+(PRESET_CHALLENGES.length-3)+' weitere</div>'+
-    '</div>';
+    '<div class="kpi-row" style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px;"><span class="kpi num" style="font-size:22px;">'+PRESET_CHALLENGES.length+'</span><span class="unit">Challenges</span></div>';
+  // Streifen aus 3 kleinen Kacheln (Foto oder Index-Fallback) statt Textzeilen
+  var strip = document.createElement('div');
+  strip.className = 'ch-strip';
+  strip.setAttribute('aria-hidden', 'true');
+  PRESET_CHALLENGES.slice(0,3).forEach(function(c){
+    var t = document.createElement('div');
+    t.className = 'ch-strip-tile';
+    chTileArt(t, c);
+    strip.appendChild(t);
+  });
+  el.appendChild(strip);
+  var more = document.createElement('div');
+  more.className = 'row-sub num';
+  more.style.cssText = 'margin:0;';
+  more.textContent = '+ '+(PRESET_CHALLENGES.length-3)+' weitere';
+  el.appendChild(more);
 }
 
 function buildChCardCommunity(){
@@ -1362,7 +1418,7 @@ function renderTrendingCard(container, id, stats){
   var isCommunity = id.indexOf('comm_') === 0;
   var photoUrl = null;
   if(isCommunity){
-    photoUrl = '/challenge-handstand.jpg';
+    photoUrl = '/challenge-p22.jpg';
   } else {
     for(var i=0;i<PRESET_CHALLENGES.length;i++){
       if(PRESET_CHALLENGES[i].id === id){ meta = PRESET_CHALLENGES[i]; break; }
@@ -1864,12 +1920,12 @@ function openChallengeCatalog(opts){
   head.appendChild(resultLbl);
   ov.appendChild(head);
 
-  // Scrollbereich mit nummerierter Liste + Leerzustand
+  // Scrollbereich mit Kachel-Galerie (2 Spalten) + Leerzustand
   var scroll = document.createElement('div');
   scroll.className = 'sheet-scroll';
   scroll.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px calc(24px + env(safe-area-inset-bottom,0px));';
   var list = document.createElement('div');
-  list.className = 'list numbered';
+  list.className = 'ch-grid';
   var emptyBox = document.createElement('div');
   emptyBox.style.display = 'none';
   var emptyTxt = document.createElement('div');
@@ -1903,35 +1959,50 @@ function openChallengeCatalog(opts){
     list.innerHTML = '';
     hits.forEach(function(item){
       var ch = item.ch;
-      var row = document.createElement('div');
-      row.className = 'list-row pressable';
-      row.setAttribute('role', 'button');
-      row.setAttribute('tabindex', '0');
-      row.setAttribute('aria-label', ch.title+' öffnen');
-      var main = document.createElement('div');
-      main.className = 'row-main';
+      var running = !!(activeChallenge && activeChallenge.id === ch.id);
+      var tile = document.createElement('div');
+      tile.className = 'ch-tile pressable'+(running ? ' active' : '');
+      tile.setAttribute('role', 'button');
+      tile.setAttribute('tabindex', '0');
+      tile.setAttribute('aria-label', ch.title);
+      chTileArt(tile, ch);
+
+      // Kopfzeile: Schwierigkeit links, Art (oder 'Läuft') rechts
+      var top = document.createElement('div');
+      top.className = 'ch-tile-top';
+      top.appendChild(chLevelDots(ch));
+      var kind = document.createElement('span');
+      kind.className = 'lbl'+(running ? ' live' : '');
+      kind.textContent = running ? 'Läuft' : presetKindLabel(ch);
+      top.appendChild(kind);
+      tile.appendChild(top);
+
+      // Fuß: Kategorien, Titel (max. 2 Zeilen), Ziel — liegt auf dem Verlauf
+      var body = document.createElement('div');
+      body.className = 'ch-tile-body';
+      var cats = document.createElement('div');
+      cats.className = 'lbl';
+      cats.textContent = presetCatLabels(ch).join(' · ');
       var t = document.createElement('div');
-      t.className = 'row-title';
+      t.className = 'ttl';
       t.textContent = ch.title;
       var sub = document.createElement('div');
-      sub.className = 'row-sub';
-      sub.textContent = chCatalogMeta(ch);
-      main.appendChild(t); main.appendChild(sub);
-      var chev = document.createElement('span');
-      chev.className = 'row-chev'; // '›' kommt aus ::after (tracker.html)
-      chev.setAttribute('aria-hidden', 'true');
-      row.appendChild(main); row.appendChild(chev);
+      sub.className = 'row-sub num';
+      sub.textContent = 'Ziel '+ch.target+' '+presetUnit(ch);
+      body.appendChild(cats); body.appendChild(t); body.appendChild(sub);
+      tile.appendChild(body);
+
       var open = function(){ openChallengeDetail(ch, ov); };
-      row.onclick = open;
-      row.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
-      list.appendChild(row);
+      tile.onclick = open;
+      tile.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
+      list.appendChild(tile);
     });
     var n = hits.length, total = index.length;
     countEl.textContent = String(n);
     resultLbl.textContent = n+' von '+total+' Challenges';
     list.style.display = n === 0 ? 'none' : '';
     emptyBox.style.display = n === 0 ? '' : 'none';
-    if(n && window.caliMotion) caliMotion.stagger(list);
+    if(n && window.caliMotion) caliMotion.stagger(list, 12);
   }
 
   document.body.appendChild(ov);
@@ -1964,14 +2035,27 @@ function openChallengeDetail(ch, catalogOv){
   box.setAttribute('aria-label', ch.title);
   box.appendChild(planSheetGrip());
 
+  // Hero-Kopf: Foto (oder Index-Fallback) + Verlauf, Schwierigkeit oben links,
+  // Titel unten links — ersetzt die frühere reine .ttl-Zeile.
+  var hero = document.createElement('div');
+  hero.className = 'ch-detail-hero';
+  chTileArt(hero, ch);
+  var heroTop = document.createElement('div');
+  heroTop.className = 'ch-tile-top';
+  heroTop.appendChild(chLevelDots(ch));
+  hero.appendChild(heroTop);
+  var heroBody = document.createElement('div');
+  heroBody.className = 'ch-tile-body';
   var title = document.createElement('div');
   title.className = 'ttl';
   title.textContent = ch.title;
-  box.appendChild(title);
+  heroBody.appendChild(title);
+  hero.appendChild(heroBody);
+  box.appendChild(hero);
 
   var meta = document.createElement('div');
   meta.className = 'lbl';
-  meta.style.cssText = 'margin:6px 0 12px;';
+  meta.style.cssText = 'margin:0 0 12px;';
   meta.textContent = presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+presetKindLabel(ch);
   box.appendChild(meta);
 
