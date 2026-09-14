@@ -244,6 +244,8 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:100;background:var(--bg);bord
 /* ── INPUTS ── */
 .inp,.fg input,.fg select,.fg textarea,.peb-inp,.sinp,.b-cust,.bsets input,.bsets-add,.cs,.emom-inp{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:var(--r-input);padding:11px 14px;font-family:inherit;font-size:16px;font-weight:500;outline:none;width:100%;min-height:44px;-webkit-appearance:none;appearance:none;transition:border-color var(--dur-fast) ease;}
 .inp:focus,.fg input:focus,.fg select:focus,.fg textarea:focus,.peb-inp:focus,.sinp:focus,.b-cust:focus,.bsets input:focus,.cs:focus,.emom-inp:focus{border-color:var(--line2);}
+/* type=search ohne Browser-eigenes Lösch-Kreuz — der Katalog bringt seinen eigenen .icon-btn mit */
+.inp[type="search"]::-webkit-search-cancel-button,.inp[type="search"]::-webkit-search-decoration{-webkit-appearance:none;display:none;}
 select.inp,.fg select,.cs{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239A9A9A' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
 ::placeholder{color:var(--muted2);opacity:1;}
 .cs{width:auto;min-height:32px;padding:6px 30px 6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;border-radius:var(--r-pill);}

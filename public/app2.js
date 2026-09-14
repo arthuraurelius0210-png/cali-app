@@ -1482,6 +1482,9 @@ function openChDrawer(type){
   var existing = document.getElementById('ch-drawer-overlay');
   if(existing) existing.remove();
 
+  // Presets leben jetzt im Vollbild-Katalog (Suche + Filter) statt im gestapelten Sheet.
+  if(type === 'preset'){ openChallengeCatalog(); return; }
+
   var ov = document.createElement('div');
   ov.id = 'ch-drawer-overlay';
   ov.style.cssText = PLAN_BACKDROP_CSS+'z-index:2000;';
@@ -1623,48 +1626,450 @@ function buildDrawerPersonal(el){
 }
 
 // ── PRESET DRAWER ─────────────────────────────────────────
-function buildDrawerPreset(el){
-  var hdr = document.createElement('div');
-  hdr.className = 'eyebrow';
-  hdr.style.cssText = 'margin-bottom:14px;';
-  hdr.textContent = 'Voreingestellte Challenges';
-  el.appendChild(hdr);
+// Ehemals gestapelte Karten im Bottom-Sheet — heute nur noch Delegat auf den
+// Vollbild-Katalog (openChDrawer('preset') routet bereits direkt dorthin).
+function buildDrawerPreset(el){ openChallengeCatalog(); }
 
-  for(var i=0;i<PRESET_CHALLENGES.length;i++){
-    (function(ch){
-      // Challenge-Karte (§6): Grayscale-Foto oben (vorhandene challenge-*.jpg), Titel uppercase,
-      // Beschreibung + Erklärung mixed case; Emoji-Icon entfällt.
-      var card = document.createElement('div');
-      card.className = 'ch-card';
-      card.style.cssText = 'background:var(--card2);margin-bottom:10px;';
-      card.onclick = function(){ trackChallengeView(ch.id); };
-      card.innerHTML =
-        (ch.image ? '<div class="ch-photo" style="height:100px;"><img src="'+ch.image+'" alt="" loading="lazy"></div>' : '')+
-        '<div class="ttl">'+ch.title+'</div>'+
-        '<div class="row-sub" style="margin-top:4px;line-height:1.5;">'+ch.desc+'</div>'+
-        (ch.explanation ? '<div class="row-sub" style="border-top:1px solid var(--line);padding-top:8px;margin-top:10px;line-height:1.5;">'+ch.explanation+'</div>' : '');
-      // Heller Sekundär-CTA je Karte — Orange bleibt dem einen Primär-CTA vorbehalten
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn sec pressable';
-      btn.style.cssText = 'margin:12px 0 0;min-height:40px;font-size:11px;';
-      btn.textContent = 'Annehmen';
-      btn.onclick = function(){
-        activeChallenge = {
-          id:ch.id, title:ch.title, desc:ch.desc,
-          icon:ch.icon, type:'preset',
-          params:presetParams(ch),
-          startDate:new Date().toISOString().slice(0,10), progress:0
-        };
-        saveChallenges(); fbSave();
-        trackChallengeParticipant(ch.id);
-        closeChDrawer();
-        toast(ch.title+' angenommen!');
-      };
-      card.appendChild(btn);
-      el.appendChild(card);
-    })(PRESET_CHALLENGES[i]);
+// ── CHALLENGE-KATALOG ─────────────────────────────────────
+// Vollbild-Overlay mit Suche, zwei Filterreihen (Muskelgruppe, Schwierigkeit) und
+// kompakter nummerierter Liste über alle PRESET_CHALLENGES. Tap auf eine Zeile öffnet
+// das Detail-Sheet mit dem einen orangenen "Annehmen". Metadaten (level/cats/kind)
+// und Labels kommen aus app3.js (presetExercises, presetCatLabels, …).
+
+// Suchnormalisierung: klein, Diakritika weg (ü→u), ß→ss, Bindestrich→Leerzeichen.
+function chCatalogNorm(s){
+  s = String(s || '').toLowerCase();
+  try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(e){}
+  return s.replace(/ß/g, 'ss').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Synonyme: ein Suchwort (oder eine Phrase) trifft eine Challenge, wenn sie eine der
+// Muskelgruppen (cats), eine der Übungen (ex) oder — bei full — ≥3 Muskelgruppen hat.
+// Schlüssel stehen bereits normalisiert (ohne Umlaute), werden aber trotzdem durch
+// chCatalogNorm gezogen.
+var CH_CATALOG_SYNONYMS = [
+  {k:['oberkorper','oberkoerper'],                          cats:['Pull','Push']},
+  {k:['unterkorper','unterkoerper','beine','bein'],          cats:['Legs']},
+  {k:['bauch','rumpf','core'],                              cats:['Core']},
+  {k:['ganzkorper','ganzkoerper'],                          full:true},
+  {k:['klimmzug','klimmzuge','pull up','pull ups','pullup','pullups'], ex:['Klimmzuge']},
+  {k:['liegestutz','liegestutze','push up','push ups','pushup','pushups'], ex:['Liegestutze']},
+  {k:['kniebeuge','kniebeugen','squat','squats'],           ex:['Kniebeugen']},
+  {k:['dip','dips'],                                        ex:['Dips']},
+  {k:['plank'],                                             ex:['Plank']},
+  {k:['burpee','burpees'],                                  ex:['Burpees']},
+  {k:['handstand'],                                         ex:['Wall Handstand Hold']},
+  {k:['muscle up','muscle ups','muscleup','muscleups'],     ex:['Muscle-Ups']},
+  {k:['front lever'],                                       ex:['Tuck Front Lever Hold']},
+  {k:['sit up','sit ups','situp','situps'],                 ex:['Sit-ups']}
+];
+
+// Prüft, ob ein Synonym-Eintrag auf die (vorberechnete) Challenge passt.
+function chCatalogSynHits(syn, item){
+  var i;
+  if(syn.full && item.cats.length >= 3) return true;
+  if(syn.cats){
+    for(i=0;i<syn.cats.length;i++){ if(item.cats.indexOf(syn.cats[i]) > -1) return true; }
   }
+  if(syn.ex){
+    for(i=0;i<syn.ex.length;i++){ if(item.exKeys.indexOf(syn.ex[i]) > -1) return true; }
+  }
+  return false;
+}
+
+// Vorberechnete Suchdaten je Preset: Haystack + Kategorien + Übungsschlüssel.
+function chCatalogIndex(){
+  return PRESET_CHALLENGES.map(function(ch){
+    var cats = ch.cats || [];
+    var exKeys = presetExerciseKeys(ch);
+    var parts = [ch.title, ch.desc, ch.explanation]
+      .concat(presetExercises(ch), exKeys, presetCatLabels(ch), cats,
+              [presetLevelLabel(ch), presetKindLabel(ch)]);
+    return {ch:ch, cats:cats, exKeys:exKeys, hay:' '+chCatalogNorm(parts.join(' '))+' '};
+  });
+}
+
+// Query → Prädikat. Phrasen-Synonyme ('pull up', 'front lever') werden zuerst aus der
+// Anfrage geschnitten, der Rest wortweise geprüft: jedes Wort muss im Haystack stehen
+// oder ein Synonym (exakt oder als Präfix ab 3 Zeichen) treffen. Alle Bedingungen UND.
+function chCatalogMatcher(query){
+  var q = ' '+chCatalogNorm(query)+' ';
+  if(q.trim() === '') return function(){ return true; };
+  var conds = []; // Funktionen item → bool
+  var i, j, key;
+  for(i=0;i<CH_CATALOG_SYNONYMS.length;i++){
+    var syn = CH_CATALOG_SYNONYMS[i];
+    for(j=0;j<syn.k.length;j++){
+      key = chCatalogNorm(syn.k[j]);
+      if(key.indexOf(' ') < 0) continue;            // nur Phrasen hier
+      if(q.indexOf(' '+key+' ') > -1){
+        q = q.replace(' '+key+' ', ' ');
+        (function(sy){ conds.push(function(item){ return chCatalogSynHits(sy, item); }); })(syn);
+      }
+    }
+  }
+  var words = q.trim().split(' ').filter(function(w){ return w; });
+  words.forEach(function(w){
+    // Synonyme, die dieses Wort exakt oder als Präfix (≥3 Zeichen) treffen
+    var syns = [];
+    for(i=0;i<CH_CATALOG_SYNONYMS.length;i++){
+      for(j=0;j<CH_CATALOG_SYNONYMS[i].k.length;j++){
+        key = chCatalogNorm(CH_CATALOG_SYNONYMS[i].k[j]);
+        if(key === w || (w.length >= 3 && key.indexOf(w) === 0)){ syns.push(CH_CATALOG_SYNONYMS[i]); break; }
+      }
+    }
+    conds.push(function(item){
+      if(item.hay.indexOf(w) > -1) return true;
+      for(var s=0;s<syns.length;s++){ if(chCatalogSynHits(syns[s], item)) return true; }
+      return false;
+    });
+  });
+  return function(item){
+    for(var c=0;c<conds.length;c++){ if(!conds[c](item)) return false; }
+    return true;
+  };
+}
+
+// Kompakte Meta-Zeile einer Zeile: 'Pull · Schwer · 100 Wdh · Einheit'
+function chCatalogMeta(ch){
+  return presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+ch.target+' '+presetUnit(ch)+' · '+presetKindLabel(ch);
+}
+
+var CH_CATALOG_GROUPS = [
+  {id:'all',  label:'Alle'},
+  {id:'Pull', label:'Pull'},
+  {id:'Push', label:'Push'},
+  {id:'Core', label:'Core'},
+  {id:'Legs', label:'Beine'},
+  {id:'full', label:'Ganzkörper'}
+];
+var CH_CATALOG_LEVELS = [
+  {id:0, label:'Alle'},
+  {id:1, label:'Leicht'},
+  {id:2, label:'Mittel'},
+  {id:3, label:'Schwer'},
+  {id:4, label:'Extrem'}
+];
+
+function openChallengeCatalog(opts){
+  opts = opts || {};
+  var old = document.getElementById('ch-catalog-ov');
+  if(old) old.remove();
+  var oldSheet = document.getElementById('ch-catalog-detail');
+  if(oldSheet) oldSheet.remove();
+
+  var state = {q: opts.prefill || '', group:'all', level:0};
+  var index = chCatalogIndex();
+
+  var ov = document.createElement('div');
+  ov.id = 'ch-catalog-ov';
+  ov.className = 'overlay';
+  // .overlay ist fixed + --bg; hier Spaltenlayout mit eigenem Scrollbereich,
+  // damit Suche und Filter oben stehen bleiben.
+  ov.style.cssText = 'display:flex;flex-direction:column;overflow:hidden;';
+
+  var closeCatalog = function(){
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+  };
+
+  // Top bar (§5.9): Zurück-Ring, zentrierter Titel, rechts Trefferzahl
+  var topBar = document.createElement('div');
+  topBar.className = 'topbar';
+  topBar.style.cssText = 'padding:0 16px;margin:0;flex-shrink:0;';
+  var backBtn = document.createElement('button');
+  backBtn.type = 'button';
+  backBtn.className = 'icon-btn sm pressable';
+  backBtn.setAttribute('aria-label', 'Zurück');
+  backBtn.innerHTML = '&#8592;';
+  backBtn.onclick = closeCatalog;
+  var titleEl = document.createElement('h2');
+  titleEl.className = 'topbar-title';
+  titleEl.style.cssText = 'margin:0;';
+  titleEl.textContent = 'Challenges';
+  var slot = document.createElement('div');
+  slot.className = 'topbar-slot';
+  slot.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;';
+  var countEl = document.createElement('span');
+  countEl.className = 'lbl num';
+  countEl.setAttribute('aria-live', 'polite');
+  slot.appendChild(countEl);
+  topBar.appendChild(backBtn); topBar.appendChild(titleEl); topBar.appendChild(slot);
+  ov.appendChild(topBar);
+
+  // Kopf: Suche + zwei Chip-Reihen + Ergebniszeile (bleibt stehen, Liste scrollt)
+  var head = document.createElement('div');
+  head.style.cssText = 'flex-shrink:0;padding:12px 16px 0;';
+
+  var searchWrap = document.createElement('div');
+  searchWrap.style.cssText = 'position:relative;';
+  var inp = document.createElement('input');
+  inp.className = 'inp';
+  inp.type = 'search';
+  inp.placeholder = 'Übung, Muskelgruppe, Name …';
+  inp.setAttribute('aria-label', 'Challenges durchsuchen');
+  inp.setAttribute('autocomplete', 'off');
+  inp.setAttribute('enterkeyhint', 'search');
+  inp.style.cssText = 'padding-right:48px;';
+  inp.value = state.q;
+  var clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'icon-btn sm pressable';
+  clearBtn.setAttribute('aria-label', 'Suche löschen');
+  clearBtn.innerHTML = '&times;';
+  clearBtn.style.cssText = 'position:absolute;right:4px;top:50%;transform:translateY(-50%);border-color:transparent;';
+  clearBtn.style.display = state.q ? '' : 'none';
+  clearBtn.onclick = function(){ inp.value = ''; state.q = ''; clearBtn.style.display = 'none'; renderList(); inp.focus(); };
+  inp.oninput = function(){ state.q = inp.value; clearBtn.style.display = state.q ? '' : 'none'; renderList(); };
+  inp.onkeydown = function(e){ if(e.key === 'Escape' && inp.value){ e.preventDefault(); clearBtn.onclick(); } };
+  searchWrap.appendChild(inp); searchWrap.appendChild(clearBtn);
+  head.appendChild(searchWrap);
+
+  var CHIP_ROW_CSS = 'display:flex;gap:6px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;margin-top:10px;';
+  function chipRow(options, getSel, setSel){
+    var row = document.createElement('div');
+    row.style.cssText = CHIP_ROW_CSS;
+    row.setAttribute('role', 'group');
+    options.forEach(function(opt){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.style.cssText = 'flex-shrink:0;';
+      b.textContent = opt.label;
+      b._optId = opt.id;
+      b.onclick = function(){ setSel(opt.id); paint(); renderList(); };
+      row.appendChild(b);
+    });
+    function paint(){
+      var sel = getSel();
+      for(var i=0;i<row.children.length;i++){
+        var on = row.children[i]._optId === sel;
+        row.children[i].classList.toggle('on', on);
+        row.children[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+    }
+    paint();
+    row._paint = paint;
+    return row;
+  }
+  var groupRow = chipRow(CH_CATALOG_GROUPS, function(){ return state.group; }, function(v){ state.group = v; });
+  groupRow.setAttribute('aria-label', 'Muskelgruppe');
+  var levelRow = chipRow(CH_CATALOG_LEVELS, function(){ return state.level; }, function(v){ state.level = v; });
+  levelRow.setAttribute('aria-label', 'Schwierigkeit');
+  head.appendChild(groupRow);
+  head.appendChild(levelRow);
+
+  var resultLbl = document.createElement('div');
+  resultLbl.className = 'lbl num';
+  resultLbl.style.cssText = 'margin:14px 0 8px;';
+  head.appendChild(resultLbl);
+  ov.appendChild(head);
+
+  // Scrollbereich mit nummerierter Liste + Leerzustand
+  var scroll = document.createElement('div');
+  scroll.className = 'sheet-scroll';
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px calc(24px + env(safe-area-inset-bottom,0px));';
+  var list = document.createElement('div');
+  list.className = 'list numbered';
+  var emptyBox = document.createElement('div');
+  emptyBox.style.display = 'none';
+  var emptyTxt = document.createElement('div');
+  emptyTxt.className = 'empty';
+  emptyTxt.textContent = 'Nichts gefunden';
+  var resetBtn = document.createElement('button');
+  resetBtn.type = 'button';
+  resetBtn.className = 'btn-g pressable';
+  resetBtn.style.cssText = 'width:100%;';
+  resetBtn.textContent = 'Filter zurücksetzen';
+  resetBtn.onclick = function(){
+    state.q = ''; state.group = 'all'; state.level = 0;
+    inp.value = ''; clearBtn.style.display = 'none';
+    groupRow._paint(); levelRow._paint();
+    renderList();
+  };
+  emptyBox.appendChild(emptyTxt); emptyBox.appendChild(resetBtn);
+  scroll.appendChild(list); scroll.appendChild(emptyBox);
+  ov.appendChild(scroll);
+
+  function passesFilters(item){
+    if(state.group === 'full'){ if(item.cats.length < 3) return false; }
+    else if(state.group !== 'all'){ if(item.cats.indexOf(state.group) < 0) return false; }
+    if(state.level && item.ch.level !== state.level) return false;
+    return true;
+  }
+
+  function renderList(){
+    var match = chCatalogMatcher(state.q);
+    var hits = index.filter(function(item){ return passesFilters(item) && match(item); });
+    list.innerHTML = '';
+    hits.forEach(function(item){
+      var ch = item.ch;
+      var row = document.createElement('div');
+      row.className = 'list-row pressable';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('aria-label', ch.title+' öffnen');
+      var main = document.createElement('div');
+      main.className = 'row-main';
+      var t = document.createElement('div');
+      t.className = 'row-title';
+      t.textContent = ch.title;
+      var sub = document.createElement('div');
+      sub.className = 'row-sub';
+      sub.textContent = chCatalogMeta(ch);
+      main.appendChild(t); main.appendChild(sub);
+      var chev = document.createElement('span');
+      chev.className = 'row-chev'; // '›' kommt aus ::after (tracker.html)
+      chev.setAttribute('aria-hidden', 'true');
+      row.appendChild(main); row.appendChild(chev);
+      var open = function(){ openChallengeDetail(ch, ov); };
+      row.onclick = open;
+      row.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
+      list.appendChild(row);
+    });
+    var n = hits.length, total = index.length;
+    countEl.textContent = String(n);
+    resultLbl.textContent = n+' von '+total+' Challenges';
+    list.style.display = n === 0 ? 'none' : '';
+    emptyBox.style.display = n === 0 ? '' : 'none';
+    if(n && window.caliMotion) caliMotion.stagger(list);
+  }
+
+  document.body.appendChild(ov);
+  // Hardware-Zurück schließt den Katalog (und ein evtl. offenes Detail-Sheet) statt der App
+  if(typeof overlayPush === 'function'){
+    overlayPush(ov, function(){
+      var d = document.getElementById('ch-catalog-detail');
+      if(d) d.remove();
+      buildChCards();
+    });
+  }
+  if(window.caliMotion) caliMotion.overlayIn(ov);
+  renderList();
+}
+
+// Detail-Sheet einer Katalog-Challenge (Markup/Animation wie confirmSheet + Drawer).
+// catalogOv wird beim Annehmen mitgeschlossen; Backdrop/Schließen schließen nur das Sheet.
+function openChallengeDetail(ch, catalogOv){
+  var old = document.getElementById('ch-catalog-detail');
+  if(old) old.remove();
+  trackChallengeView(ch.id);
+
+  var ov = document.createElement('div');
+  ov.id = 'ch-catalog-detail';
+  ov.style.cssText = PLAN_BACKDROP_CSS+'z-index:2100;';
+  var box = document.createElement('div');
+  box.className = 'sheet sheet-scroll';
+  box.style.cssText = 'max-height:85vh;overflow-y:auto;';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', ch.title);
+  box.appendChild(planSheetGrip());
+
+  var title = document.createElement('div');
+  title.className = 'ttl';
+  title.textContent = ch.title;
+  box.appendChild(title);
+
+  var meta = document.createElement('div');
+  meta.className = 'lbl';
+  meta.style.cssText = 'margin:6px 0 12px;';
+  meta.textContent = presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+presetKindLabel(ch);
+  box.appendChild(meta);
+
+  var desc = document.createElement('div');
+  desc.className = 'row-sub';
+  desc.style.cssText = 'margin:0;line-height:1.5;color:var(--text);';
+  desc.textContent = ch.desc || '';
+  box.appendChild(desc);
+
+  if(ch.explanation){
+    var divider = document.createElement('div');
+    divider.style.cssText = 'border-top:1px solid var(--line);margin:12px 0;';
+    box.appendChild(divider);
+    var expl = document.createElement('div');
+    expl.className = 'row-sub';
+    expl.style.cssText = 'margin:0;line-height:1.5;';
+    expl.textContent = ch.explanation;
+    box.appendChild(expl);
+  }
+
+  var exNames = presetExercises(ch);
+  var exLbl = document.createElement('div');
+  exLbl.className = 'lbl';
+  exLbl.style.cssText = 'margin:16px 0 8px;';
+  exLbl.textContent = 'Übungen';
+  box.appendChild(exLbl);
+  var exWrap = document.createElement('div');
+  exWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;';
+  (exNames.length ? exNames : [PRESET_CATS_EMPTY_LABEL]).forEach(function(name){
+    var tag = document.createElement('span');
+    // Outline-Chip: transparent, 1px --line2, Pill-Radius; mixed case (Umlaute bleiben)
+    tag.style.cssText = 'border:1px solid var(--line2);border-radius:var(--r-pill);padding:6px 12px;font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;';
+    tag.textContent = name;
+    exWrap.appendChild(tag);
+  });
+  box.appendChild(exWrap);
+
+  var goal = document.createElement('div');
+  goal.style.cssText = 'display:flex;align-items:baseline;gap:8px;margin:16px 0 18px;';
+  goal.innerHTML = '<span class="lbl">Ziel</span>'+
+    '<span class="kpi num" style="font-size:22px;">'+ch.target+'</span>'+
+    '<span class="unit">'+presetUnit(ch)+'</span>';
+  box.appendChild(goal);
+
+  var closeSheet = function(){ sheetOut(ov, box); };
+
+  // Exakt der bisherige Annehmen-Code des Preset-Drawers
+  var accept = function(){
+    activeChallenge = {
+      id:ch.id, title:ch.title, desc:ch.desc,
+      icon:ch.icon, type:'preset',
+      params:presetParams(ch),
+      startDate:new Date().toISOString().slice(0,10), progress:0
+    };
+    saveChallenges();
+    if(typeof fbSave === 'function') fbSave();
+    trackChallengeParticipant(ch.id);
+    toast(ch.title+' angenommen!');
+    closeSheet();
+    if(catalogOv){
+      if(typeof overlayClose === 'function'){ overlayClose(catalogOv); } else { catalogOv.remove(); }
+    }
+    buildChallengeUI();
+  };
+
+  var okBtn = document.createElement('button');
+  okBtn.type = 'button';
+  okBtn.className = 'btn pressable';
+  okBtn.style.cssText = 'margin:0 0 8px;';
+  okBtn.textContent = 'Annehmen';
+  okBtn.onclick = function(){
+    var running = activeChallenge && activeChallenge.id !== ch.id &&
+                  calcChallengeProgress() < ((activeChallenge.params && activeChallenge.params.target) || 1);
+    if(running){
+      confirmSheet({
+        title:'Aktive Challenge ersetzen?',
+        desc:'Deine laufende Challenge „'+activeChallenge.title+'“ wird verworfen.',
+        confirmLabel:'Ersetzen',
+        onConfirm:accept
+      });
+    } else {
+      accept();
+    }
+  };
+  box.appendChild(okBtn);
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn-g pressable';
+  cancelBtn.style.cssText = 'width:100%;min-height:44px;';
+  cancelBtn.textContent = 'Schließen';
+  cancelBtn.onclick = closeSheet;
+  box.appendChild(cancelBtn);
+
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target === ov) closeSheet(); };
+  document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }
 function togglePlanExpand(card){
   var detail = card.querySelector('.plan-ex-detail');
