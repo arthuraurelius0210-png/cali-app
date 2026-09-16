@@ -1336,6 +1336,9 @@ function buildChallengeUI(){
   buildChCards();
   buildStartChallengeWidget();
   buildTrendingChallenges();
+  if(typeof loadFeaturedChallenges === 'function'){
+    loadFeaturedChallenges(function(changed){ if(changed) buildChCardPreset(); });
+  }
 }
 
 // ── BUILD 3 CARD PREVIEWS ─────────────────────────────────
@@ -1483,13 +1486,22 @@ function buildChCardPreset(){
   var strip = document.createElement('div');
   strip.className = 'ch-strip';
   strip.setAttribute('aria-hidden', 'true');
-  PRESET_CHALLENGES.slice(0,3).forEach(function(c){
+  var newest = typeof newestFeaturedChallenge === 'function' ? newestFeaturedChallenge() : null;
+  var stripItems = (newest ? [newest] : []).concat(PRESET_CHALLENGES.filter(function(c){ return !c.featured; })).slice(0,3);
+  stripItems.forEach(function(c){
     var t = document.createElement('div');
     t.className = 'ch-strip-tile';
     chTileArt(t, c);
     strip.appendChild(t);
   });
   el.appendChild(strip);
+  if(newest){
+    var hl = document.createElement('div');
+    hl.className = 'row-sub';
+    hl.style.cssText = 'margin:0 0 6px;color:var(--text);';
+    hl.textContent = 'Challenge der Woche: '+newest.title;
+    el.appendChild(hl);
+  }
   var more = document.createElement('div');
   more.className = 'row-sub num';
   more.style.cssText = 'margin:0;';
@@ -1918,14 +1930,19 @@ function chCatalogSynHits(syn, item){
 
 // Vorberechnete Suchdaten je Preset: Haystack + Kategorien + Übungsschlüssel.
 function chCatalogIndex(){
-  return PRESET_CHALLENGES.map(function(ch){
+  var items = PRESET_CHALLENGES.map(function(ch){
     var cats = ch.cats || [];
     var exKeys = presetExerciseKeys(ch);
     var parts = [ch.title, ch.desc, ch.explanation]
       .concat(presetExercises(ch), exKeys, presetCatLabels(ch), cats,
               [presetLevelLabel(ch), presetKindLabel(ch)]);
+    // Challenge der Woche: auch über Ersteller, "Community" und die KW auffindbar
+    if(ch.featured) parts = parts.concat([ch.author, 'Community', 'Challenge der Woche', 'KW '+weeklyNum(ch.week)]);
     return {ch:ch, cats:cats, exKeys:exKeys, hay:' '+chCatalogNorm(parts.join(' '))+' '};
   });
+  // Neueste Challenge der Woche zuerst, danach die festen Vorlagen in ihrer Reihenfolge
+  var feat = items.filter(function(it){ return it.ch.featured; }).reverse();
+  return feat.concat(items.filter(function(it){ return !it.ch.featured; }));
 }
 
 // Query → Prädikat. Phrasen-Synonyme ('pull up', 'front lever') werden zuerst aus der
@@ -2179,7 +2196,7 @@ function openChallengeCatalog(opts){
       top.appendChild(chLevelDots(ch));
       var kind = document.createElement('span');
       kind.className = 'lbl'+(running ? ' live' : '');
-      kind.textContent = running ? 'Läuft' : presetKindLabel(ch);
+      kind.textContent = running ? 'Läuft' : (ch.featured ? 'KW '+weeklyNum(ch.week) : presetKindLabel(ch));
       top.appendChild(kind);
       tile.appendChild(top);
 
@@ -2188,7 +2205,7 @@ function openChallengeCatalog(opts){
       body.className = 'ch-tile-body';
       var cats = document.createElement('div');
       cats.className = 'lbl';
-      cats.textContent = presetCatLabels(ch).join(' · ');
+      cats.textContent = ch.featured ? 'von '+ch.author : presetCatLabels(ch).join(' · ');
       var t = document.createElement('div');
       t.className = 'ttl';
       t.textContent = ch.title;
@@ -2233,6 +2250,12 @@ function openChallengeCatalog(opts){
   }
   if(window.caliMotion) caliMotion.overlayIn(ov);
   renderList();
+  // Challenges der Woche kommen asynchron aus Firestore, danach einmal neu aufbauen
+  if(typeof loadFeaturedChallenges === 'function'){
+    loadFeaturedChallenges(function(changed){
+      if(changed && document.body.contains(ov)){ index = chCatalogIndex(); renderList(); }
+    });
+  }
 }
 
 // Detail-Sheet einer Katalog-Challenge (Markup/Animation wie confirmSheet + Drawer).
@@ -2275,6 +2298,13 @@ function openChallengeDetail(ch, catalogOv){
   meta.style.cssText = 'margin:0 0 12px;';
   meta.textContent = presetCatLabels(ch).join(' · ')+' · '+presetLevelLabel(ch)+' · '+presetKindLabel(ch)+' · '+presetMinutesLabel(ch);
   box.appendChild(meta);
+  if(ch.featured){
+    var featLine = document.createElement('div');
+    featLine.className = 'lbl';
+    featLine.style.cssText = 'margin:-6px 0 12px;color:var(--accent);';
+    featLine.textContent = 'Challenge der Woche · KW '+weeklyNum(ch.week)+' · von '+ch.author;
+    box.appendChild(featLine);
+  }
 
   var desc = document.createElement('div');
   desc.className = 'row-sub';

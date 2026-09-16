@@ -3,30 +3,95 @@
     {
       "target": "prod",
       "public": "public",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "rewrites": [{ "source": "/api/overpass", "function": "overpass" }],
-      "headers": [{ "source": "**/*.@(js|html|json)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }]
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "/api/overpass",
+          "function": "overpass"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|html|json)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        }
+      ]
     },
     {
       "target": "classic",
       "public": "versions/classic/public",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "rewrites": [{ "source": "/api/overpass", "function": "overpass" }],
-      "headers": [{ "source": "**/*.@(js|html|json)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }]
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "/api/overpass",
+          "function": "overpass"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|html|json)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        }
+      ]
     },
     {
       "target": "premium",
       "public": "versions/premium/public",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "rewrites": [{ "source": "/api/overpass", "function": "overpass" }],
-      "headers": [{ "source": "**/*.@(js|html|json)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }]
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "/api/overpass",
+          "function": "overpass"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|html|json)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        }
+      ]
     }
   ],
   "functions": [
     {
       "source": "functions",
       "codebase": "default",
-      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
     }
-  ]
+  ],
+  "firestore": {
+    "rules": "firestore.rules"
+  }
 }

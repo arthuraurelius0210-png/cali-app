@@ -680,13 +680,18 @@ function buildCommCard(docId, data){
   likeBtn.onclick = function(){
     if(!currentUser){ toast('Einloggen zum Liken!'); return; }
     var ref = db.collection('communityChallenges').doc(docId);
+    // likedAt: Zeitstempel je Like, damit die Challenge der Woche nur Likes der ersten 7 Tage zählt
+    var likeUpd = {};
     if(liked){
-      ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) })
-        .then(function(){ loadCommFeed(); });
+      likeUpd.likes = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
+      likeUpd['likedAt.'+currentUser.uid] = firebase.firestore.FieldValue.delete();
     } else {
-      ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) })
-        .then(function(){ loadCommFeed(); });
+      likeUpd.likes = firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
+      likeUpd['likedAt.'+currentUser.uid] = firebase.firestore.FieldValue.serverTimestamp();
     }
+    ref.update(likeUpd)
+      .then(function(){ loadCommFeed(); })
+      .catch(function(){ loadCommFeed(); });
     liked = !liked;
   };
 

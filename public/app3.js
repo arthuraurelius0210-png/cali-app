@@ -892,6 +892,8 @@ var PRESET_EX_DISPLAY = {'Klimmzuge':'Klimmzüge', 'Liegestutze':'Liegestütze'}
 
 // Rohe Übungs-Schlüssel eines Presets (exName + parts[].ex, ohne Duplikate).
 function presetExerciseKeys(ch){
+  // Challenge der Woche: Übungsnamen aus dem Community-Post
+  if(ch.exList && ch.exList.length) return ch.exList.slice();
   var keys = [];
   if(ch.exName) keys.push(ch.exName);
   if(ch.parts){

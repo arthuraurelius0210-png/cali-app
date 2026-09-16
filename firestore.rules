@@ -1,19 +1,56 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Einziger Admin (Admin-Panel im Profil). Schreibrechte für Moderation hängen daran.
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'u8PNuq4y2ahh2p7rukCa0vGD4su1';
+    }
+    // Like/Unlike: genau die eigene ID kommt in die Like-Liste oder geht raus,
+    // dazu höchstens der eigene Zeitstempel in likedAt. Sonst ändert sich nichts.
+    function isOwnLikeChange() {
+      let before = resource.data.get('likes', []);
+      let after = request.resource.data.get('likes', []);
+      let uid = request.auth.uid;
+      let keys = request.resource.data.diff(resource.data).affectedKeys();
+      let added = after.toSet().difference(before.toSet());
+      let removed = before.toSet().difference(after.toSet());
+      return keys.hasOnly(['likes', 'likedAt'])
+        && after.toSet().size() == after.size()
+        && ((after.size() == before.size() + 1 && added.size() == 1 && added.hasOnly([uid]) && removed.size() == 0)
+          || (after.size() == before.size() - 1 && removed.size() == 1 && removed.hasOnly([uid]) && added.size() == 0))
+        && (!('likedAt' in keys)
+          || request.resource.data.get('likedAt', {}).diff(resource.data.get('likedAt', {})).affectedKeys().hasOnly([uid]));
+    }
+    // Kommentar: genau ein neuer Kommentar hinten dran, mit der eigenen ID, alte bleiben unverändert.
+    function isOwnCommentAdd() {
+      let before = resource.data.get('comments', []);
+      let after = request.resource.data.get('comments', []);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments'])
+        && after.size() == before.size() + 1
+        && after[0:before.size()] == before
+        && after[before.size()].uid == request.auth.uid;
+    }
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     match /communityChallenges/{docId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.get('likes', []).size() == 0
+        && request.resource.data.get('comments', []).size() == 0;
+      allow update: if request.auth != null && (isOwnLikeChange() || isOwnCommentAdd());
+      allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+    // Challenge der Woche: fertige Katalog-Einträge je Kalenderwoche, nur der Admin schreibt.
+    match /featuredChallenges/{weekId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /globalLeaderboard/{docId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
-      allow update: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow update: if request.auth != null && (request.auth.uid == resource.data.uid || isAdmin());
       allow delete: if false;
     }
     match /parkLeaderboard/{parkId}/entries/{entryId} {
