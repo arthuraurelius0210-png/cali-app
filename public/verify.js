@@ -106,6 +106,19 @@ function buildVerifySection(){
   el.appendChild(card);
 }
 
+// Abnahme für eine bestimmte geschaffte Challenge öffnen (aus dem Challenge-Sheet heraus).
+// key wie in wallets/{uid}.completed: 'challenge|<id>|<startDate>' oder 'weekly|<KW>'.
+function openVerifyForKey(key){
+  if(!currentUser){ toast('Bitte einloggen'); return; }
+  var item = null;
+  for(var i=0;i<walletState.completed.length;i++){ if(walletState.completed[i].key === key){ item = walletState.completed[i]; break; } }
+  if(!item){ toast('Erst die Challenge abschließen, dann verifizieren lassen'); return; }
+  var v = walletState.verifications[key];
+  if(v && v.status === 'pending'){ toast('Die Abnahme läuft schon'); return; }
+  if(v && v.status === 'approved'){ toast('Schon verifiziert'); return; }
+  openVerifySheet(item);
+}
+
 // ── Auswahl: welche geschaffte Challenge soll verifiziert werden ──
 function openVerifyPicker(){
   if(!currentUser){ toast('Bitte einloggen'); return; }

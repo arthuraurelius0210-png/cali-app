@@ -825,13 +825,15 @@ function chManualCheckin(){
 // Fertige Challenge abschließen: der Server prüft den Fortschritt gegen users/{uid} und schreibt
 // XP gut (wallet.js earnReward). Erst nach seiner Antwort wird die Challenge geleert, damit ein
 // Netzfehler nichts verschluckt. 'already' = früher schon abgeholt → ohne XP-Hinweis abschließen.
-// Gemeinsam für die Challenge-Karte (hier) und das Start-Widget (app3.js). onFail: Knopf wieder freigeben.
-function claimActiveChallenge(onFail){
+// Gemeinsam für die Challenge-Karte (hier) und das Start-Widget (app3.js). onFail: Knopf wieder
+// freigeben; onSuccess: läuft nach dem Abschluss (z. B. Abnahme öffnen).
+function claimActiveChallenge(onFail, onSuccess){
   if(!activeChallenge) return;
   var ch = activeChallenge;
   var key = String(ch.id)+'|'+String(ch.startDate||'');
   earnReward('challenge', key, {label:'Challenge: '+ch.title}, function(res){
     if(res && res.ok === false && !res.already){ if(onFail) onFail(); return; }
+    if(onSuccess){ try{ onSuccess(res); }catch(e){} }
     activeChallenge = null;
     saveChallenges();
     fbSave();
@@ -917,6 +919,40 @@ function chHowInfo(p){
   if(week.indexOf(m) > -1) return {label:'Diese Woche', hint:'Zählt alles, was du seit Montag in Workouts einträgst.'};
   if(session.indexOf(m) > -1) return {label:'Eine Einheit', hint:'Zählt deine beste einzelne Einheit seit dem Start der Challenge.'};
   return {label:'Seit Start', hint:'Zählt deine Einheiten seit dem Start der Challenge.'};
+}
+// Übung(en) der aktiven Challenge als Plan-Blöcke fürs Workout. exName ist ein Präfix
+// ('Klimmzuge' → 'Klimmzuge (schulterbreit)'), parts kommen aus Runden-Challenges.
+// Satzvorschlag: bester Satz = 1 Satz mit Ziel; Wochensumme = ein Drittel heute; sonst das Ziel
+// auf 1 oder 4 Sätze verteilt. Der Nutzer trägt seine echten Werte ein, Vorschläge sind nur Vorgabe.
+function chWorkoutBlocks(p){
+  function find(prefix){ for(var i=0;i<EX_DB.length;i++){ var n=EX_DB[i].name; if(n===prefix || n.indexOf(prefix)===0) return EX_DB[i]; } return null; }
+  function block(ex, n, count){ var s=[]; for(var i=0;i<count;i++) s.push({target:String(n), actual:''}); return {name:ex.name, unit:ex.unit, col:ex.col, sets:s, done:false, open:false}; }
+  var blocks=[];
+  if(p.parts && p.parts.length){
+    var rounds = p.metric==='rounds_in_session' ? Math.max(1, Math.min(10, parseInt(p.target,10)||1)) : 3;
+    for(var k=0;k<p.parts.length;k++){ var pex=find(p.parts[k].ex); if(pex) blocks.push(block(pex, p.parts[k].n, rounds)); }
+    return blocks;
+  }
+  var ex = p.exName ? find(p.exName) : null;
+  if(!ex) return blocks;
+  var t = parseFloat(p.target)||1;
+  if(p.metric==='best_set') return [block(ex, t, 1)];
+  if(p.metric==='days_with_volume') t = parseFloat(p.perDay)||t;
+  if(p.metric==='volume_exercise') t = Math.ceil(t/3);
+  var sets = t<=15 ? 1 : 4;
+  return [block(ex, Math.ceil(t/sets), sets)];
+}
+// „Workout starten" im Challenge-Sheet: Workout beginnen und die Challenge-Übung vorladen.
+// Läuft schon eins, geht es nur dorthin — die Einträge zählen ohnehin für die Challenge.
+function startChallengeWorkout(){
+  closeChDrawer();
+  goPage('e');
+  if(!activeChallenge) return;
+  if(typeof woActive!=='undefined' && woActive){ toast('Dein laufendes Workout zählt schon für die Challenge'); return; }
+  var blocks = chWorkoutBlocks(activeChallenge.params||{});
+  startWorkout(null);
+  if(blocks.length){ planBlocks = blocks; buildPlanBlocks(); }
+  toast(blocks.length ? 'Workout für „'+activeChallenge.title+'“ gestartet' : 'Workout gestartet');
 }
 // Ausführliche Erklärung aus der Vorlage (Presets und Community-Sieger), sonst leer
 function chExplanationFor(ch){
@@ -1454,6 +1490,22 @@ function buildDrawerPersonal(el){
       claimBtn.textContent = 'Challenge abschließen';
       claimBtn.onclick = function(){ claimBtn.disabled = true; claimActiveChallenge(function(){ claimBtn.disabled = false; }); };
       el.appendChild(claimBtn);
+      // Abschließen und direkt die Abnahme beantragen (verify.js); der Schlüssel ist der
+      // completed-Eintrag, den der Server beim Abschließen anlegt
+      if(typeof openVerifyForKey === 'function' && typeof CALI_ECON !== 'undefined'){
+        var vKey = 'challenge|'+String(activeChallenge.id)+'|'+String(activeChallenge.startDate||'');
+        var verBtn = document.createElement('button');
+        verBtn.type = 'button';
+        verBtn.className = 'btn-g pressable';
+        verBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:8px;';
+        verBtn.textContent = 'Abschließen und verifizieren lassen ('+CALI_ECON.verifyCost+' Diamanten)';
+        verBtn.onclick = function(){
+          if(!currentUser){ toast('Bitte einloggen'); return; }
+          verBtn.disabled = true; claimBtn.disabled = true;
+          claimActiveChallenge(function(){ verBtn.disabled = false; claimBtn.disabled = false; }, function(){ setTimeout(function(){ openVerifyForKey(vKey); }, 450); });
+        };
+        el.appendChild(verBtn);
+      }
     } else {
       // Der eine orangene CTA: Abhaken bei manuellen Challenges, sonst ab ins Workout
       if(chIsManual()){
@@ -1464,8 +1516,16 @@ function buildDrawerPersonal(el){
         woBtn.className = 'btn pressable';
         woBtn.style.cssText = 'margin:0 0 8px;';
         woBtn.textContent = 'Workout starten';
-        woBtn.onclick = function(){ closeChDrawer(); goPage('e'); };
+        woBtn.onclick = function(){ startChallengeWorkout(); };
         el.appendChild(woBtn);
+      }
+      // Hinweis auf die Abnahme, damit man weiß, wo es nach dem Schaffen weitergeht
+      if(typeof CALI_ECON !== 'undefined'){
+        var vHint = document.createElement('div');
+        vHint.className = 'row-sub';
+        vHint.style.cssText = 'margin:0 0 10px;white-space:normal;line-height:1.5;text-align:center;';
+        vHint.textContent = 'Geschafft? Nach dem Abschließen kannst du sie per Video verifizieren lassen ('+CALI_ECON.verifyCost+' Diamanten) und bekommst das Abzeichen „Verifiziert".';
+        el.appendChild(vHint);
       }
 
       // Wechseln ist kostenlos: Katalog oder Zufall, so oft man will

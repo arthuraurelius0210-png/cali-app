@@ -748,6 +748,19 @@ function openWochenSheet(noAnim){
   } else if(!done && wochenIsManual(ch)){
     box.appendChild(wochenCheckinButton('margin:0 0 8px;'));
   }
+  // Nach dem Abholen: Abnahme per Video (verify.js), Schlüssel wie im wallets-Dokument
+  if(st.claimed && typeof openVerifyForKey === 'function' && typeof CALI_ECON !== 'undefined'){
+    var vs = walletState && walletState.verifications ? walletState.verifications['weekly|' + st.week] : null;
+    if(vs && vs.status !== 'rejected'){
+      add('div', 'row-sub', 'margin:0 0 12px;text-align:center;', vs.status === 'approved' ? 'Verifiziert, das Abzeichen ist im Profil.' : 'Abnahme läuft, du bekommst Bescheid im Profil.');
+    } else {
+      var ver = add('button', 'btn sec pressable', 'margin:0 0 8px;', 'Verifizieren lassen (' + CALI_ECON.verifyCost + ' Diamanten)');
+      ver.type = 'button';
+      ver.onclick = function(){ wochenCloseSheet(); setTimeout(function(){ openVerifyForKey('weekly|' + st.week); }, 350); };
+    }
+  } else if(!st.claimed && typeof CALI_ECON !== 'undefined'){
+    add('div', 'row-sub', 'margin:0 0 12px;text-align:center;white-space:normal;line-height:1.5;', 'Nach dem Abholen kannst du sie per Video verifizieren lassen (' + CALI_ECON.verifyCost + ' Diamanten).');
+  }
 
   if(!done && !st.claimed){
     if(st.swapped){
