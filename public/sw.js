@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cali-v10';
+const CACHE_NAME = 'cali-v11';
 const STATIC_ASSETS = [
   '/tracker.html',
   '/index.html',
@@ -16,6 +16,7 @@ const STATIC_ASSETS = [
   '/skills.js',
   '/community.js',
   '/weekly.js',
+  '/wochen.js',
   '/parks.js',
   '/rekorde.js',
   '/leaderboard.js',

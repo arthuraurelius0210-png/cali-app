@@ -921,14 +921,17 @@ function getUserDoc(){
 function saveUserData(){
   if(!currentUser) return;
   var doc = getUserDoc();
-  doc.set({
+  var payload = {
     ents:       ents,
     maxEntries: maxEntries,
     plans:      plans,
     prData:     prData,
     challenge:  activeChallenge||null,
     updatedAt:  new Date().toISOString()
-  }, {merge: true}).catch(function(e){ console.log('Save error:', e); });
+  };
+  // Wochen-Challenge (wochen.js) nur mitschicken, wenn es einen Stand gibt
+  if(typeof wochenState !== 'undefined' && wochenState) payload.wochen = wochenState;
+  doc.set(payload, {merge: true}).catch(function(e){ console.log('Save error:', e); });
 }
 
 function loadUserData(uid){
@@ -941,6 +944,7 @@ function loadUserData(uid){
         if(d.plans)      plans      = d.plans;
         if(d.prData)     prData     = d.prData;
         if(d.challenge)  activeChallenge = d.challenge;
+        if(d.wochen && typeof wochenMerge === 'function') wochenMerge(d.wochen);
         try{
           localStorage.setItem('cali_v4', JSON.stringify(ents));
           localStorage.setItem('cali_max', JSON.stringify(maxEntries));

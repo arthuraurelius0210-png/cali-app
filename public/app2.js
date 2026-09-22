@@ -1333,6 +1333,7 @@ function buildChallengeUI(){
   if(streakEl) streakEl.textContent = (streakData && streakData.currentStreak) || 0;
   var pointsEl = document.getElementById('ch-points-val');
   if(pointsEl) pointsEl.textContent = currency.diamonds || 0;
+  if(typeof buildWochenCard === 'function') buildWochenCard();
   buildChCards();
   buildStartChallengeWidget();
   buildTrendingChallenges();
@@ -1499,7 +1500,7 @@ function buildChCardPreset(){
     var hl = document.createElement('div');
     hl.className = 'row-sub';
     hl.style.cssText = 'margin:0 0 6px;color:var(--text);';
-    hl.textContent = 'Challenge der Woche: '+newest.title;
+    hl.textContent = 'Community-Sieger: '+newest.title;
     el.appendChild(hl);
   }
   var more = document.createElement('div');
@@ -1937,7 +1938,7 @@ function chCatalogIndex(){
       .concat(presetExercises(ch), exKeys, presetCatLabels(ch), cats,
               [presetLevelLabel(ch), presetKindLabel(ch)]);
     // Challenge der Woche: auch über Ersteller, "Community" und die KW auffindbar
-    if(ch.featured) parts = parts.concat([ch.author, 'Community', 'Challenge der Woche', 'KW '+weeklyNum(ch.week)]);
+    if(ch.featured) parts = parts.concat([ch.author, 'Community', 'Community-Sieger', 'Challenge der Woche', 'KW '+weeklyNum(ch.week)]);
     return {ch:ch, cats:cats, exKeys:exKeys, hay:' '+chCatalogNorm(parts.join(' '))+' '};
   });
   // Neueste Challenge der Woche zuerst, danach die festen Vorlagen in ihrer Reihenfolge
@@ -2302,7 +2303,7 @@ function openChallengeDetail(ch, catalogOv){
     var featLine = document.createElement('div');
     featLine.className = 'lbl';
     featLine.style.cssText = 'margin:-6px 0 12px;color:var(--accent);';
-    featLine.textContent = 'Challenge der Woche · KW '+weeklyNum(ch.week)+' · von '+ch.author;
+    featLine.textContent = 'Community-Sieger · KW '+weeklyNum(ch.week)+' · von '+ch.author;
     box.appendChild(featLine);
   }
 

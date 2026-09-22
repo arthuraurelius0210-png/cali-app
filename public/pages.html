@@ -85,6 +85,13 @@
     </div>
   </div>
 
+  <!-- WOCHEN-CHALLENGE: eine für alle, jede KW eine neue (wochen.js buildWochenCard) -->
+  <div id="ch-card-week" class="ch-card pressable" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" onclick="openWochenSheet()" style="cursor:pointer;position:relative;padding:14px 40px 14px 14px;">
+    <span class="eyebrow" id="ch-week-eyebrow">Wochen-Challenge</span>
+    <div id="ch-card-week-inner"></div>
+    <span class="row-chev" style="position:absolute;right:14px;top:24px;"></span>
+  </div>
+
   <!-- KARTE 1: MEINE CHALLENGE (groß, oben) -->
   <div id="ch-card-personal" class="ch-card pressable" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" onclick="openChDrawer('personal')" style="cursor:pointer;position:relative;padding:14px 40px 14px 14px;">
     <span class="eyebrow">Meine Challenge</span>

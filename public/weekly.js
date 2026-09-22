@@ -134,7 +134,7 @@ function weeklyPresetFromDoc(id, d){
     author: d.authorName || 'Athlet', authorUid: d.authorUid || '', sourceId: d.sourceId || '',
     level: d.level || 2, cats: d.cats || [], kind: d.kind || 'manual', minutes: d.minutes || 15,
     icon: 'community',
-    title: d.title || 'Challenge der Woche', desc: d.desc || '', explanation: d.explanation || '',
+    title: d.title || 'Community-Sieger', desc: d.desc || '', explanation: d.explanation || '',
     target: metric === 'manual' ? 1 : (d.target || 1), metric: metric, unit: d.unit || 'Mal',
     exList: d.exercises || []
   };
@@ -249,7 +249,7 @@ function renderWeeklyAdmin(el){
     });
 
     weeklySection(el, 'Aufgenommen');
-    if(!approved.length) weeklyEmpty(el, 'Noch keine Challenge der Woche');
+    if(!approved.length) weeklyEmpty(el, 'Noch keine Community-Sieger');
     approved.sort(function(a, b){ return a.id < b.id ? 1 : -1; }).forEach(function(x){
       var card = document.createElement('div');
       card.className = 'card';
