@@ -185,7 +185,7 @@ function openShopSheet(){
 
   add('div', 'lbl', 'margin-bottom:8px;', 'Was Diamanten kosten');
   var costList = add('div', 'list', 'margin-bottom:16px;');
-  [['Abnahme per Video', CALI_ECON.verifyCost], ['Extra-Post in der Community', CALI_ECON.spend.post], ['Streak auf Eis', CALI_ECON.spend.ice], ['Challenge tauschen oder skippen', CALI_ECON.spend.swap]].forEach(function(x){
+  [['Abnahme per Video', CALI_ECON.verifyCost], ['Extra-Post in der Community', CALI_ECON.spend.post], ['Streak auf Eis', CALI_ECON.spend.ice], ['Wochen-Challenge tauschen', CALI_ECON.spend.swap]].forEach(function(x){
     var r = document.createElement('div');
     r.className = 'list-row';
     r.style.cssText = 'cursor:default;min-height:40px;';

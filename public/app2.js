@@ -892,77 +892,37 @@ function earnFlames(workoutDurSecs){
 
 // Diamanten für Rekorde vergibt der Server (wallet.js earnReward('pr', …)).
 
-function skipChallenge(){
-  if(currency.diamonds >= 1 || currency.flames >= 50){
-    showSkipModal();
-  } else {
-    toast('Nicht genug: du brauchst 1 Diamant oder 50 Flammen zum Skippen.');
-  }
+// Eigene Challenge beenden oder wechseln kostet nichts: Jeder darf jede Challenge ausprobieren,
+// so oft er will. Bezahlt wird nur die Abnahme per Video (verify.js) und das Tauschen der
+// Wochen-Challenge (wochen.js). Das frühere Skip-Sheet mit Diamanten/Flammen ist weg.
+function endActiveChallenge(){
+  if(!activeChallenge) return;
+  activeChallenge = null;
+  saveChallenges();
+  fbSave();
+  buildChallengeUI();
+  toast('Challenge beendet');
 }
 
-function showSkipModal(){
-  var ex = document.getElementById('skip-currency-modal');
-  if(ex) ex.remove();
-  var modal = document.createElement('div');
-  modal.id = 'skip-currency-modal';
-  modal.style.cssText = PLAN_BACKDROP_CSS+'z-index:2000;';
-
-  var box = document.createElement('div');
-  box.className = 'sheet';
-  box.appendChild(planSheetGrip());
-
-  var title = document.createElement('div');
-  title.className = 'ttl';
-  title.style.cssText = 'margin-bottom:6px;';
-  title.textContent = 'Challenge skippen?';
-
-  var sub = document.createElement('div');
-  sub.style.cssText = 'font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.5;';
-  sub.textContent = 'Kostet 1 Diamant oder 50 Flammen. Du hast: '+currency.diamonds+' Diamanten \u00B7 '+currency.flames+' Flammen';
-
-  function doSkip(costLabel){
-    activeChallenge=null; saveChallenges(); buildChallengeUI();
-    sheetOut(modal, box);
-    toast('Challenge geskippt: '+costLabel);
-  }
-
-  // Zwei gleichwertige Zahlwege: heller Sekundär-CTA (Diamant) + Ghost (Flammen);
-  // nicht bezahlbar → disabled (Opazität .5, kein onclick)
-  var canDiamond = currency.diamonds >= 1;
-  var btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'btn sec pressable';
-  btn.style.cssText = 'margin:0 0 8px;';
-  btn.textContent = '1 Diamant \u2014 skippen';
-  if(canDiamond){ btn.onclick = function(){ btn.disabled = true; spendDiamonds('skip', function(ok){ if(ok) doSkip('-1 Diamant'); else btn.disabled = false; }); }; }
-  else { btn.disabled = true; }
-
-  // Flammen-Preis: der im Skip-Label versprochene zweite Zahlweg
-  var canFlames = currency.flames >= 50;
-  var flameBtn = document.createElement('button');
-  flameBtn.type = 'button';
-  flameBtn.className = 'btn-g pressable';
-  flameBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:4px;'+(canFlames?'':'opacity:.5;cursor:default;');
-  flameBtn.textContent = '50 Flammen \u2014 skippen';
-  if(canFlames){ flameBtn.onclick = function(){ currency.flames -= 50; saveCurrency(); doSkip('-50 Flammen'); }; }
-  else { flameBtn.disabled = true; }
-
-  var cancel = document.createElement('button');
-  cancel.type = 'button';
-  cancel.className = 'pressable u';
-  cancel.style.cssText = PLAN_TEXTBTN_CSS;
-  cancel.textContent = 'Abbrechen';
-  cancel.onclick = function(){ sheetOut(modal, box); };
-
-  box.appendChild(title);
-  box.appendChild(sub);
-  box.appendChild(btn);
-  box.appendChild(flameBtn);
-  box.appendChild(cancel);
-  modal.appendChild(box);
-  modal.onclick = function(e){ if(e.target===modal) sheetOut(modal, box); };
-  document.body.appendChild(modal);
-  if(window.caliMotion) caliMotion.sheetIn(box, modal);
+// Wie der Fortschritt einer Challenge zustande kommt (Zeile im Sheet „Meine Challenge"):
+// label kurz, hint ein Satz. Metriken siehe caliCalcProgress (calc.js).
+function chHowInfo(p){
+  var m = (p && p.metric) || '';
+  var week = ['workouts_this_week','volume_exercise','best_set','new_exercise','category_workouts','pyramid_count','new_exercises_week','categories_this_week','hold_total_week','skills_this_week','balance_week','sets_this_week'];
+  var session = ['sets_in_one_workout','volume_one_workout','volume_session_ex','multi_volume_session','rounds_in_session','longest_session_min','distinct_exercises_session','categories_in_session','hold_total_session','pullup_pyramid'];
+  if(m === 'manual') return {label:'Abhaken', hint:'Trag es hier ein, sobald du es gemacht hast.'};
+  if(m === 'new_personal_record') return {label:'Max-Test', hint:'Zählt, sobald du im Max-Tab einen alten Bestwert schlägst.'};
+  if(m === 'streak_days') return {label:'Serie', hint:'Zählt Trainingstage direkt hintereinander.'};
+  if(m === 'saved_parks') return {label:'Parks', hint:'Zählt deine gespeicherten Parks.'};
+  if(week.indexOf(m) > -1) return {label:'Diese Woche', hint:'Zählt alles, was du seit Montag in Workouts einträgst.'};
+  if(session.indexOf(m) > -1) return {label:'Eine Einheit', hint:'Zählt deine beste einzelne Einheit seit dem Start der Challenge.'};
+  return {label:'Seit Start', hint:'Zählt deine Einheiten seit dem Start der Challenge.'};
+}
+// Ausführliche Erklärung aus der Vorlage (Presets und Community-Sieger), sonst leer
+function chExplanationFor(ch){
+  if(!ch || typeof PRESET_CHALLENGES === 'undefined') return '';
+  for(var i=0;i<PRESET_CHALLENGES.length;i++){ if(PRESET_CHALLENGES[i].id === ch.id) return PRESET_CHALLENGES[i].explanation || ''; }
+  return '';
 }
 
 function getCurrencyDisplay(){
@@ -1461,6 +1421,30 @@ function buildDrawerPersonal(el){
       else chFill.style.width = pct+'%';
     }
 
+    // So kommt der Fortschritt zustande + Erklärung aus der Vorlage
+    var how = chHowInfo(activeChallenge.params);
+    var howEl = document.createElement('div');
+    howEl.style.cssText = 'margin:0 0 14px;';
+    var howLbl = document.createElement('div');
+    howLbl.className = 'lbl';
+    howLbl.style.cssText = 'margin-bottom:4px;';
+    howLbl.textContent = 'So zählt es · '+how.label;
+    var howTxt = document.createElement('div');
+    howTxt.className = 'row-sub';
+    howTxt.style.cssText = 'margin:0;white-space:normal;line-height:1.5;';
+    howTxt.textContent = how.hint + (chIsManual() ? '' : ' Starte ein Workout und trag die Übung ein, die Zahl oben steigt von selbst.');
+    howEl.appendChild(howLbl);
+    howEl.appendChild(howTxt);
+    var expl = chExplanationFor(activeChallenge);
+    if(expl){
+      var explEl = document.createElement('div');
+      explEl.className = 'row-sub';
+      explEl.style.cssText = 'margin:8px 0 0;white-space:normal;line-height:1.5;color:var(--text);';
+      explEl.textContent = expl;
+      howEl.appendChild(explEl);
+    }
+    el.appendChild(howEl);
+
     if(done){
       // Feiermoment statt Sackgasse: Challenge abschließen, XP schreibt der Server gut
       var claimBtn = document.createElement('button');
@@ -1471,23 +1455,43 @@ function buildDrawerPersonal(el){
       claimBtn.onclick = function(){ claimBtn.disabled = true; claimActiveChallenge(function(){ claimBtn.disabled = false; }); };
       el.appendChild(claimBtn);
     } else {
-      if(chIsManual()) el.appendChild(chManualButton('margin:0 0 8px;'));
+      // Der eine orangene CTA: Abhaken bei manuellen Challenges, sonst ab ins Workout
+      if(chIsManual()){
+        el.appendChild(chManualButton('margin:0 0 8px;'));
+      } else {
+        var woBtn = document.createElement('button');
+        woBtn.type = 'button';
+        woBtn.className = 'btn pressable';
+        woBtn.style.cssText = 'margin:0 0 8px;';
+        woBtn.textContent = 'Workout starten';
+        woBtn.onclick = function(){ closeChDrawer(); goPage('e'); };
+        el.appendChild(woBtn);
+      }
+
+      // Wechseln ist kostenlos: Katalog oder Zufall, so oft man will
+      var pickBtn = document.createElement('button');
+      pickBtn.type = 'button';
+      pickBtn.className = 'btn-g pressable';
+      pickBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:8px;';
+      pickBtn.textContent = 'Andere Challenge wählen';
+      pickBtn.onclick = function(){ closeChDrawer(); setTimeout(openChallengeCatalog, 300); };
+      el.appendChild(pickBtn);
 
       var newBtn = document.createElement('button');
       newBtn.type = 'button';
       newBtn.className = 'btn-g pressable';
       newBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:4px;';
-      newBtn.textContent = 'Neue Challenge generieren';
+      newBtn.textContent = 'Zufällige Challenge';
       newBtn.onclick = function(){ activeChallenge=null; saveChallenges(); generateChallenge(); closeChDrawer(); setTimeout(function(){ openChDrawer('personal'); }, 350); };
       el.appendChild(newBtn);
 
-      var skipBtn = document.createElement('button');
-      skipBtn.type = 'button';
-      skipBtn.className = 'pressable u';
-      skipBtn.style.cssText = PLAN_TEXTBTN_CSS;
-      skipBtn.textContent = 'Challenge skippen (50 Flammen oder 1 Diamant)';
-      skipBtn.onclick = function(){ closeChDrawer(); setTimeout(skipChallenge, 300); };
-      el.appendChild(skipBtn);
+      var endBtn = document.createElement('button');
+      endBtn.type = 'button';
+      endBtn.className = 'pressable u';
+      endBtn.style.cssText = PLAN_TEXTBTN_CSS;
+      endBtn.textContent = 'Challenge beenden';
+      endBtn.onclick = function(){ closeChDrawer(); endActiveChallenge(); };
+      el.appendChild(endBtn);
     }
   }
 }

@@ -94,8 +94,9 @@ var CALI_ECON = {
     battle:   {xp:0,   diamonds:0, perDay:10, label:'Battle gewonnen'},
     milestone:{xp:0,   diamonds:0, perDay:20, label:'Meilenstein'}
   },
-  // Was etwas kostet (Diamanten)
-  spend: {skip:1, swap:1, ice:2, post:3},
+  // Was etwas kostet (Diamanten). Die eigene Challenge wechseln oder beenden ist frei,
+  // nur die Wochen-Challenge kostet beim Tauschen (swap).
+  spend: {swap:1, ice:2, post:3},
   // Abnahme einer geschafften Challenge per Video
   verifyCost: 1000,
   // Diamanten-Pakete: Euro-Preis in Cent. Das kleinste Paket deckt genau eine Abnahme,

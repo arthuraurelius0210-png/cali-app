@@ -776,7 +776,7 @@ function openWochenSheet(noAnim){
   }
 }
 
-// Tauschen: zeigt die Ersatz-Challenge und beide Zahlwege (wie showSkipModal in app2.js)
+// Tauschen: zeigt die Ersatz-Challenge und beide Zahlwege (Diamanten über den Server, Flammen lokal)
 function openWochenSwapSheet(){
   var st = wochenCurrent();
   if(st.swapped || st.claimed) return;
