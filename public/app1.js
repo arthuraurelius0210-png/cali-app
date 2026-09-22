@@ -355,6 +355,21 @@ window.addEventListener('beforeunload', function(e){
 });
 
 // ── WORKOUT FLOW ──────────────────────────────────────────
+// Challenge-Workout (startChallengeWorkout, app2.js): nur zeigen, was die Challenge braucht,
+// also den Plan-Block mit der Übung. „Übung hinzufügen", EMOM und die leere Liste
+// „Dieses Workout" bleiben weg; die Liste erscheint, sobald Sätze übernommen sind.
+var woChallengeMode = false;
+var WO_PLAN_TITLE_DEFAULT = 'Plan-Übungen — tippen zum Eintragen';
+function applyWoChallengeMode(){
+  var on = woChallengeMode;
+  if(on){
+    ['wo-emom-btn-wrap','plan-add-form','plan-add-label'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display='none'; });
+  }
+  var showList = !on || woExercises.length > 0;
+  var t=document.getElementById('wo-list-title'); if(t) t.style.display = showList ? '' : 'none';
+  var l=document.getElementById('wo-ex-list'); if(l) l.style.display = showList ? '' : 'none';
+}
+
 function startWorkout(planId){
   // Laufende Session nie stillschweigend verwerfen
   if(woActive){
@@ -393,6 +408,10 @@ function startWorkout(planId){
   fillWoExSelect();
   if(!sets.length) addSet();
   startTimer();
+  // Normales Workout: alles sichtbar, Plan-Überschrift zurück (Challenge-Modus setzt sie um)
+  woChallengeMode = false;
+  var pbt=document.getElementById('plan-blocks-title'); if(pbt) pbt.textContent = WO_PLAN_TITLE_DEFAULT;
+  applyWoChallengeMode();
 
   // If plan selected, pre-fill exercises
   if(planId){
@@ -719,6 +738,7 @@ function buildWoExList(){
     h+='</div>';
   }
   el.innerHTML=h;
+  if(woChallengeMode) applyWoChallengeMode();
 }
 
 // Falsch geloggte Übung aus der laufenden Session entfernen (rein in-memory)

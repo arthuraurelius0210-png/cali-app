@@ -951,7 +951,15 @@ function startChallengeWorkout(){
   if(typeof woActive!=='undefined' && woActive){ toast('Dein laufendes Workout zählt schon für die Challenge'); return; }
   var blocks = chWorkoutBlocks(activeChallenge.params||{});
   startWorkout(null);
-  if(blocks.length){ planBlocks = blocks; buildPlanBlocks(); }
+  if(blocks.length){
+    planBlocks = blocks;
+    buildPlanBlocks();
+    // Nur zeigen, was die Challenge braucht (app1.js applyWoChallengeMode)
+    woChallengeMode = true;
+    var pbt = document.getElementById('plan-blocks-title');
+    if(pbt) pbt.textContent = 'Challenge: '+activeChallenge.title;
+    applyWoChallengeMode();
+  }
   toast(blocks.length ? 'Workout für „'+activeChallenge.title+'“ gestartet' : 'Workout gestartet');
 }
 // Ausführliche Erklärung aus der Vorlage (Presets und Community-Sieger), sonst leer
