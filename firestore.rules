@@ -33,6 +33,47 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    // Freunde: öffentliches Profil (Name, kleines Bild, Level, Streak, Einladungscode).
+    // Jeder Eingeloggte liest, nur der Besitzer schreibt. Das users-Dokument bleibt privat.
+    match /profiles/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    // Einladungscode → UID. Nur der Besitzer legt seinen an, jeder Eingeloggte darf ihn auflösen.
+    match /invites/{code} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    // Freundschaft: eine Datei je Paar, ID = kleinere_größere UID, members = [a, b] sortiert.
+    // Anfrage (pending) legt der Absender an, angenommen wird nur vom Empfänger. Mit gültigem
+    // Einladungscode des anderen darf sie sofort als accepted angelegt werden. Löschen darf jedes Mitglied.
+    function fsData() { return request.resource.data; }
+    function fsValidPair(id) {
+      return fsData().members is list && fsData().members.size() == 2
+        && fsData().members[0] is string && fsData().members[1] is string
+        && fsData().members[0] < fsData().members[1]
+        && id == fsData().members[0] + '_' + fsData().members[1]
+        && request.auth.uid in fsData().members
+        && fsData().requestedBy == request.auth.uid;
+    }
+    function fsInviteOk() {
+      let inv = get(/databases/$(database)/documents/invites/$(fsData().inviteCode)).data;
+      return inv.uid in fsData().members && inv.uid != request.auth.uid;
+    }
+    match /friendships/{pairId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.members;
+      allow create: if request.auth != null && fsValidPair(pairId)
+        && (fsData().status == 'pending'
+            || (fsData().status == 'accepted' && 'inviteCode' in fsData() && fsInviteOk()));
+      allow update: if request.auth != null
+        && request.auth.uid in resource.data.members
+        && request.auth.uid != resource.data.requestedBy
+        && resource.data.status == 'pending'
+        && fsData().status == 'accepted'
+        && fsData().diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt']);
+      allow delete: if request.auth != null && request.auth.uid in resource.data.members;
+    }
     match /communityChallenges/{docId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null

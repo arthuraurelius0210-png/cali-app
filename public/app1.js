@@ -560,6 +560,8 @@ function finalizeEndWorkout(autoCommitted){
     toast('Workout gespeichert! '+durStr);
   }
   fbSave();
+  // Öffentliches Profil (Freunde sehen Streak, letztes Training) nachziehen
+  if(typeof profileSyncSoon === 'function'){ try{ profileSyncSoon(); }catch(e){} }
 }
 
 // Zählt die 'cali_weekgoal_done_<Wochenstart>'-Marker aus main2ba.js.

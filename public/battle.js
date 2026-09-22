@@ -346,14 +346,15 @@ function openChallengeSomeone(parentOv){
     var q = this.value.trim().toLowerCase();
     if(q.length < 2){ resultsList.innerHTML=''; return; }
     resultsList.innerHTML = '<div class="empty" style="padding:8px 0;">Suche...</div>';
-    db.collection('users').limit(100).get().then(function(snap){
+    // Öffentliche Profile (friends.js) statt users: fremde users-Dokumente sind laut Regeln nicht lesbar,
+    // die Suche lief deshalb seit jeher ins Leere. Präfixsuche auf nameLower, private Profile bleiben weg.
+    db.collection('profiles').where('nameLower','>=',q).where('nameLower','<=',q+'').limit(10).get().then(function(snap){
       resultsList.innerHTML = '';
       var matches = [];
       snap.forEach(function(doc){
         var d = doc.data();
-        var name = (d.prData&&d.prData.name||'').toLowerCase();
-        if(name.includes(q) && doc.id !== firebase.auth().currentUser.uid){
-          matches.push({uid:doc.id, name:d.prData&&d.prData.name||'Anonym'});
+        if(doc.id !== firebase.auth().currentUser.uid && d.isPublic !== false){
+          matches.push({uid:doc.id, name:d.name||'Athlet'});
         }
       });
       if(matches.length===0){ resultsList.innerHTML='<div class="empty" style="padding:8px 0;">Niemanden gefunden.</div>'; return; }
@@ -374,7 +375,7 @@ function openChallengeSomeone(parentOv){
         list.appendChild(row);
       });
       resultsList.appendChild(list);
-    });
+    }).catch(function(){ resultsList.innerHTML='<div class="empty" style="padding:8px 0;">Suche gerade nicht möglich.</div>'; });
   };
 
   searchWrap.appendChild(searchInput);

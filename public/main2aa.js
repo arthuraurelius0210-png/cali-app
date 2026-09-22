@@ -592,6 +592,8 @@ function buildProfilUI(){
 
   // Abnahmen + Diamanten (verify.js) — auch ohne Login mit Hinweis
   if(typeof buildVerifySection==='function'){ try{ buildVerifySection(); }catch(e){} }
+  // Freunde (friends.js) + öffentliches Profil nachziehen (Name, Bild, Level können sich geändert haben)
+  if(typeof buildFriendsSection==='function'){ try{ buildFriendsSection(); profileSyncSoon(); }catch(e){} }
 
   // Best performances from maxEntries
   var bests=document.getElementById('pr-bests');
@@ -962,6 +964,8 @@ function loadUserData(uid){
       // Geldbörse vom Server holen (wallet.js) — erst jetzt, damit der Import der
       // Geräte-Diamanten den geladenen Stand sieht
       if(typeof walletSync === 'function') walletSync();
+      // Freunde (friends.js): öffentliches Profil schreiben, Freundschaften live laden, Einladungslink einlösen
+      if(typeof profileSync === 'function'){ try{ profileSync(); loadFriendships(); handlePendingInvite(); }catch(e){} }
       // Check onboarding AFTER data loaded
       lstreak();
       var onboarded = false;
