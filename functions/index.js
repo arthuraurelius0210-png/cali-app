@@ -6,6 +6,7 @@ const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https')
 const admin = require('firebase-admin');
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 const R = require('./lib/rewards');
 const E = require('./shared/econ');
 
@@ -106,7 +107,7 @@ function requireAdmin(req) {
   return uid;
 }
 function str(v, max) { return typeof v === 'string' ? v.slice(0, max || 200) : ''; }
-const ERR = { already: 'already-exists', insufficient: 'failed-precondition', invalid: 'invalid-argument', nodata: 'failed-precondition', notdone: 'failed-precondition', notbetter: 'failed-precondition', limit: 'resource-exhausted' };
+const ERR = { already: 'already-exists', insufficient: 'failed-precondition', invalid: 'invalid-argument', nodata: 'failed-precondition', notdone: 'failed-precondition', notbetter: 'failed-precondition', limit: 'resource-exhausted', expired: 'deadline-exceeded' };
 function toErr(res) { return new HttpsError(ERR[res.code] || 'failed-precondition', res.message); }
 const walletRef = uid => db.collection('wallets').doc(uid);
 
@@ -185,23 +186,47 @@ exports.spend = onCall(async (req) => {
   });
 });
 
-// Abnahme beantragen: {key, videoPath} — Video muss schon im eigenen Storage-Ordner liegen
-exports.requestVerification = onCall(async (req) => {
+// Abnahme, Schritt 1: Aufnahme starten: {key} → {id, code, expiresAt}
+// Der Code muss am Anfang des Videos zu sehen oder zu hören sein (Schutz gegen fremde Videos).
+exports.startVerification = onCall(async (req) => {
   const uid = requireUid(req);
-  const key = str(req.data && req.data.key, 120), videoPath = str(req.data && req.data.videoPath, 300);
-  if (videoPath.indexOf('verificationVideos/' + uid + '/') !== 0) throw new HttpsError('invalid-argument', 'Video liegt nicht im eigenen Ordner');
-  const [exists] = await admin.storage().bucket().file(videoPath).exists();
-  if (!exists) throw new HttpsError('failed-precondition', 'Video wurde nicht gefunden, bitte nochmal hochladen');
+  const key = str(req.data && req.data.key, 120);
   const uRef = db.collection('users').doc(uid), wRef = walletRef(uid);
   const vRef = db.collection('verifications').doc();
   return db.runTransaction(async tx => {
     const [uS, wS] = await Promise.all([tx.get(uRef), tx.get(wRef)]);
     const ctx = { uid, user: uS.exists ? uS.data() : {}, wallet: R.normalizeWallet(wS.exists ? wS.data() : null), now: new Date() };
-    const res = R.evaluateVerification(ctx, key, videoPath);
+    const res = R.evaluateStart(ctx, key);
     if (!res.ok) throw toErr(res);
-    const out = R.applyVerification(ctx, key, res.item, res.cost, videoPath, vRef.id);
+    const code = crypto.randomInt(1000, 10000);
+    const out = R.applyStart(ctx, key, res.item, vRef.id, code);
     tx.set(wRef, out.wallet);
     tx.set(vRef, out.doc);
+    if (res.prevId) tx.set(db.collection('verifications').doc(res.prevId), { status: 'abandoned', abandonedAt: Date.now() }, { merge: true });
+    return out.result;
+  });
+});
+
+// Abnahme, Schritt 2: Video einreichen: {id, videoPath, seconds} — Datei liegt unter
+// verificationVideos/{uid}/{id}.<ext>; jetzt werden die Diamanten abgebucht
+exports.requestVerification = onCall(async (req) => {
+  const uid = requireUid(req);
+  const data = req.data || {};
+  const id = str(data.id, 60), videoPath = str(data.videoPath, 300), seconds = parseInt(data.seconds, 10) || 0;
+  if (!id) throw new HttpsError('invalid-argument', 'Aufnahme fehlt');
+  if (videoPath.indexOf('verificationVideos/' + uid + '/' + id + '.') !== 0) throw new HttpsError('invalid-argument', 'Video gehört nicht zu dieser Aufnahme');
+  const [exists] = await admin.storage().bucket().file(videoPath).exists();
+  if (!exists) throw new HttpsError('failed-precondition', 'Video wurde nicht gefunden, bitte nochmal hochladen');
+  const wRef = walletRef(uid), vRef = db.collection('verifications').doc(id);
+  return db.runTransaction(async tx => {
+    const [wS, vS] = await Promise.all([tx.get(wRef), tx.get(vRef)]);
+    const doc = vS.exists ? Object.assign({ id: vS.id }, vS.data()) : null;
+    const ctx = { uid, wallet: R.normalizeWallet(wS.exists ? wS.data() : null), now: new Date() };
+    const res = R.evaluateSubmit(ctx, doc, videoPath);
+    if (!res.ok) throw toErr(res);
+    const out = R.applySubmit(ctx, doc, res.cost, videoPath, seconds);
+    tx.set(wRef, out.wallet);
+    tx.update(vRef, out.update);
     return out.result;
   });
 });

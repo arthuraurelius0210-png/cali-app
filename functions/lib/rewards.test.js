@@ -132,23 +132,40 @@ eq('Level-Diamanten 1→11', E.levelUpDiamonds(0, 18500), 550);
   eq('Nach dem Eis: 0', c.wallet.diamonds, 0);
 }
 
-// Abnahme
+// Abnahme: Schritt 1 Code ausgeben (nichts abbuchen), Schritt 2 Video einreichen (abbuchen)
 {
   const c = ctx(); c.wallet.diamonds = 1500;
-  eq('Abnahme ohne geschaffte Challenge', R.evaluateVerification(c, 'challenge|p5|' + today, 'verificationVideos/u1/a.mp4').code, 'nodata');
-  earn('weekly', '2026-W39', c);
-  eq('Abnahme fremder Pfad', R.evaluateVerification(c, 'weekly|2026-W39', 'verificationVideos/u2/a.mp4').code, 'invalid');
-  const r = R.evaluateVerification(c, 'weekly|2026-W39', 'verificationVideos/u1/a.mp4');
-  eq('Abnahme ok, kostet 1000', [r.ok, r.cost], [true, 1000]);
-  const a = R.applyVerification(c, 'weekly|2026-W39', r.item, r.cost, 'verificationVideos/u1/a.mp4', 'v1');
-  c.wallet = a.wallet;
-  eq('Abnahme abgebucht', c.wallet.diamonds, 503);
-  eq('Abnahme-Dokument', [a.doc.uid, a.doc.name, a.doc.kind, a.doc.title, a.doc.status, a.doc.week], ['u1', 'Mara', 'weekly', 'Hundert Liegestütze', 'pending', '2026-W39']);
-  eq('Abnahme zweimal: läuft schon', R.evaluateVerification(c, 'weekly|2026-W39', 'verificationVideos/u1/b.mp4').code, 'already');
+  eq('Start ohne geschaffte Challenge', R.evaluateStart(c, 'challenge|p5|' + today).code, 'nodata');
   const poor = ctx(); earn('weekly', '2026-W39', poor);
-  eq('Abnahme zu wenig Diamanten', R.evaluateVerification(poor, 'weekly|2026-W39', 'verificationVideos/u1/a.mp4').code, 'insufficient');
+  eq('Start zu wenig Diamanten', R.evaluateStart(poor, 'weekly|2026-W39').code, 'insufficient');
+  earn('weekly', '2026-W39', c);
+  const s = R.evaluateStart(c, 'weekly|2026-W39');
+  eq('Start ok, noch nichts abgebucht', [s.ok, s.cost, s.prevId, c.wallet.diamonds], [true, 1000, null, 1503]);
+  const a = R.applyStart(c, 'weekly|2026-W39', s.item, 'v1', 4821);
+  c.wallet = a.wallet;
+  eq('Start: Dokument mit Code und Frist', [a.doc.status, a.doc.code, a.doc.uid, a.doc.name, a.doc.kind, a.doc.title, a.doc.week, a.doc.expiresAt - a.doc.issuedAt, a.doc.videoPath], ['recording', '4821', 'u1', 'Mara', 'weekly', 'Hundert Liegestütze', '2026-W39', R.RECORD_WINDOW_MS, null]);
+  eq('Start: Antwort an den Client', [a.result.id, a.result.code, a.result.expiresAt], ['v1', '4821', a.doc.expiresAt]);
+  eq('Start: Wallet merkt Aufnahme, Diamanten bleiben', [c.wallet.verifications['weekly|2026-W39'].status, c.wallet.diamonds], ['recording', 1503]);
+  eq('Neustart erlaubt, alte Aufnahme wird verworfen', (r => [r.ok, r.prevId])(R.evaluateStart(c, 'weekly|2026-W39')), [true, 'v1']);
+  const doc = Object.assign({id: 'v1'}, a.doc);
+  eq('Einreichen fremdes Dokument', R.evaluateSubmit({uid: 'u2', wallet: c.wallet, now: NOW}, doc, 'verificationVideos/u2/v1.webm').code, 'nodata');
+  eq('Einreichen falscher Pfad', R.evaluateSubmit(c, doc, 'verificationVideos/u1/anders.webm').code, 'invalid');
+  eq('Einreichen fremder Ordner', R.evaluateSubmit(c, doc, 'verificationVideos/u2/v1.webm').code, 'invalid');
+  eq('Einreichen abgelaufen (106 min)', R.evaluateSubmit(Object.assign({}, c, {now: new Date(NOW.getTime() + 106 * 60000)}), doc, 'verificationVideos/u1/v1.webm').code, 'expired');
+  eq('Einreichen knapp vor Ablauf (104 min) ok', R.evaluateSubmit(Object.assign({}, c, {now: new Date(NOW.getTime() + 104 * 60000)}), doc, 'verificationVideos/u1/v1.webm').ok, true);
+  const broke = Object.assign({}, c, {wallet: Object.assign(R.normalizeWallet(c.wallet), {diamonds: 999})});
+  eq('Einreichen zu wenig Diamanten', R.evaluateSubmit(broke, doc, 'verificationVideos/u1/v1.webm').code, 'insufficient');
+  const sub = R.evaluateSubmit(c, doc, 'verificationVideos/u1/v1.mp4');
+  eq('Einreichen ok, kostet 1000', [sub.ok, sub.cost], [true, 1000]);
+  const b = R.applySubmit(c, doc, sub.cost, 'verificationVideos/u1/v1.mp4', 95);
+  c.wallet = b.wallet;
+  eq('Einreichen abgebucht', c.wallet.diamonds, 503);
+  eq('Einreichen: Update', [b.update.status, b.update.videoPath, b.update.recordSeconds, b.update.cost], ['pending', 'verificationVideos/u1/v1.mp4', 95, 1000]);
+  eq('Einreichen: Wallet-Status', c.wallet.verifications['weekly|2026-W39'].status, 'pending');
+  eq('Einreichen zweimal: nicht mehr offen', R.evaluateSubmit(c, Object.assign({}, doc, {status: 'pending'}), 'verificationVideos/u1/v1.mp4').code, 'invalid');
+  eq('Start während Prüfung: läuft schon', R.evaluateStart(c, 'weekly|2026-W39').code, 'already');
   // Entscheidung
-  const v = Object.assign({id: 'v1'}, a.doc);
+  const v = Object.assign({}, doc, b.update);
   const ap = R.applyReview({uid: 'u1', wallet: c.wallet, now: NOW}, v, 'approved', 'Sauber', false);
   eq('Freigabe: Abzeichen', [ap.badge.kind, ap.badge.title, ap.badge.week, ap.update.status, ap.update.videoPath], ['weekly', 'Hundert Liegestütze', '2026-W39', 'approved', null]);
   eq('Freigabe: Diamanten bleiben', ap.wallet.diamonds, 503);

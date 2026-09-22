@@ -201,27 +201,55 @@ function applySpend(ctx, what, cost){
   return {wallet: wallet, result: {ok:true, what:what, cost:cost, wallet:publicWallet(wallet)}};
 }
 
-// ── Abnahme beantragen ──
-// key = completed.key ('challenge|p5|2026-09-22' oder 'weekly|2026-W39'), videoPath im eigenen Ordner
-function evaluateVerification(ctx, key, videoPath){
+// ── Abnahme, Schritt 1: Aufnahme starten ──
+// key = completed.key ('challenge|p5|2026-09-22' oder 'weekly|2026-W39'). Der Server gibt einen
+// vierstelligen Code aus, der am Anfang des Videos zu sehen oder zu hören sein muss; das Video
+// entsteht in der App (kein Datei-Upload). So lässt sich kein fremdes oder altes Video einreichen.
+// Diamanten werden erst beim Einreichen abgebucht. Eine offene Aufnahme darf neu gestartet werden.
+const RECORD_WINDOW_MS = 90 * 60000; // Zeit von Code-Ausgabe bis Einreichen
+const RECORD_GRACE_MS = 15 * 60000;  // Upload darf etwas länger dauern
+
+function evaluateStart(ctx, key){
   const wallet = ctx.wallet, cost = E.CALI_ECON.verifyCost;
   if(typeof key !== 'string' || !key) return fail('invalid', 'Challenge fehlt');
   const item = wallet.completed.find(c => c.key === key);
   if(!item) return fail('nodata', 'Diese Challenge ist bei dir nicht als geschafft eingetragen');
   const prev = wallet.verifications[key];
-  if(prev && (prev.status === 'pending' || prev.status === 'approved')) return fail('already', prev.status === 'pending' ? 'Abnahme läuft schon' : 'Schon verifiziert');
-  if(typeof videoPath !== 'string' || videoPath.indexOf('verificationVideos/' + ctx.uid + '/') !== 0 || videoPath.length > 300) return fail('invalid', 'Video liegt nicht im eigenen Ordner');
+  if(prev && prev.status === 'pending') return fail('already', 'Abnahme läuft schon');
+  if(prev && prev.status === 'approved') return fail('already', 'Schon verifiziert');
   if(wallet.diamonds < cost) return fail('insufficient', 'Nicht genug Diamanten: ' + cost + ' nötig, ' + wallet.diamonds + ' da');
-  return {ok:true, item:item, cost:cost};
+  return {ok:true, item:item, cost:cost, prevId:(prev && prev.status === 'recording') ? (prev.id || null) : null};
 }
-function applyVerification(ctx, key, item, cost, videoPath, docId){
+function applyStart(ctx, key, item, docId, code){
   const wallet = normalizeWallet(ctx.wallet), nowMs = (ctx.now || new Date()).getTime();
-  wallet.diamonds -= cost;
-  wallet.verifications[key] = {status:'pending', id:docId, at:nowMs};
+  wallet.verifications[key] = {status:'recording', id:docId, at:nowMs};
   wallet.updatedAt = nowMs;
   const name = (ctx.user && ctx.user.prData && ctx.user.prData.name) ? String(ctx.user.prData.name).slice(0, 60) : 'Athlet';
-  const doc = {uid:ctx.uid, name:name, key:key, kind:item.kind, challengeId:item.id, title:item.title, week:item.week || null, completedAt:item.date || null, videoPath:videoPath, status:'pending', cost:cost, createdAt:nowMs};
-  return {wallet: wallet, doc: doc, result: {ok:true, id:docId, wallet:publicWallet(wallet)}};
+  const doc = {uid:ctx.uid, name:name, key:key, kind:item.kind, challengeId:item.id, title:item.title, week:item.week || null, completedAt:item.date || null,
+    status:'recording', code:String(code), issuedAt:nowMs, expiresAt:nowMs + RECORD_WINDOW_MS, cost:E.CALI_ECON.verifyCost, createdAt:nowMs, videoPath:null};
+  return {wallet: wallet, doc: doc, result: {ok:true, id:docId, code:String(code), expiresAt:doc.expiresAt, wallet:publicWallet(wallet)}};
+}
+
+// ── Abnahme, Schritt 2: Video einreichen ──
+// Das Video muss unter verificationVideos/{uid}/{docId}.<ext> liegen und die Aufnahme darf nicht abgelaufen sein.
+function evaluateSubmit(ctx, doc, videoPath){
+  const wallet = ctx.wallet, nowMs = (ctx.now || new Date()).getTime();
+  if(!doc || doc.uid !== ctx.uid) return fail('nodata', 'Abnahme nicht gefunden');
+  if(doc.status !== 'recording') return fail('invalid', 'Diese Aufnahme ist nicht mehr offen');
+  if(nowMs > (doc.expiresAt || 0) + RECORD_GRACE_MS) return fail('expired', 'Der Code ist abgelaufen, bitte neu aufnehmen');
+  const prefix = 'verificationVideos/' + ctx.uid + '/' + doc.id + '.';
+  if(typeof videoPath !== 'string' || videoPath.indexOf(prefix) !== 0 || videoPath.length > 300) return fail('invalid', 'Video gehört nicht zu dieser Aufnahme');
+  const cost = doc.cost || E.CALI_ECON.verifyCost;
+  if(wallet.diamonds < cost) return fail('insufficient', 'Nicht genug Diamanten: ' + cost + ' nötig, ' + wallet.diamonds + ' da');
+  return {ok:true, cost:cost};
+}
+function applySubmit(ctx, doc, cost, videoPath, seconds){
+  const wallet = normalizeWallet(ctx.wallet), nowMs = (ctx.now || new Date()).getTime();
+  wallet.diamonds -= cost;
+  wallet.verifications[doc.key] = {status:'pending', id:doc.id, at:nowMs};
+  wallet.updatedAt = nowMs;
+  const update = {status:'pending', videoPath:videoPath, submittedAt:nowMs, recordSeconds:Math.max(0, parseInt(seconds, 10) || 0), cost:cost};
+  return {wallet: wallet, update: update, result: {ok:true, id:doc.id, wallet:publicWallet(wallet)}};
 }
 
 // ── Abnahme entscheiden (Admin) ──
@@ -255,6 +283,7 @@ function publicWallet(w){
 
 module.exports = {
   ADMIN_UID, localDate, normalizeWallet, evaluate, applyEarn, evaluateSpend, applySpend,
-  evaluateVerification, applyVerification, applyReview, initialWallet, publicWallet, weeklyChallengeFor,
+  evaluateStart, applyStart, evaluateSubmit, applySubmit, applyReview, initialWallet, publicWallet, weeklyChallengeFor,
+  RECORD_WINDOW_MS, RECORD_GRACE_MS,
   levelOf: xp => E.getLevelFromXP(parseInt(xp, 10) || 0).level
 };

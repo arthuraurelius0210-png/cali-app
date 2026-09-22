@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cali-v14';
+const CACHE_NAME = 'cali-v15';
 const STATIC_ASSETS = [
   '/tracker.html',
   '/index.html',

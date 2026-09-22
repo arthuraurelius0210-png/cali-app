@@ -1,18 +1,22 @@
 // ══════════════════════════════════════════════════════════
 // VERIFY.JS — Abnahme geschaffter Challenges per Video
 // Ablauf: Challenge geschafft (Server hat sie in wallets/{uid}.completed eingetragen) →
-// Nutzer lädt ein Video nach verificationVideos/{uid}/ hoch → requestVerification bucht
-// 1000 Diamanten ab und legt verifications/{id} an → Admin entscheidet im Admin-Panel
-// (Tab „Abnahme", reviewVerification) → Abzeichen in verifiedBadges/{uid}, Video wird gelöscht.
+// startVerification gibt einen vierstelligen Code aus → das Video wird IN DER APP mit der
+// Handykamera aufgenommen (getUserMedia + MediaRecorder, kein Datei-Upload), der Code muss am
+// Anfang zu sehen oder zu hören sein → Upload nach verificationVideos/{uid}/{id}.<ext> →
+// requestVerification bucht 1000 Diamanten ab und setzt verifications/{id} auf „pending" →
+// Admin entscheidet im Admin-Panel (Tab „Abnahme", reviewVerification) → Abzeichen in
+// verifiedBadges/{uid}, Video wird gelöscht.
 // ══════════════════════════════════════════════════════════
 
 var VERIFY_RULES = [
-  'Die Challenge ist komplett zu sehen, bei langen Challenges die entscheidenden Teile.',
-  'Möglichst ohne Schnitt. Uhr oder Datum im Bild helfen.',
-  'Höchstens 3 Minuten und unter 300 MB.',
-  'Das Video sehen nur du und der Prüfer. Nach der Entscheidung wird es gelöscht.'
+  'Die Aufnahme läuft direkt hier in der App mit deiner Handykamera. Fertige Videos hochladen geht nicht.',
+  'Du bekommst einen Code. Zeig ihn am Anfang in die Kamera oder sag ihn laut.',
+  'Die Challenge ist komplett zu sehen. Pause zwischen den Sätzen ist erlaubt, die Aufnahme bleibt dabei in der App.',
+  'Höchstens 10 Minuten. Das Video sehen nur du und der Prüfer, nach der Entscheidung wird es gelöscht.'
 ];
-var VERIFY_STATUS = {pending:'Wird geprüft', approved:'Verifiziert', rejected:'Abgelehnt'};
+var VERIFY_STATUS = {recording:'Aufnahme offen', pending:'Wird geprüft', approved:'Verifiziert', rejected:'Abgelehnt'};
+var VERIFY_MAX_SECONDS = 600;
 
 function verifyKindLabel(item){
   if(item.kind === 'weekly') return 'Wochen-Challenge' + (item.week && typeof weeklyNum === 'function' ? ' · KW ' + weeklyNum(item.week) : '');
@@ -23,12 +27,27 @@ function verifyFmtDate(ms){
   if(isNaN(d.getTime())) return '';
   return (d.getDate() < 10 ? '0' : '') + d.getDate() + '.' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '.' + d.getFullYear();
 }
-// Geschaffte Challenges, die noch eine Abnahme vertragen (keine offene, keine freigegebene)
+function verifyFmtClock(sec){
+  sec = Math.max(0, Math.floor(sec || 0));
+  var m = Math.floor(sec / 60), s = sec % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+// Geschaffte Challenges, die noch eine Abnahme vertragen (keine laufende Prüfung, keine freigegebene)
 function verifyOpenItems(){
   return walletState.completed.filter(function(c){
     var v = walletState.verifications[c.key];
-    return !v || v.status === 'rejected';
+    return !v || v.status === 'rejected' || v.status === 'recording';
   }).slice().reverse();
+}
+function verifyCanRecord(){
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && typeof MediaRecorder !== 'undefined');
+}
+// Bestes Aufnahmeformat des Geräts: iOS liefert mp4, Android/Chrome webm
+function verifyPickMime(){
+  if(typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+  var cands = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  for(var i=0;i<cands.length;i++){ if(MediaRecorder.isTypeSupported(cands[i])) return cands[i]; }
+  return '';
 }
 
 // ── Profil: Abschnitt „Abnahmen" (#pr-verify in pages.html) ──
@@ -72,7 +91,7 @@ function buildVerifySection(){
     var none = document.createElement('div');
     none.className = 'row-sub';
     none.style.cssText = 'margin:0;white-space:normal;';
-    none.textContent = 'Noch keine Abnahme. Schaff eine Challenge, film sie und hol dir das Abzeichen „Verifiziert".';
+    none.textContent = 'Noch keine Abnahme. Schaff eine Challenge, nimm sie hier in der App auf und hol dir das Abzeichen „Verifiziert".';
     card.appendChild(none);
   } else {
     var list = document.createElement('div');
@@ -93,7 +112,7 @@ function buildVerifySection(){
         var s = document.createElement('div');
         s.className = 'row-sub';
         s.style.cssText = 'white-space:normal;';
-        s.textContent = (item ? verifyKindLabel(item) + ' · ' : '') + verifyFmtDate(v.at) + (v.status === 'rejected' && v.note ? ' · ' + v.note : '') + (v.refunded ? ' · Diamanten zurück' : '');
+        s.textContent = (item ? verifyKindLabel(item) + ' · ' : '') + verifyFmtDate(v.at) + (v.status === 'rejected' && v.note ? ' · ' + v.note : '') + (v.refunded ? ' · Diamanten zurück' : '') + (v.status === 'recording' ? ' · noch nicht eingereicht' : '');
         main.appendChild(t); main.appendChild(s);
         var chip = document.createElement('span');
         chip.style.cssText = PLAN_TAG_CSS + 'flex-shrink:0;' + (v.status === 'approved' ? 'color:var(--accent);border-color:var(--accent);' : '');
@@ -145,7 +164,7 @@ function openVerifyPicker(){
   if(!items.length){
     var none = document.createElement('div');
     none.className = 'empty';
-    none.textContent = walletState.completed.length ? 'Alle geschafften Challenges sind schon eingereicht.' : 'Noch keine geschaffte Challenge. Erst schaffen, dann verifizieren.';
+    none.textContent = walletState.completed.length ? 'Alle geschafften Challenges sind schon eingereicht.' : 'Noch keine geschaffte Challenge. Erst schaffen und abschließen, dann verifizieren.';
     box.appendChild(none);
   } else {
     var list = document.createElement('div');
@@ -187,7 +206,7 @@ function openVerifyPicker(){
   if(window.caliMotion) caliMotion.sheetIn(box, ov);
 }
 
-// ── Einreichen: Regeln, Video wählen, hochladen, beantragen ──
+// ── Vorab-Sheet: Regeln, Preis, dann Code holen und Kamera öffnen ──
 function openVerifySheet(item){
   var old = document.getElementById('verify-sheet');
   if(old) old.remove();
@@ -222,54 +241,27 @@ function openVerifySheet(item){
   });
 
   var cost = CALI_ECON.verifyCost, have = currency.diamonds || 0, enough = have >= cost;
-  add('div', 'row-sub num', 'margin:0 0 14px;color:' + (enough ? 'var(--text)' : 'var(--red)') + ';', 'Kostet ' + cost + ' Diamanten (' + econDiamondsEuro(cost) + '). Du hast ' + have + '.' + (enough ? '' : ' Zu wenig.'));
+  add('div', 'row-sub num', 'margin:0 0 14px;color:' + (enough ? 'var(--text)' : 'var(--red)') + ';', 'Kostet ' + cost + ' Diamanten (' + econDiamondsEuro(cost) + '), abgebucht erst beim Einreichen. Du hast ' + have + '.' + (enough ? '' : ' Zu wenig.'));
 
-  var file = null;
-  var inp = document.createElement('input');
-  inp.type = 'file';
-  inp.accept = 'video/*';
-  inp.style.display = 'none';
-  box.appendChild(inp);
-  var pick = add('button', 'btn-g pressable', 'width:100%;min-height:44px;margin-bottom:8px;', 'Video auswählen');
-  pick.type = 'button';
-  var fileLine = add('div', 'row-sub num', 'margin:0 0 12px;min-height:14px;', '');
-  inp.onchange = function(){
-    file = inp.files && inp.files[0];
-    if(!file){ fileLine.textContent = ''; submit.disabled = true; return; }
-    if(file.size > 300 * 1024 * 1024){ toast('Video zu groß (max. 300 MB)'); file = null; fileLine.textContent = ''; submit.disabled = true; return; }
-    fileLine.textContent = file.name + ' · ' + (file.size / 1048576).toFixed(1) + ' MB';
-    submit.disabled = !enough;
-  };
-  pick.onclick = function(){ inp.click(); };
+  var canRec = verifyCanRecord();
+  if(!canRec) add('div', 'row-sub', 'margin:0 0 12px;white-space:normal;color:var(--red);', 'Dieses Gerät oder dieser Browser kann hier nicht aufnehmen. Öffne die App auf dem Handy (Safari oder Chrome).');
 
-  var submit = add('button', 'btn pressable', 'margin:0 0 8px;', 'Abnahme beantragen');
-  submit.type = 'button';
-  submit.disabled = true;
+  var start = add('button', 'btn pressable', 'margin:0 0 8px;', 'Kamera öffnen und aufnehmen');
+  start.type = 'button';
+  start.disabled = !enough || !canRec;
   var status = add('div', 'row-sub num', 'margin:0 0 8px;min-height:14px;text-align:center;', '');
-  submit.onclick = function(){
-    if(!file || !currentUser) return;
-    submit.disabled = true; pick.disabled = true;
-    var ext = (file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'mp4';
-    var path = 'verificationVideos/' + currentUser.uid + '/' + Date.now() + '_' + item.key.replace(/[^a-zA-Z0-9]/g, '_') + '.' + ext;
-    var task = firebase.storage().ref(path).put(file, {contentType: file.type || 'video/mp4'});
-    task.on('state_changed', function(snap){
-      status.textContent = 'Hochladen ' + Math.round(snap.bytesTransferred / snap.totalBytes * 100) + ' %';
-    }, function(e){
+  start.onclick = function(){
+    if(!currentUser){ toast('Bitte einloggen'); return; }
+    start.disabled = true;
+    status.textContent = 'Code wird geholt …';
+    walletCall('startVerification', {key:item.key}).then(function(d){
+      walletApply(d.wallet);
+      sheetOut(ov, box);
+      setTimeout(function(){ openVerifyRecorder(item, d); }, 250);
+    }).catch(function(e){
       status.textContent = '';
-      toast('Upload fehlgeschlagen: ' + (e && e.message ? e.message : ''));
-      submit.disabled = false; pick.disabled = false;
-    }, function(){
-      status.textContent = 'Wird beantragt …';
-      walletCall('requestVerification', {key:item.key, videoPath:path}).then(function(d){
-        walletApply(d.wallet);
-        sheetOut(ov, box);
-        if(window.caliMotion && caliMotion.celebrate) caliMotion.celebrate('burst');
-        toast('Abnahme eingereicht. Du bekommst Bescheid im Profil.');
-      }).catch(function(e){
-        status.textContent = '';
-        toast(walletErrorMessage(e));
-        submit.disabled = false; pick.disabled = false;
-      });
+      toast(walletErrorMessage(e));
+      start.disabled = false;
     });
   };
   var close = add('button', 'pressable u', PLAN_TEXTBTN_CSS, 'Abbrechen');
@@ -280,6 +272,259 @@ function openVerifySheet(item){
   ov.onclick = function(e){ if(e.target === ov) sheetOut(ov, box); };
   document.body.appendChild(ov);
   if(window.caliMotion) caliMotion.sheetIn(box, ov);
+}
+
+// ── Aufnahme in der App ──
+// Vollbild: Code oben, Kamerabild, Aufnahme/Pause/Stopp, danach Vorschau und Einreichen.
+// session = {id, code, expiresAt} aus startVerification.
+function openVerifyRecorder(item, session){
+  var old = document.getElementById('verify-rec');
+  if(old) old.remove();
+  var stream = null, rec = null, chunks = [], blob = null, mime = verifyPickMime();
+  var facing = 'environment', recording = false, paused = false, seconds = 0, tick = null, previewUrl = null;
+
+  var ov = document.createElement('div');
+  ov.id = 'verify-rec';
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:2200;display:flex;flex-direction:column;overflow:hidden;';
+
+  function stopStream(){
+    if(stream){ try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} stream = null; }
+  }
+  function cleanup(){
+    if(tick){ clearInterval(tick); tick = null; }
+    if(rec && rec.state !== 'inactive'){ try{ rec.stop(); }catch(e){} }
+    stopStream();
+    if(previewUrl){ try{ URL.revokeObjectURL(previewUrl); }catch(e){} previewUrl = null; }
+  }
+  function close(){
+    cleanup();
+    if(typeof overlayClose === 'function'){ overlayClose(ov); } else { ov.remove(); }
+    buildVerifySection();
+  }
+
+  // Kopfzeile
+  var top = document.createElement('div');
+  top.className = 'topbar';
+  top.style.cssText = 'margin:0 16px;flex-shrink:0;';
+  var back = document.createElement('button');
+  back.type = 'button';
+  back.className = 'icon-btn sm pressable';
+  back.setAttribute('aria-label', 'Abbrechen');
+  back.innerHTML = '&#8592;';
+  back.onclick = function(){
+    if(recording || blob){
+      confirmSheet({title:'Aufnahme verwerfen?', desc:'Der Code bleibt gültig, du kannst gleich neu starten.', confirmLabel:'Verwerfen', onConfirm:close});
+    } else close();
+  };
+  var ttl = document.createElement('div');
+  ttl.className = 'topbar-title';
+  ttl.textContent = 'Abnahme';
+  var slot = document.createElement('div');
+  slot.className = 'topbar-slot';
+  top.appendChild(back); top.appendChild(ttl); top.appendChild(slot);
+  ov.appendChild(top);
+
+  var body = document.createElement('div');
+  body.className = 'sheet-scroll';
+  body.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px calc(24px + env(safe-area-inset-bottom,0px));';
+  ov.appendChild(body);
+
+  // Code-Karte
+  var codeCard = document.createElement('div');
+  codeCard.className = 'card';
+  codeCard.style.cssText = 'display:flex;align-items:center;gap:14px;margin-bottom:10px;';
+  codeCard.innerHTML = '<div><span class="eyebrow" style="margin:0 0 2px;">Dein Code</span><div class="kpi num" style="font-size:34px;letter-spacing:.12em;"></div></div>' +
+    '<div class="row-sub" style="white-space:normal;line-height:1.5;margin:0;flex:1;">Zeig den Code am Anfang in die Kamera (auf Papier oder Hand) oder sag ihn laut. Ohne Code keine Abnahme.</div>';
+  codeCard.querySelector('.kpi').textContent = session.code;
+  body.appendChild(codeCard);
+
+  var sub = document.createElement('div');
+  sub.className = 'row-sub';
+  sub.style.cssText = 'margin:0 0 10px;';
+  sub.textContent = item.title + ' · ' + verifyKindLabel(item);
+  body.appendChild(sub);
+
+  // Kamerabild / Vorschau
+  var frame = document.createElement('div');
+  frame.style.cssText = 'position:relative;background:#000;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;aspect-ratio:3/4;max-height:52vh;margin-bottom:10px;';
+  var live = document.createElement('video');
+  live.autoplay = true; live.muted = true; live.playsInline = true;
+  live.setAttribute('playsinline', ''); live.setAttribute('muted', '');
+  live.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+  var play = document.createElement('video');
+  play.controls = true; play.playsInline = true;
+  play.setAttribute('playsinline', '');
+  play.style.cssText = 'width:100%;height:100%;object-fit:contain;display:none;background:#000;';
+  var camMsg = document.createElement('div');
+  camMsg.className = 'row-sub';
+  camMsg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;white-space:normal;line-height:1.5;';
+  camMsg.textContent = 'Kamera wird geöffnet …';
+  var clock = document.createElement('div');
+  clock.className = 'num';
+  clock.style.cssText = PLAN_TAG_CSS + 'position:absolute;top:10px;left:10px;background:var(--card);display:inline-flex;align-items:center;gap:6px;';
+  clock.innerHTML = '<span class="live-dot" style="display:none;"></span><span>00:00</span>';
+  frame.appendChild(live); frame.appendChild(play); frame.appendChild(camMsg); frame.appendChild(clock);
+  body.appendChild(frame);
+
+  var clockDot = clock.querySelector('.live-dot'), clockTxt = clock.querySelector('span:last-child');
+  function setClock(){ clockTxt.textContent = verifyFmtClock(seconds) + ' / ' + verifyFmtClock(VERIFY_MAX_SECONDS); }
+  setClock();
+
+  // Bedienung
+  var ctrl = document.createElement('div');
+  ctrl.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;';
+  var recBtn = document.createElement('button');
+  recBtn.type = 'button';
+  recBtn.className = 'btn pressable';
+  recBtn.style.cssText = 'margin:0;grid-column:1 / -1;';
+  recBtn.textContent = 'Aufnahme starten';
+  recBtn.disabled = true;
+  var pauseBtn = document.createElement('button');
+  pauseBtn.type = 'button';
+  pauseBtn.className = 'btn-g pressable';
+  pauseBtn.style.cssText = 'min-height:44px;display:none;';
+  pauseBtn.textContent = 'Pause';
+  var flipBtn = document.createElement('button');
+  flipBtn.type = 'button';
+  flipBtn.className = 'btn-g pressable';
+  flipBtn.style.cssText = 'min-height:44px;';
+  flipBtn.textContent = 'Kamera wechseln';
+  ctrl.appendChild(recBtn); ctrl.appendChild(pauseBtn); ctrl.appendChild(flipBtn);
+  body.appendChild(ctrl);
+
+  var status = document.createElement('div');
+  status.className = 'row-sub num';
+  status.style.cssText = 'margin:0 0 8px;min-height:14px;text-align:center;white-space:normal;';
+  body.appendChild(status);
+
+  var submitBtn = document.createElement('button');
+  submitBtn.type = 'button';
+  submitBtn.className = 'btn pressable';
+  submitBtn.style.cssText = 'margin:0 0 8px;display:none;';
+  submitBtn.textContent = 'Einreichen (' + CALI_ECON.verifyCost + ' Diamanten)';
+  var againBtn = document.createElement('button');
+  againBtn.type = 'button';
+  againBtn.className = 'btn-g pressable';
+  againBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:8px;display:none;';
+  againBtn.textContent = 'Neu aufnehmen';
+  body.appendChild(submitBtn); body.appendChild(againBtn);
+
+  function openCamera(){
+    stopStream();
+    camMsg.style.display = 'flex';
+    camMsg.textContent = 'Kamera wird geöffnet …';
+    recBtn.disabled = true;
+    var constraints = {video:{facingMode:facing, width:{ideal:1280}, height:{ideal:720}}, audio:true};
+    return navigator.mediaDevices.getUserMedia(constraints).catch(function(){
+      // Ohne Mikrofon weiter (Code kann dann nur gezeigt werden)
+      return navigator.mediaDevices.getUserMedia({video:{facingMode:facing}, audio:false});
+    }).then(function(s){
+      stream = s;
+      live.srcObject = s;
+      live.style.display = 'block';
+      play.style.display = 'none';
+      camMsg.style.display = 'none';
+      recBtn.disabled = false;
+      try{ live.play(); }catch(e){}
+    }).catch(function(e){
+      camMsg.textContent = 'Kamera nicht freigegeben. Erlaube der App den Zugriff auf Kamera und Mikrofon und versuch es nochmal.';
+      recBtn.disabled = true;
+    });
+  }
+
+  function startRec(){
+    if(!stream) return;
+    chunks = []; blob = null; seconds = 0; paused = false;
+    var opts = {videoBitsPerSecond: 1500000};
+    if(mime) opts.mimeType = mime;
+    try{ rec = new MediaRecorder(stream, opts); }
+    catch(e){ try{ rec = new MediaRecorder(stream); }catch(e2){ toast('Aufnahme auf diesem Gerät nicht möglich'); return; } }
+    rec.ondataavailable = function(ev){ if(ev.data && ev.data.size) chunks.push(ev.data); };
+    rec.onstop = function(){
+      var type = (rec && rec.mimeType) || mime || 'video/webm';
+      blob = new Blob(chunks, {type:type.split(';')[0]});
+      stopStream();
+      previewUrl = URL.createObjectURL(blob);
+      play.src = previewUrl;
+      live.style.display = 'none';
+      play.style.display = 'block';
+      recBtn.style.display = 'none'; pauseBtn.style.display = 'none'; flipBtn.style.display = 'none';
+      submitBtn.style.display = 'block'; againBtn.style.display = 'block';
+      status.textContent = verifyFmtClock(seconds) + ' aufgenommen · ' + (blob.size / 1048576).toFixed(1) + ' MB';
+    };
+    rec.start(1000);
+    recording = true;
+    clockDot.style.display = 'inline-block';
+    recBtn.textContent = 'Stopp';
+    recBtn.className = 'btn sec pressable';
+    pauseBtn.style.display = 'block';
+    flipBtn.style.display = 'none';
+    setClock();
+    tick = setInterval(function(){
+      if(paused) return;
+      seconds++;
+      setClock();
+      if(seconds >= VERIFY_MAX_SECONDS) stopRec();
+    }, 1000);
+  }
+  function stopRec(){
+    if(!rec || rec.state === 'inactive') return;
+    if(tick){ clearInterval(tick); tick = null; }
+    recording = false;
+    clockDot.style.display = 'none';
+    try{ if(rec.state === 'paused') rec.resume(); }catch(e){}
+    try{ rec.stop(); }catch(e){}
+  }
+  recBtn.onclick = function(){ if(recording) stopRec(); else startRec(); };
+  pauseBtn.onclick = function(){
+    if(!rec) return;
+    if(!paused){ try{ rec.pause(); }catch(e){ return; } paused = true; pauseBtn.textContent = 'Weiter'; clockDot.style.display = 'none'; }
+    else { try{ rec.resume(); }catch(e){ return; } paused = false; pauseBtn.textContent = 'Pause'; clockDot.style.display = 'inline-block'; }
+  };
+  flipBtn.onclick = function(){ facing = facing === 'environment' ? 'user' : 'environment'; openCamera(); };
+  againBtn.onclick = function(){
+    blob = null; chunks = []; seconds = 0; setClock();
+    if(previewUrl){ try{ URL.revokeObjectURL(previewUrl); }catch(e){} previewUrl = null; }
+    play.removeAttribute('src'); play.load();
+    submitBtn.style.display = 'none'; againBtn.style.display = 'none';
+    recBtn.style.display = 'block'; recBtn.textContent = 'Aufnahme starten'; recBtn.className = 'btn pressable';
+    flipBtn.style.display = 'block';
+    status.textContent = '';
+    openCamera();
+  };
+  submitBtn.onclick = function(){
+    if(!blob || !currentUser) return;
+    if(Date.now() > (session.expiresAt || 0)){ toast('Der Code ist abgelaufen, bitte neu starten'); return; }
+    submitBtn.disabled = true; againBtn.disabled = true;
+    var type = blob.type || (mime ? mime.split(';')[0] : 'video/webm');
+    var ext = /mp4/.test(type) ? 'mp4' : 'webm';
+    var path = 'verificationVideos/' + currentUser.uid + '/' + session.id + '.' + ext;
+    var task = firebase.storage().ref(path).put(blob, {contentType:type});
+    task.on('state_changed', function(snap){
+      status.textContent = 'Hochladen ' + Math.round(snap.bytesTransferred / snap.totalBytes * 100) + ' %';
+    }, function(e){
+      status.textContent = '';
+      toast('Upload fehlgeschlagen: ' + (e && e.message ? e.message : ''));
+      submitBtn.disabled = false; againBtn.disabled = false;
+    }, function(){
+      status.textContent = 'Wird eingereicht …';
+      walletCall('requestVerification', {id:session.id, videoPath:path, seconds:seconds}).then(function(d){
+        walletApply(d.wallet);
+        close();
+        if(window.caliMotion && caliMotion.celebrate) caliMotion.celebrate('burst');
+        toast('Abnahme eingereicht. Du bekommst Bescheid im Profil.');
+      }).catch(function(e){
+        status.textContent = '';
+        toast(walletErrorMessage(e));
+        submitBtn.disabled = false; againBtn.disabled = false;
+      });
+    });
+  };
+
+  document.body.appendChild(ov);
+  if(typeof overlayPush === 'function') overlayPush(ov);
+  if(window.caliMotion) caliMotion.overlayIn(ov);
+  openCamera();
 }
 
 // ── Verifizierte Abzeichen im Profil (vor den normalen Abzeichen) ──
@@ -324,8 +569,12 @@ function renderVerifyAdmin(el){
   db.collection('verifications').orderBy('createdAt', 'desc').limit(60).get().then(function(snap){
     el.innerHTML = '';
     var pending = [], done = [];
-    snap.forEach(function(d){ var x = Object.assign({id:d.id}, d.data()); (x.status === 'pending' ? pending : done).push(x); });
-    pending.sort(function(a, b){ return (a.createdAt || 0) - (b.createdAt || 0); });
+    snap.forEach(function(d){
+      var x = Object.assign({id:d.id}, d.data());
+      if(x.status === 'pending') pending.push(x);
+      else if(x.status === 'approved' || x.status === 'rejected') done.push(x);
+    });
+    pending.sort(function(a, b){ return (a.submittedAt || a.createdAt || 0) - (b.submittedAt || b.createdAt || 0); });
 
     // Diamanten gutschreiben
     var grant = document.createElement('div');
@@ -402,8 +651,18 @@ function verifyAdminCard(v, rerender){
   var head = document.createElement('div');
   head.innerHTML = '<div class="ttl" style="margin-bottom:2px;"></div><div class="row-sub" style="white-space:normal;margin:0 0 10px;"></div>';
   head.querySelector('.ttl').textContent = v.title || 'Challenge';
-  head.querySelector('.row-sub').textContent = (v.name || 'Athlet') + ' · ' + verifyKindLabel(v) + ' · eingereicht ' + verifyFmtDate(v.createdAt) + ' · geschafft ' + verifyFmtDate(v.completedAt) + ' · UID ' + v.uid;
+  head.querySelector('.row-sub').textContent = (v.name || 'Athlet') + ' · ' + verifyKindLabel(v) + ' · eingereicht ' + verifyFmtDate(v.submittedAt || v.createdAt) + ' · geschafft ' + verifyFmtDate(v.completedAt) + ' · UID ' + v.uid;
   card.appendChild(head);
+
+  // Prüfhinweis: Code und Zeit zwischen Code-Ausgabe und Einreichen
+  var mins = (v.submittedAt && v.issuedAt) ? Math.round((v.submittedAt - v.issuedAt) / 60000) : null;
+  var codeRow = document.createElement('div');
+  codeRow.className = 'card';
+  codeRow.style.cssText = 'background:var(--card2);display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:12px 14px;';
+  codeRow.innerHTML = '<div><span class="eyebrow" style="margin:0 0 2px;">Code</span><div class="kpi num" style="font-size:26px;letter-spacing:.12em;"></div></div><div class="row-sub" style="white-space:normal;line-height:1.5;margin:0;flex:1;"></div>';
+  codeRow.querySelector('.kpi').textContent = v.code || '?';
+  codeRow.querySelector('.row-sub').textContent = 'Ist der Code am Anfang zu sehen oder zu hören?' + (mins !== null ? ' Eingereicht ' + mins + ' min nach Code-Ausgabe.' : '') + (v.recordSeconds ? ' Aufnahme ' + verifyFmtClock(v.recordSeconds) + '.' : '');
+  card.appendChild(codeRow);
 
   var vid = document.createElement('video');
   vid.controls = true;
@@ -423,7 +682,7 @@ function verifyAdminCard(v, rerender){
   note.style.cssText = 'margin-bottom:8px;';
   card.appendChild(note);
 
-  function decide(decision, refund, btn){
+  function decide(decision, refund){
     var btns = card.querySelectorAll('button');
     for(var i=0;i<btns.length;i++) btns[i].disabled = true;
     walletCall('reviewVerification', {id:v.id, decision:decision, note:note.value.trim(), refund:refund}).then(function(){
@@ -439,20 +698,20 @@ function verifyAdminCard(v, rerender){
   ok.className = 'btn pressable';
   ok.style.cssText = 'margin:0 0 8px;';
   ok.textContent = 'Verifizieren';
-  ok.onclick = function(){ decide('approved', false, ok); };
+  ok.onclick = function(){ decide('approved', false); };
   var rjRefund = document.createElement('button');
   rjRefund.type = 'button';
   rjRefund.className = 'btn-g pressable';
   rjRefund.style.cssText = 'width:100%;min-height:44px;margin-bottom:8px;';
   rjRefund.textContent = 'Ablehnen, Diamanten zurück';
-  rjRefund.onclick = function(){ decide('rejected', true, rjRefund); };
+  rjRefund.onclick = function(){ decide('rejected', true); };
   var rj = document.createElement('button');
   rj.type = 'button';
   rj.className = 'btn-g danger pressable';
   rj.style.cssText = 'width:100%;min-height:44px;';
   rj.textContent = 'Ablehnen ohne Rückgabe';
   rj.onclick = function(){
-    confirmSheet({title:'Ohne Rückgabe ablehnen?', desc:'Der Nutzer verliert die ' + (v.cost || CALI_ECON.verifyCost) + ' Diamanten. Nur bei Täuschung.', confirmLabel:'Ablehnen', onConfirm:function(){ decide('rejected', false, rj); }});
+    confirmSheet({title:'Ohne Rückgabe ablehnen?', desc:'Der Nutzer verliert die ' + (v.cost || CALI_ECON.verifyCost) + ' Diamanten. Nur bei Täuschung, zum Beispiel fehlendem Code.', confirmLabel:'Ablehnen', onConfirm:function(){ decide('rejected', false); }});
   };
   card.appendChild(ok); card.appendChild(rjRefund); card.appendChild(rj);
   return card;
