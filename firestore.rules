@@ -94,14 +94,35 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null;
     }
+    // XP und Diamanten schreibt nur noch der Server (Cloud Functions earn/spend), der Admin
+    // für die Monatsboni. Der Nutzer liest sein XP-Dokument, alle lesen für die Rangliste.
     match /xp/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if isAdmin();
     }
     match /xpLog/{docId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow delete: if false;
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+    // Geldbörse: nur lesen, und nur die eigene. Jede Änderung läuft über Cloud Functions.
+    match /wallets/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+    // Abnahmen: der Antragsteller sieht seine, der Admin alle. Anlegen und Entscheiden nur per Function.
+    match /verifications/{docId} {
+      allow read: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+    // Verifizierte Abzeichen sind öffentlich (Profil), schreibt nur die Function.
+    match /verifiedBadges/{userId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /walletLog/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
     match /exerciseSuggestions/{docId} {
       allow read: if request.auth != null;

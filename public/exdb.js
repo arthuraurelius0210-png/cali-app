@@ -1,0 +1,87 @@
+// ══════════════════════════════════════════════════════════
+// EXDB.JS — Übungsdatenbank (geteilt zwischen App und Cloud Functions)
+// Im Browser ein klassisches Script (globales EX_DB), in Node per require.
+// functions/sync-shared.js kopiert die Datei vor jedem Deploy nach functions/shared/.
+// ══════════════════════════════════════════════════════════
+var EX_DB = [
+  // PULL
+  {name:'Klimmzuge (schulterbreit)',    cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Klimmzuge (eng)',              cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Klimmzuge (weit)',             cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Klimmzuge (neutral)',          cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Chin-Ups',                     cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Archer Pull-ups',              cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Commando Pull-ups',            cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Typewriter Pull-ups',          cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Negative Klimmzuge',           cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Muscle-Ups',                   cat:'Pull', unit:'Wdh', col:'gr', band:1},
+  {name:'Australian Rows',              cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Archer Rows',                  cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Einarm Row (Handtuch)',        cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Face Pulls (Band)',            cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Towel Curl',                   cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Tuck Front Lever Hold',        cat:'Pull', unit:'Sek', col:'gr', band:0},
+  {name:'Front Lever Hold',             cat:'Pull', unit:'Sek', col:'gr', band:0},
+  {name:'Scapula Pull-ups',             cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Hanging Knee Raises',          cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Toes to Bar',                  cat:'Pull', unit:'Wdh', col:'gr', band:0},
+  {name:'Dead Hang',                    cat:'Pull', unit:'Sek', col:'gr', band:0},
+  // PUSH
+  {name:'Liegestutze',                  cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Liegestutze (eng)',            cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Liegestutze (weit)',           cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Archer Push-ups',             cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Diamond Push-ups',            cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Pike Push-ups',               cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Pseudo Planche Push-ups',     cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Handstand Push-ups',          cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Wall Handstand Hold',         cat:'Push', unit:'Sek', col:'or', band:0},
+  {name:'Handstand Hold (frei)',       cat:'Push', unit:'Sek', col:'or', band:0},
+  {name:'Dips (Stange)',               cat:'Push', unit:'Wdh', col:'or', band:1},
+  {name:'Dips (Ring)',                 cat:'Push', unit:'Wdh', col:'or', band:1},
+  {name:'Dips (Bench)',                cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Dips (eng)',                  cat:'Push', unit:'Wdh', col:'or', band:0},
+  {name:'Tuck Planche Hold',          cat:'Push', unit:'Sek', col:'or', band:0},
+  {name:'Planche Lean',               cat:'Push', unit:'Sek', col:'or', band:0},
+  // CORE
+  {name:'Plank',                       cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Side Plank',                  cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Hollow Body Hold',            cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'L-Sit Hold',                  cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Leg Raises',                  cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'Dragon Flag Negatives',       cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'Ab Wheel Rollout',            cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'V-Ups',                       cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'Sit-ups',                     cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'Mountain Climbers',           cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Windshield Wipers',           cat:'Core', unit:'Wdh', col:'pu', band:0},
+  {name:'Superman Hold',               cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Reverse Plank',               cat:'Core', unit:'Sek', col:'pu', band:0},
+  {name:'Russian Twists',              cat:'Core', unit:'Wdh', col:'pu', band:0},
+  // LEGS
+  {name:'Pistol Squat',                cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Box Pistol Squat',            cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Kniebeugen',                  cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Jump Squats',                 cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Bulgarian Split Squat',       cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Shrimp Squat',                cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Nordic Curl Negatives',       cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Calf Raises',                 cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Burpees',                     cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Wall Sit',                    cat:'Legs', unit:'Sek', col:'te', band:0},
+  {name:'Lunges',                      cat:'Legs', unit:'Wdh', col:'te', band:0},
+  {name:'Glute Bridge',                cat:'Legs', unit:'Wdh', col:'te', band:0},
+  // SKILLS
+  {name:'Klimmzug Pyramide',          cat:'Skills', unit:'Runden', col:'am', band:1},
+  {name:'Muscle-Up Transition',       cat:'Skills', unit:'Wdh',    col:'am', band:1},
+  {name:'Back Lever Hold',            cat:'Skills', unit:'Sek',    col:'am', band:0},
+  {name:'Human Flag Hold',            cat:'Skills', unit:'Sek',    col:'am', band:0},
+  {name:'Ring Muscle-Up',             cat:'Skills', unit:'Wdh',    col:'am', band:0},
+  {name:'Handstand Walk',             cat:'Skills', unit:'Meter',  col:'am', band:0},
+  {name:'360 Pull-up',                cat:'Skills', unit:'Wdh',    col:'am', band:0},
+  {name:'Frog Stand',                 cat:'Skills', unit:'Sek',    col:'am', band:0},
+  // SCHWIMMEN
+            // LAUFEN
+        ];
+
+if(typeof module !== 'undefined' && module.exports){ module.exports = {EX_DB: EX_DB}; }

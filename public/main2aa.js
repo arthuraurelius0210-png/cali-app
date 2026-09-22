@@ -554,6 +554,8 @@ function buildProfilUI(){
     badgeEl.innerHTML='';
     var earnedMap=checkBadgeUnlocks();
     var earned=0;
+    // Verifizierte Challenges zuerst (verify.js, aus verifiedBadges/{uid})
+    if(typeof renderVerifiedBadges==='function') earned+=renderVerifiedBadges(badgeEl);
     for(var i=0;i<BADGES.length;i++){
       var b=BADGES[i];
       var has=!!earnedMap[b.id];
@@ -587,6 +589,9 @@ function buildProfilUI(){
     }
     if(window.caliMotion) caliMotion.stagger(badgeEl);
   }
+
+  // Abnahmen + Diamanten (verify.js) — auch ohne Login mit Hinweis
+  if(typeof buildVerifySection==='function'){ try{ buildVerifySection(); }catch(e){} }
 
   // Best performances from maxEntries
   var bests=document.getElementById('pr-bests');
@@ -931,7 +936,8 @@ function saveUserData(){
   };
   // Wochen-Challenge (wochen.js) nur mitschicken, wenn es einen Stand gibt
   if(typeof wochenState !== 'undefined' && wochenState) payload.wochen = wochenState;
-  doc.set(payload, {merge: true}).catch(function(e){ console.log('Save error:', e); });
+  // Promise zurückgeben: earnReward (wallet.js) wartet darauf, bevor der Server nachrechnet
+  return doc.set(payload, {merge: true}).catch(function(e){ console.log('Save error:', e); });
 }
 
 function loadUserData(uid){
@@ -953,6 +959,9 @@ function loadUserData(uid){
         }catch(x){}
         bb(); buildStartPlanBtns(); buildStartChallengeWidget();
       }
+      // Geldbörse vom Server holen (wallet.js) — erst jetzt, damit der Import der
+      // Geräte-Diamanten den geladenen Stand sieht
+      if(typeof walletSync === 'function') walletSync();
       // Check onboarding AFTER data loaded
       lstreak();
       var onboarded = false;
@@ -983,7 +992,8 @@ function loadUserData(uid){
 
 // Auto-save to Firebase when data changes
 function fbSave(){
-  if(currentUser) saveUserData();
+  if(currentUser) return saveUserData();
+  return Promise.resolve();
 }
 
 

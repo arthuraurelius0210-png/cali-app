@@ -517,13 +517,14 @@ function openAdminPanel(){
   var tabWrap = document.createElement('div');
   tabWrap.className = 'seg-ctl';
   tabWrap.setAttribute('role','tablist');
-  var tabs2 = [{label:'Ausstehend',id:'pending'},{label:'Genehmigt',id:'approved'},{label:'Abgelehnt',id:'rejected'},{label:'Parks',id:'parks'},{label:'Woche',id:'weekly'}];
+  var tabs2 = [{label:'Ausstehend',id:'pending'},{label:'Genehmigt',id:'approved'},{label:'Abgelehnt',id:'rejected'},{label:'Parks',id:'parks'},{label:'Woche',id:'weekly'},{label:'Abnahme',id:'verify'}];
   var activeAdminTab = 'pending';
   var listEl = document.createElement('div');
   var approvedEl = document.createElement('div'); approvedEl.style.display='none';
   var rejectedEl = document.createElement('div'); rejectedEl.style.display='none';
   var suggestEl = document.createElement('div'); suggestEl.style.display='none';
   var weeklyEl = document.createElement('div'); weeklyEl.style.display='none';
+  var verifyEl = document.createElement('div'); verifyEl.style.display='none';
 
   tabs2.forEach(function(t){
     var btn = document.createElement('button');
@@ -544,6 +545,8 @@ function openAdminPanel(){
       rejectedEl.style.display = t.id==='rejected'?'block':'none';
       suggestEl.style.display = t.id==='parks'?'block':'none';
       weeklyEl.style.display = t.id==='weekly'?'block':'none';
+      verifyEl.style.display = t.id==='verify'?'block':'none';
+      if(t.id==='verify' && !verifyEl._loaded && typeof renderVerifyAdmin==='function'){ renderVerifyAdmin(verifyEl); verifyEl._loaded=true; }
       if(t.id==='approved' && !approvedEl._loaded){ loadApprovedEntries(approvedEl); approvedEl._loaded=true; }
       if(t.id==='rejected' && !rejectedEl._loaded){ loadRejectedEntries(rejectedEl); rejectedEl._loaded=true; }
       if(t.id==='parks' && !suggestEl._loaded){ loadParkSuggestions(suggestEl); suggestEl._loaded=true; }
@@ -553,7 +556,7 @@ function openAdminPanel(){
   });
   box.appendChild(tabWrap);
   listEl.innerHTML = '<div class="empty">Lädt…</div>';
-  box.appendChild(listEl); box.appendChild(approvedEl); box.appendChild(rejectedEl); box.appendChild(suggestEl); box.appendChild(weeklyEl);
+  box.appendChild(listEl); box.appendChild(approvedEl); box.appendChild(rejectedEl); box.appendChild(suggestEl); box.appendChild(weeklyEl); box.appendChild(verifyEl);
 
   // Load pending entries
   db.collection('globalLeaderboard').where('status','==','pending').get()

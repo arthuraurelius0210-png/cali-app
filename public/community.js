@@ -447,8 +447,15 @@ function showCommPostModal(){
 
   function postChallenge(){
     if(extraCost){
-      if(currency.diamonds<COMM_POST_COST_DIAMONDS){toast('Nicht genug Diamanten!');return;}
-      currency.diamonds-=COMM_POST_COST_DIAMONDS; saveCurrency();
+      // Extra-Post kostet Diamanten, Abbuchung über den Server (wallet.js); danach normal posten
+      nextBtn.disabled=true;
+      spendDiamonds('post', function(ok){
+        nextBtn.disabled=false;
+        if(!ok) return;
+        extraCost=false;
+        postChallenge();
+      });
+      return;
     }
     try{localStorage.setItem('cali_comm_lastpost',today);}catch(x){}
     var postData={

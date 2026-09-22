@@ -1,10 +1,14 @@
 {
   "name": "functions",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
+  "scripts": {
+    "test": "node lib/rewards.test.js"
+  },
   "dependencies": {
+    "firebase-admin": "^13.0.0",
     "firebase-functions": "^6.0.0"
   },
   "private": true

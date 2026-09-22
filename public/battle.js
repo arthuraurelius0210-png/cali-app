@@ -200,36 +200,16 @@ function loadMyBattles(el){
 }
 
 // ── BATTLE-SIEG XP (idempotent, läuft nur auf dem Gerät des Gewinners) ──
+// Der Server prüft Sieg und Gegner-Level, schreibt XP gut und markiert das Battle (xpAwardedTo).
 function maybeAwardBattleWins(battles, uid){
-  if(typeof calcBattleXP !== 'function' || typeof awardXP !== 'function') return;
+  if(typeof earnReward !== 'function') return;
   battles.forEach(function(b){
     var d = b.data;
     if(!d || d.status !== 'completed' || d.winnerId !== uid || d.xpAwardedTo) return;
-    var ref = db.collection('battles').doc(b.id);
-    db.runTransaction(function(tx){
-      return tx.get(ref).then(function(doc){
-        if(!doc.exists) return false;
-        var fd = doc.data();
-        if(fd.status === 'completed' && fd.winnerId === uid && !fd.xpAwardedTo){
-          tx.update(ref, {xpAwardedTo: uid});
-          return true;
-        }
-        return false;
-      });
-    }).then(function(shouldAward){
-      if(!shouldAward) return;
-      var oppId = d.challengerId === uid ? d.challengedId : d.challengerId;
-      var oppName = d.challengerId === uid ? (d.challengedName||'Gegner') : (d.challengerName||'Gegner');
-      db.collection('xp').doc(uid).get().then(function(xdoc){
-        var myLv = xdoc.exists ? (xdoc.data().level||1) : 1;
-        db.collection('xp').doc(oppId).get().then(function(xdoc2){
-          var oppLv = xdoc2.exists ? (xdoc2.data().level||1) : 1;
-          var xpWon = calcBattleXP(myLv, oppLv, true);
-          awardXP(xpWon, 'Battle gewonnen (Level '+oppLv+' Gegner)');
-          showBattleVictory(oppName, xpWon);
-        }).catch(function(){});
-      }).catch(function(){});
-    }).catch(function(){});
+    var oppName = d.challengerId === uid ? (d.challengedName||'Gegner') : (d.challengerName||'Gegner');
+    earnReward('battle', b.id, {label:'Battle gewonnen gegen '+oppName}, function(res){
+      if(res && res.ok && res.xp) showBattleVictory(oppName, res.xp);
+    });
   });
 }
 

@@ -3,25 +3,25 @@
 // Auf Dateiebene, damit auch das Start-Dashboard (app1.js) via
 // getUnclaimedMilestoneCount() darauf zugreifen kann.
 // icon = Name aus CALI_ICONS (Line-Icons) — kein Emoji mehr im UI.
-var MILESTONES = [
-  {days:3,   label:'3 Tage',     diamonds:2,  badge:'Erster Schritt', icon:'flame'},
-  {days:7,   label:'1 Woche',    diamonds:4,  badge:'Starter',        icon:'calendar'},
-  {days:14,  label:'2 Wochen',   diamonds:5,  badge:'Im Rhythmus',    icon:'clock'},
-  {days:21,  label:'3 Wochen',   diamonds:6,  badge:'Gewohnheit',     icon:'check'},
-  {days:30,  label:'1 Monat',    diamonds:8,  badge:'Dedicated',      icon:'dumbbell'},
-  {days:45,  label:'45 Tage',    diamonds:10, badge:'Halftime',       icon:'trend'},
-  {days:60,  label:'2 Monate',   diamonds:12, badge:'Consistent',     icon:'chart'},
-  {days:90,  label:'3 Monate',   diamonds:16, badge:'Warrior',        icon:'target'},
-  {days:120, label:'4 Monate',   diamonds:18, badge:'Grinder',        icon:'gear'},
-  {days:150, label:'5 Monate',   diamonds:20, badge:'Machine',        icon:'flex'},
-  {days:180, label:'6 Monate',   diamonds:25, badge:'Veteran',        icon:'flame'},
-  {days:240, label:'8 Monate',   diamonds:28, badge:'Relentless',     icon:'moon'},
-  {days:270, label:'9 Monate',   diamonds:30, badge:'Iron Will',      icon:'bookmark'},
-  {days:300, label:'10 Monate',  diamonds:32, badge:'Unstoppable',    icon:'play'},
-  {days:365, label:'1 Jahr',     diamonds:50, badge:'Elite',          icon:'trophy'},
-  {days:500, label:'500 Tage',   diamonds:60, badge:'Legend',         icon:'star'},
-  {days:730, label:'2 Jahre',    diamonds:100,badge:'Immortal',       icon:'lightbulb'},
-];
+// Die Tabelle MILESTONES liegt in econ.js (geteilt mit dem Server, der die Diamanten gutschreibt).
+
+// Meilenstein abholen: der Server prüft das Kontoalter und schreibt die Diamanten gut.
+// Der lokale Schlüssel merkt sich nur, dass die Zeile als abgeholt gezeigt wird.
+function claimMilestone(m, btn, done){
+  if(btn) btn.disabled = true;
+  earnReward('milestone', String(m.days), {label:m.badge}, function(res){
+    if(!res || (res.ok === false && !res.already)){ if(btn) btn.disabled = false; return; }
+    try{ localStorage.setItem('cali_ms_claimed_'+m.days, '1'); }catch(x){}
+    if(res.ok){
+      if(window.caliMotion){ if(btn) caliMotion.floatUp(btn, '+'+m.diamonds+' Diamanten'); caliMotion.celebrate('burst'); }
+      toast(m.badge+'! +'+m.diamonds+' Diamanten');
+    } else {
+      toast(m.badge+' war schon abgeholt');
+    }
+    if(done) done();
+    buildProfilUI();
+  });
+}
 
 // Icon-Slot-HTML (44px-Ring mit Line-Icon) mit Fallbacks, falls app1.js noch nicht geladen ist
 function prIconHtml(name, opts){
@@ -398,17 +398,12 @@ function buildProfilStreakSection(){
         claimBtn2.style.cssText = 'flex-shrink:0;';
         claimBtn2.setAttribute('aria-label','Belohnung abholen: '+m.diamonds+' Diamanten');
         claimBtn2.textContent = '+'+m.diamonds+' abholen';
-        claimBtn2.onclick = (function(ms3, key3){
+        claimBtn2.onclick = (function(ms3){
           return function(e){
             e.stopPropagation();
-            currency.diamonds += ms3.diamonds;
-            saveCurrency();
-            try{ localStorage.setItem(key3,'1'); }catch(x){}
-            if(window.caliMotion){ caliMotion.floatUp(this, '+'+ms3.diamonds+' Diamanten'); caliMotion.celebrate('burst'); }
-            toast(ms3.badge+'! +'+ms3.diamonds+' Diamanten');
-            buildProfilUI();
+            claimMilestone(ms3, this);
           };
-        })(m, claimedKey);
+        })(m);
         row.appendChild(infoEl); row.appendChild(claimBtn2);
       } else {
         var rewEl = document.createElement('div');
@@ -662,19 +657,20 @@ function buildProfilStreakSection(){
 
 // ── STREAK AUF EIS KAUFEN ─────────────────────────────────
 function buyIceStreak(){
-  if(currency.diamonds < 2){ toast('Nicht genug Diamanten! Du brauchst 2.'); return; }
   var tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate()+1);
   var tStr = tomorrow.toISOString().slice(0,10);
   var iceDates2 = {};
   try{ iceDates2 = JSON.parse(localStorage.getItem('cali_ice_dates')||'{}'); }catch(x){}
   if(iceDates2[tStr]){ toast('Morgen ist bereits auf Eis geschützt!'); return; }
-  iceDates2[tStr] = 1;
-  try{ localStorage.setItem('cali_ice_dates', JSON.stringify(iceDates2)); }catch(x){}
-  currency.diamonds -= 2;
-  saveCurrency();
-  toast('Streak geschützt für morgen! −2 Diamanten');
-  buildProfilUI();
+  // Abbuchung läuft über den Server (wallet.js), erst danach wird der Tag geschützt
+  spendDiamonds('ice', function(ok){
+    if(!ok) return;
+    iceDates2[tStr] = 1;
+    try{ localStorage.setItem('cali_ice_dates', JSON.stringify(iceDates2)); }catch(x){}
+    toast('Streak geschützt für morgen! −'+CALI_ECON.spend.ice+' Diamanten');
+    buildProfilUI();
+  });
 }
 
 function showMilestoneDetail(m){
@@ -731,15 +727,13 @@ function showMilestoneDetail(m){
 }
 
 function claimMilestoneFromModal(days, diamonds, badge, icon){
-  var key = 'cali_ms_claimed_'+days;
-  currency.diamonds += diamonds;
-  saveCurrency();
-  try{ localStorage.setItem(key, '1'); }catch(x){}
-  var ov = document.getElementById('ms-detail-modal');
-  if(ov) ov.remove();
-  if(window.caliMotion) caliMotion.celebrate('burst');
-  toast(badge+' erreicht! +'+diamonds+' Diamanten');
-  buildProfilUI();
+  var m = null;
+  for(var i=0;i<MILESTONES.length;i++){ if(String(MILESTONES[i].days) === String(days)) m = MILESTONES[i]; }
+  if(!m) return;
+  claimMilestone(m, null, function(){
+    var ov = document.getElementById('ms-detail-modal');
+    if(ov) ov.remove();
+  });
 }
 
 

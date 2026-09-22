@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// Vorher: eine Startregel, die am 08.08.2026 abgelaufen ist (danach war jeder Upload gesperrt).
+// Jetzt: nur eingeloggte Nutzer, Uploads nur in den eigenen Ordner, Videos begrenzt.
+// Abnahme-Videos (verificationVideos) sind privat: nur Besitzer und Admin dürfen sie sehen.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return request.auth != null && request.auth.uid == 'u8PNuq4y2ahh2p7rukCa0vGD4su1'; }
+    function isVideo() { return request.resource.contentType.matches('video/.*') && request.resource.size < 300 * 1024 * 1024; }
+
+    // Abnahme-Videos: nur der Nutzer selbst lädt hoch, lesen darf er und der Admin,
+    // löschen nur der Admin (nach der Entscheidung, siehe reviewVerification).
+    match /verificationVideos/{uid}/{file} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid && isVideo();
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+    // Community-Challenge-Videos: eigener Ordner, für alle Eingeloggten sichtbar
+    match /challengeVideos/{uid}/{file} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.uid == uid && isVideo();
+      allow update, delete: if signedIn() && request.auth.uid == uid;
+    }
+    // Battle-Runden und Ranglisten-Videos (Dateiname enthält die eigene UID, Pfad ist flach)
+    match /battles/{file} {
+      allow read: if signedIn();
+      allow create: if signedIn() && isVideo() && file.matches('.*_' + request.auth.uid + '_.*');
+      allow update, delete: if false;
+    }
+    match /leaderboard/{file} {
+      allow read: if signedIn();
+      allow create: if signedIn() && isVideo() && file.matches(request.auth.uid + '_.*');
+      allow update, delete: if false;
+    }
+    // Kein Sammel-Match: in Storage-Regeln gewinnt jede passende Erlaubnis, ein „alles lesen"
+    // würde die privaten Abnahme-Videos wieder öffnen. Unbekannte Ordner sind damit gesperrt;
+    // alte Download-Links mit Token funktionieren unabhängig von den Regeln weiter.
+  }
+}

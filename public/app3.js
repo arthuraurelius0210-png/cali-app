@@ -159,14 +159,9 @@ function buildStartChallengeWidget(){
   txt.appendChild(t1);
   txt.appendChild(t2);
 
-  // Fertige Challenge: gleicher Claim-Flow wie die Challenge-Karte in app2.js
-  // (identischer claimKey, damit beide Einstiege denselben Zustand teilen)
-  var claimKey = 'cali_ch_claimed_'+activeChallenge.id+'_'+(activeChallenge.startDate||'');
-  var claimed = false;
-  try{ claimed = !!localStorage.getItem(claimKey); }catch(e){}
-
+  // Fertige Challenge: gleicher Claim-Flow wie die Challenge-Karte (claimActiveChallenge, app2.js)
   var arr;
-  if(done && !claimed){
+  if(done){
     // helle Sekundär-Pille — die orange Primäraktion der Startseite sitzt im Hero
     arr = document.createElement('button');
     arr.type = 'button';
@@ -175,32 +170,9 @@ function buildStartChallengeWidget(){
     arr.textContent = 'Belohnung abholen';
     arr.onclick = function(ev){
       ev.stopPropagation();
-      var already = false;
-      try{ already = !!localStorage.getItem(claimKey); }catch(e){}
-      if(!already){
-        try{ localStorage.setItem(claimKey,'1'); }catch(e){}
-        if(typeof awardXP === 'function'){ try{ awardXP(100, 'Challenge: '+activeChallenge.title); }catch(e){} }
-      }
-      var ch = activeChallenge;
-      activeChallenge = null;
-      if(typeof saveChallenges === 'function') saveChallenges();
-      if(typeof showCelebrationOverlay === 'function'){
-        showCelebrationOverlay({
-          iconName: 'trophy',
-          title: 'Challenge geschafft!',
-          big: ch.title,
-          sub: ch.desc,
-          note: already ? '' : '+100 XP'
-        });
-      }
-      if(typeof buildChallengeUI === 'function') buildChallengeUI();
-      else buildStartChallengeWidget();
+      arr.disabled = true;
+      claimActiveChallenge(function(){ arr.disabled = false; });
     };
-  } else if(done){
-    arr = document.createElement('div');
-    arr.style.cssText = 'width:18px;height:18px;color:var(--accent);flex-shrink:0;';
-    arr.setAttribute('aria-hidden','true');
-    arr.innerHTML = ci('check');
   } else {
     arr = document.createElement('span');
     arr.className = 'row-chev';
@@ -860,18 +832,7 @@ var PRESET_CHALLENGES = [
 // Alle Preset-Felder in activeChallenge.params übernehmen (unit, parts, perDay, maxDur,
 // catName, days, beforeHour, afterHour) — wird von allen drei "Annehmen"-Stellen genutzt
 // (app3.js, app2.js Katalog-Detail, main2aa.js). Neue Metrik-Parameter NUR hier ergänzen.
-function presetParams(ch){
-  var p = {target:ch.target, metric:ch.metric, exName:ch.exName};
-  if(ch.unit) p.unit = ch.unit;
-  if(ch.parts) p.parts = ch.parts;
-  if(ch.perDay !== undefined) p.perDay = ch.perDay;
-  if(ch.maxDur !== undefined) p.maxDur = ch.maxDur;
-  if(ch.catName) p.catName = ch.catName;
-  if(ch.days !== undefined) p.days = ch.days;
-  if(ch.beforeHour !== undefined) p.beforeHour = ch.beforeHour;
-  if(ch.afterHour !== undefined) p.afterHour = ch.afterHour;
-  return p;
-}
+// presetParams liegt in calc.js (geteilt mit dem Server)
 
 // Geschätzte Minuten pro Einheit (Dauer-Filter + Meta-Zeile im Katalog). Ohne Angabe: 20.
 function presetMinutes(ch){

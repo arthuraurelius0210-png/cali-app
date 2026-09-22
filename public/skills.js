@@ -145,7 +145,7 @@ function toggleSkillStep(stepId){
       try{localStorage.setItem(mKey,'1');}catch(x){}
       if(window.caliMotion) caliMotion.celebrate('burst');
       if(typeof toast==='function') toast('Skill gemeistert: '+skill.name+'!');
-      try{ if(typeof awardXP==='function') awardXP(200,'Skill gemeistert: '+skill.name); }catch(x){}
+      try{ if(typeof earnReward==='function') earnReward('skill', skill.id, {label:'Skill gemeistert: '+skill.name}); }catch(x){}
     }
   } else {
     var next=null;

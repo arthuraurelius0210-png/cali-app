@@ -2,19 +2,7 @@
 // XP.JS — XP & Level System
 // ══════════════════════════════════════════════════════════
 
-// ── LEVEL TABELLE (1-50) ──────────────────────────────────
-var XP_LEVELS = (function(){
-  var levels = [{level:1, xpRequired:0, diamonds:0}];
-  var xp = 0;
-  var increment = 500;
-  for(var i=2; i<=50; i++){
-    xp += increment;
-    var diamonds = i<=10 ? 50 : i<=25 ? 100 : i<=40 ? 150 : 200;
-    levels.push({level:i, xpRequired:xp, diamonds:diamonds});
-    increment += 300;
-  }
-  return levels;
-})();
+// Leveltabelle XP_LEVELS, getLevelFromXP und calcBattleXP liegen in econ.js (geteilt mit dem Server).
 
 // ── MONATLICHE RANGLISTE BONI ─────────────────────────────
 var MONTHLY_RANK_BONUS = [
@@ -36,109 +24,11 @@ function xpCacheTotal(totalXP){
   try{ localStorage.setItem('cali_xp_cache', String(parseInt(totalXP,10)||0)); }catch(e){}
 }
 
-// ── XP BERECHNUNG (ELO-basiert für Battles) ───────────────
-function calcBattleXP(myLevel, opponentLevel, won){
-  if(!won) return 0;
-  var diff = opponentLevel - myLevel;
-  var base = 100;
-  if(diff >= 15) return 800;
-  if(diff >= 10) return 600;
-  if(diff >= 5)  return 400;
-  if(diff >= 2)  return 250;
-  if(diff >= 0)  return 100;
-  if(diff >= -3) return 60;
-  if(diff >= -7) return 40;
-  return 20;
-}
-
-// ── AKTUELLES LEVEL ERMITTELN ─────────────────────────────
-function getLevelFromXP(totalXP){
-  var current = XP_LEVELS[0];
-  for(var i=XP_LEVELS.length-1; i>=0; i--){
-    if(totalXP >= XP_LEVELS[i].xpRequired){
-      current = XP_LEVELS[i];
-      break;
-    }
-  }
-  var next = XP_LEVELS[Math.min(current.level, XP_LEVELS.length-1)];
-  var xpForCurrent = current.xpRequired;
-  var xpForNext = next ? next.xpRequired : current.xpRequired;
-  var progress = xpForNext > xpForCurrent ?
-    Math.round((totalXP - xpForCurrent) / (xpForNext - xpForCurrent) * 100) : 100;
-  return {
-    level: current.level,
-    xp: totalXP,
-    xpForNext: xpForNext,
-    xpForCurrent: xpForCurrent,
-    progress: Math.min(progress, 100),
-    xpToNext: Math.max(0, xpForNext - totalXP),
-  };
-}
-
 // ── XP VERGEBEN ───────────────────────────────────────────
+// Seit der Server-Geldbörse vergibt nur noch die Cloud Function XP (wallet.js earnReward).
+// Dieser Rest fängt vergessene Aufrufer ab, statt still Punkte zu erfinden.
 function awardXP(amount, reason){
-  if(!db || !firebase.auth().currentUser || amount <= 0) return;
-  var uid = firebase.auth().currentUser.uid;
-  var now = Date.now();
-  var monthKey = new Date().toISOString().slice(0,7); // "2026-06"
-
-  db.collection('xp').doc(uid).get().then(function(doc){
-    var data = doc.exists ? doc.data() : {totalXP:0, monthlyXP:{}, level:1, diamonds:0};
-    var oldXP = data.totalXP || 0;
-    var newXP = oldXP + amount;
-    var oldLevel = getLevelFromXP(oldXP);
-    var newLevel = getLevelFromXP(newXP);
-
-    // Monthly XP
-    var monthly = data.monthlyXP || {};
-    monthly[monthKey] = (monthly[monthKey] || 0) + amount;
-
-    // Level up?
-    var diamondBonus = 0;
-    if(newLevel.level > oldLevel.level){
-      for(var l=oldLevel.level+1; l<=newLevel.level; l++){
-        var lvlData = XP_LEVELS[l-1];
-        if(lvlData) diamondBonus += lvlData.diamonds;
-      }
-    }
-
-    var updates = {
-      totalXP: newXP,
-      monthlyXP: monthly,
-      level: newLevel.level,
-      lastUpdated: now,
-    };
-    if(diamondBonus > 0){
-      updates.diamonds = (data.diamonds||0) + diamondBonus;
-    }
-
-    return db.collection('xp').doc(uid).set(updates, {merge:true}).then(function(){
-      xpCacheTotal(newXP);
-      // XP Log
-      db.collection('xpLog').add({
-        uid: uid,
-        amount: amount,
-        reason: reason,
-        total: newXP,
-        date: now,
-      });
-
-      // Level-Up Toast
-      if(newLevel.level > oldLevel.level){
-        var msg = 'Level up! Level '+newLevel.level;
-        if(diamondBonus > 0) msg += ' · +'+diamondBonus+' Diamanten';
-        if(typeof toast==='function') toast(msg);
-        showLevelUpAnimation(oldLevel.level, newLevel.level, diamondBonus);
-        // Sync diamonds to main currency (spendable wallet: Streak-Eis, Challenge-Skip …)
-        if(diamondBonus > 0 && typeof currency!=='undefined'){
-          currency.diamonds = (currency.diamonds||0) + diamondBonus;
-          if(typeof saveCurrency==='function') saveCurrency();
-        }
-      } else {
-        showXPFloat(amount, reason);
-      }
-    });
-  }).catch(function(e){ console.log('XP error:', e.message); });
+  console.log('awardXP ist abgeschaltet, Belohnungen laufen über earnReward:', reason);
 }
 
 // ── XP FLOAT (Mikro-Belohnung statt generischem Toast) ────
@@ -470,12 +360,14 @@ function checkDailyKingXP(){
   var key = 'king_xp_'+today;
   if(localStorage.getItem(key)) return; // Already awarded today
 
+  // Der Server zählt die Parks selbst (functions/lib/rewards.js, Typ parkking)
   db.collection('parkKings').where('uid','==',uid).limit(10).get().then(function(snap){
     if(snap.empty) return;
     var count = snap.size;
-    var xpAmount = count * 20; // 20 XP per park you're king of
-    awardXP(xpAmount, 'Park King ('+count+' Park'+(count>1?'s':'')+')');
-    localStorage.setItem(key, '1');
+    if(typeof earnReward !== 'function') return;
+    earnReward('parkking', today, {label:'Park King ('+count+' Park'+(count>1?'s':'')+')'}, function(res){
+      if(res && (res.ok || res.already)) localStorage.setItem(key, '1');
+    });
   });
 }
 

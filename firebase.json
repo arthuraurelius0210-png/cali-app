@@ -83,6 +83,10 @@
     {
       "source": "functions",
       "codebase": "default",
+      "predeploy": [
+        "node functions/sync-shared.js",
+        "node functions/lib/rewards.test.js"
+      ],
       "ignore": [
         "node_modules",
         ".git",
@@ -93,5 +97,8 @@
   ],
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }
