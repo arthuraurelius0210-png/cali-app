@@ -132,21 +132,40 @@ eq('Level-Diamanten 1→11', E.levelUpDiamonds(0, 18500), 550);
   eq('Nach dem Eis: 0', c.wallet.diamonds, 0);
 }
 
-// Abnahme: Schritt 1 Code ausgeben (nichts abbuchen), Schritt 2 Video einreichen (abbuchen)
+// Abnahme: Schritt 1 Code ausgeben (nichts abbuchen, Challenge muss NICHT geschafft sein),
+// Schritt 2 Video einreichen (abbuchen). Nur Challenges, die in einer Einheit gehen.
 {
-  const c = ctx(); c.wallet.diamonds = 1500;
-  eq('Start ohne geschaffte Challenge', R.evaluateStart(c, 'challenge|p5|' + today).code, 'nodata');
-  const poor = ctx(); earn('weekly', '2026-W39', poor);
-  eq('Start zu wenig Diamanten', R.evaluateStart(poor, 'weekly|2026-W39').code, 'insufficient');
-  earn('weekly', '2026-W39', c);
-  const s = R.evaluateStart(c, 'weekly|2026-W39');
-  eq('Start ok, noch nichts abgebucht', [s.ok, s.cost, s.prevId, c.wallet.diamonds], [true, 1000, null, 1503]);
-  const a = R.applyStart(c, 'weekly|2026-W39', s.item, 'v1', 4821);
+  const plank = {id: 'p5', title: 'Plank 5 Minuten', startDate: today, params: {metric: 'best_set', exName: 'Plank', target: 300}};
+  const K = 'challenge|p5|' + today;
+  eq('Start ohne gespeicherte Challenge', R.evaluateStart(ctx({user: {ents}}), K).code, 'nodata');
+  eq('Start mit fremdem Schlüssel', R.evaluateStart(ctx({user: {ents, challenge: plank}}), 'challenge|p1|' + today).code, 'invalid');
+  eq('Start unbekannter Schlüssel', R.evaluateStart(ctx({user: {ents, challenge: plank}}), 'x|y').code, 'invalid');
+  const weekly = ctx({user: {ents}}); weekly.wallet.diamonds = 1500;
+  eq('Start Wochen-Challenge KW 39 (Wochensumme): nicht aufnehmbar', R.evaluateStart(weekly, 'weekly|2026-W39').code, 'notrecordable');
+  eq('Start falsche Woche', R.evaluateStart(weekly, 'weekly|2026-W38').code, 'invalid');
+  const may = new Date(2027, 4, 3, 12); // Montag 03.05.2027 → w33 „Zehn am Stück" (bester Satz)
+  const wk33 = R.weeklyChallengeFor(may, null);
+  eq('KW im Mai 2027 → w33 bester Satz', [wk33.ch.id, wk33.ch.metric], ['w33', 'best_set']);
+  const wkStart = R.evaluateStart(ctx({user: {ents}, now: may, wallet: Object.assign(R.normalizeWallet(null), {diamonds: 1500})}), 'weekly|' + wk33.key);
+  eq('Start Wochen-Challenge mit bestem Satz: ok', [wkStart.ok, wkStart.item.kind, wkStart.item.id, wkStart.item.week], [true, 'weekly', 'w33', wk33.key]);
+  const multi = ctx({user: {ents, challenge: Object.assign({}, plank, {params: {metric: 'volume_exercise', exName: 'Plank', target: 300}})}}); multi.wallet.diamonds = 1500;
+  eq('Start Wochen-Metrik bei eigener Challenge: nicht aufnehmbar', R.evaluateStart(multi, K).code, 'notrecordable');
+  const once = ctx({user: {ents, challenge: Object.assign({}, plank, {params: {metric: 'manual', target: 1}})}}); once.wallet.diamonds = 1500;
+  eq('Start Abhaken einmalig: ok', R.evaluateStart(once, K).ok, true);
+  const daily = ctx({user: {ents, challenge: Object.assign({}, plank, {params: {metric: 'manual', target: 5, perDay: true}})}}); daily.wallet.diamonds = 1500;
+  eq('Start Abhaken über Tage: nicht aufnehmbar', R.evaluateStart(daily, K).code, 'notrecordable');
+  const poor = ctx({user: {ents, challenge: plank}});
+  eq('Start zu wenig Diamanten', R.evaluateStart(poor, K).code, 'insufficient');
+
+  const c = ctx({user: {ents, challenge: plank, prData: {name: 'Mara'}}}); c.wallet.diamonds = 1503;
+  const s = R.evaluateStart(c, K);
+  eq('Start ok ohne geschaffte Challenge, nichts abgebucht', [s.ok, s.cost, s.prevId, c.wallet.diamonds, c.wallet.completed.length], [true, 1000, null, 1503, 0]);
+  const a = R.applyStart(c, K, s.item, 'v1', 4821);
   c.wallet = a.wallet;
-  eq('Start: Dokument mit Code und Frist', [a.doc.status, a.doc.code, a.doc.uid, a.doc.name, a.doc.kind, a.doc.title, a.doc.week, a.doc.expiresAt - a.doc.issuedAt, a.doc.videoPath], ['recording', '4821', 'u1', 'Mara', 'weekly', 'Hundert Liegestütze', '2026-W39', R.RECORD_WINDOW_MS, null]);
+  eq('Start: Dokument mit Code und Frist', [a.doc.status, a.doc.code, a.doc.uid, a.doc.name, a.doc.kind, a.doc.title, a.doc.completedAt, a.doc.expiresAt - a.doc.issuedAt, a.doc.videoPath], ['recording', '4821', 'u1', 'Mara', 'challenge', 'Plank 5 Minuten', today, R.RECORD_WINDOW_MS, null]);
   eq('Start: Antwort an den Client', [a.result.id, a.result.code, a.result.expiresAt], ['v1', '4821', a.doc.expiresAt]);
-  eq('Start: Wallet merkt Aufnahme, Diamanten bleiben', [c.wallet.verifications['weekly|2026-W39'].status, c.wallet.diamonds], ['recording', 1503]);
-  eq('Neustart erlaubt, alte Aufnahme wird verworfen', (r => [r.ok, r.prevId])(R.evaluateStart(c, 'weekly|2026-W39')), [true, 'v1']);
+  eq('Start: Wallet merkt Aufnahme, Diamanten bleiben', [c.wallet.verifications[K].status, c.wallet.diamonds], ['recording', 1503]);
+  eq('Neustart erlaubt, alte Aufnahme wird verworfen', (r => [r.ok, r.prevId])(R.evaluateStart(c, K)), [true, 'v1']);
   const doc = Object.assign({id: 'v1'}, a.doc);
   eq('Einreichen fremdes Dokument', R.evaluateSubmit({uid: 'u2', wallet: c.wallet, now: NOW}, doc, 'verificationVideos/u2/v1.webm').code, 'nodata');
   eq('Einreichen falscher Pfad', R.evaluateSubmit(c, doc, 'verificationVideos/u1/anders.webm').code, 'invalid');
@@ -161,13 +180,13 @@ eq('Level-Diamanten 1→11', E.levelUpDiamonds(0, 18500), 550);
   c.wallet = b.wallet;
   eq('Einreichen abgebucht', c.wallet.diamonds, 503);
   eq('Einreichen: Update', [b.update.status, b.update.videoPath, b.update.recordSeconds, b.update.cost], ['pending', 'verificationVideos/u1/v1.mp4', 95, 1000]);
-  eq('Einreichen: Wallet-Status', c.wallet.verifications['weekly|2026-W39'].status, 'pending');
+  eq('Einreichen: Wallet-Status', c.wallet.verifications[K].status, 'pending');
   eq('Einreichen zweimal: nicht mehr offen', R.evaluateSubmit(c, Object.assign({}, doc, {status: 'pending'}), 'verificationVideos/u1/v1.mp4').code, 'invalid');
-  eq('Start während Prüfung: läuft schon', R.evaluateStart(c, 'weekly|2026-W39').code, 'already');
+  eq('Start während Prüfung: läuft schon', R.evaluateStart(c, K).code, 'already');
   // Entscheidung
   const v = Object.assign({}, doc, b.update);
   const ap = R.applyReview({uid: 'u1', wallet: c.wallet, now: NOW}, v, 'approved', 'Sauber', false);
-  eq('Freigabe: Abzeichen', [ap.badge.kind, ap.badge.title, ap.badge.week, ap.update.status, ap.update.videoPath], ['weekly', 'Hundert Liegestütze', '2026-W39', 'approved', null]);
+  eq('Freigabe: Abzeichen', [ap.badge.kind, ap.badge.title, ap.badge.week, ap.update.status, ap.update.videoPath], ['challenge', 'Plank 5 Minuten', null, 'approved', null]);
   eq('Freigabe: Diamanten bleiben', ap.wallet.diamonds, 503);
   const rj = R.applyReview({uid: 'u1', wallet: c.wallet, now: NOW}, v, 'rejected', 'Video unscharf', true);
   eq('Ablehnung mit Rückgabe: +1000', [rj.wallet.diamonds, rj.badge, rj.update.refunded], [1503, null, true]);

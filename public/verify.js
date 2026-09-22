@@ -1,22 +1,23 @@
 // ══════════════════════════════════════════════════════════
-// VERIFY.JS — Abnahme geschaffter Challenges per Video
-// Ablauf: Challenge geschafft (Server hat sie in wallets/{uid}.completed eingetragen) →
-// startVerification gibt einen vierstelligen Code aus → das Video wird IN DER APP mit der
-// Handykamera aufgenommen (getUserMedia + MediaRecorder, kein Datei-Upload), der Code muss am
-// Anfang zu sehen oder zu hören sein → Upload nach verificationVideos/{uid}/{id}.<ext> →
-// requestVerification bucht 1000 Diamanten ab und setzt verifications/{id} auf „pending" →
-// Admin entscheidet im Admin-Panel (Tab „Abnahme", reviewVerification) → Abzeichen in
-// verifiedBadges/{uid}, Video wird gelöscht.
+// VERIFY.JS — Abnahme einer Challenge per Video
+// Die Aufnahme ist der Versuch selbst: Beim Annehmen wählt man „Annehmen und aufnehmen" (oder im
+// Challenge-Sheet „Aufnehmen für Abnahme"), nur bei Challenges, die in einer Einheit gehen
+// (econRecordable). Ablauf: startVerification gibt einen vierstelligen Code aus → das Video wird
+// IN DER APP mit der Handykamera aufgenommen (getUserMedia + MediaRecorder, kein Datei-Upload),
+// der Code muss am Anfang zu sehen oder zu hören sein → Upload nach
+// verificationVideos/{uid}/{id}.<ext> → requestVerification bucht 1000 Diamanten ab und setzt
+// verifications/{id} auf „pending" → Admin entscheidet im Admin-Panel (Tab „Abnahme",
+// reviewVerification) → Abzeichen in verifiedBadges/{uid}, Video wird gelöscht.
 // ══════════════════════════════════════════════════════════
 
 var VERIFY_RULES = [
-  'Die Aufnahme läuft direkt hier in der App mit deiner Handykamera. Fertige Videos hochladen geht nicht.',
+  'Die Aufnahme ist dein Versuch: Du filmst die Challenge, während du sie machst, direkt hier in der App. Fertige Videos hochladen geht nicht.',
   'Du bekommst einen Code. Zeig ihn am Anfang in die Kamera oder sag ihn laut.',
-  'Die Challenge ist komplett zu sehen. Pause zwischen den Sätzen ist erlaubt, die Aufnahme bleibt dabei in der App.',
-  'Höchstens 10 Minuten. Das Video sehen nur du und der Prüfer, nach der Entscheidung wird es gelöscht.'
+  'Alles muss zu sehen sein. Pause zwischen den Sätzen ist erlaubt, die Aufnahme bleibt dabei in der App.',
+  'Höchstens 20 Minuten. Das Video sehen nur du und der Prüfer, nach der Entscheidung wird es gelöscht.'
 ];
 var VERIFY_STATUS = {recording:'Aufnahme offen', pending:'Wird geprüft', approved:'Verifiziert', rejected:'Abgelehnt'};
-var VERIFY_MAX_SECONDS = 600;
+var VERIFY_MAX_SECONDS = 1200;
 
 function verifyKindLabel(item){
   if(item.kind === 'weekly') return 'Wochen-Challenge' + (item.week && typeof weeklyNum === 'function' ? ' · KW ' + weeklyNum(item.week) : '');
@@ -32,12 +33,15 @@ function verifyFmtClock(sec){
   var m = Math.floor(sec / 60), s = sec % 60;
   return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
-// Geschaffte Challenges, die noch eine Abnahme vertragen (keine laufende Prüfung, keine freigegebene)
-function verifyOpenItems(){
-  return walletState.completed.filter(function(c){
-    var v = walletState.verifications[c.key];
-    return !v || v.status === 'rejected' || v.status === 'recording';
-  }).slice().reverse();
+// Stand der Abnahme zu einem Schlüssel: null | 'recording' | 'pending' | 'approved' | 'rejected'
+function verifyStatusFor(key){
+  var v = walletState.verifications[key];
+  return v ? v.status : null;
+}
+// Abnahme-Objekt für die aktive Challenge (Schlüssel wie im wallets-Dokument des Servers)
+function verifyItemForActive(){
+  if(typeof activeChallenge === 'undefined' || !activeChallenge) return null;
+  return {key:'challenge|' + String(activeChallenge.id) + '|' + String(activeChallenge.startDate || ''), kind:'challenge', id:String(activeChallenge.id), title:activeChallenge.title, week:null, date:activeChallenge.startDate || null};
 }
 function verifyCanRecord(){
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && typeof MediaRecorder !== 'undefined');
@@ -78,20 +82,18 @@ function buildVerifySection(){
     return;
   }
 
-  var newBtn = document.createElement('button');
-  newBtn.type = 'button';
-  newBtn.className = 'btn sec pressable';
-  newBtn.style.cssText = 'margin:0 0 10px;';
-  newBtn.textContent = 'Abnahme beantragen (' + CALI_ECON.verifyCost + ' Diamanten)';
-  newBtn.onclick = function(){ openVerifyPicker(); };
-  card.appendChild(newBtn);
+  var how = document.createElement('div');
+  how.className = 'row-sub';
+  how.style.cssText = 'margin:0 0 10px;white-space:normal;line-height:1.5;';
+  how.textContent = 'Eine Abnahme startest du beim Annehmen einer Challenge mit „Annehmen und aufnehmen". Die Aufnahme ist dein Versuch, wir prüfen sie und du bekommst das Abzeichen „Verifiziert". Kostet ' + CALI_ECON.verifyCost + ' Diamanten.';
+  card.appendChild(how);
 
   var keys = Object.keys(walletState.verifications);
   if(!keys.length){
     var none = document.createElement('div');
     none.className = 'row-sub';
     none.style.cssText = 'margin:0;white-space:normal;';
-    none.textContent = 'Noch keine Abnahme. Schaff eine Challenge, nimm sie hier in der App auf und hol dir das Abzeichen „Verifiziert".';
+    none.textContent = 'Noch keine Abnahme.';
     card.appendChild(none);
   } else {
     var list = document.createElement('div');
@@ -125,89 +127,14 @@ function buildVerifySection(){
   el.appendChild(card);
 }
 
-// Abnahme für eine bestimmte geschaffte Challenge öffnen (aus dem Challenge-Sheet heraus).
-// key wie in wallets/{uid}.completed: 'challenge|<id>|<startDate>' oder 'weekly|<KW>'.
-function openVerifyForKey(key){
-  if(!currentUser){ toast('Bitte einloggen'); return; }
-  var item = null;
-  for(var i=0;i<walletState.completed.length;i++){ if(walletState.completed[i].key === key){ item = walletState.completed[i]; break; } }
-  if(!item){ toast('Erst die Challenge abschließen, dann verifizieren lassen'); return; }
-  var v = walletState.verifications[key];
-  if(v && v.status === 'pending'){ toast('Die Abnahme läuft schon'); return; }
-  if(v && v.status === 'approved'){ toast('Schon verifiziert'); return; }
-  openVerifySheet(item);
-}
-
-// ── Auswahl: welche geschaffte Challenge soll verifiziert werden ──
-function openVerifyPicker(){
-  if(!currentUser){ toast('Bitte einloggen'); return; }
-  var old = document.getElementById('verify-picker');
-  if(old) old.remove();
-  var ov = document.createElement('div');
-  ov.id = 'verify-picker';
-  ov.style.cssText = PLAN_BACKDROP_CSS + 'z-index:2100;';
-  var box = document.createElement('div');
-  box.className = 'sheet sheet-scroll';
-  box.style.cssText = 'max-height:85vh;overflow-y:auto;';
-  box.appendChild(planSheetGrip());
-  var title = document.createElement('div');
-  title.className = 'ttl';
-  title.style.cssText = 'margin-bottom:6px;';
-  title.textContent = 'Abnahme beantragen';
-  box.appendChild(title);
-  var sub = document.createElement('div');
-  sub.style.cssText = 'font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:14px;';
-  sub.textContent = 'Wähle eine geschaffte Challenge. Eine Abnahme kostet ' + CALI_ECON.verifyCost + ' Diamanten (entspricht ' + econDiamondsEuro(CALI_ECON.verifyCost) + '). Du hast ' + (currency.diamonds || 0) + '.';
-  box.appendChild(sub);
-
-  var items = verifyOpenItems();
-  if(!items.length){
-    var none = document.createElement('div');
-    none.className = 'empty';
-    none.textContent = walletState.completed.length ? 'Alle geschafften Challenges sind schon eingereicht.' : 'Noch keine geschaffte Challenge. Erst schaffen und abschließen, dann verifizieren.';
-    box.appendChild(none);
-  } else {
-    var list = document.createElement('div');
-    list.className = 'list';
-    list.style.cssText = 'margin-bottom:8px;';
-    items.forEach(function(item){
-      var row = document.createElement('div');
-      row.className = 'list-row pressable';
-      row.setAttribute('role', 'button');
-      row.setAttribute('tabindex', '0');
-      var main = document.createElement('div');
-      main.className = 'row-main';
-      var t = document.createElement('div');
-      t.className = 'row-title';
-      t.textContent = item.title;
-      var s = document.createElement('div');
-      s.className = 'row-sub';
-      s.textContent = verifyKindLabel(item) + ' · geschafft am ' + verifyFmtDate(item.date);
-      main.appendChild(t); main.appendChild(s);
-      var chev = document.createElement('span');
-      chev.className = 'row-chev';
-      row.appendChild(main); row.appendChild(chev);
-      row.onclick = function(){ sheetOut(ov, box); setTimeout(function(){ openVerifySheet(item); }, 250); };
-      row.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); row.click(); } };
-      list.appendChild(row);
-    });
-    box.appendChild(list);
-  }
-  var close = document.createElement('button');
-  close.type = 'button';
-  close.className = 'pressable u';
-  close.style.cssText = PLAN_TEXTBTN_CSS;
-  close.textContent = 'Schließen';
-  close.onclick = function(){ sheetOut(ov, box); };
-  box.appendChild(close);
-  ov.appendChild(box);
-  ov.onclick = function(e){ if(e.target === ov) sheetOut(ov, box); };
-  document.body.appendChild(ov);
-  if(window.caliMotion) caliMotion.sheetIn(box, ov);
-}
-
 // ── Vorab-Sheet: Regeln, Preis, dann Code holen und Kamera öffnen ──
-function openVerifySheet(item){
+// item = {key, kind, id, title, week, date} (verifyItemForActive bzw. aus wochen.js)
+function openVerifyStart(item){
+  if(!item) return;
+  if(!currentUser){ toast('Bitte einloggen'); return; }
+  var st = verifyStatusFor(item.key);
+  if(st === 'pending'){ toast('Die Abnahme läuft schon'); return; }
+  if(st === 'approved'){ toast('Schon verifiziert'); return; }
   var old = document.getElementById('verify-sheet');
   if(old) old.remove();
   var ov = document.createElement('div');
@@ -228,7 +155,7 @@ function openVerifySheet(item){
   }
   add('span', 'eyebrow', '', 'Abnahme');
   add('div', 'ttl', 'margin-bottom:4px;', item.title);
-  add('div', 'row-sub', 'margin:0 0 12px;', verifyKindLabel(item) + ' · geschafft am ' + verifyFmtDate(item.date));
+  add('div', 'row-sub', 'margin:0 0 12px;', verifyKindLabel(item));
   add('div', 'lbl', 'margin-bottom:6px;', 'So klappt die Abnahme');
   var ul = add('div', 'list numbered', 'margin-bottom:14px;');
   VERIFY_RULES.forEach(function(r){
@@ -254,7 +181,11 @@ function openVerifySheet(item){
     if(!currentUser){ toast('Bitte einloggen'); return; }
     start.disabled = true;
     status.textContent = 'Code wird geholt …';
-    walletCall('startVerification', {key:item.key}).then(function(d){
+    // Erst den Stand speichern: der Server liest die aktive Challenge aus users/{uid}
+    var saved = (typeof fbSave === 'function') ? fbSave() : null;
+    Promise.resolve(saved).catch(function(){}).then(function(){
+      return walletCall('startVerification', {key:item.key});
+    }).then(function(d){
       walletApply(d.wallet);
       sheetOut(ov, box);
       setTimeout(function(){ openVerifyRecorder(item, d); }, 250);
@@ -435,7 +366,7 @@ function openVerifyRecorder(item, session){
   function startRec(){
     if(!stream) return;
     chunks = []; blob = null; seconds = 0; paused = false;
-    var opts = {videoBitsPerSecond: 1500000};
+    var opts = {videoBitsPerSecond: 1200000};
     if(mime) opts.mimeType = mime;
     try{ rec = new MediaRecorder(stream, opts); }
     catch(e){ try{ rec = new MediaRecorder(stream); }catch(e2){ toast('Aufnahme auf diesem Gerät nicht möglich'); return; } }

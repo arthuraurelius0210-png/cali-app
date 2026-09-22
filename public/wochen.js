@@ -748,18 +748,20 @@ function openWochenSheet(noAnim){
   } else if(!done && wochenIsManual(ch)){
     box.appendChild(wochenCheckinButton('margin:0 0 8px;'));
   }
-  // Nach dem Abholen: Abnahme per Video (verify.js), Schlüssel wie im wallets-Dokument
-  if(st.claimed && typeof openVerifyForKey === 'function' && typeof CALI_ECON !== 'undefined'){
-    var vs = walletState && walletState.verifications ? walletState.verifications['weekly|' + st.week] : null;
-    if(vs && vs.status !== 'rejected'){
-      add('div', 'row-sub', 'margin:0 0 12px;text-align:center;', vs.status === 'approved' ? 'Verifiziert, das Abzeichen ist im Profil.' : 'Abnahme läuft, du bekommst Bescheid im Profil.');
-    } else {
-      var ver = add('button', 'btn sec pressable', 'margin:0 0 8px;', 'Verifizieren lassen (' + CALI_ECON.verifyCost + ' Diamanten)');
+  // Abnahme per Video (verify.js): die Aufnahme ist der Versuch selbst, nur bei Challenges,
+  // die in einer Einheit gehen. Schlüssel wie im wallets-Dokument des Servers.
+  if(typeof openVerifyStart === 'function' && typeof CALI_ECON !== 'undefined'){
+    var vKey = 'weekly|' + st.week;
+    var vSt = (typeof verifyStatusFor === 'function') ? verifyStatusFor(vKey) : null;
+    if(vSt === 'pending' || vSt === 'approved'){
+      add('div', 'row-sub', 'margin:0 0 12px;text-align:center;', vSt === 'approved' ? 'Verifiziert, das Abzeichen ist im Profil.' : 'Abnahme eingereicht, wird geprüft.');
+    } else if(econRecordable(presetParams(ch))){
+      var ver = add('button', 'btn-g pressable', 'width:100%;min-height:44px;margin-bottom:8px;', 'Mit Aufnahme machen · Abnahme ' + CALI_ECON.verifyCost + ' Diamanten');
       ver.type = 'button';
-      ver.onclick = function(){ wochenCloseSheet(); setTimeout(function(){ openVerifyForKey('weekly|' + st.week); }, 350); };
+      ver.onclick = function(){ wochenCloseSheet(); setTimeout(function(){ openVerifyStart({key:vKey, kind:'weekly', id:ch.id, title:ch.title, week:st.week, date:null}); }, 350); };
+    } else {
+      add('div', 'row-sub', 'margin:0 0 12px;text-align:center;white-space:normal;line-height:1.5;', 'Abnahme per Video gibt es nur bei Challenges, die in einer Einheit gehen.');
     }
-  } else if(!st.claimed && typeof CALI_ECON !== 'undefined'){
-    add('div', 'row-sub', 'margin:0 0 12px;text-align:center;white-space:normal;line-height:1.5;', 'Nach dem Abholen kannst du sie per Video verifizieren lassen (' + CALI_ECON.verifyCost + ' Diamanten).');
   }
 
   if(!done && !st.claimed){

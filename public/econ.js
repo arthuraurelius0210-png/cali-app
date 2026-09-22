@@ -110,6 +110,15 @@ var CALI_ECON = {
   migrateCap: 300
 };
 
+// Metriken, die sich in einer einzigen Einheit zeigen lassen. Nur solche Challenges lassen sich
+// beim Annehmen „mit Aufnahme" machen (Abnahme per Video); Wochen- und Tages-Challenges nicht.
+var RECORDABLE_METRICS = ['best_set', 'volume_session_ex', 'multi_volume_session', 'rounds_in_session', 'longest_session_min', 'sets_in_one_workout', 'distinct_exercises_session', 'categories_in_session', 'hold_total_session', 'volume_one_workout', 'pullup_pyramid'];
+function econRecordable(p){
+  if(!p || !p.metric) return false;
+  if(p.metric === 'manual') return !(parseFloat(p.target) > 1) && !p.perDay;
+  return RECORDABLE_METRICS.indexOf(p.metric) > -1;
+}
+
 // Euro-Wert einer Diamantenzahl zum Preis des kleinsten Pakets ('2,99 €')
 function econEuro(cents){
   var e = Math.floor(cents / 100), c = cents % 100;
@@ -134,6 +143,7 @@ if(typeof module !== 'undefined' && module.exports){
   module.exports = {
     XP_LEVELS: XP_LEVELS, getLevelFromXP: getLevelFromXP, levelUpDiamonds: levelUpDiamonds,
     calcBattleXP: calcBattleXP, MILESTONES: MILESTONES, CALI_ECON: CALI_ECON,
-    econEuro: econEuro, econDiamondsEuro: econDiamondsEuro, econWeekKey: econWeekKey
+    econEuro: econEuro, econDiamondsEuro: econDiamondsEuro, econWeekKey: econWeekKey,
+    RECORDABLE_METRICS: RECORDABLE_METRICS, econRecordable: econRecordable
   };
 }

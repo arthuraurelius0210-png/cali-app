@@ -107,7 +107,7 @@ function requireAdmin(req) {
   return uid;
 }
 function str(v, max) { return typeof v === 'string' ? v.slice(0, max || 200) : ''; }
-const ERR = { already: 'already-exists', insufficient: 'failed-precondition', invalid: 'invalid-argument', nodata: 'failed-precondition', notdone: 'failed-precondition', notbetter: 'failed-precondition', limit: 'resource-exhausted', expired: 'deadline-exceeded' };
+const ERR = { already: 'already-exists', insufficient: 'failed-precondition', invalid: 'invalid-argument', nodata: 'failed-precondition', notdone: 'failed-precondition', notbetter: 'failed-precondition', limit: 'resource-exhausted', expired: 'deadline-exceeded', notrecordable: 'failed-precondition' };
 function toErr(res) { return new HttpsError(ERR[res.code] || 'failed-precondition', res.message); }
 const walletRef = uid => db.collection('wallets').doc(uid);
 

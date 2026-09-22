@@ -1490,22 +1490,6 @@ function buildDrawerPersonal(el){
       claimBtn.textContent = 'Challenge abschließen';
       claimBtn.onclick = function(){ claimBtn.disabled = true; claimActiveChallenge(function(){ claimBtn.disabled = false; }); };
       el.appendChild(claimBtn);
-      // Abschließen und direkt die Abnahme beantragen (verify.js); der Schlüssel ist der
-      // completed-Eintrag, den der Server beim Abschließen anlegt
-      if(typeof openVerifyForKey === 'function' && typeof CALI_ECON !== 'undefined'){
-        var vKey = 'challenge|'+String(activeChallenge.id)+'|'+String(activeChallenge.startDate||'');
-        var verBtn = document.createElement('button');
-        verBtn.type = 'button';
-        verBtn.className = 'btn-g pressable';
-        verBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:8px;';
-        verBtn.textContent = 'Abschließen und verifizieren lassen ('+CALI_ECON.verifyCost+' Diamanten)';
-        verBtn.onclick = function(){
-          if(!currentUser){ toast('Bitte einloggen'); return; }
-          verBtn.disabled = true; claimBtn.disabled = true;
-          claimActiveChallenge(function(){ verBtn.disabled = false; claimBtn.disabled = false; }, function(){ setTimeout(function(){ openVerifyForKey(vKey); }, 450); });
-        };
-        el.appendChild(verBtn);
-      }
     } else {
       // Der eine orangene CTA: Abhaken bei manuellen Challenges, sonst ab ins Workout
       if(chIsManual()){
@@ -1519,13 +1503,35 @@ function buildDrawerPersonal(el){
         woBtn.onclick = function(){ startChallengeWorkout(); };
         el.appendChild(woBtn);
       }
-      // Hinweis auf die Abnahme, damit man weiß, wo es nach dem Schaffen weitergeht
-      if(typeof CALI_ECON !== 'undefined'){
-        var vHint = document.createElement('div');
-        vHint.className = 'row-sub';
-        vHint.style.cssText = 'margin:0 0 10px;white-space:normal;line-height:1.5;text-align:center;';
-        vHint.textContent = 'Geschafft? Nach dem Abschließen kannst du sie per Video verifizieren lassen ('+CALI_ECON.verifyCost+' Diamanten) und bekommst das Abzeichen „Verifiziert".';
-        el.appendChild(vHint);
+      // Abnahme per Video: die Aufnahme ist der Versuch selbst (verify.js), nur bei Challenges,
+      // die in einer Einheit gehen. Startet das Workout mit der Übung und legt die Kamera darüber.
+      if(typeof openVerifyStart === 'function' && typeof CALI_ECON !== 'undefined'){
+        var vSt = verifyStatusFor('challenge|'+String(activeChallenge.id)+'|'+String(activeChallenge.startDate||''));
+        if(vSt === 'pending' || vSt === 'approved'){
+          var vDone = document.createElement('div');
+          vDone.className = 'row-sub';
+          vDone.style.cssText = 'margin:0 0 10px;text-align:center;';
+          vDone.textContent = vSt === 'approved' ? 'Verifiziert, das Abzeichen ist im Profil.' : 'Abnahme eingereicht, wird geprüft.';
+          el.appendChild(vDone);
+        } else if(econRecordable(activeChallenge.params)){
+          var recBtn = document.createElement('button');
+          recBtn.type = 'button';
+          recBtn.className = 'btn-g pressable';
+          recBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:8px;';
+          recBtn.textContent = 'Aufnehmen für Abnahme · '+CALI_ECON.verifyCost+' Diamanten';
+          recBtn.onclick = function(){
+            var item = verifyItemForActive();
+            startChallengeWorkout();
+            setTimeout(function(){ openVerifyStart(item); }, 350);
+          };
+          el.appendChild(recBtn);
+        } else {
+          var vHint = document.createElement('div');
+          vHint.className = 'row-sub';
+          vHint.style.cssText = 'margin:0 0 10px;white-space:normal;line-height:1.5;text-align:center;';
+          vHint.textContent = 'Abnahme per Video gibt es nur bei Challenges, die in einer Einheit gehen.';
+          el.appendChild(vHint);
+        }
       }
 
       // Wechseln ist kostenlos: Katalog oder Zufall, so oft man will
@@ -2055,12 +2061,8 @@ function openChallengeDetail(ch, catalogOv){
     buildChallengeUI();
   };
 
-  var okBtn = document.createElement('button');
-  okBtn.type = 'button';
-  okBtn.className = 'btn pressable';
-  okBtn.style.cssText = 'margin:0 0 8px;';
-  okBtn.textContent = 'Annehmen';
-  okBtn.onclick = function(){
+  // Läuft eine andere Challenge noch, erst nachfragen, dann fn ausführen
+  var runAccept = function(fn){
     var running = activeChallenge && activeChallenge.id !== ch.id &&
                   calcChallengeProgress() < ((activeChallenge.params && activeChallenge.params.target) || 1);
     if(running){
@@ -2068,13 +2070,47 @@ function openChallengeDetail(ch, catalogOv){
         title:'Aktive Challenge ersetzen?',
         desc:'Deine laufende Challenge „'+activeChallenge.title+'“ wird verworfen.',
         confirmLabel:'Ersetzen',
-        onConfirm:accept
+        onConfirm:fn
       });
     } else {
-      accept();
+      fn();
     }
   };
+
+  var okBtn = document.createElement('button');
+  okBtn.type = 'button';
+  okBtn.className = 'btn pressable';
+  okBtn.style.cssText = 'margin:0 0 8px;';
+  okBtn.textContent = 'Annehmen';
+  okBtn.onclick = function(){ runAccept(accept); };
   box.appendChild(okBtn);
+
+  // Zweite Option: annehmen und den Versuch gleich aufnehmen (Abnahme per Video, verify.js).
+  // Startet das Workout mit der Übung vorgeladen und legt die Kamera darüber.
+  if(typeof openVerifyStart === 'function' && typeof econRecordable === 'function' && typeof CALI_ECON !== 'undefined'){
+    if(econRecordable(presetParams(ch))){
+      var recBtn = document.createElement('button');
+      recBtn.type = 'button';
+      recBtn.className = 'btn-g pressable';
+      recBtn.style.cssText = 'width:100%;min-height:44px;margin-bottom:8px;';
+      recBtn.textContent = 'Annehmen und aufnehmen · Abnahme '+CALI_ECON.verifyCost+' Diamanten';
+      recBtn.onclick = function(){
+        runAccept(function(){
+          accept();
+          var item = verifyItemForActive();
+          startChallengeWorkout();
+          setTimeout(function(){ openVerifyStart(item); }, 350);
+        });
+      };
+      box.appendChild(recBtn);
+    } else {
+      var recHint = document.createElement('div');
+      recHint.className = 'row-sub';
+      recHint.style.cssText = 'margin:0 0 10px;text-align:center;white-space:normal;line-height:1.5;';
+      recHint.textContent = 'Abnahme per Video gibt es nur bei Challenges, die in einer Einheit gehen.';
+      box.appendChild(recHint);
+    }
+  }
 
   var cancelBtn = document.createElement('button');
   cancelBtn.type = 'button';

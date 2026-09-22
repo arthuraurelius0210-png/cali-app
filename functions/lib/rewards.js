@@ -202,7 +202,9 @@ function applySpend(ctx, what, cost){
 }
 
 // ── Abnahme, Schritt 1: Aufnahme starten ──
-// key = completed.key ('challenge|p5|2026-09-22' oder 'weekly|2026-W39'). Der Server gibt einen
+// key = 'challenge|<id>|<startDate>' (aktive Challenge im users-Dokument) oder 'weekly|<KW>' (laufende
+// Wochen-Challenge). Die Aufnahme ist der Versuch selbst, die Challenge muss also NICHT geschafft
+// sein; nur Challenges, die in einer Einheit gehen (econRecordable). Der Server gibt einen
 // vierstelligen Code aus, der am Anfang des Videos zu sehen oder zu hören sein muss; das Video
 // entsteht in der App (kein Datei-Upload). So lässt sich kein fremdes oder altes Video einreichen.
 // Diamanten werden erst beim Einreichen abgebucht. Eine offene Aufnahme darf neu gestartet werden.
@@ -210,10 +212,24 @@ const RECORD_WINDOW_MS = 90 * 60000; // Zeit von Code-Ausgabe bis Einreichen
 const RECORD_GRACE_MS = 15 * 60000;  // Upload darf etwas länger dauern
 
 function evaluateStart(ctx, key){
-  const wallet = ctx.wallet, cost = E.CALI_ECON.verifyCost;
+  const wallet = ctx.wallet, user = ctx.user || {}, now = ctx.now || new Date(), cost = E.CALI_ECON.verifyCost;
   if(typeof key !== 'string' || !key) return fail('invalid', 'Challenge fehlt');
-  const item = wallet.completed.find(c => c.key === key);
-  if(!item) return fail('nodata', 'Diese Challenge ist bei dir nicht als geschafft eingetragen');
+  let item = null, params = null;
+  if(key.indexOf('weekly|') === 0){
+    const wk = weeklyChallengeFor(now, user.wochen);
+    if(key !== 'weekly|' + wk.key) return fail('invalid', 'Nur die laufende Wochen-Challenge kann aufgenommen werden');
+    params = presetParams(wk.ch);
+    item = {kind:'weekly', id:wk.ch.id, title:wk.ch.title, week:wk.key, date:null};
+  } else if(key.indexOf('challenge|') === 0){
+    const ch = user.challenge;
+    if(!ch || !ch.params) return fail('nodata', 'Keine aktive Challenge gespeichert');
+    if(key !== 'challenge|' + String(ch.id) + '|' + String(ch.startDate || '')) return fail('invalid', 'Challenge passt nicht zur gespeicherten');
+    params = ch.params;
+    item = {kind:'challenge', id:String(ch.id), title:String(ch.title || ch.id), week:null, date:ch.startDate || null};
+  } else {
+    return fail('invalid', 'Unbekannter Schlüssel');
+  }
+  if(!E.econRecordable(params)) return fail('notrecordable', 'Diese Challenge läuft über mehrere Tage und lässt sich nicht in einer Aufnahme zeigen');
   const prev = wallet.verifications[key];
   if(prev && prev.status === 'pending') return fail('already', 'Abnahme läuft schon');
   if(prev && prev.status === 'approved') return fail('already', 'Schon verifiziert');
