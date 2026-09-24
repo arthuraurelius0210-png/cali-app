@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CALI · Rechtliches</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#0b0b0b;--card:#141414;--line:#262626;--text:#f2f2f2;--muted:#9a9a9a;--accent:#ff5500;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"DM Mono","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;line-height:1.7;font-size:14px}
+header{border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+header .logo{letter-spacing:.3em;font-weight:600}
+header a{color:var(--accent);text-decoration:none;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+nav.legal-nav{display:flex;flex-wrap:wrap;gap:8px;padding:16px 20px 0}
+nav.legal-nav a{color:var(--muted);text-decoration:none;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+main{width:min(820px,100%);margin:0 auto;padding:16px 20px 80px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 18px;margin:16px 0}
+h1{font-size:22px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px}
+h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin:22px 0 8px;color:var(--text)}
+h2:first-of-type{margin-top:0}
+h3{font-size:13px;margin:16px 0 6px}
+p{margin:0 0 12px;color:#d8d8d8}
+ul,ol{margin:0 0 14px 20px;color:#d8d8d8}
+li{margin:4px 0}
+a{color:var(--accent)}
+.eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.small{font-size:12px;color:var(--muted)}
+.note{border-left:3px solid var(--accent);padding:10px 14px;background:#0f0f0f;margin:14px 0}
+.todo{border:1px dashed var(--accent);border-radius:8px;padding:10px 14px;margin:0 0 16px;color:var(--accent);font-size:12px}
+footer{border-top:1px solid var(--line);text-align:center;padding:24px 20px;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">CALI</div>
+  <a href="/tracker.html">Zur App</a>
+</header>
+<nav class="legal-nav">
+  <a href="#impressum">Impressum</a>
+  <a href="#datenschutz">Datenschutz</a>
+  <a href="#agb">AGB</a>
+  <a href="#widerruf">Widerruf</a>
+</nav>
+<main>
+
+<section id="legal-impressum">
+  <p class="eyebrow">Anbieterkennzeichnung</p>
+  <h1 id="impressum">Impressum</h1>
+  <div class="todo" data-todo>Vor der Veröffentlichung eintragen: Straße, Hausnummer, Postleitzahl, E-Mail-Adresse. Nach der Gewerbeanmeldung außerdem die Umsatzsteuer-Regelung prüfen.</div>
+  <p><strong>Arthur Przybyla</strong><br>
+  [STRASSE HAUSNUMMER]<br>
+  [PLZ] Berlin<br>
+  Deutschland</p>
+  <p>E-Mail: <a href="mailto:[E-MAIL]">[E-MAIL]</a></p>
+  <h2>Angaben nach § 5 DDG</h2>
+  <p>Verantwortlich für den Inhalt dieser App und der zugehörigen Website ist die oben genannte Person (Einzelunternehmen). Umsatzsteuer: Es wird gemäß § 19 UStG keine Umsatzsteuer berechnet (Kleinunternehmerregelung).</p>
+  <h2>Verantwortlich für Inhalte nach § 18 Abs. 2 MStV</h2>
+  <p>Arthur Przybyla, Anschrift wie oben.</p>
+  <h2>Streitbeilegung</h2>
+  <p>Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+  <h2>Kartenmaterial</h2>
+  <p>Kartendaten © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende, Open Database License. Parkdaten über die Overpass API.</p>
+</section>
+
+<section id="legal-datenschutz">
+  <p class="eyebrow">Datenschutz</p>
+  <h1 id="datenschutz">Datenschutzerklärung</h1>
+  <div class="todo" data-todo>Vor der Veröffentlichung: Anschrift und E-Mail unter „Verantwortlicher" eintragen. Abschnitt „Zahlungen" gilt erst, sobald der Diamanten-Kauf freigeschaltet ist.</div>
+
+  <h2>1. Verantwortlicher</h2>
+  <p><strong>Arthur Przybyla</strong>, [STRASSE HAUSNUMMER], [PLZ] Berlin, E-Mail: <a href="mailto:[E-MAIL]">[E-MAIL]</a></p>
+
+  <h2>2. Worum es geht</h2>
+  <p>CALI ist eine Web-App zum Aufzeichnen von Calisthenics-Training. Diese Erklärung beschreibt, welche Daten die App verarbeitet, wozu und wie lange. Die App richtet sich an Personen ab 16 Jahren.</p>
+
+  <h2>3. Hosting und Datenbank (Google Firebase)</h2>
+  <p>Die App wird über Google Firebase bereitgestellt (Firebase Hosting, Firestore-Datenbank, Firebase Authentication, Cloud Storage, Cloud Functions). Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Beim Aufruf verarbeitet Google technisch notwendige Verbindungsdaten (IP-Adresse, Zeitpunkt, angeforderte Datei, Browser- und Geräteinformationen). Die Verarbeitung dient dem sicheren Betrieb der App, Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Google kann Daten in den USA verarbeiten; Grundlage dafür sind die Standardvertragsklauseln der EU und die Zertifizierung von Google unter dem EU-U.S. Data Privacy Framework.</p>
+
+  <h2>4. Konto und Anmeldung</h2>
+  <p>Für die Nutzung ist ein Konto nötig. Bei der Registrierung mit E-Mail und Passwort speichert Firebase Authentication deine E-Mail-Adresse, ein gehashtes Passwort, den Zeitpunkt der Registrierung und der letzten Anmeldung. Bei der Anmeldung mit Google erhalten wir von Google deinen Namen, deine E-Mail-Adresse und gegebenenfalls dein Profilbild. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertrag über die Nutzung der App).</p>
+
+  <h2>5. Trainings- und Profildaten</h2>
+  <p>Alles, was du in der App einträgst, speichern wir in deinem Konto: Name, Alter, Gewicht, Größe, Geschlecht und Trainingsziel (freiwillig), Profilbild, Trainingseinheiten mit Übungen, Sätzen und Dauer, Max-Werte, Pläne, Challenges und Fortschritte, Streak, Erfahrungspunkte (XP), Diamanten und Flammen, Abzeichen sowie Freundschaften. Zweck ist die Funktion der App (Art. 6 Abs. 1 lit. b DSGVO).</p>
+  <p><strong>Öffentliches Profil.</strong> Damit andere Nutzer dich finden, herausfordern und als Freund hinzufügen können, ist ein kleiner Teil deines Profils für alle angemeldeten Nutzer sichtbar: Name, verkleinertes Profilbild, Level, XP, Streak, Anzahl der Workouts und Datum des letzten Trainings. In den Einstellungen kannst du dein Profil auf „privat" stellen; dann erscheinst du nicht mehr in Suchen, Ranglisten und beim Trainingspartner-Finder.</p>
+  <p><strong>Ranglisten und Battles.</strong> Wenn du Einträge in Ranglisten machst, Battles startest oder annimmst, sehen andere angemeldete Nutzer deinen Namen, das Ergebnis und gegebenenfalls das dazugehörige Video.</p>
+
+  <h2>6. Community-Inhalte und Videos</h2>
+  <p>Challenges, die du in der Community postest, sowie Kommentare und Likes sind für alle angemeldeten Nutzer sichtbar, ebenso Videos, die du zu Community-Challenges, Battles oder Ranglisten-Einträgen hochlädst. Videos liegen in Google Cloud Storage (Firebase). Du kannst eigene Beiträge jederzeit löschen.</p>
+  <p><strong>Abnahme-Videos.</strong> Videos, die du zur Prüfung einer Challenge in der App aufnimmst, sind nicht öffentlich. Sie sehen nur du und der Prüfer. Nach der Entscheidung wird das Video gelöscht; gespeichert bleibt nur das Ergebnis (verifiziert oder abgelehnt) mit Datum. Der bei der Aufnahme angezeigte Code dient allein der Prüfung, dass das Video in der App entstanden ist.</p>
+
+  <h2>7. Standort und Karte</h2>
+  <p>Die Parks-Karte fragt deinen Standort nur ab, wenn du das im Browser erlaubst. Der Standort wird zur Anzeige der Karte und der Parks in deiner Nähe verwendet und nicht dauerhaft gespeichert. Ausnahmen: Bei einem Battle merken wir uns den zugeordneten Park (Name und Kennung), und bei einem Trainingspartner-Gesuch speichern wir den von dir gewählten Park mit seinen Koordinaten für die Dauer des Gesuchs (7 Tage). Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du im Browser jederzeit widerrufen kannst.</p>
+  <p>Die Karte lädt Kartenkacheln von OpenStreetMap (OpenStreetMap Foundation, St John's Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Großbritannien). Dabei wird deine IP-Adresse an deren Server übertragen. Parkdaten holen wir über die Overpass API; die Anfrage läuft über unseren eigenen Server, sodass deine IP-Adresse dort nicht ankommt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (Bereitstellung der Kartenfunktion).</p>
+
+  <h2>8. Kamera und Mikrofon</h2>
+  <p>Für Videoaufnahmen (Abnahme, Battles, Ranglisten, Community) greift die App auf Kamera und Mikrofon zu, nachdem du das im Browser erlaubt hast. Die Aufnahme geschieht auf deinem Gerät und wird erst beim Einreichen hochgeladen.</p>
+
+  <h2>9. Diamanten und Zahlungen</h2>
+  <p>Diamanten sind eine virtuelle Währung innerhalb der App ohne Barwert. Dein Kontostand und alle Gutschriften und Abbuchungen werden auf unseren Servern gespeichert. Wenn du Diamanten kaufst, läuft die Zahlung über Stripe (Stripe Payments Europe, Ltd., 1 Grand Canal Street Lower, Dublin 2, Irland). Stripe erhält dabei die für die Zahlung nötigen Daten (Zahlungsmittel, Betrag, E-Mail-Adresse); Kartendaten sehen wir nicht. Wir speichern zu jedem Kauf Zeitpunkt, Paket, Betrag und den Zahlungsstatus, außerdem deine Zustimmung zur sofortigen Bereitstellung. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO; Aufbewahrung nach den steuerlichen Fristen (Art. 6 Abs. 1 lit. c DSGVO). Datenschutzerklärung von Stripe: <a href="https://stripe.com/de/privacy" target="_blank" rel="noopener">stripe.com/de/privacy</a>.</p>
+
+  <h2>10. Schriften</h2>
+  <p>Die App lädt Schriftarten über Google Fonts. Dabei wird deine IP-Adresse an Google übertragen (Art. 6 Abs. 1 lit. f DSGVO, einheitliche Darstellung).</p>
+
+  <h2>11. Lokale Speicherung, keine Werbung, kein Tracking</h2>
+  <p>Die App speichert Einstellungen und eine Kopie deiner Trainingsdaten im lokalen Speicher deines Browsers, damit sie offline funktioniert. Firebase setzt für die Anmeldung technisch notwendige Speichereinträge. Wir setzen keine Werbe- oder Tracking-Cookies und keine Analyse-Dienste ein.</p>
+
+  <h2>12. Speicherdauer und Löschung</h2>
+  <p>Deine Daten bleiben gespeichert, solange dein Konto besteht. Unter Einstellungen → „Account löschen" kannst du dein Konto samt allen Daten selbst löschen; Zahlungsbelege bewahren wir aus steuerlichen Gründen bis zu zehn Jahre auf. Trainingspartner-Gesuche werden nach 7 Tagen gelöscht, Abnahme-Videos nach der Entscheidung. Unter „Daten exportieren" bekommst du alle deine Daten als JSON-Datei.</p>
+
+  <h2>13. Deine Rechte</h2>
+  <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch gegen Verarbeitungen, die auf Art. 6 Abs. 1 lit. f DSGVO beruhen. Einwilligungen kannst du jederzeit mit Wirkung für die Zukunft widerrufen. Du kannst dich bei einer Datenschutzaufsichtsbehörde beschweren, zuständig ist die Berliner Beauftragte für Datenschutz und Informationsfreiheit, Alt-Moabit 59-61, 10555 Berlin.</p>
+
+  <h2>14. Änderungen</h2>
+  <p>Wenn sich die App ändert, passen wir diese Erklärung an. Es gilt die jeweils in der App veröffentlichte Fassung.</p>
+  <p class="small">Stand: September 2026.</p>
+</section>
+
+<section id="legal-agb">
+  <p class="eyebrow">Nutzungsbedingungen</p>
+  <h1 id="agb">Allgemeine Geschäftsbedingungen</h1>
+  <div class="todo" data-todo>Vor der Veröffentlichung: Anschrift und E-Mail unter „Anbieter" eintragen. Die Abschnitte zum Kauf gelten ab Freischaltung des Diamanten-Kaufs.</div>
+
+  <h2>1. Anbieter und Geltung</h2>
+  <p>Anbieter der App CALI ist Arthur Przybyla, [STRASSE HAUSNUMMER], [PLZ] Berlin, E-Mail: [E-MAIL]. Diese Bedingungen gelten für die Nutzung der App und für den Kauf von Diamanten. Abweichende Bedingungen des Nutzers gelten nicht.</p>
+
+  <h2>2. Konto</h2>
+  <p>Für die Nutzung ist ein Konto nötig. Du musst mindestens 16 Jahre alt sein; Minderjährige brauchen für Käufe die Zustimmung der Eltern. Halte deine Zugangsdaten geheim. Du kannst dein Konto jederzeit in den Einstellungen löschen.</p>
+
+  <h2>3. Leistung</h2>
+  <p>Die App ist kostenlos nutzbar. Sie dient dem Aufzeichnen von Training, dem Vergleich mit anderen Nutzern (Ranglisten, Battles, Challenges) und dem Austausch in der Community. Wir bemühen uns um ständige Verfügbarkeit, garantieren sie aber nicht; Wartung, Updates und Störungen können zu Ausfällen führen. Wir können Funktionen ändern oder einstellen, wenn dies für Nutzer zumutbar ist.</p>
+
+  <h2>4. Diamanten</h2>
+  <p>Diamanten sind eine virtuelle Währung innerhalb der App. Sie haben keinen Barwert, sind nicht übertragbar, nicht auszahlbar und gelten nur in der App. Du kannst sie im Training verdienen oder kaufen. Im Shop steht neben jedem Diamanten-Preis der Euro-Wert. Bei Löschung des Kontos verfallen vorhandene Diamanten; für gekaufte Diamanten, die noch nicht eingesetzt wurden, gilt das gesetzliche Widerrufsrecht nach Maßgabe der Widerrufsbelehrung.</p>
+
+  <h2>5. Kauf von Diamanten</h2>
+  <p>Der Kauf kommt zustande, wenn du im Bezahlvorgang auf „Kostenpflichtig kaufen" tippst und die Zahlung bei unserem Zahlungsdienstleister Stripe abgeschlossen ist. Die Preise sind Endpreise in Euro; nach § 19 UStG wird keine Umsatzsteuer ausgewiesen. Die Diamanten werden sofort nach Zahlungseingang gutgeschrieben. Mit dem Kauf stimmst du ausdrücklich zu, dass wir vor Ablauf der Widerrufsfrist mit der Bereitstellung beginnen, und bestätigst, dass dein Widerrufsrecht damit erlischt (siehe Widerrufsbelehrung). Den Vertragstext bekommst du per E-Mail von Stripe als Beleg.</p>
+
+  <h2>6. Abnahme per Video</h2>
+  <p>Für bestimmte Challenges kannst du gegen Diamanten eine Abnahme beantragen: Du nimmst deinen Versuch in der App auf, wir prüfen das Video und vergeben bei Erfolg das Abzeichen „Verifiziert". Die Prüfung ist eine Einschätzung durch uns; ein Anspruch auf Freigabe besteht nicht. Wird ein Video abgelehnt, weil die Aufnahme unklar ist oder die Vorgaben nicht erfüllt, bekommst du die Diamanten zurück. Bei Täuschung (zum Beispiel fehlender oder falscher Code, fremdes Video, geschnittene Aufnahme) behalten wir die Diamanten ein und können das Konto sperren.</p>
+
+  <h2>7. Inhalte der Nutzer</h2>
+  <p>Für Inhalte, die du postest oder hochlädst (Challenges, Kommentare, Videos, Bilder), bist du verantwortlich. Du räumst uns das einfache Recht ein, sie in der App anzuzeigen und den anderen Nutzern zugänglich zu machen. Verboten sind Inhalte, die Rechte Dritter verletzen, beleidigend, diskriminierend, gefährlich oder werblich sind, sowie Inhalte, die Personen ohne deren Einverständnis zeigen. Wir dürfen solche Inhalte entfernen und bei Verstößen Konten sperren.</p>
+
+  <h2>8. Fairness</h2>
+  <p>Manipulation von Ergebnissen, Likes, Ranglisten, Diamanten oder Abzeichen sowie der Einsatz technischer Hilfsmittel dazu sind untersagt. Wir dürfen erschlichene Punkte, Diamanten und Abzeichen entfernen.</p>
+
+  <h2>9. Gesundheit und Haftung</h2>
+  <p>Training ist auf eigene Verantwortung. Die App gibt keine medizinische Beratung; Challenges und Pläne sind Vorschläge, die du an deine Fähigkeiten anpassen musst. Bei Beschwerden oder Vorerkrankungen sprich vorher mit einem Arzt. Wir haften unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie bei Verletzung von Leben, Körper und Gesundheit. Bei einfacher Fahrlässigkeit haften wir nur für die Verletzung wesentlicher Vertragspflichten und begrenzt auf den vorhersehbaren, vertragstypischen Schaden. Für Datenverlust haften wir nur, soweit er auch bei regelmäßiger Datensicherung durch dich eingetreten wäre; nutze die Exportfunktion.</p>
+
+  <h2>10. Laufzeit und Kündigung</h2>
+  <p>Die Nutzung ist unbefristet. Du kannst jederzeit dein Konto löschen. Wir können das Nutzungsverhältnis mit einer Frist von zwei Wochen kündigen, bei schweren Verstößen fristlos.</p>
+
+  <h2>11. Änderungen</h2>
+  <p>Wir können diese Bedingungen ändern, wenn dafür ein sachlicher Grund besteht (zum Beispiel neue Funktionen oder Gesetzesänderungen). Über Änderungen informieren wir in der App; sie gelten als angenommen, wenn du die App danach weiter nutzt und nicht innerhalb von vier Wochen widersprichst. Bei Widerspruch kannst du das Konto löschen.</p>
+
+  <h2>12. Schlussbestimmungen</h2>
+  <p>Es gilt deutsches Recht. Bei Verbrauchern bleiben zwingende Verbraucherschutzvorschriften des Wohnsitzstaats unberührt. Wir nehmen nicht an Streitbeilegungsverfahren vor Verbraucherschlichtungsstellen teil. Sollte eine Bestimmung unwirksam sein, bleibt der Rest wirksam.</p>
+  <p class="small">Stand: September 2026.</p>
+</section>
+
+<section id="legal-widerruf">
+  <p class="eyebrow">Verbraucherinformation</p>
+  <h1 id="widerruf">Widerrufsbelehrung</h1>
+  <div class="todo" data-todo>Vor der Veröffentlichung: Anschrift und E-Mail eintragen (zweimal, unten auch im Musterformular).</div>
+
+  <h2>Widerrufsrecht</h2>
+  <p>Du hast das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsschlusses.</p>
+  <p>Um dein Widerrufsrecht auszuüben, musst du uns (Arthur Przybyla, [STRASSE HAUSNUMMER], [PLZ] Berlin, E-Mail: [E-MAIL]) mittels einer eindeutigen Erklärung (zum Beispiel per E-Mail oder Brief) über deinen Entschluss, diesen Vertrag zu widerrufen, informieren. Du kannst dafür das beigefügte Muster-Widerrufsformular verwenden, das ist jedoch nicht vorgeschrieben.</p>
+  <p>Zur Wahrung der Widerrufsfrist reicht es aus, dass du die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absendest.</p>
+
+  <h2>Folgen des Widerrufs</h2>
+  <p>Wenn du diesen Vertrag widerrufst, haben wir dir alle Zahlungen, die wir von dir erhalten haben, unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über deinen Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das du bei der ursprünglichen Transaktion eingesetzt hast, es sei denn, mit dir wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden dir wegen dieser Rückzahlung Entgelte berechnet.</p>
+
+  <h2>Erlöschen des Widerrufsrechts bei digitalen Inhalten</h2>
+  <p>Diamanten sind digitale Inhalte, die nicht auf einem körperlichen Datenträger geliefert werden. Dein Widerrufsrecht erlischt, wenn wir mit der Ausführung des Vertrags begonnen haben, nachdem du ausdrücklich zugestimmt hast, dass wir vor Ablauf der Widerrufsfrist mit der Ausführung beginnen, und du deine Kenntnis davon bestätigt hast, dass du durch deine Zustimmung mit Beginn der Ausführung dein Widerrufsrecht verlierst (§ 356 Abs. 5 BGB). Diese Zustimmung gibst du beim Kauf durch das Setzen des Häkchens vor „Kostenpflichtig kaufen"; die Diamanten werden danach sofort gutgeschrieben.</p>
+
+  <h2>Muster-Widerrufsformular</h2>
+  <p class="small">Wenn du den Vertrag widerrufen willst, fülle dieses Formular aus und sende es zurück.</p>
+  <div class="note">
+    <p>An Arthur Przybyla, [STRASSE HAUSNUMMER], [PLZ] Berlin, E-Mail: [E-MAIL]</p>
+    <p>Hiermit widerrufe ich den von mir abgeschlossenen Vertrag über den Kauf der folgenden digitalen Inhalte (Diamanten-Paket):</p>
+    <p>________________________________________</p>
+    <p>Bestellt am: ____________________</p>
+    <p>Name des Verbrauchers: ____________________</p>
+    <p>Anschrift des Verbrauchers: ____________________</p>
+    <p>Datum: ____________________</p>
+  </div>
+  <p class="small">Stand: September 2026.</p>
+</section>
+
+</main>
+<footer>© 2026 CALI · <a href="#impressum">Impressum</a> · <a href="#datenschutz">Datenschutz</a> · <a href="#agb">AGB</a> · <a href="#widerruf">Widerruf</a></footer>
+</body>
+</html>

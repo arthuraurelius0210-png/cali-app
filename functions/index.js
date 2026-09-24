@@ -3,10 +3,17 @@
 process.env.TZ = 'Europe/Berlin';
 
 const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https');
+const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
+
+// Stripe-Schlüssel liegen im Secret Manager (firebase functions:secrets:set STRIPE_SECRET / STRIPE_WEBHOOK_SECRET).
+// Solange dort 'unset' steht, ist der Kauf abgeschaltet und createCheckout antwortet mit failed-precondition.
+const STRIPE_SECRET = defineSecret('STRIPE_SECRET');
+const STRIPE_WEBHOOK_SECRET = defineSecret('STRIPE_WEBHOOK_SECRET');
+const APP_URL = 'https://cali-app-75cc9.web.app';
 const R = require('./lib/rewards');
 const E = require('./shared/econ');
 
@@ -257,6 +264,139 @@ exports.reviewVerification = onCall(async (req) => {
     try { await admin.storage().bucket().file(done.videoPath).delete(); } catch (e) { console.log('video delete', e.message); }
   }
   return { ok: true, decision: done.decision };
+});
+
+// ── Diamanten kaufen (Stripe Checkout) ────────────────────
+function stripeClient() {
+  let key = '';
+  try { key = STRIPE_SECRET.value(); } catch (e) { key = ''; }
+  if (!key || key === 'unset' || key.indexOf('sk_') !== 0) return null;
+  const Stripe = require('stripe');
+  return new Stripe(key);
+}
+
+// Checkout-Sitzung anlegen: {packId, consent:true}. consent = ausdrückliche Zustimmung zur sofortigen
+// Bereitstellung und Kenntnis vom Erlöschen des Widerrufsrechts (§ 356 Abs. 5 BGB), im Sheet gesetzt.
+exports.createCheckout = onCall({ secrets: [STRIPE_SECRET] }, async (req) => {
+  const uid = requireUid(req);
+  const data = req.data || {};
+  const packId = str(data.packId, 10);
+  const pack = E.CALI_ECON.packs.find(p => p.id === packId);
+  if (!pack) throw new HttpsError('invalid-argument', 'Unbekanntes Paket');
+  if (data.consent !== true) throw new HttpsError('failed-precondition', 'Bitte der sofortigen Bereitstellung zustimmen');
+  const stripe = stripeClient();
+  if (!stripe) throw new HttpsError('failed-precondition', 'Der Kauf ist noch nicht freigeschaltet');
+  const email = req.auth.token && req.auth.token.email;
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    locale: 'de',
+    line_items: [{ quantity: 1, price_data: { currency: 'eur', unit_amount: pack.cents, product_data: { name: pack.diamonds + ' Diamanten (' + pack.label + ')', description: 'Virtuelle Währung für die CALI App. Kein Barwert, nicht übertragbar, nicht auszahlbar.' } } }],
+    success_url: APP_URL + '/tracker.html?shop=success',
+    cancel_url: APP_URL + '/tracker.html?shop=cancel',
+    customer_email: email || undefined,
+    metadata: { uid, packId, diamonds: String(pack.diamonds), consentAt: String(Date.now()) },
+    custom_text: { submit: { message: 'Mit dem Kauf stimmst du zu, dass die Diamanten sofort bereitgestellt werden, und weißt, dass dein Widerrufsrecht damit erlischt.' } }
+  });
+  await db.collection('purchases').doc(session.id).set({ uid, packId, diamonds: pack.diamonds, cents: pack.cents, status: 'open', createdAt: Date.now(), consentAt: Date.now() });
+  return { url: session.url };
+});
+
+// Gutschrift nach bezahlter Sitzung, idempotent über purchases/{sessionId}.status
+async function creditPurchase(sessionId, meta) {
+  const pRef = db.collection('purchases').doc(sessionId);
+  await db.runTransaction(async tx => {
+    const pS = await tx.get(pRef);
+    const p = pS.exists ? pS.data() : null;
+    const uid = (p && p.uid) || meta.uid;
+    const diamonds = (p && p.diamonds) || parseInt(meta.diamonds, 10) || 0;
+    if (!uid || !diamonds) return;
+    if (p && p.status === 'paid') return;
+    const wRef = walletRef(uid);
+    const wS = await tx.get(wRef);
+    const wallet = R.normalizeWallet(wS.exists ? wS.data() : null);
+    wallet.diamonds += diamonds;
+    wallet.updatedAt = Date.now();
+    if (!wallet.createdAt) wallet.createdAt = wallet.updatedAt;
+    tx.set(wRef, wallet);
+    tx.set(pRef, { uid, diamonds, status: 'paid', paidAt: Date.now(), packId: (p && p.packId) || meta.packId || null }, { merge: true });
+    tx.set(db.collection('walletLog').doc(), { uid, diamonds, reason: 'Kauf ' + sessionId, by: 'stripe', date: Date.now() });
+  });
+}
+
+// Stripe ruft diese URL nach der Zahlung auf (Webhook-Endpunkt in Stripe eintragen, Ereignis checkout.session.completed)
+exports.stripeWebhook = onRequest({ secrets: [STRIPE_SECRET, STRIPE_WEBHOOK_SECRET] }, async (req, res) => {
+  const stripe = stripeClient();
+  let whsec = '';
+  try { whsec = STRIPE_WEBHOOK_SECRET.value(); } catch (e) { whsec = ''; }
+  if (!stripe || !whsec || whsec === 'unset') { res.status(503).send('not configured'); return; }
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.rawBody, req.headers['stripe-signature'], whsec);
+  } catch (e) {
+    res.status(400).send('bad signature');
+    return;
+  }
+  try {
+    if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
+      const s = event.data.object;
+      if (s.payment_status === 'paid') await creditPurchase(s.id, s.metadata || {});
+    }
+    res.status(200).send('ok');
+  } catch (e) {
+    console.log('webhook', e.message);
+    res.status(500).send('error');
+  }
+});
+
+// ── Konto löschen (Art. 17 DSGVO): alle Daten des Nutzers, Videos, dann das Auth-Konto ──
+exports.deleteAccount = onCall({ timeoutSeconds: 300 }, async (req) => {
+  const uid = requireUid(req);
+  if (str(req.data && req.data.confirm, 20) !== 'LÖSCHEN') throw new HttpsError('invalid-argument', 'Bestätigung fehlt');
+  const refs = [];
+  ['users', 'profiles', 'wallets', 'xp', 'verifiedBadges', 'personalBests'].forEach(c => refs.push(db.collection(c).doc(uid)));
+  const queries = [
+    ['xpLog', 'uid'], ['verifications', 'uid'], ['communityChallenges', 'uid'], ['trainingBuddies', 'uid'], ['globalLeaderboard', 'uid'],
+    ['invites', 'uid'], ['feedback', 'uid'], ['parkSuggestions', 'uid'], ['exerciseSuggestions', 'uid'], ['parkKings', 'uid']
+  ];
+  for (const [col, field] of queries) {
+    try {
+      const s = await db.collection(col).where(field, '==', uid).limit(1000).get();
+      s.forEach(d => refs.push(d.ref));
+    } catch (e) { console.log('delete query', col, e.message); }
+  }
+  try {
+    const f = await db.collection('friendships').where('members', 'array-contains', uid).get();
+    f.forEach(d => refs.push(d.ref));
+  } catch (e) { console.log('delete friendships', e.message); }
+  try {
+    const posts = await db.collectionGroup('posts').where('uid', '==', uid).limit(1000).get();
+    posts.forEach(d => refs.push(d.ref));
+  } catch (e) { console.log('delete park posts', e.message); }
+  // Battles bleiben für den Gegner erhalten, der Name wird anonymisiert
+  const anon = [];
+  for (const field of ['challengerId', 'challengedId']) {
+    try {
+      const b = await db.collection('battles').where(field, '==', uid).limit(1000).get();
+      b.forEach(d => anon.push({ ref: d.ref, upd: field === 'challengerId' ? { challengerName: 'Gelöschter Nutzer' } : { challengedName: 'Gelöschter Nutzer' } }));
+    } catch (e) { console.log('anon battles', e.message); }
+  }
+  // In Schüben löschen (Batch-Limit 500)
+  for (let i = 0; i < refs.length; i += 400) {
+    const batch = db.batch();
+    refs.slice(i, i + 400).forEach(r => batch.delete(r));
+    await batch.commit();
+  }
+  for (let i = 0; i < anon.length; i += 400) {
+    const batch = db.batch();
+    anon.slice(i, i + 400).forEach(a => batch.set(a.ref, a.upd, { merge: true }));
+    await batch.commit();
+  }
+  // Videos des Nutzers
+  for (const prefix of ['verificationVideos/' + uid + '/', 'challengeVideos/' + uid + '/']) {
+    try { await admin.storage().bucket().deleteFiles({ prefix }); } catch (e) { console.log('delete files', prefix, e.message); }
+  }
+  await admin.auth().deleteUser(uid);
+  return { ok: true, deleted: refs.length, anonymized: anon.length };
 });
 
 // Admin schreibt Diamanten gut (Tests, Freunde, Entschädigung): {uid, diamonds, reason}

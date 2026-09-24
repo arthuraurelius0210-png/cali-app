@@ -564,6 +564,12 @@ img.ch-tile-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cove
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);text-align:center;">
       <button onclick="demoLogin()" class="auth-link">Ohne Login testen (Demo)</button>
     </div>
+    <div class="row-sub" style="margin-top:14px;text-align:center;white-space:normal;line-height:1.6;">
+      Mit der Registrierung akzeptierst du die <button type="button" class="auth-link" style="display:inline;padding:0;color:var(--accent);" onclick="openLegal('agb')">AGB</button> und die <button type="button" class="auth-link" style="display:inline;padding:0;color:var(--accent);" onclick="openLegal('datenschutz')">Datenschutzerklärung</button>.
+    </div>
+    <div class="lbl" style="margin-top:10px;text-align:center;">
+      <button type="button" class="auth-link" style="display:inline;padding:0;" onclick="openLegal('impressum')">Impressum</button>
+    </div>
   </div>
 </div>
 
@@ -921,6 +927,7 @@ img.ch-tile-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cove
 <script src="wallet.js"></script>
 <script src="verify.js"></script>
 <script src="friends.js"></script>
+<script src="account.js"></script>
 
 <script src="parks.js"></script>
 <script src="buddyfinder.js"></script>

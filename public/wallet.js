@@ -117,9 +117,83 @@ function spendDiamonds(what, cb){
   });
 }
 
+// ── Kauf über Stripe Checkout ──
+// Freigeschaltet, wenn config/shop.enabled true ist UND die Stripe-Schlüssel auf dem Server liegen
+// (functions/index.js createCheckout). Vor dem Checkout ein Sheet mit Preis, AGB/Widerruf und der
+// ausdrücklichen Zustimmung zur sofortigen Bereitstellung (§ 356 Abs. 5 BGB).
+var shopEnabled = null;
+function shopLoadConfig(cb){
+  if(shopEnabled !== null){ if(cb) cb(shopEnabled); return; }
+  if(!walletReady()){ if(cb) cb(false); return; }
+  db.collection('config').doc('shop').get().then(function(d){ shopEnabled = !!(d.exists && d.data().enabled); if(cb) cb(shopEnabled); })
+    .catch(function(){ shopEnabled = false; if(cb) cb(false); });
+}
+function openPurchaseSheet(pack){
+  if(!walletReady()){ toast('Bitte einloggen'); return; }
+  var old = document.getElementById('buy-sheet');
+  if(old) old.remove();
+  var ov = document.createElement('div');
+  ov.id = 'buy-sheet';
+  ov.style.cssText = PLAN_BACKDROP_CSS + 'z-index:2300;';
+  var box = document.createElement('div');
+  box.className = 'sheet sheet-scroll';
+  box.style.cssText = 'max-height:88vh;overflow-y:auto;';
+  box.appendChild(planSheetGrip());
+  function add(tag, cls, css, text){ var n = document.createElement(tag); if(cls) n.className = cls; if(css) n.style.cssText = css; if(text !== undefined) n.textContent = text; box.appendChild(n); return n; }
+  add('span', 'eyebrow', '', 'Diamanten kaufen');
+  var kpi = add('div', '', 'display:flex;align-items:baseline;gap:8px;margin-bottom:4px;');
+  kpi.innerHTML = '<span class="kpi num" style="font-size:30px;">' + pack.diamonds.toLocaleString('de-DE') + '</span><span class="unit">Diamanten</span><span class="kpi num" style="font-size:18px;margin-left:auto;">' + econEuro(pack.cents) + '</span>';
+  add('div', 'row-sub', 'margin:0 0 14px;white-space:normal;line-height:1.5;', pack.label + ' · Endpreis, keine Umsatzsteuer nach § 19 UStG. Diamanten haben keinen Barwert, sind nicht übertragbar und werden nicht ausgezahlt. Die Zahlung läuft über Stripe.');
+  var lbl = document.createElement('label');
+  lbl.style.cssText = 'display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;cursor:pointer;';
+  var cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.style.cssText = 'margin-top:3px;width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;';
+  var txt = document.createElement('span');
+  txt.className = 'row-sub';
+  txt.style.cssText = 'white-space:normal;line-height:1.5;color:var(--text);';
+  txt.textContent = 'Ich stimme ausdrücklich zu, dass die Diamanten sofort nach der Zahlung bereitgestellt werden, und weiß, dass ich damit mein Widerrufsrecht verliere.';
+  lbl.appendChild(cb); lbl.appendChild(txt);
+  box.appendChild(lbl);
+  var links = add('div', 'row-sub', 'margin:0 0 14px;white-space:normal;line-height:1.6;');
+  links.innerHTML = 'Es gelten die <a href="#" data-legal="agb" style="color:var(--accent);">AGB</a> und die <a href="#" data-legal="widerruf" style="color:var(--accent);">Widerrufsbelehrung</a>. <a href="#" data-legal="datenschutz" style="color:var(--accent);">Datenschutz</a>.';
+  links.querySelectorAll('a').forEach(function(a){ a.onclick = function(e){ e.preventDefault(); if(typeof openLegal === 'function') openLegal(a.getAttribute('data-legal')); }; });
+  var status = add('div', 'row-sub num', 'margin:0 0 8px;min-height:14px;text-align:center;', '');
+  var buy = add('button', 'btn pressable', 'margin:0 0 4px;', 'Kostenpflichtig kaufen · ' + econEuro(pack.cents));
+  buy.type = 'button';
+  buy.disabled = true;
+  cb.onchange = function(){ buy.disabled = !cb.checked; };
+  buy.onclick = function(){
+    if(!cb.checked) return;
+    buy.disabled = true;
+    status.textContent = 'Weiter zu Stripe …';
+    walletCall('createCheckout', {packId:pack.id, consent:true}).then(function(d){
+      if(d && d.url){ location.href = d.url; }
+      else { status.textContent = ''; toast('Kauf konnte nicht gestartet werden'); buy.disabled = false; }
+    }).catch(function(e){ status.textContent = ''; toast(walletErrorMessage(e)); buy.disabled = false; });
+  };
+  var cancel = add('button', 'pressable u', PLAN_TEXTBTN_CSS, 'Abbrechen');
+  cancel.type = 'button';
+  cancel.onclick = function(){ sheetOut(ov, box); };
+  ov.appendChild(box);
+  ov.onclick = function(e){ if(e.target === ov) sheetOut(ov, box); };
+  document.body.appendChild(ov);
+  if(window.caliMotion) caliMotion.sheetIn(box, ov);
+}
+// Rückkehr von Stripe: ?shop=success|cancel (Gutschrift kommt per Webhook, das Wallet-Live-Update zeigt sie)
+function shopHandleReturn(){
+  try{
+    var q = new URLSearchParams(location.search), s = q.get('shop');
+    if(!s) return;
+    history.replaceState(null, '', location.pathname);
+    setTimeout(function(){ toast(s === 'success' ? 'Zahlung eingegangen, die Diamanten werden gleich gutgeschrieben' : 'Kauf abgebrochen'); }, 1500);
+  }catch(e){}
+}
+shopHandleReturn();
+
 // ── Shop-Sheet: Kontostand, Pakete mit Euro-Preis, wie man Diamanten verdient und ausgibt ──
-// Der Kauf selbst kommt mit Stripe, sobald Gewerbe und Rechtsseiten stehen; bis dahin sind
-// die Kaufknöpfe aus. Preise und Pakete: CALI_ECON (econ.js).
+// Kaufknöpfe sind aktiv, sobald config/shop.enabled gesetzt ist (Stripe eingerichtet).
+// Preise und Pakete: CALI_ECON (econ.js).
 function openShopSheet(){
   var old = document.getElementById('shop-sheet');
   if(old) old.remove();
@@ -163,15 +237,23 @@ function openShopSheet(){
       '<div class="row-sub num">' + p.label + ' · ' + n + ' Abnahme' + (n === 1 ? '' : 'n') + ' · ' + per + ' je Abnahme</div></div>';
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'btn sec sm num';
+    btn.className = 'btn sec sm num pressable';
     btn.style.cssText = 'flex-shrink:0;white-space:nowrap;';
     btn.textContent = econEuro(p.cents);
     btn.disabled = true;
-    btn.setAttribute('aria-label', p.diamonds + ' Diamanten für ' + econEuro(p.cents) + ', bald verfügbar');
+    btn.setAttribute('data-buy', p.id);
+    btn.setAttribute('aria-label', p.diamonds + ' Diamanten für ' + econEuro(p.cents) + ' kaufen');
+    btn.onclick = function(){ openPurchaseSheet(p); };
     row.appendChild(btn);
     list.appendChild(row);
   });
-  add('div', 'row-sub', 'margin:0 0 16px;white-space:normal;', 'Der Kauf startet in Kürze. Bis dahin verdienst du Diamanten nur im Training.');
+  var shopNote = add('div', 'row-sub', 'margin:0 0 16px;white-space:normal;', 'Der Kauf startet in Kürze. Bis dahin verdienst du Diamanten nur im Training.');
+  shopLoadConfig(function(on){
+    if(!on) return;
+    shopNote.textContent = 'Zahlung über Stripe, Diamanten werden sofort gutgeschrieben. Es gelten AGB und Widerrufsbelehrung.';
+    var bs = list.querySelectorAll('[data-buy]');
+    for(var i=0;i<bs.length;i++) bs[i].disabled = false;
+  });
 
   add('div', 'lbl', 'margin-bottom:8px;', 'So verdienst du Diamanten');
   var earnList = add('div', 'list', 'margin-bottom:14px;');
