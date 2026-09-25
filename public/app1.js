@@ -154,8 +154,7 @@ function populateMaxDropdowns(){
 }
 
 var _lastGoPage = null;
-// dir (optional): 'down' = Seite kommt von oben herein (Swipe-down → nächster Tab)
-function goPage(p, dir){
+function goPage(p){
   if(p==='m') setTimeout(populateMaxDropdowns, 100);
   var ps=['e','p','m','ch','v','pr','sk','h','parks','rek'];
   for(var i=0;i<ps.length;i++){
@@ -208,62 +207,7 @@ function goPage(p, dir){
     }
     if(stTarget) caliMotion.stagger(stTarget);
   }
-  // Richtungs-Entrance: beim Swipe-down (nächster Tab) kommt die Seite von OBEN
-  // herein statt der Standard-pageIn von unten (WAAPI überstimmt die CSS-Animation)
-  if(dir==='down' && !(window.caliMotion && caliMotion.reduced())){
-    var dirPg = document.getElementById('page-'+p);
-    if(dirPg && dirPg.animate){
-      dirPg.animate(
-        [{opacity:0,transform:'translateY(-10px)'},{opacity:1,transform:'translateY(0)'}],
-        {duration:200, easing:'cubic-bezier(0.22,1,0.36,1)'}
-      );
-    }
-  }
 }
-
-// ── SWIPE NAVIGATION (TikTok-style: swipe down at top = next tab, swipe up at bottom = previous tab) ──
-(function(){
-  var NAV_ORDER = ['e','p','m','ch','pr','parks','rek'];
-  var startY = 0, startX = 0, startScrollTop = 0, swiping = false;
-
-  document.addEventListener('touchstart', function(e){
-    var pageEl = e.target.closest('.page.on') || e.target.closest('nav');
-    if(!pageEl || e.touches.length !== 1){ swiping = false; return; }
-    swiping = true;
-    startY = e.touches[0].clientY;
-    startX = e.touches[0].clientX;
-    startScrollTop = window.scrollY || document.documentElement.scrollTop;
-  }, {passive:true});
-
-  document.addEventListener('touchend', function(e){
-    if(!swiping) return;
-    swiping = false;
-    var endY = e.changedTouches[0].clientY;
-    var endX = e.changedTouches[0].clientX;
-    var deltaY = endY - startY;
-    var deltaX = endX - startX;
-    // Höhere Schwelle + strengere Richtungsprüfung, damit die Geste nicht mit
-    // Pull-to-Refresh oder normalem Scrollen kollidiert
-    if(Math.abs(deltaY) < 90 || Math.abs(deltaX) > 0.5 * Math.abs(deltaY)) return;
-    // Während eines aktiven Workouts nie per Swipe wegnavigieren
-    if(woActive) return;
-
-    var currentPage = document.querySelector('.page.on');
-    if(!currentPage) return;
-    var idx = NAV_ORDER.indexOf(currentPage.id.replace('page-',''));
-    if(idx === -1) return;
-
-    var atTop = startScrollTop <= 4;
-    var atBottom = (window.scrollY + window.innerHeight) >= (document.documentElement.scrollHeight - 4);
-
-    // Kein Wrap-Around — an den Enden der Tab-Leiste stoppen
-    if(deltaY > 0 && atTop){
-      if(idx + 1 < NAV_ORDER.length) goPage(NAV_ORDER[idx + 1], 'down');
-    } else if(deltaY < 0 && atBottom){
-      if(idx - 1 >= 0) goPage(NAV_ORDER[idx - 1]);
-    }
-  }, {passive:true});
-})();
 
 // ── OVERLAY-HISTORY (Hardware-Zurück schließt Overlays statt der App) ──
 // overlayPush(ov, onClose) nach document.body.appendChild(ov) aufrufen;
